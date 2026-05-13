@@ -12,7 +12,7 @@ const textMuted = '#6b7a99'
 
 type Team = { id: string; name: string }
 
-const input = {
+const inp = {
   background: surface,
   border: '1px solid ' + border,
   borderRadius: 8,
@@ -23,7 +23,7 @@ const input = {
   width: '100%',
 } as React.CSSProperties
 
-const label = {
+const lbl = {
   fontSize: 11,
   fontWeight: 700,
   color: textMuted,
@@ -32,10 +32,16 @@ const label = {
   display: 'block',
 } as React.CSSProperties
 
+const STYLES = [
+  'Enhand',
+  'Tvahand',
+]
+
 export default function AdminPage() {
   const [tab, setTab] = useState('teams')
   const [msg, setMsg] = useState('')
   const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(false)
 
   const [teamName, setTeamName] = useState('')
   const [teamClub, setTeamClub] = useState('')
@@ -44,11 +50,9 @@ export default function AdminPage() {
   const [playerName, setPlayerName] = useState('')
   const [playerTeam, setPlayerTeam] = useState('')
   const [playerHand, setPlayerHand] = useState('right')
-  const [playerStyle, setPlayerStyle] = useState('Stroker')
+  const [playerStyle, setPlayerStyle] = useState('Enhand')
   const [playerAge, setPlayerAge] = useState('')
   const [playerHometown, setPlayerHometown] = useState('')
-
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -57,10 +61,7 @@ export default function AdminPage() {
     })
   }, [msg])
 
-  const flash = (m: string) => {
-    setMsg(m)
-    setTimeout(() => setMsg(''), 3000)
-  }
+  const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
 
   const addTeam = async () => {
     if (!teamName || !teamClub) return flash('Namn och klubb kravs')
@@ -89,9 +90,6 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  const tabs = ['teams', 'players']
-  const tabLabel: Record<string, string> = { teams: 'Lag', players: 'Spelare' }
-
   return (
     <main style={{ minHeight: '100vh', background: bg, color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <header style={{ background: surface, borderBottom: '1px solid ' + border, padding: '16px 24px' }}>
@@ -113,9 +111,9 @@ export default function AdminPage() {
         )}
 
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: surface, borderRadius: 10, padding: 4, border: '1px solid ' + border }}>
-          {tabs.map(t => (
+          {['teams', 'players'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ flex: 1, background: tab === t ? card : 'transparent', border: tab === t ? '1px solid ' + border : '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 13, fontWeight: 700, color: tab === t ? accent : textMuted, cursor: 'pointer' }}>
-              {tabLabel[t]}
+              {t === 'teams' ? 'Lag' : 'Spelare'}
             </button>
           ))}
         </div>
@@ -124,31 +122,22 @@ export default function AdminPage() {
           <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL LAG</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-              <div>
-                <label style={label}>LAGNAMN</label>
-                <input style={input} value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="t.ex. IFK Goteborg" />
-              </div>
-              <div>
-                <label style={label}>KLUBB</label>
-                <input style={input} value={teamClub} onChange={e => setTeamClub(e.target.value)} placeholder="t.ex. IFK Goteborg BK" />
-              </div>
+              <div><label style={lbl}>LAGNAMN</label><input style={inp} value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="t.ex. IFK Goteborg" /></div>
+              <div><label style={lbl}>KLUBB</label><input style={inp} value={teamClub} onChange={e => setTeamClub(e.target.value)} placeholder="t.ex. IFK Goteborg BK" /></div>
             </div>
             <div style={{ marginBottom: 20 }}>
-              <label style={label}>STAD</label>
-              <input style={input} value={teamCity} onChange={e => setTeamCity(e.target.value)} placeholder="t.ex. Goteborg" />
+              <label style={lbl}>STAD</label>
+              <input style={inp} value={teamCity} onChange={e => setTeamCity(e.target.value)} placeholder="t.ex. Goteborg" />
             </div>
             <button onClick={addTeam} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + Lagg till lag
             </button>
-
             {teams.length > 0 && (
               <div style={{ marginTop: 24, borderTop: '1px solid ' + border, paddingTop: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 1, marginBottom: 12 }}>REGISTRERADE LAG</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {teams.map(t => (
-                    <div key={t.id} style={{ background: surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'white' }}>
-                      {t.name}
-                    </div>
+                    <div key={t.id} style={{ background: surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'white' }}>{t.name}</div>
                   ))}
                 </div>
               </div>
@@ -159,43 +148,30 @@ export default function AdminPage() {
         {tab === 'players' && (
           <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL SPELARE</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+              <div><label style={lbl}>NAMN</label><input style={inp} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Fornamn Efternamn" /></div>
               <div>
-                <label style={label}>NAMN</label>
-                <input style={input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Fornamn Efternamn" />
-              </div>
-              <div>
-                <label style={label}>LAG</label>
-                <select style={input} value={playerTeam} onChange={e => setPlayerTeam(e.target.value)}>
+                <label style={lbl}>LAG</label>
+                <select style={inp} value={playerTeam} onChange={e => setPlayerTeam(e.target.value)}>
                   <option value="">-- Valj lag --</option>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </div>
+<div>
+  <label style={lbl}>SPELSTIL</label>
+  <select style={inp} value={playerStyle} onChange={e => setPlayerStyle(e.target.value)}>
+    {STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+  </select>
+</div>
               <div>
-                <label style={label}>HAND</label>
-                <select style={input} value={playerHand} onChange={e => setPlayerHand(e.target.value)}>
+                <label style={lbl}>HAND</label>
+                <select style={inp} value={playerHand} onChange={e => setPlayerHand(e.target.value)}>
                   <option value="right">Hoger</option>
                   <option value="left">Vanster</option>
                 </select>
               </div>
-              <div>
-                <label style={label}>STIL</label>
-                <select style={input} value={playerStyle} onChange={e => setPlayerStyle(e.target.value)}>
-                  {['Stroker', 'Tweener', 'Power Player', 'Cranker'].map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={label}>ALDER</label>
-                <input style={input} type="number" value={playerAge} onChange={e => setPlayerAge(e.target.value)} placeholder="25" />
-              </div>
-              <div>
-                <label style={label}>HEMORT</label>
-                <input style={input} value={playerHometown} onChange={e => setPlayerHometown(e.target.value)} placeholder="Stockholm" />
-              </div>
+              <div><label style={lbl}>ALDER</label><input style={inp} type="number" value={playerAge} onChange={e => setPlayerAge(e.target.value)} placeholder="25" /></div>
+              <div><label style={lbl}>HEMORT</label><input style={inp} value={playerHometown} onChange={e => setPlayerHometown(e.target.value)} placeholder="Stockholm" /></div>
             </div>
             <button onClick={addPlayer} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + Lagg till spelare
