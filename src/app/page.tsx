@@ -35,9 +35,17 @@ export default async function Home() {
               LIVE BOWLINGSAJT
             </div>
           </div>
-          <a href="/admin" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
-            Admin
-          </a>
+          <div style={{ display: 'flex', gap: 8 }}>
+  <a href="/players" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
+    Spelare
+  </a>
+  <a href="/teams" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
+    Lag
+  </a>
+  <a href="/admin" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
+    Admin
+  </a>
+</div>
         </div>
       </header>
 
