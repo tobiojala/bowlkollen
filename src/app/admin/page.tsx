@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 
 const bg = '#10161e'
@@ -10,54 +10,87 @@ const border = '#2a3858'
 const accent = '#f5c200'
 const textMuted = '#6b7a99'
 
+type Team = { id: string; name: string }
+
+const input = {
+  background: surface,
+  border: '1px solid ' + border,
+  borderRadius: 8,
+  padding: '10px 12px',
+  color: 'white',
+  fontSize: 14,
+  outline: 'none',
+  width: '100%',
+} as React.CSSProperties
+
+const label = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: textMuted,
+  letterSpacing: 1,
+  marginBottom: 6,
+  display: 'block',
+} as React.CSSProperties
+
 export default function AdminPage() {
+  const [tab, setTab] = useState('teams')
+  const [msg, setMsg] = useState('')
+  const [teams, setTeams] = useState<Team[]>([])
+
   const [teamName, setTeamName] = useState('')
   const [teamClub, setTeamClub] = useState('')
   const [teamCity, setTeamCity] = useState('')
-  const [msg, setMsg] = useState('')
+
+  const [playerName, setPlayerName] = useState('')
+  const [playerTeam, setPlayerTeam] = useState('')
+  const [playerHand, setPlayerHand] = useState('right')
+  const [playerStyle, setPlayerStyle] = useState('Stroker')
+  const [playerAge, setPlayerAge] = useState('')
+  const [playerHometown, setPlayerHometown] = useState('')
+
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.from('teams').select('id, name').order('name').then(({ data }) => {
+      if (data) setTeams(data)
+    })
+  }, [msg])
+
+  const flash = (m: string) => {
+    setMsg(m)
+    setTimeout(() => setMsg(''), 3000)
+  }
+
   const addTeam = async () => {
-    if (!teamName || !teamClub) {
-      setMsg('Namn och klubb krävs')
-      return
-    }
+    if (!teamName || !teamClub) return flash('Namn och klubb kravs')
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase
-      .from('teams')
-      .insert({ name: teamName, club: teamClub, city: teamCity })
-
-    if (error) {
-      setMsg('Fel: ' + error.message)
-    } else {
-      setMsg('Lag tillagt!')
-      setTeamName('')
-      setTeamClub('')
-      setTeamCity('')
-    }
+    const { error } = await supabase.from('teams').insert({ name: teamName, club: teamClub, city: teamCity })
+    if (error) flash('Fel: ' + error.message)
+    else { flash('Lag tillagt!'); setTeamName(''); setTeamClub(''); setTeamCity('') }
     setLoading(false)
   }
 
-  const inputStyle = {
-    background: surface,
-    border: '1px solid ' + border,
-    borderRadius: 8,
-    padding: '10px 12px',
-    color: 'white',
-    fontSize: 14,
-    outline: 'none',
-    width: '100%',
+  const addPlayer = async () => {
+    if (!playerName || !playerTeam) return flash('Namn och lag kravs')
+    setLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('players').insert({
+      name: playerName,
+      team_id: playerTeam,
+      hand: playerHand,
+      style: playerStyle,
+      age: playerAge ? parseInt(playerAge) : null,
+      hometown: playerHometown || null,
+    })
+    if (error) flash('Fel: ' + error.message)
+    else { flash('Spelare tillagd!'); setPlayerName(''); setPlayerAge(''); setPlayerHometown('') }
+    setLoading(false)
   }
 
-  const labelStyle = {
-    fontSize: 11,
-    fontWeight: 700,
-    color: textMuted,
-    letterSpacing: 1,
-    marginBottom: 6,
-    display: 'block',
-  }
+  const tabs = ['teams', 'players']
+  const tabLabel: Record<string, string> = { teams: 'Lag', players: 'Spelare' }
 
   return (
     <main style={{ minHeight: '100vh', background: bg, color: 'white', fontFamily: 'system-ui, sans-serif' }}>
@@ -67,83 +100,108 @@ export default function AdminPage() {
             Bowl<span style={{ color: accent }}>kollen</span>
             <span style={{ fontSize: 13, color: textMuted, fontWeight: 400, marginLeft: 10 }}>Admin</span>
           </div>
-          <a href="/" style={{ fontSize: 12, color: textMuted, textDecoration: 'none' }}>
-            Tillbaka
-          </a>
+          <a href="/" style={{ fontSize: 12, color: textMuted, textDecoration: 'none' }}>Tillbaka</a>
         </div>
       </header>
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
         {msg && (
-          <div style={{
-            background: msg.includes('Fel') ? '#2a1212' : '#122a1a',
-            border: '1px solid ' + (msg.includes('Fel') ? '#4a1a1a' : '#1a4a2a'),
-            borderRadius: 10,
-            padding: '12px 16px',
-            marginBottom: 24,
-            fontSize: 13,
-            fontWeight: 600,
-            color: msg.includes('Fel') ? '#ff6b6b' : '#4caf7d'
-          }}>
+          <div style={{ background: msg.includes('Fel') ? '#2a1212' : '#122a1a', border: '1px solid ' + (msg.includes('Fel') ? '#4a1a1a' : '#1a4a2a'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? '#ff6b6b' : '#4caf7d' }}>
             {msg}
           </div>
         )}
 
-        <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>
-            LÄGG TILL LAG
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div>
-              <label style={labelStyle}>LAGNAMN</label>
-              <input
-                style={inputStyle}
-                value={teamName}
-                onChange={e => setTeamName(e.target.value)}
-                placeholder="t.ex. IFK Göteborg"
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>KLUBB</label>
-              <input
-                style={inputStyle}
-                value={teamClub}
-                onChange={e => setTeamClub(e.target.value)}
-                placeholder="t.ex. IFK Göteborg BK"
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>STAD</label>
-            <input
-              style={inputStyle}
-              value={teamCity}
-              onChange={e => setTeamCity(e.target.value)}
-              placeholder="t.ex. Göteborg"
-            />
-          </div>
-
-          <button
-            onClick={addTeam}
-            disabled={loading}
-            style={{
-              background: accent,
-              color: '#1a1400',
-              border: 'none',
-              borderRadius: 10,
-              padding: '11px 24px',
-              fontSize: 14,
-              fontWeight: 800,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? 'Sparar...' : '+ Lägg till lag'}
-          </button>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: surface, borderRadius: 10, padding: 4, border: '1px solid ' + border }}>
+          {tabs.map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ flex: 1, background: tab === t ? card : 'transparent', border: tab === t ? '1px solid ' + border : '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 13, fontWeight: 700, color: tab === t ? accent : textMuted, cursor: 'pointer' }}>
+              {tabLabel[t]}
+            </button>
+          ))}
         </div>
+
+        {tab === 'teams' && (
+          <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL LAG</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <label style={label}>LAGNAMN</label>
+                <input style={input} value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="t.ex. IFK Goteborg" />
+              </div>
+              <div>
+                <label style={label}>KLUBB</label>
+                <input style={input} value={teamClub} onChange={e => setTeamClub(e.target.value)} placeholder="t.ex. IFK Goteborg BK" />
+              </div>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={label}>STAD</label>
+              <input style={input} value={teamCity} onChange={e => setTeamCity(e.target.value)} placeholder="t.ex. Goteborg" />
+            </div>
+            <button onClick={addTeam} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              + Lagg till lag
+            </button>
+
+            {teams.length > 0 && (
+              <div style={{ marginTop: 24, borderTop: '1px solid ' + border, paddingTop: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 1, marginBottom: 12 }}>REGISTRERADE LAG</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {teams.map(t => (
+                    <div key={t.id} style={{ background: surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'white' }}>
+                      {t.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'players' && (
+          <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL SPELARE</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <label style={label}>NAMN</label>
+                <input style={input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Fornamn Efternamn" />
+              </div>
+              <div>
+                <label style={label}>LAG</label>
+                <select style={input} value={playerTeam} onChange={e => setPlayerTeam(e.target.value)}>
+                  <option value="">-- Valj lag --</option>
+                  {teams.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={label}>HAND</label>
+                <select style={input} value={playerHand} onChange={e => setPlayerHand(e.target.value)}>
+                  <option value="right">Hoger</option>
+                  <option value="left">Vanster</option>
+                </select>
+              </div>
+              <div>
+                <label style={label}>STIL</label>
+                <select style={input} value={playerStyle} onChange={e => setPlayerStyle(e.target.value)}>
+                  {['Stroker', 'Tweener', 'Power Player', 'Cranker'].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={label}>ALDER</label>
+                <input style={input} type="number" value={playerAge} onChange={e => setPlayerAge(e.target.value)} placeholder="25" />
+              </div>
+              <div>
+                <label style={label}>HEMORT</label>
+                <input style={input} value={playerHometown} onChange={e => setPlayerHometown(e.target.value)} placeholder="Stockholm" />
+              </div>
+            </div>
+            <button onClick={addPlayer} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              + Lagg till spelare
+            </button>
+          </div>
+        )}
 
       </div>
     </main>
