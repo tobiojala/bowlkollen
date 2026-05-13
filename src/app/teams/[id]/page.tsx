@@ -28,10 +28,11 @@ export default async function TeamPage({ params }: Props) {
     .eq('team_id', id)
     .order('name')
 
-  const { data: results } = await supabase
+const { data: results } = await supabase
     .from('match_results')
     .select('*')
     .eq('team_id', id)
+    .eq('type', 'league')
     .order('created_at', { ascending: false })
     .limit(10)
 
