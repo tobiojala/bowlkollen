@@ -50,6 +50,12 @@ export default function AdminPage() {
     supabase.from('players').select('id, name, team_id').order('name').then(({ data }) => { if (data) setPlayers(data) })
   }, [msg])
 
+  const logout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
   const addTeam = async () => {
     if (!teamName || !teamClub) return flash('Namn och klubb kravs')
     setLoading(true)
@@ -101,7 +107,17 @@ export default function AdminPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: bg, color: 'white', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>
+          Bowl<span style={{ color: accent }}>kollen</span>
+          <span style={{ fontSize: 13, color: textMuted, fontWeight: 400, marginLeft: 10 }}>Admin</span>
+        </div>
+        <button onClick={logout} style={{ background: surface, border: '1px solid ' + border, borderRadius: 8, padding: '6px 14px', fontSize: 12, color: textMuted, cursor: 'pointer' }}>
+          Logga ut
+        </button>
+      </div>
+
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '16px 24px 60px' }}>
 
         {msg && (
           <div style={{ background: msg.includes('Fel') ? '#2a1212' : '#122a1a', border: '1px solid ' + (msg.includes('Fel') ? '#4a1a1a' : '#1a4a2a'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? '#ff6b6b' : '#4caf7d' }}>
@@ -182,7 +198,6 @@ export default function AdminPage() {
           <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>REGISTRERA SERIE</div>
 
-            {/* Type selector */}
             <div style={{ marginBottom: 20 }}>
               <label style={lbl}>TYP AV RESULTAT</label>
               <div style={{ display: 'flex', gap: 8 }}>
