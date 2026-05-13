@@ -2,24 +2,22 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-
-const bg = '#10161e'
-const surface = '#172030'
-const card = '#1c2840'
-const border = '#2a3858'
-const accent = '#f5c200'
-const textMuted = '#6b7a99'
-const green = '#4caf7d'
+import { useTheme } from '@/components/ThemeProvider'
+import { dark, light } from '@/lib/colors'
 
 type Team = { id: string; name: string }
 type Player = { id: string; name: string; team_id: string }
-type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home?: { name: string }; away?: { name: string } }
+type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home: { name: string }; away: { name: string } }
 
-const inp = { background: surface, border: '1px solid ' + border, borderRadius: 8, padding: '10px 12px', color: 'white', fontSize: 14, outline: 'none', width: '100%' } as React.CSSProperties
-const lbl = { fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 1, marginBottom: 6, display: 'block' } as React.CSSProperties
 const STYLES = ['Enhand', 'Tvahand']
 
 export default function AdminPage() {
+  const { theme } = useTheme()
+  const C = theme === 'dark' ? dark : light
+
+  const inp = { background: C.surface, border: '1px solid ' + C.border, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, outline: 'none', width: '100%' } as React.CSSProperties
+  const lbl = { fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 6, display: 'block' } as React.CSSProperties
+
   const [tab, setTab] = useState('matches')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
@@ -116,23 +114,10 @@ export default function AdminPage() {
     if (parsed.some(g => isNaN(g) || g < 0 || g > 300)) return flash('Ogiltiga poang (0-300)')
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.from('match_results').insert({
-      player_id: rPlayer,
-      team_id: rTeam,
-      round: rRound,
-      date: rDate,
-      games: parsed,
-      type: rType,
-      match_id: rMatch || null,
-    })
+    const { error } = await supabase.from('match_results').insert({ player_id: rPlayer, team_id: rTeam, round: rRound, date: rDate, games: parsed, type: rType, match_id: rMatch || null })
     if (error) flash('Fel: ' + error.message)
     else { flash('Serie sparad!'); setGames(['', '', '', '']); setRRound('') }
     setLoading(false)
-  }
-
-  const matchTeams = (m: Match) => {
-    const allTeams = new Set([m.home_team_id, m.away_team_id])
-    return players.filter(p => allTeams.has(p.team_id))
   }
 
   const teamPlayers = rTeam ? players.filter(p => p.team_id === rTeam) : []
@@ -142,27 +127,27 @@ export default function AdminPage() {
   const tabLabel: Record<string, string> = { matches: 'Matcher', results: 'Resultat', teams: 'Lag', players: 'Spelare' }
 
   return (
-    <main style={{ minHeight: '100vh', background: bg, color: 'white', fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 18, fontWeight: 800 }}>
-          Bowl<span style={{ color: accent }}>kollen</span>
-          <span style={{ fontSize: 13, color: textMuted, fontWeight: 400, marginLeft: 10 }}>Admin</span>
+          Bowl<span style={{ color: '#f5c200' }}>kollen</span>
+          <span style={{ fontSize: 13, color: C.textMuted, fontWeight: 400, marginLeft: 10 }}>Admin</span>
         </div>
-        <button onClick={logout} style={{ background: surface, border: '1px solid ' + border, borderRadius: 8, padding: '6px 14px', fontSize: 12, color: textMuted, cursor: 'pointer' }}>
+        <button onClick={logout} style={{ background: C.surface, border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', fontSize: 12, color: C.textMuted, cursor: 'pointer' }}>
           Logga ut
         </button>
       </div>
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px 60px' }}>
         {msg && (
-          <div style={{ background: msg.includes('Fel') ? '#2a1212' : '#122a1a', border: '1px solid ' + (msg.includes('Fel') ? '#4a1a1a' : '#1a4a2a'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? '#ff6b6b' : green }}>
+          <div style={{ background: msg.includes('Fel') ? (theme === 'dark' ? '#2a1212' : '#fff0f0') : (theme === 'dark' ? '#122a1a' : '#f0fff4'), border: '1px solid ' + (msg.includes('Fel') ? '#ffaaaa' : '#aaffcc'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? C.red : C.green }}>
             {msg}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: surface, borderRadius: 10, padding: 4, border: '1px solid ' + border }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.surface, borderRadius: 10, padding: 4, border: '1px solid ' + C.border }}>
           {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ flex: 1, background: tab === t ? card : 'transparent', border: tab === t ? '1px solid ' + border : '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: tab === t ? accent : textMuted, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setTab(t)} style={{ flex: 1, background: tab === t ? C.card : 'transparent', border: tab === t ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: tab === t ? C.accent : C.textMuted, cursor: 'pointer' }}>
               {tabLabel[t]}
             </button>
           ))}
@@ -170,8 +155,8 @@ export default function AdminPage() {
 
         {tab === 'matches' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>SKAPA MATCH</div>
+            <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 20 }}>SKAPA MATCH</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                 <div>
                   <label style={lbl}>HEMMALAG</label>
@@ -200,39 +185,35 @@ export default function AdminPage() {
                   </select>
                 </div>
               </div>
-              <button onClick={addMatch} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              <button onClick={addMatch} disabled={loading} style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
                 + Skapa match
               </button>
             </div>
 
             {matches.length > 0 && (
-              <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 16 }}>MATCHER</div>
+              <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 16 }}>MATCHER</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {matches.map(m => {
-                    const home = m.home as unknown as { name: string }
-                    const away = m.away as unknown as { name: string }
-                    return (
-                      <div key={m.id} style={{ background: surface, borderRadius: 10, padding: '12px 14px', border: '1px solid ' + border }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14 }}>
-                            {home?.name || '?'} <span style={{ color: textMuted, fontWeight: 400 }}>vs</span> {away?.name || '?'}
-                          </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: m.status === 'live' ? '#0a3a1a' : m.status === 'completed' ? '#1a1a2a' : '#1a1a0a', color: m.status === 'live' ? green : m.status === 'completed' ? textMuted : accent }}>
-                            {m.status === 'live' ? 'LIVE' : m.status === 'completed' ? 'AVSLUTAD' : 'KOMMANDE'}
-                          </span>
+                  {matches.map(m => (
+                    <div key={m.id} style={{ background: C.surface, borderRadius: 10, padding: '12px 14px', border: '1px solid ' + C.border }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
+                          {m.home?.name} <span style={{ color: C.textMuted, fontWeight: 400 }}>vs</span> {m.away?.name}
                         </div>
-                        <div style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>{m.date}</div>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {['upcoming', 'live', 'completed'].map(s => (
-                            <button key={s} onClick={() => setMatchStatus(m.id, s)} style={{ background: m.status === s ? accent : card, color: m.status === s ? '#1a1400' : textMuted, border: '1px solid ' + border, borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
-                              {s === 'upcoming' ? 'Kommande' : s === 'live' ? 'Live' : 'Avslutad'}
-                            </button>
-                          ))}
-                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: m.status === 'live' ? (theme === 'dark' ? '#0a3a1a' : '#e8f5ee') : (theme === 'dark' ? '#1a1a2a' : '#f0f2f5'), color: m.status === 'live' ? C.green : C.textMuted }}>
+                          {m.status === 'live' ? 'LIVE' : m.status === 'completed' ? 'AVSLUTAD' : 'KOMMANDE'}
+                        </span>
                       </div>
-                    )
-                  })}
+                      <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{m.date}</div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {['upcoming', 'live', 'completed'].map(s => (
+                          <button key={s} onClick={() => setMatchStatus(m.id, s)} style={{ background: m.status === s ? C.accent : C.card, color: m.status === s ? (theme === 'dark' ? '#1a1400' : '#ffffff') : C.textMuted, border: '1px solid ' + C.border, borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+                            {s === 'upcoming' ? 'Kommande' : s === 'live' ? 'Live' : 'Avslutad'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -240,38 +221,30 @@ export default function AdminPage() {
         )}
 
         {tab === 'results' && (
-          <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>REGISTRERA SERIE</div>
-
+          <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 20 }}>REGISTRERA SERIE</div>
             <div style={{ marginBottom: 16 }}>
               <label style={lbl}>TYP AV RESULTAT</label>
               <div style={{ display: 'flex', gap: 8 }}>
-                {[
-                  { value: 'league', label: 'Seriematch', desc: 'Visas pa lagsidan' },
-                  { value: 'individual', label: 'Individuell', desc: 'Visas bara pa spelarsidan' },
-                ].map(opt => (
-                  <button key={opt.value} onClick={() => setRType(opt.value)} style={{ flex: 1, background: rType === opt.value ? (opt.value === 'league' ? '#0a3a1a' : '#1a0a3a') : surface, border: '1px solid ' + (rType === opt.value ? (opt.value === 'league' ? green : accent) : border), borderRadius: 10, padding: '12px', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: rType === opt.value ? (opt.value === 'league' ? green : accent) : 'white', marginBottom: 2 }}>{opt.label}</div>
-                    <div style={{ fontSize: 11, color: textMuted }}>{opt.desc}</div>
+                {[{ value: 'league', label: 'Seriematch', desc: 'Visas pa lagsidan' }, { value: 'individual', label: 'Individuell', desc: 'Visas bara pa spelarsidan' }].map(opt => (
+                  <button key={opt.value} onClick={() => setRType(opt.value)} style={{ flex: 1, background: rType === opt.value ? (theme === 'dark' ? (opt.value === 'league' ? '#0a3a1a' : '#1a0a3a') : (opt.value === 'league' ? '#e8f5ee' : '#f0e8ff')) : C.surface, border: '1px solid ' + (rType === opt.value ? (opt.value === 'league' ? C.green : C.accent) : C.border), borderRadius: 10, padding: '12px', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: rType === opt.value ? (opt.value === 'league' ? C.green : C.accent) : C.text, marginBottom: 2 }}>{opt.label}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>{opt.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
-
             {rType === 'league' && matches.length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>KOPPLAD MATCH (valfritt)</label>
                 <select style={inp} value={rMatch} onChange={e => setRMatch(e.target.value)}>
                   <option value="">-- Valj match --</option>
-                  {matches.filter(m => m.status !== 'upcoming').map(m => {
-                    const home = m.home as unknown as { name: string }
-                    const away = m.away as unknown as { name: string }
-                    return <option key={m.id} value={m.id}>{home?.name} vs {away?.name} ({m.date})</option>
-                  })}
+                  {matches.filter(m => m.status !== 'upcoming').map(m => (
+                    <option key={m.id} value={m.id}>{m.home?.name} vs {m.away?.name} ({m.date})</option>
+                  ))}
                 </select>
               </div>
             )}
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
               <div>
                 <label style={lbl}>LAG</label>
@@ -296,40 +269,36 @@ export default function AdminPage() {
                 <input style={inp} type="date" value={rDate} onChange={e => setRDate(e.target.value)} />
               </div>
             </div>
-
-            <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 1, marginBottom: 12 }}>SERIER</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 12 }}>SERIER</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
               {games.map((g, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ fontSize: 11, color: textMuted, width: 56, flexShrink: 0 }}>Serie {i + 1}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, width: 56, flexShrink: 0 }}>Serie {i + 1}</div>
                   <input style={{ ...inp, textAlign: 'center', fontSize: 20, fontWeight: 800, flex: 1 }} type="number" min="0" max="300" value={g} onChange={e => updateGame(i, e.target.value)} placeholder="0" />
                   {games.length > 1 && (
-                    <button onClick={() => removeGame(i)} style={{ background: '#2a1212', border: '1px solid #4a1a1a', color: '#ff6b6b', borderRadius: 8, width: 36, height: 36, cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>x</button>
+                    <button onClick={() => removeGame(i)} style={{ background: theme === 'dark' ? '#2a1212' : '#fff0f0', border: '1px solid #ffaaaa', color: C.red, borderRadius: 8, width: 36, height: 36, cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>x</button>
                   )}
                 </div>
               ))}
             </div>
-
-            <button onClick={addGame} style={{ background: surface, border: '1px solid ' + border, color: textMuted, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16, width: '100%' }}>
+            <button onClick={addGame} style={{ background: C.surface, border: '1px solid ' + C.border, color: C.textMuted, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16, width: '100%' }}>
               + Lagg till serie
             </button>
-
             {seriesTotal !== null && (
-              <div style={{ background: surface, borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, color: textMuted }}>{validGames.length} serier · Totalt</span>
-                <span style={{ fontSize: 24, fontWeight: 900, color: accent }}>{seriesTotal}</span>
+              <div style={{ background: C.surface, borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 13, color: C.textMuted }}>{validGames.length} serier · Totalt</span>
+                <span style={{ fontSize: 24, fontWeight: 900, color: C.accent }}>{seriesTotal}</span>
               </div>
             )}
-
-            <button onClick={addResult} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
+            <button onClick={addResult} disabled={loading} style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
               {loading ? 'Sparar...' : 'Spara serie'}
             </button>
           </div>
         )}
 
         {tab === 'teams' && (
-          <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL LAG</div>
+          <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL LAG</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
               <div><label style={lbl}>LAGNAMN</label><input style={inp} value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="t.ex. IFK Goteborg" /></div>
               <div><label style={lbl}>KLUBB</label><input style={inp} value={teamClub} onChange={e => setTeamClub(e.target.value)} placeholder="t.ex. IFK Goteborg BK" /></div>
@@ -338,14 +307,14 @@ export default function AdminPage() {
               <label style={lbl}>STAD</label>
               <input style={inp} value={teamCity} onChange={e => setTeamCity(e.target.value)} placeholder="t.ex. Goteborg" />
             </div>
-            <button onClick={addTeam} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={addTeam} disabled={loading} style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + Lagg till lag
             </button>
             {teams.length > 0 && (
-              <div style={{ marginTop: 24, borderTop: '1px solid ' + border, paddingTop: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 1, marginBottom: 12 }}>REGISTRERADE LAG</div>
+              <div style={{ marginTop: 24, borderTop: '1px solid ' + C.border, paddingTop: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 12 }}>REGISTRERADE LAG</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {teams.map(t => <div key={t.id} style={{ background: surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'white' }}>{t.name}</div>)}
+                  {teams.map(t => <div key={t.id} style={{ background: C.surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: C.text, border: '1px solid ' + C.border }}>{t.name}</div>)}
                 </div>
               </div>
             )}
@@ -353,8 +322,8 @@ export default function AdminPage() {
         )}
 
         {tab === 'players' && (
-          <div style={{ background: card, borderRadius: 14, border: '1px solid ' + border, padding: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL SPELARE</div>
+          <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 20 }}>LAGG TILL SPELARE</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
               <div><label style={lbl}>NAMN</label><input style={inp} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Fornamn Efternamn" /></div>
               <div>
@@ -380,7 +349,7 @@ export default function AdminPage() {
               <div><label style={lbl}>ALDER</label><input style={inp} type="number" value={playerAge} onChange={e => setPlayerAge(e.target.value)} placeholder="25" /></div>
               <div><label style={lbl}>HEMORT</label><input style={inp} value={playerHometown} onChange={e => setPlayerHometown(e.target.value)} placeholder="Stockholm" /></div>
             </div>
-            <button onClick={addPlayer} disabled={loading} style={{ background: accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={addPlayer} disabled={loading} style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               + Lagg till spelare
             </button>
           </div>

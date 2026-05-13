@@ -1,84 +1,166 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useTheme } from '@/components/ThemeProvider'
+import { dark, light } from '@/lib/colors'
 
-export default async function Home() {
-  const supabase = createClient()
+type MatchResult = {
+  player_id: string
+  team_id: string
+  games: number[]
+  players: { name: string }
+}
 
-  const { data: seasons } = await supabase
-    .from('seasons')
-    .select('*')
-    .eq('is_active', true)
-    .limit(1)
+type Match = {
+  id: string
+  date: string
+  status: string
+  home_team_id: string
+  away_team_id: string
+  home: { id: string; name: string }
+  away: { id: string; name: string }
+  results: MatchResult[]
+}
 
-  const { data: teams } = await supabase
-    .from('teams')
-    .select('*')
-    .limit(6)
+export default function Home() {
+  const { theme } = useTheme()
+  const C = theme === 'dark' ? dark : light
+  const [matches, setMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const season = seasons?.[0]
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('matches')
+      .select('id, date, status, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
+      .in('status', ['live', 'completed'])
+      .order('date', { ascending: false })
+      .limit(5)
+      .then(async ({ data: matchData }) => {
+        if (!matchData) return setLoading(false)
+        const full: Match[] = []
+        for (const m of matchData) {
+          const { data: results } = await supabase
+            .from('match_results')
+            .select('player_id, team_id, games, players(name)')
+            .eq('match_id', m.id)
+            .eq('type', 'league')
+          full.push({ ...m, results: results || [] } as unknown as Match)
+        }
+        setMatches(full)
+        setLoading(false)
+      })
+  }, [])
 
-  const bg = '#10161e'
-  const surface = '#172030'
-  const card = '#1c2840'
-  const border = '#2a3858'
-  const accent = '#f5c200'
-  const textMuted = '#6b7a99'
+  const calcTotal = (results: MatchResult[], teamId: string) =>
+    results.filter(r => r.team_id === teamId).flatMap(r => r.games || []).reduce((a, b) => a + b, 0)
+
+  const bestPlayer = (results: MatchResult[], teamId: string) => {
+    const rs = results.filter(r => r.team_id === teamId)
+    if (!rs.length) return null
+    return rs.reduce((best, r) => r.games.reduce((a, b) => a + b, 0) > best.games.reduce((a: number, b: number) => a + b, 0) ? r : best)
+  }
 
   return (
-    <main style={{ minHeight: '100vh', background: bg, color: 'white', fontFamily: 'system-ui, sans-serif' }}>
-      <header style={{ background: surface, borderBottom: '1px solid ' + border, padding: '16px 24px' }}>
-        <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 800 }}>
-              Bowl<span style={{ color: accent }}>kollen</span>
-            </div>
-            <div style={{ fontSize: 10, color: textMuted, letterSpacing: 2, marginTop: 2 }}>
-              LIVE BOWLINGSAJT
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-  <a href="/players" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
-    Spelare
-  </a>
-  <a href="/teams" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
-    Lag
-  </a>
-  <a href="/admin" style={{ fontSize: 12, color: textMuted, background: card, padding: '6px 14px', borderRadius: 8, border: '1px solid ' + border, textDecoration: 'none' }}>
-    Admin
-  </a>
-</div>
-        </div>
-      </header>
-
+    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
-        <section style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 2, marginBottom: 16 }}>
-            LIVE NU
-          </div>
-          <div style={{ background: card, borderRadius: 12, border: '1px solid ' + border, padding: 24, textAlign: 'center', color: textMuted, fontSize: 13 }}>
-            Inga live-matcher just nu
-          </div>
-        </section>
 
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: textMuted, letterSpacing: 2 }}>LAG</div>
-            <a href="/teams" style={{ fontSize: 12, color: accent, fontWeight: 600, textDecoration: 'none' }}>Se alla</a>
+        {/* Hero */}
+        <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0a3a5a 0%, #172030 100%)' : 'linear-gradient(135deg, #0a5c8a 0%, #1278b0 100%)', borderRadius: 16, borderLeft: '4px solid ' + C.accent, padding: '24px', marginBottom: 32 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, marginBottom: 8 }}>VALKOMMEN TILL</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: '#ffffff', marginBottom: 4 }}>
+            Bowl<span style={{ color: '#f5c200' }}>kollen</span>
           </div>
-          {teams && teams.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {teams.map(team => (
-                <a key={team.id} href={'/teams/' + team.id} style={{ background: card, borderRadius: 12, border: '1px solid ' + border, padding: 16, textDecoration: 'none', display: 'block' }}>
-                  <div style={{ fontWeight: 700, color: 'white', fontSize: 15 }}>{team.name}</div>
-                  <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>{team.club}</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>Live resultat och statistik for svensk bowling</div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <a href="/league" style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Serietabell</a>
+            <a href="/players" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}>Spelare</a>
+          </div>
+        </div>
+
+        {/* Latest matches */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 2, marginBottom: 16 }}>SENASTE MATCHER</div>
+
+        {loading && (
+          <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
+            Laddar...
+          </div>
+        )}
+
+        {!loading && matches.length === 0 && (
+          <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
+            Inga matcher spelade annu
+          </div>
+        )}
+
+        {!loading && matches.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {matches.map(match => {
+              const homeTotal = calcTotal(match.results, match.home_team_id)
+              const awayTotal = calcTotal(match.results, match.away_team_id)
+              const homeBest = bestPlayer(match.results, match.home_team_id)
+              const awayBest = bestPlayer(match.results, match.away_team_id)
+              const homeWin = homeTotal > awayTotal
+              const awayWin = awayTotal > homeTotal
+
+              return (
+                <a key={match.id} href={'/matches/' + match.id} style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden', textDecoration: 'none', display: 'block' }}>
+                  <div style={{ background: C.surface, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>{match.date}</div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: match.status === 'live' ? (theme === 'dark' ? '#0a3a1a' : '#e8f5ee') : (theme === 'dark' ? '#1a1a2a' : '#f0f2f5'), color: match.status === 'live' ? C.green : C.textMuted }}>
+                      {match.status === 'live' ? '* LIVE' : 'AVSLUTAD'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, padding: '16px 20px', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: homeWin ? C.accent : C.text, marginBottom: 4 }}>{match.home?.name}</div>
+                      {homeBest && <div style={{ fontSize: 11, color: C.textMuted }}>Bast: {homeBest.players?.name} ({homeBest.games.reduce((a, b) => a + b, 0)})</div>}
+                    </div>
+                    <div style={{ textAlign: 'center', minWidth: 130 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                        <span style={{ fontSize: 30, fontWeight: 900, color: homeWin ? C.accent : C.text }}>{homeTotal}</span>
+                        <span style={{ fontSize: 16, color: C.textMuted }}>-</span>
+                        <span style={{ fontSize: 30, fontWeight: 900, color: awayWin ? C.accent : C.text }}>{awayTotal}</span>
+                      </div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, letterSpacing: 1 }}>KAGLEPOANG</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: awayWin ? C.accent : C.text, marginBottom: 4 }}>{match.away?.name}</div>
+                      {awayBest && <div style={{ fontSize: 11, color: C.textMuted }}>Bast: {awayBest.players?.name} ({awayBest.games.reduce((a, b) => a + b, 0)})</div>}
+                    </div>
+                  </div>
+
+                  {match.results.length > 0 && (
+                    <div style={{ borderTop: '1px solid ' + C.border, padding: '12px 20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        {[match.home_team_id, match.away_team_id].map((teamId, ti) => {
+                          const rs = match.results.filter(r => r.team_id === teamId)
+                          const team = ti === 0 ? match.home : match.away
+                          return (
+                            <div key={teamId}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 6 }}>{team?.name?.toUpperCase()}</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {rs.map((r, i) => (
+                                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', background: C.surface, borderRadius: 6, padding: '5px 10px' }}>
+                                    <div style={{ fontSize: 12, color: C.text }}>{r.players?.name}</div>
+                                    <div style={{ fontSize: 13, fontWeight: 800, color: C.accent }}>{r.games.reduce((a, b) => a + b, 0)}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </a>
-              ))}
-            </div>
-          ) : (
-            <div style={{ background: card, borderRadius: 12, border: '1px solid ' + border, padding: 24, textAlign: 'center', color: textMuted, fontSize: 13 }}>
-              Inga lag ännu — lägg till via Admin
-            </div>
-          )}
-        </section>
+              )
+            })}
+          </div>
+        )}
+
       </div>
     </main>
   )
