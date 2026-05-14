@@ -6,10 +6,11 @@ import { useTheme } from './ThemeProvider'
 
 const links = [
   { href: '/',        label: 'Hem'         },
-  { href: '/sllm',    label: 'SLLM 2026'   },
+  { href: '/schema',  label: 'Schema'      },
   { href: '/league',  label: 'Serietabell' },
   { href: '/teams',   label: 'Lag'         },
   { href: '/players', label: 'Spelare'     },
+  { href: '/sllm',    label: 'SLLM 2026'   },
   { href: '/admin',   label: 'Admin'       },
 ]
 
@@ -34,11 +35,11 @@ export default function Nav() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
           {links.map(l => (
             <a key={l.href} href={l.href} style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: l.href === '/sllm' ? 800 : 600,
               color: path === l.href ? accent : l.href === '/sllm' ? (isDark ? '#ffd700' : '#c8860a') : textMuted,
               textDecoration: 'none',
-              padding: '6px 10px',
+              padding: '6px 8px',
               borderRadius: 8,
               background: path === l.href ? card : l.href === '/sllm' && path !== '/sllm' ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(200,134,10,0.08)') : 'transparent',
               border: '1px solid ' + (path === l.href ? border : l.href === '/sllm' && path !== '/sllm' ? (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(200,134,10,0.15)') : 'transparent'),
@@ -47,7 +48,7 @@ export default function Nav() {
               {l.label}
             </a>
           ))}
-          <button onClick={toggle} style={{ background: card, border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 12, marginLeft: 4, color: textMuted }}>
+          <button onClick={toggle} style={{ background: card, border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11, marginLeft: 4, color: textMuted }}>
             {isDark ? 'Light' : 'Dark'}
           </button>
         </div>

@@ -92,7 +92,6 @@ export default function Home() {
               const awayBest = bestPlayer(match.results, match.away_team_id)
               const homeWin = homeTotal > awayTotal
               const awayWin = awayTotal > homeTotal
-
               return (
                 <a key={match.id} href={'/matches/' + match.id} style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden', textDecoration: 'none', display: 'block' }}>
                   <div style={{ background: C.surface, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
