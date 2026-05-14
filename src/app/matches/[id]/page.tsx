@@ -11,13 +11,14 @@ const green = '#4caf7d'
 
 type Props = { params: Promise<{ id: string }> }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Result = {
   id: string
   player_id: string
   team_id: string
   round: string
   games: number[]
-  players: { name: string }
+  players: any
 }
 
 export default async function MatchPage({ params }: Props) {
@@ -47,7 +48,7 @@ export default async function MatchPage({ params }: Props) {
 
   const home = match.home as { id: string; name: string; club: string }
   const away = match.away as { id: string; name: string; club: string }
-  const allResults = (results || []) as Result[]
+  const allResults = (results || []) as unknown as Result[]
 
   const homeResults = allResults.filter(r => r.team_id === match.home_team_id)
   const awayResults = allResults.filter(r => r.team_id === match.away_team_id)
