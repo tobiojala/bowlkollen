@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
-type Result = { team_id: string; games: number[]; teams: { name: string; id: string } }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Result = { team_id: string; games: number[]; teams: any }
 type TeamStats = { id: string; name: string; series: number; totalPins: number; avg: number; high: number }
 
 export default function LeaguePage() {
