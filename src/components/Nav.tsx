@@ -6,6 +6,7 @@ import { useTheme } from './ThemeProvider'
 
 const links = [
   { href: '/',        label: 'Hem'         },
+  { href: '/live',    label: 'Live'        },
   { href: '/schema',  label: 'Schema'      },
   { href: '/league',  label: 'Serietabell' },
   { href: '/teams',   label: 'Lag'         },
@@ -33,21 +34,30 @@ export default function Nav() {
           Bowl<span style={{ color: accent }}>kollen</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
-          {links.map(l => (
-            <a key={l.href} href={l.href} style={{
-              fontSize: 11,
-              fontWeight: l.href === '/sllm' ? 800 : 600,
-              color: path === l.href ? accent : l.href === '/sllm' ? (isDark ? '#ffd700' : '#c8860a') : textMuted,
-              textDecoration: 'none',
-              padding: '6px 8px',
-              borderRadius: 8,
-              background: path === l.href ? card : l.href === '/sllm' && path !== '/sllm' ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(200,134,10,0.08)') : 'transparent',
-              border: '1px solid ' + (path === l.href ? border : l.href === '/sllm' && path !== '/sllm' ? (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(200,134,10,0.15)') : 'transparent'),
-              whiteSpace: 'nowrap',
-            }}>
-              {l.label}
-            </a>
-          ))}
+          {links.map(l => {
+            const isLive = l.href === '/live'
+            const isSllm = l.href === '/sllm'
+            const isActive = path === l.href
+            return (
+              <a key={l.href} href={l.href} style={{
+                fontSize: 11,
+                fontWeight: isLive || isSllm ? 800 : 600,
+                color: isActive ? accent : isLive ? '#e05555' : isSllm ? (isDark ? '#ffd700' : '#c8860a') : textMuted,
+                textDecoration: 'none',
+                padding: '6px 8px',
+                borderRadius: 8,
+                background: isActive ? card : isLive && !isActive ? (isDark ? 'rgba(224,85,85,0.1)' : 'rgba(224,85,85,0.06)') : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(200,134,10,0.08)') : 'transparent',
+                border: '1px solid ' + (isActive ? border : isLive && !isActive ? 'rgba(224,85,85,0.25)' : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(200,134,10,0.15)') : 'transparent'),
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}>
+                {isLive && !isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#e05555', display: 'inline-block' }} />}
+                {l.label}
+              </a>
+            )
+          })}
           <button onClick={toggle} style={{ background: card, border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11, marginLeft: 4, color: textMuted }}>
             {isDark ? 'Light' : 'Dark'}
           </button>

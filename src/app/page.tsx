@@ -6,22 +6,21 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import HeroCarousel from '@/components/HeroCarousel'
 
-type MatchResult = {
-  player_id: string
-  team_id: string
-  games: number[]
-  players: { name: string }
-}
-
 type Match = {
   id: string
   date: string
   status: string
+  home_score: number | null
+  away_score: number | null
+  venue: string | null
   home_team_id: string
   away_team_id: string
   home: { id: string; name: string }
   away: { id: string; name: string }
-  results: MatchResult[]
+}
+
+function shortName(name: string) {
+  return name.replace(/ A$/, '').replace(/ H A$/, '').trim()
 }
 
 export default function Home() {
@@ -34,34 +33,16 @@ export default function Home() {
     const supabase = createClient()
     supabase
       .from('matches')
-      .select('id, date, status, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
-      .in('status', ['live', 'completed'])
+      .select('id, date, status, home_score, away_score, venue, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
+      .eq('status', 'completed')
+      .not('home_score', 'is', null)
       .order('date', { ascending: false })
       .limit(5)
-      .then(async ({ data: matchData }) => {
-        if (!matchData) return setLoading(false)
-        const full: Match[] = []
-        for (const m of matchData) {
-          const { data: results } = await supabase
-            .from('match_results')
-            .select('player_id, team_id, games, players(name)')
-            .eq('match_id', m.id)
-            .eq('type', 'league')
-          full.push({ ...m, results: results || [] } as unknown as Match)
-        }
-        setMatches(full)
+      .then(({ data }) => {
+        if (data) setMatches(data as unknown as Match[])
         setLoading(false)
       })
   }, [])
-
-  const calcTotal = (results: MatchResult[], teamId: string) =>
-    results.filter(r => r.team_id === teamId).flatMap(r => r.games || []).reduce((a, b) => a + b, 0)
-
-  const bestPlayer = (results: MatchResult[], teamId: string) => {
-    const rs = results.filter(r => r.team_id === teamId)
-    if (!rs.length) return null
-    return rs.reduce((best, r) => r.games.reduce((a, b) => a + b, 0) > best.games.reduce((a: number, b: number) => a + b, 0) ? r : best)
-  }
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -84,68 +65,66 @@ export default function Home() {
         )}
 
         {!loading && matches.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {matches.map(match => {
-              const homeTotal = calcTotal(match.results, match.home_team_id)
-              const awayTotal = calcTotal(match.results, match.away_team_id)
-              const homeBest = bestPlayer(match.results, match.home_team_id)
-              const awayBest = bestPlayer(match.results, match.away_team_id)
-              const homeWin = homeTotal > awayTotal
-              const awayWin = awayTotal > homeTotal
+              const homeWin = (match.home_score ?? 0) > (match.away_score ?? 0)
+              const awayWin = (match.away_score ?? 0) > (match.home_score ?? 0)
+              const isDraw = match.home_score !== null && match.home_score === match.away_score
+              const homeHue = (match.home?.name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+              const awayHue = (match.away?.name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+              const tc = (hue: number) => 'hsl(' + hue + ',50%,45%)'
+              const tclo = (hue: number) => theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+
               return (
-                <a key={match.id} href={'/matches/' + match.id} style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden', textDecoration: 'none', display: 'block' }}>
-                  <div style={{ background: C.surface, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
-                    <div style={{ fontSize: 11, color: C.textMuted }}>{match.date}</div>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: match.status === 'live' ? (theme === 'dark' ? '#0a3a1a' : '#e8f5ee') : (theme === 'dark' ? '#1a1a2a' : '#f0f2f5'), color: match.status === 'live' ? C.green : C.textMuted }}>
-                      {match.status === 'live' ? '* LIVE' : 'AVSLUTAD'}
-                    </span>
+                <a key={match.id} href={'/matches/' + match.id} style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, textDecoration: 'none', display: 'block', overflow: 'hidden' }}>
+
+                  <div style={{ background: C.surface, padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>{match.date?.slice(0, 10)}</div>
+                    <div style={{ fontSize: 10, color: C.textMuted }}>{match.venue || 'Elitserien Herrar'}</div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, padding: '16px 20px', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 16, color: homeWin ? C.accent : C.text, marginBottom: 4 }}>{match.home?.name}</div>
-                      {homeBest && <div style={{ fontSize: 11, color: C.textMuted }}>Bast: {homeBest.players?.name} ({homeBest.games.reduce((a, b) => a + b, 0)})</div>}
-                    </div>
-                    <div style={{ textAlign: 'center', minWidth: 130 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 30, fontWeight: 900, color: homeWin ? C.accent : C.text }}>{homeTotal}</span>
-                        <span style={{ fontSize: 16, color: C.textMuted }}>-</span>
-                        <span style={{ fontSize: 30, fontWeight: 900, color: awayWin ? C.accent : C.text }}>{awayTotal}</span>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 1fr', gap: 8, padding: '14px 16px', alignItems: 'center' }}>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 15, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>
+                          {shortName(match.home?.name || '')}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, letterSpacing: 1 }}>KAGLEPOANG</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 16, color: awayWin ? C.accent : C.text, marginBottom: 4 }}>{match.away?.name}</div>
-                      {awayBest && <div style={{ fontSize: 11, color: C.textMuted }}>Bast: {awayBest.players?.name} ({awayBest.games.reduce((a, b) => a + b, 0)})</div>}
-                    </div>
-                  </div>
-                  {match.results.length > 0 && (
-                    <div style={{ borderTop: '1px solid ' + C.border, padding: '12px 20px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        {[match.home_team_id, match.away_team_id].map((teamId, ti) => {
-                          const rs = match.results.filter(r => r.team_id === teamId)
-                          const team = ti === 0 ? match.home : match.away
-                          return (
-                            <div key={teamId}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 6 }}>{team?.name?.toUpperCase()}</div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                {rs.map((r, i) => (
-                                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', background: C.surface, borderRadius: 6, padding: '5px 10px' }}>
-                                    <div style={{ fontSize: 12, color: C.text }}>{r.players?.name}</div>
-                                    <div style={{ fontSize: 13, fontWeight: 800, color: C.accent }}>{r.games.reduce((a, b) => a + b, 0)}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )
-                        })}
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
+                        {shortName(match.home?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
                       </div>
                     </div>
-                  )}
+
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 26, fontWeight: 900, color: homeWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{match.home_score}</span>
+                        <span style={{ fontSize: 13, color: C.muted }}>-</span>
+                        <span style={{ fontSize: 26, fontWeight: 900, color: awayWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{match.away_score}</span>
+                      </div>
+                      <div style={{ fontSize: 8, color: C.textMuted, letterSpacing: 0.5, marginTop: 2 }}>MATCHPOANG</div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
+                        {shortName(match.away?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>
+                        {shortName(match.away?.name || '')}
+                      </div>
+                    </div>
+
+                  </div>
                 </a>
               )
             })}
+
+            <a href="/schema" style={{ textAlign: 'center', padding: '10px', fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none', display: 'block' }}>
+              Se alla matcher i schema &rarr;
+            </a>
           </div>
         )}
+
       </div>
     </main>
   )
