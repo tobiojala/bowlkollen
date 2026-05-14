@@ -64,10 +64,11 @@ export default function LivePage() {
       .limit(30)
       .then(({ data }) => {
         if (data) {
-          setMatches(data as unknown as Match[])
+          const matchData = data as unknown as Match[]
+          setMatches(matchData)
           // Auto-select most recent match
-          const live = (data as Match[]).find(m => m.status === 'live')
-          setSelected(live || (data as Match[])[0] || null)
+          const live = matchData.find(m => m.status === 'live')
+          setSelected(live || matchData[0] || null)
         }
         setLoading(false)
       })
