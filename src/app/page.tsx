@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import HeroCarousel from '@/components/HeroCarousel'
 
 type MatchResult = {
   player_id: string
@@ -66,20 +67,8 @@ export default function Home() {
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
-        {/* Hero */}
-        <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0a3a5a 0%, #172030 100%)' : 'linear-gradient(135deg, #0a5c8a 0%, #1278b0 100%)', borderRadius: 16, borderLeft: '4px solid ' + C.accent, padding: '24px', marginBottom: 32 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, marginBottom: 8 }}>VALKOMMEN TILL</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: '#ffffff', marginBottom: 4 }}>
-            Bowl<span style={{ color: '#f5c200' }}>kollen</span>
-          </div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>Live resultat och statistik for svensk bowling</div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <a href="/league" style={{ background: C.accent, color: theme === 'dark' ? '#1a1400' : '#ffffff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Serietabell</a>
-            <a href="/players" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}>Spelare</a>
-          </div>
-        </div>
+        <HeroCarousel />
 
-        {/* Latest matches */}
         <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 2, marginBottom: 16 }}>SENASTE MATCHER</div>
 
         {loading && (
@@ -112,7 +101,6 @@ export default function Home() {
                       {match.status === 'live' ? '* LIVE' : 'AVSLUTAD'}
                     </span>
                   </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, padding: '16px 20px', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 16, color: homeWin ? C.accent : C.text, marginBottom: 4 }}>{match.home?.name}</div>
@@ -131,7 +119,6 @@ export default function Home() {
                       {awayBest && <div style={{ fontSize: 11, color: C.textMuted }}>Bast: {awayBest.players?.name} ({awayBest.games.reduce((a, b) => a + b, 0)})</div>}
                     </div>
                   </div>
-
                   {match.results.length > 0 && (
                     <div style={{ borderTop: '1px solid ' + C.border, padding: '12px 20px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -160,7 +147,6 @@ export default function Home() {
             })}
           </div>
         )}
-
       </div>
     </main>
   )
