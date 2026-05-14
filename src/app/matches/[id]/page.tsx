@@ -95,7 +95,7 @@ export default async function MatchPage({ params }: Props) {
             <div style={{ textAlign: 'left' }}>
               <a href={'/teams/' + home?.id} style={{ textDecoration: 'none' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: 'hsl(' + homeHue + ',40%,15%)', border: '2px solid ' + homeTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: homeTc, marginBottom: 10 }}>
-                  {home?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                  {home?.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ fontWeight: 800, fontSize: 18, color: homeWin ? accent : 'white', marginBottom: 3 }}>{home?.name}</div>
                 <div style={{ fontSize: 12, color: textMuted }}>{home?.club}</div>
@@ -119,7 +119,7 @@ export default async function MatchPage({ params }: Props) {
             <div style={{ textAlign: 'right' }}>
               <a href={'/teams/' + away?.id} style={{ textDecoration: 'none' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: 'hsl(' + awayHue + ',40%,15%)', border: '2px solid ' + awayTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: awayTc, marginBottom: 10, marginLeft: 'auto' }}>
-                  {away?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                  {away?.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ fontWeight: 800, fontSize: 18, color: awayWin ? accent : 'white', marginBottom: 3 }}>{away?.name}</div>
                 <div style={{ fontSize: 12, color: textMuted }}>{away?.club}</div>
@@ -152,7 +152,7 @@ export default async function MatchPage({ params }: Props) {
                         <div style={{ fontSize: 12, color: tc }}>{playerTotal(best)} pins</div>
                       </div>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: tc + '33', border: '1px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                        {best.players?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                        {best.players?.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                     </>
                   )}
@@ -183,7 +183,7 @@ export default async function MatchPage({ params }: Props) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'hsl(' + hue + ',40%,15%)', border: '1px solid ' + tc + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                              {r.players?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                              {r.players?.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{r.players?.name}</div>
