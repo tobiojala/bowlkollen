@@ -135,7 +135,7 @@ export default async function MatchPage({ params }: Props) {
                   {i === 0 && (
                     <>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: tc + '33', border: '1px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                        {best.players?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                        {best.players?.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div style={{ fontSize: 10, color: textMuted, marginBottom: 2 }}>BAST SPELARE</div>
