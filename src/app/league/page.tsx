@@ -94,18 +94,20 @@ export default function LeaguePage() {
 
   // Zone boundaries like BITS — top 2 promoted, relegation zone
   const getZone = (i: number, total: number) => {
-    if (i < 2) return 'top'
-    if (i < 6) return 'playoff'
-    if (i >= total - 2) return 'relegation'
-    return 'mid'
-  }
+  if (i < 2) return 'top'
+  if (i < 6) return 'playoff'
+  if (i === total - 1) return 'relegation'
+  if (i === total - 2) return 'kval'
+  return 'mid'
+}
 
   const zoneColor = (zone: string) => {
-    if (zone === 'top') return C.accent
-    if (zone === 'playoff') return C.green
-    if (zone === 'relegation') return '#e05555'
-    return C.border
-  }
+  if (zone === 'top') return C.accent
+  if (zone === 'playoff') return C.green
+  if (zone === 'kval') return '#e05555'
+  if (zone === 'relegation') return '#444444'
+  return C.border
+}
 
   const col = { textAlign: 'right' as const, fontSize: 13, color: C.textMuted, padding: '0 8px' }
   const hdr = { textAlign: 'right' as const, fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, padding: '0 8px' }
@@ -165,7 +167,7 @@ export default function LeaguePage() {
                   gridTemplateColumns: '28px 1fr 42px 36px 36px 36px 100px 52px 44px',
                   padding: '11px 16px',
                   borderBottom: i < standings.length - 1 ? '1px solid ' + C.border : 'none',
-                  borderLeft: '3px solid ' + (i < 2 ? C.accent : i < 6 ? C.green : i >= standings.length - 2 ? '#e05555' : 'transparent'),
+                  borderLeft: '3px solid ' + (i < 2 ? C.accent : i < 6 ? C.green : i === standings.length - 1 ? '#444444' : i === standings.length - 2 ? '#e05555' : 'transparent'),
                   textDecoration: 'none',
                   alignItems: 'center',
                   background: 'transparent',
@@ -206,6 +208,7 @@ export default function LeaguePage() {
             { color: C.accent, label: 'SM-slutspel direkt' },
             { color: C.green, label: 'Play-off' },
             { color: '#e05555', label: 'Kvalar' },
+            { color: '#444444', label: 'Nedflyttning' },
           ].map(({ color, label }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.textMuted }}>
               <div style={{ width: 10, height: 10, borderRadius: 2, background: color, flexShrink: 0 }} />
