@@ -17,12 +17,15 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.session) {
       setError('Fel e-post eller losenord')
       setLoading(false)
     } else {
-      window.location.href = '/admin'
+      // Wait for cookie to be set then redirect
+      setTimeout(() => {
+        window.location.replace('/admin')
+      }, 500)
     }
   }
 

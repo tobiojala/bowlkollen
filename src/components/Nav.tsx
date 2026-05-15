@@ -6,7 +6,6 @@ import { useTheme } from './ThemeProvider'
 
 const links = [
   { href: '/',        label: 'Hem'         },
-  { href: '/live',    label: 'Live'        },
   { href: '/schema',  label: 'Schema'      },
   { href: '/league',  label: 'Serietabell' },
   { href: '/teams',   label: 'Lag'         },
@@ -34,25 +33,20 @@ export default function Nav() {
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
           {links.map(l => {
-            const isLive = l.href === '/live'
             const isSllm = l.href === '/sllm'
             const isActive = path === l.href
             return (
               <a key={l.href} href={l.href} style={{
                 fontSize: 11,
-                fontWeight: isLive || isSllm ? 800 : 600,
-                color: isActive ? accent : isLive ? '#e05555' : isSllm ? (isDark ? '#ffd700' : '#c8860a') : textMuted,
+                fontWeight: isSllm ? 800 : 600,
+                color: isActive ? accent : isSllm ? (isDark ? '#ffd700' : '#c8860a') : textMuted,
                 textDecoration: 'none',
                 padding: '6px 8px',
                 borderRadius: 8,
-                background: isActive ? card : isLive && !isActive ? (isDark ? 'rgba(224,85,85,0.1)' : 'rgba(224,85,85,0.06)') : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(200,134,10,0.08)') : 'transparent',
-                border: '1px solid ' + (isActive ? border : isLive && !isActive ? 'rgba(224,85,85,0.25)' : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(200,134,10,0.15)') : 'transparent'),
+                background: isActive ? card : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(200,134,10,0.08)') : 'transparent',
+                border: '1px solid ' + (isActive ? border : isSllm && !isActive ? (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(200,134,10,0.15)') : 'transparent'),
                 whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
               }}>
-                {isLive && !isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#e05555', display: 'inline-block' }} />}
                 {l.label}
               </a>
             )
