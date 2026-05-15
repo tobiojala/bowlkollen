@@ -12,7 +12,7 @@ const links = [
   { href: '/teams',   label: 'Lag'         },
   { href: '/players', label: 'Spelare'     },
   { href: '/sllm',    label: 'SLLM 2026'   },
-  { href: '/admin',   label: 'Admin'       },
+  { href: '/login',   label: 'Login'       },
 ]
 
 export default function Nav() {
