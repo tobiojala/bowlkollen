@@ -16,17 +16,34 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Supabase puts the token in the URL hash
     const supabase = createClient()
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true)
+
+    // Parse hash from URL manually
+    const hash = window.location.hash
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1))
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      const type = params.get('type')
+
+      if (accessToken && type === 'recovery') {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        }).then(({ error }) => {
+          if (!error) setReady(true)
+          else setError('Ogiltig eller utgangen aterstallningslank')
+        })
+        return
       }
+    }
+
+    // Fallback: listen for PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
-    // Also check if we have a session already from the magic link
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true)
-    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const updatePassword = async () => {
@@ -71,7 +88,7 @@ export default function ResetPasswordPage() {
 
           {success && (
             <div style={{ background: theme === 'dark' ? '#122a1a' : '#f0fff4', border: '1px solid #aaffcc', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: C.green, fontWeight: 600, textAlign: 'center' }}>
-              Losenord uppdaterat! Omdirigerar...
+              Losenord uppdaterat! Omdirigerar till admin...
             </div>
           )}
 
@@ -81,9 +98,11 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {!ready && !success && (
-            <div style={{ textAlign: 'center', color: C.textMuted, fontSize: 13, padding: '16px 0' }}>
-              Vantar pa verifiering...
+          {!ready && !success && !error && (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 8 }}>Verifierar aterstallningslank...</div>
+              <div style={{ width: 32, height: 32, border: '3px solid ' + C.border, borderTop: '3px solid #f5c200', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
             </div>
           )}
 
