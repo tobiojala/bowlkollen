@@ -221,7 +221,7 @@ export default function PlayerPage({ params }: Props) {
                     {(r.games || []).map((g, j) => (
                       <div key={j} style={{ flex: 1, background: C.surface, borderRadius: 8, border: '1px solid ' + (g >= 250 ? pc : g >= 200 ? pc + '44' : C.border), padding: '8px 4px', textAlign: 'center' }}>
                         <div style={{ fontSize: 16, fontWeight: 800, color: g >= 250 ? pc : g >= 200 ? C.text : C.textMuted }}>{g}</div>
-                        <div style={{ fontSize: 8, color: C.muted, marginTop: 2 }}>S{j + 1}</div>
+                        <div style={{ fontSize: 8, color: C.textMuted, marginTop: 2 }}>S{j + 1}</div>
                       </div>
                     ))}
                   </div>
@@ -275,7 +275,7 @@ export default function PlayerPage({ params }: Props) {
                     return (
                       <div key={r.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                         <div style={{ width: '100%', background: pc, borderRadius: '3px 3px 0 0', height: pct + '%', minHeight: 4, opacity: 0.7 + (i / 20) }} />
-                        <div style={{ fontSize: 8, color: C.muted, whiteSpace: 'nowrap' }}>{total}</div>
+                        <div style={{ fontSize: 8, color: C.textMuted, whiteSpace: 'nowrap' }}>{total}</div>
                       </div>
                     )
                   })}

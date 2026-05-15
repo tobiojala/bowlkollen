@@ -156,7 +156,7 @@ export default function SchedulePage() {
                 <div style={{ fontSize: 9, fontWeight: 600, color: isActive ? C.accent : C.textMuted, marginBottom: 2, letterSpacing: 0.3 }}>{d.day}</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: isActive ? C.accent : C.text, lineHeight: 1 }}>{d.date}</div>
                 <div style={{ fontSize: 9, color: isActive ? C.accent : C.textMuted, marginTop: 1 }}>{d.month}</div>
-                <div style={{ fontSize: 8, color: C.muted, marginTop: 2, opacity: 0.7 }}>O{round}</div>
+                <div style={{ fontSize: 8, color: C.textMuted, marginTop: 2, opacity: 0.7 }}>O{round}</div>
                 {today2 && !isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', background: C.green, margin: '3px auto 0' }} />}
               </div>
             )
@@ -219,7 +219,7 @@ export default function SchedulePage() {
                           <>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                               <span style={{ fontSize: 22, fontWeight: 900, color: homeWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{m.home_score}</span>
-                              <span style={{ fontSize: 11, color: C.muted }}>-</span>
+                              <span style={{ fontSize: 11, color: C.textMuted }}>-</span>
                               <span style={{ fontSize: 22, fontWeight: 900, color: awayWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{m.away_score}</span>
                             </div>
                             <div style={{ fontSize: 8, color: C.textMuted, letterSpacing: 0.5, marginTop: 2 }}>MATCHPOANG</div>

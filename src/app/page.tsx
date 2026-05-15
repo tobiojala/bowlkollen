@@ -99,7 +99,7 @@ export default function Home() {
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                         <span style={{ fontSize: 26, fontWeight: 900, color: homeWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{match.home_score}</span>
-                        <span style={{ fontSize: 13, color: C.muted }}>-</span>
+                        <span style={{ fontSize: 13, color: C.textMuted }}>-</span>
                         <span style={{ fontSize: 26, fontWeight: 900, color: awayWin ? C.accent : isDraw ? C.text : C.textMuted, lineHeight: 1 }}>{match.away_score}</span>
                       </div>
                       <div style={{ fontSize: 8, color: C.textMuted, letterSpacing: 0.5, marginTop: 2 }}>MATCHPOANG</div>
