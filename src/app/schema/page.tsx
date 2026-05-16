@@ -244,7 +244,7 @@ export default function SchedulePage() {
                         <div style={{ fontSize: 10, color: C.textMuted }}>Borta</div>
                         <div>
                         <div style={{ fontSize: 14, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>{shortName(m.away?.name || '')}</div>
-                        <div style={{ fontSize: 10, color: C.textMuted }}>Borta{m.oil_profile ? ' · ' + m.oil_profile : ''}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Borta</div>
                         </div>
                       </div>
 
