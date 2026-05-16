@@ -77,7 +77,6 @@ export default function Home() {
 
               return (
                 <a key={match.id} href={'/matches/' + match.id} style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, textDecoration: 'none', display: 'block', overflow: 'hidden' }}>
-
                   <div style={{ background: C.surface, padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
                     <div style={{ fontSize: 11, color: C.textMuted }}>{match.date?.slice(0, 10)}</div>
                     <div style={{ fontSize: 10, color: C.textMuted }}>{match.venue || 'Elitserien Herrar'}</div>
@@ -87,12 +86,9 @@ export default function Home() {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                       <div style={{ textAlign: 'right' }}>
-                       <div style={{ textAlign: 'right' }}>
-                       <div style={{ fontSize: 15, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>
-                         {shortName(match.home?.name || '')}
+                        <div style={{ fontSize: 15, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>{shortName(match.home?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Hemmalag</div>
                       </div>
-                       <div style={{ fontSize: 10, color: C.textMuted }}>Hemmalag</div>
-                    </div>
                       <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
                         {shortName(match.home?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
                       </div>
@@ -108,12 +104,12 @@ export default function Home() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>
-                       {shortName(match.away?.name || '')}
-                    </div>
-                      <div style={{ fontSize: 10, color: C.textMuted }}>Bortalag</div>
-                      <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>
-                        {shortName(match.away?.name || '')}
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
+                        {shortName(match.away?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>{shortName(match.away?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Bortalag</div>
                       </div>
                     </div>
 
