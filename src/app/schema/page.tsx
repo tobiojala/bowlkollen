@@ -206,12 +206,13 @@ export default function SchedulePage() {
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 14, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>{shortName(m.home?.name || '')}</div>
-                          {m.venue && <div style={{ fontSize: 10, color: C.textMuted, maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.venue}</div>}
+                        <div style={{ fontSize: 14, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>{shortName(m.home?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Hemma</div>
                         </div>
                         <div style={{ width: 38, height: 38, borderRadius: 8, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
                           {teamCode(m.home?.name || '')}
                         </div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Hemma</div>
                       </div>
 
                       <div style={{ textAlign: 'center' }}>
@@ -238,9 +239,10 @@ export default function SchedulePage() {
                         <div style={{ width: 38, height: 38, borderRadius: 8, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
                           {teamCode(m.away?.name || '')}
                         </div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Borta</div>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>{shortName(m.away?.name || '')}</div>
-                          {m.oil_profile && <div style={{ fontSize: 10, color: C.textMuted }}>{m.oil_profile}</div>}
+                        <div style={{ fontSize: 14, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>{shortName(m.away?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Borta{m.oil_profile ? ' · ' + m.oil_profile : ''}</div>
                         </div>
                       </div>
 
