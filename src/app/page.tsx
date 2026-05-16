@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import MatchDayStrip from '@/components/MatchDayStrip'
 import HeroCarousel from '@/components/HeroCarousel'
 
 type Match = {
