@@ -49,6 +49,7 @@ export default function Home() {
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px' }}>
 
+        <MatchDayStrip />
         <HeroCarousel />
 
         <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 2, marginBottom: 16 }}>SENASTE MATCHER</div>
