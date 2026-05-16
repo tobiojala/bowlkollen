@@ -47,7 +47,7 @@ export default function MatchDayStrip() {
         if (data) {
           setMatches(data as unknown as Match[])
           const today = new Date().toISOString().slice(0, 10)
-          const dates = [...new Set((data as Match[]).map(m => m.date.slice(0, 10)))].sort()
+          const dates = [...new Set((data as any[]).map((m: any) => m.date.slice(0, 10)))].sort()
           const upcoming = dates.find(d => d >= today)
           const past = dates.filter(d => d < today)
           setActiveDate(upcoming || past[past.length - 1] || null)
