@@ -79,14 +79,16 @@ function StandingsTable({ standings, theme, C }: { standings: Standing[], theme:
       {standings.map((s, i) => {
         const total = standings.length
         const isTop = i < 2
-        const isPlayoff = i >= 2 && i < 6
+        const isPlayoff = total <= 8 ? (i >= 2 && i < 4) : (i >= 2 && i < 6)
         const isKval = i === total - 2
         const isRelegation = i === total - 1
         const borderColor = isTop ? C.accent : isPlayoff ? C.green : isKval ? '#e05555' : isRelegation ? '#444444' : 'transparent'
         const hue = s.team.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
         const tc = 'hsl(' + hue + ',50%,45%)'
         const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
-        const showDivider = (i === 2 || i === 6 || i === total - 2)
+        const showDivider = total <= 8
+          ? (i === 2 || i === 4 || i === total - 2)
+          : (i === 2 || i === 6 || i === total - 2)
 
         return (
           <div key={s.team.id}>
