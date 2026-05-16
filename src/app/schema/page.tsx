@@ -71,8 +71,10 @@ export default function SchedulePage() {
           const dates = [...new Set(all.map((m: any) => m.date.slice(0, 10)))].sort()
           const pastDates = dates.filter(d => d < today)
           const futureDates = dates.filter(d => d >= today)
-          const target = futureDates[0] || pastDates[pastDates.length - 1] || dates[0]
-          setActiveDate(target)
+          const params = new URLSearchParams(window.location.search)
+          const dateParam = params.get('date')
+          const target = (dateParam && dates.includes(dateParam)) ? dateParam : futureDates[0] || pastDates[pastDates.length - 1] || dates[0]
+        setActiveDate(target)
         }
         setLoading(false)
       })

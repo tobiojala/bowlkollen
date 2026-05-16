@@ -71,7 +71,7 @@ export default function MatchDayStrip() {
             <button
               key={dateKey}
               ref={isActive ? activeDateRef : null}
-              onClick={() => { setActiveDate(dateKey); window.location.href = '/schema' }}
+              onClick={() => { setActiveDate(dateKey); window.location.href = '/schema?date=' + dateKey }}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
