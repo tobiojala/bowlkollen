@@ -8,22 +8,20 @@ import { dark, light } from '@/lib/colors'
 export default function MatchDayStrip() {
   const { theme } = useTheme()
   const C = theme === 'dark' ? dark : light
-  const [allMatches, setAllMatches] = useState<any[]>([])
   const [dates, setDates] = useState<string[]>([])
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const activeDateRef = useRef<HTMLButtonElement>(null)
+  const activeDateRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase
       .from('matches')
-      .select('id, date, status, home_score, away_score, division, home:teams!home_team_id(name), away:teams!away_team_id(name)')
+      .select('date')
       .not('round', 'is', null)
       .order('date')
       .then(({ data }) => {
         if (!data) return
-        setAllMatches(data as any[])
         const allDates = [...new Set((data as any[]).map(m => m.date.slice(0, 10)))].sort()
         setDates(allDates)
         const today = new Date().toISOString().slice(0, 10)
@@ -42,30 +40,48 @@ export default function MatchDayStrip() {
     }
   }, [activeDate, dates])
 
+  const scroll = (dir: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' })
+    }
+  }
+
   if (dates.length === 0) return null
 
   const today = new Date().toISOString().slice(0, 10)
   const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
-  const activeMatches = activeDate ? allMatches.filter(m => m.date.slice(0, 10) === activeDate) : []
 
-  const shortName = (name: string) =>
-    name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
+  const arrowBtn = {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    color: C.textMuted,
+    fontSize: 18,
+    padding: '0 8px',
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
+  } as React.CSSProperties
 
   return (
-    <div style={{ borderBottom: '1px solid ' + C.border, marginBottom: 32 }}>
+    <div style={{ borderBottom: '1px solid ' + C.border, marginBottom: 32, display: 'flex', alignItems: 'stretch' }}>
+
+      {/* Left arrow */}
+      <button onClick={() => scroll('left')} style={arrowBtn}>&#8249;</button>
 
       {/* Date strip */}
-      <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex' }}>
+      <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', flex: 1 }}>
         {dates.map(dateKey => {
           const d = new Date(dateKey + 'T12:00:00')
           const isActive = dateKey === activeDate
           const isToday = dateKey === today
           const isPast = dateKey < today
           return (
-            <button
+            
               key={dateKey}
               ref={isActive ? activeDateRef : null}
+              href={'/schema'}
               onClick={() => setActiveDate(dateKey)}
               style={{
                 display: 'flex',
@@ -79,6 +95,7 @@ export default function MatchDayStrip() {
                 whiteSpace: 'nowrap',
                 opacity: isPast && !isActive ? 0.4 : 1,
                 gap: 2,
+                textDecoration: 'none',
               }}
             >
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, color: isActive ? '#f5c200' : C.textMuted }}>
@@ -87,54 +104,13 @@ export default function MatchDayStrip() {
               <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? '#f5c200' : C.text }}>
                 {d.getDate()} {months[d.getMonth()]}
               </span>
-            </button>
+            </a>
           )
         })}
       </div>
 
-      {/* Matches for active date */}
-      {activeMatches.length > 0 && (
-        <div style={{ padding: '10px 0 12px' }}>
-          {/* Group by division */}
-          {[...new Set(activeMatches.map(m => m.division || 'Ovrigt'))].map(div => {
-            const divMatches = activeMatches.filter(m => (m.division || 'Ovrigt') === div)
-            return (
-              <div key={div} style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 6, paddingLeft: 2 }}>
-                  {div.toUpperCase()}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {divMatches.map(m => {
-                    const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
-                    const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
-                    const hasScore = m.home_score !== null
-                    const isLive = m.status === 'live'
-                    return (
-                      <a key={m.id} href={'/matches/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                      >
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: homeWin ? 600 : 400, color: homeWin ? C.text : C.textMuted, textAlign: 'right' }}>
-                          {shortName(m.home?.name || '')}
-                        </span>
-                        <span style={{ fontSize: 12, fontWeight: 700, minWidth: 48, textAlign: 'center', color: isLive ? '#e05555' : hasScore ? C.text : C.textMuted }}>
-                          {isLive ? '● LIVE' : hasScore ? m.home_score + ' - ' + m.away_score : 'vs'}
-                        </span>
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: awayWin ? 600 : 400, color: awayWin ? C.text : C.textMuted }}>
-                          {shortName(m.away?.name || '')}
-                        </span>
-                      </a>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-          <a href="/schema" style={{ fontSize: 11, color: C.textMuted, textDecoration: 'none', display: 'block', marginTop: 6, paddingLeft: 2 }}>
-            Se fullstandigt schema &rarr;
-          </a>
-        </div>
-      )}
+      {/* Right arrow */}
+      <button onClick={() => scroll('right')} style={arrowBtn}>&#8250;</button>
 
     </div>
   )
