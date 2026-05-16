@@ -11,7 +11,7 @@ export default function MatchDayStrip() {
   const [dates, setDates] = useState<string[]>([])
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const activeDateRef = useRef<HTMLAnchorElement>(null)
+  const activeDateRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -49,40 +49,29 @@ export default function MatchDayStrip() {
   if (dates.length === 0) return null
 
   const today = new Date().toISOString().slice(0, 10)
-  const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
+  const days = ['Son','Man','Tis','Ons','Tor','Fre','Lor']
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
-
-  const arrowBtn = {
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    color: C.textMuted,
-    fontSize: 18,
-    padding: '0 8px',
-    display: 'flex',
-    alignItems: 'center',
-    flexShrink: 0,
-  } as React.CSSProperties
 
   return (
     <div style={{ borderBottom: '1px solid ' + C.border, marginBottom: 32, display: 'flex', alignItems: 'stretch' }}>
+      <button onClick={() => scroll('left')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted, fontSize: 18, padding: '0 8px', flexShrink: 0 }}>
+        &#8249;
+      </button>
 
-      {/* Left arrow */}
-      <button onClick={() => scroll('left')} style={arrowBtn}>&#8249;</button>
-
-      {/* Date strip */}
       <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', flex: 1 }}>
         {dates.map(dateKey => {
           const d = new Date(dateKey + 'T12:00:00')
           const isActive = dateKey === activeDate
           const isToday = dateKey === today
           const isPast = dateKey < today
+          const day = days[d.getDay()]
+          const label = isToday ? 'IDAG' : day.toUpperCase()
+          const dateLabel = d.getDate() + ' ' + months[d.getMonth()]
           return (
-            
+            <button
               key={dateKey}
               ref={isActive ? activeDateRef : null}
-              href={'/schema'}
-              onClick={() => setActiveDate(dateKey)}
+              onClick={() => { setActiveDate(dateKey); window.location.href = '/schema' }}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -95,23 +84,22 @@ export default function MatchDayStrip() {
                 whiteSpace: 'nowrap',
                 opacity: isPast && !isActive ? 0.4 : 1,
                 gap: 2,
-                textDecoration: 'none',
               }}
             >
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, color: isActive ? '#f5c200' : C.textMuted }}>
-                {isToday ? 'IDAG' : days[d.getDay()].toUpperCase()}
+                {label}
               </span>
               <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? '#f5c200' : C.text }}>
-                {d.getDate()} {months[d.getMonth()]}
+                {dateLabel}
               </span>
-            </a>
+            </button>
           )
         })}
       </div>
 
-      {/* Right arrow */}
-      <button onClick={() => scroll('right')} style={arrowBtn}>&#8250;</button>
-
+      <button onClick={() => scroll('right')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted, fontSize: 18, padding: '0 8px', flexShrink: 0 }}>
+        &#8250;
+      </button>
     </div>
   )
 }
