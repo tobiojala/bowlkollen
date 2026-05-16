@@ -87,10 +87,12 @@ export default function Home() {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 15, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>
-                          {shortName(match.home?.name || '')}
-                        </div>
-                      </div>
+                       <div style={{ textAlign: 'right' }}>
+  <div style={{ fontSize: 15, fontWeight: homeWin ? 800 : 500, color: homeWin ? C.text : C.textMuted }}>
+    {shortName(match.home?.name || '')}
+  </div>
+  <div style={{ fontSize: 10, color: C.textMuted }}>Hemma</div>
+</div>
                       <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
                         {shortName(match.home?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
                       </div>
@@ -106,9 +108,10 @@ export default function Home() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 8, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
-                        {shortName(match.away?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
-                      </div>
+                      <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>
+  {shortName(match.away?.name || '')}
+</div>
+<div style={{ fontSize: 10, color: C.textMuted }}>Borta</div>
                       <div style={{ fontSize: 15, fontWeight: awayWin ? 800 : 500, color: awayWin ? C.text : C.textMuted }}>
                         {shortName(match.away?.name || '')}
                       </div>
