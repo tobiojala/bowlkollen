@@ -8,31 +8,27 @@ import { dark, light } from '@/lib/colors'
 export default function MatchDayStrip() {
   const { theme } = useTheme()
   const C = theme === 'dark' ? dark : light
+  const [allMatches, setAllMatches] = useState<any[]>([])
   const [dates, setDates] = useState<string[]>([])
   const [activeDate, setActiveDate] = useState<string | null>(null)
-  const [activeMatches, setActiveMatches] = useState<any[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const activeDateRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const to = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString()
     supabase
       .from('matches')
-      .select('id, date, status, home_score, away_score, home:teams!home_team_id(name), away:teams!away_team_id(name)')
-      .gte('date', from)
-      .lte('date', to)
+      .select('id, date, status, home_score, away_score, division, home:teams!home_team_id(name), away:teams!away_team_id(name)')
       .not('round', 'is', null)
       .order('date')
       .then(({ data }) => {
         if (!data) return
+        setAllMatches(data as any[])
         const allDates = [...new Set((data as any[]).map(m => m.date.slice(0, 10)))].sort()
         setDates(allDates)
         const today = new Date().toISOString().slice(0, 10)
         const target = allDates.find(d => d >= today) || allDates[allDates.length - 1]
         setActiveDate(target)
-        setActiveMatches((data as any[]).filter(m => m.date.slice(0, 10) === target))
       })
   }, [])
 
@@ -42,28 +38,16 @@ export default function MatchDayStrip() {
         const el = activeDateRef.current!
         const container = scrollRef.current!
         container.scrollTo({ left: el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2, behavior: 'smooth' })
-      }, 100)
+      }, 150)
     }
-  }, [activeDate])
-
-  const handleDateClick = async (dateKey: string) => {
-    setActiveDate(dateKey)
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('matches')
-      .select('id, date, status, home_score, away_score, home:teams!home_team_id(name), away:teams!away_team_id(name)')
-      .gte('date', dateKey + 'T00:00:00')
-      .lte('date', dateKey + 'T23:59:59')
-      .not('round', 'is', null)
-      .order('date')
-    setActiveMatches(data || [])
-  }
+  }, [activeDate, dates])
 
   if (dates.length === 0) return null
 
   const today = new Date().toISOString().slice(0, 10)
   const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
+  const activeMatches = activeDate ? allMatches.filter(m => m.date.slice(0, 10) === activeDate) : []
 
   const shortName = (name: string) =>
     name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
@@ -82,7 +66,7 @@ export default function MatchDayStrip() {
             <button
               key={dateKey}
               ref={isActive ? activeDateRef : null}
-              onClick={() => handleDateClick(dateKey)}
+              onClick={() => setActiveDate(dateKey)}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -108,29 +92,46 @@ export default function MatchDayStrip() {
         })}
       </div>
 
-      {/* Subtle match list for active date */}
+      {/* Matches for active date */}
       {activeMatches.length > 0 && (
-        <div style={{ padding: '8px 0 10px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {activeMatches.map(m => {
-            const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
-            const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
-            const hasScore = m.home_score !== null
+        <div style={{ padding: '10px 0 12px' }}>
+          {/* Group by division */}
+          {[...new Set(activeMatches.map(m => m.division || 'Ovrigt'))].map(div => {
+            const divMatches = activeMatches.filter(m => (m.division || 'Ovrigt') === div)
             return (
-              <a key={m.id} href={'/matches/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', background: C.card, borderRadius: 8, border: '1px solid ' + C.border, textDecoration: 'none', flexShrink: 0, fontSize: 12 }}>
-                <span style={{ color: homeWin ? C.text : C.textMuted, fontWeight: homeWin ? 600 : 400 }}>
-                  {shortName(m.home?.name || '')}
-                </span>
-                <span style={{ color: C.textMuted, fontSize: 11, minWidth: 28, textAlign: 'center', fontWeight: 700 }}>
-                  {hasScore ? m.home_score + '-' + m.away_score : 'vs'}
-                </span>
-                <span style={{ color: awayWin ? C.text : C.textMuted, fontWeight: awayWin ? 600 : 400 }}>
-                  {shortName(m.away?.name || '')}
-                </span>
-              </a>
+              <div key={div} style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 6, paddingLeft: 2 }}>
+                  {div.toUpperCase()}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {divMatches.map(m => {
+                    const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
+                    const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
+                    const hasScore = m.home_score !== null
+                    const isLive = m.status === 'live'
+                    return (
+                      <a key={m.id} href={'/matches/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                      >
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: homeWin ? 600 : 400, color: homeWin ? C.text : C.textMuted, textAlign: 'right' }}>
+                          {shortName(m.home?.name || '')}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, minWidth: 48, textAlign: 'center', color: isLive ? '#e05555' : hasScore ? C.text : C.textMuted }}>
+                          {isLive ? '● LIVE' : hasScore ? m.home_score + ' - ' + m.away_score : 'vs'}
+                        </span>
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: awayWin ? 600 : 400, color: awayWin ? C.text : C.textMuted }}>
+                          {shortName(m.away?.name || '')}
+                        </span>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
             )
           })}
-          <a href="/schema" style={{ padding: '5px 10px', fontSize: 11, color: C.textMuted, textDecoration: 'none', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-            Schema &rarr;
+          <a href="/schema" style={{ fontSize: 11, color: C.textMuted, textDecoration: 'none', display: 'block', marginTop: 6, paddingLeft: 2 }}>
+            Se fullstandigt schema &rarr;
           </a>
         </div>
       )}
