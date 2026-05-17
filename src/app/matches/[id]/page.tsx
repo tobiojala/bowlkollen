@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import LiveLaneViewer from '@/components/LiveLaneViewer'
 
 type Props = { params: Promise<{ id: string }> }
 type Lineup = { id: string; team_id: string; player_name: string; bord: number; position: number }
@@ -312,11 +313,17 @@ export default function MatchPage({ params }: Props) {
 
         {/* Stream link */}
         {hasStream && (
-          <div style={{ marginTop: 16, padding: '12px 16px', background: C.card, borderRadius: 10, border: '1px solid ' + C.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 12, color: C.textMuted }}>Officiellt scoring pa BITS</div>
-            <a href={match.stream_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none' }}>
-              Oppna BITS &#8599;
-            </a>
+          <div style={{ marginTop: 16, background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
+            {match.stream_url.includes('scoring.se') ? (
+              <LiveLaneViewer streamUrl={match.stream_url} matchName={shortName(home?.name || '') + ' vs ' + shortName(away?.name || '')} />
+            ) : (
+              <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 12, color: C.textMuted }}>Live scoring</div>
+                <a href={match.stream_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none' }}>
+                  Oppna scoring &#8599;
+                </a>
+              </div>
+            )}
           </div>
         )}
 
