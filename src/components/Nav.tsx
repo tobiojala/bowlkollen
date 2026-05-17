@@ -5,12 +5,13 @@ import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
 
 const links = [
-  { href: '/',        label: 'Hem'         },
-  { href: '/schema',  label: 'Schema'      },
-  { href: '/league',  label: 'Serietabell' },
-  { href: '/teams',   label: 'Lag'         },
-  { href: '/sllm',    label: 'SLLM 2026'   },
-  { href: '/login',   label: 'Login'       },
+  { href: '/',          label: 'Hem'         },
+  { href: '/schema',    label: 'Schema'      },
+  { href: '/league',    label: 'Serietabell' },
+  { href: '/teams',     label: 'Lag'         },
+  { href: '/tavlingar', label: 'Tavlingar'   },
+  { href: '/sllm',      label: 'SLLM 2026'   },
+  { href: '/login',     label: 'Login'       },
 ]
 
 export default function Nav() {
@@ -27,14 +28,14 @@ export default function Nav() {
 
   return (
     <header style={{ background: surface, borderBottom: '1px solid ' + border, position: 'sticky', top: 0, zIndex: 50, boxShadow: isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
         <a href="/" style={{ fontSize: 20, fontWeight: 800, color: text, textDecoration: 'none', flexShrink: 0 }}>
           Bowl<span style={{ color: accent }}>kollen</span>
         </a>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto', scrollbarWidth: 'none' }}>
           {links.map(l => {
+            const isActive = path === l.href || (l.href === '/sllm' && path.startsWith('/sllm'))
             const isSllm = l.href === '/sllm'
-            const isActive = path === l.href
             return (
               <a key={l.href} href={l.href} style={{
                 fontSize: 11,
