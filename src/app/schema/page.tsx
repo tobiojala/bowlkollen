@@ -143,8 +143,11 @@ export default function SchedulePage() {
           return (
             <div key={div}>
               {/* Division header */}
-              <div style={{ padding: '16px 20px 8px', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
-                {div.toUpperCase()}
+              <div style={{ padding: '12px 20px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: div === 'Elitserien Herrar' ? '#4a90d9' : div === 'Elitserien Damer' ? '#d94a90' : div === 'SM-slutspel' ? '#f5c200' : C.textMuted, flexShrink: 0 }} />
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: div === 'Elitserien Herrar' ? '#4a90d9' : div === 'Elitserien Damer' ? '#d94a90' : div === 'SM-slutspel' ? '#f5c200' : C.textMuted }}>
+                  {div === 'Elitserien Herrar' ? 'ELITSERIEN HERRAR' : div === 'Elitserien Damer' ? 'ELITSERIEN DAMER' : div.toUpperCase()}
+                </div>
               </div>
 
               {divMatches.map(m => {
@@ -164,9 +167,10 @@ export default function SchedulePage() {
                   >
                     {/* Home */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: 14, fontWeight: homeWin ? 700 : 400, color: homeWin ? C.text : C.textMuted, textAlign: 'right', lineHeight: 1.2 }}>
-                        {shortName(m.home?.name || '')}
-                      </span>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 14, fontWeight: homeWin ? 700 : 400, color: homeWin ? C.text : C.textMuted }}>{shortName(m.home?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Hemmalag</div>
+                      </div>
                       <div style={{ width: 30, height: 30, borderRadius: 7, background: tclo(homeHue), border: '1.5px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
                         {shortName(m.home?.name || '').split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()}
                       </div>
@@ -199,9 +203,10 @@ export default function SchedulePage() {
                       <div style={{ width: 30, height: 30, borderRadius: 7, background: tclo(awayHue), border: '1.5px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
                         {shortName(m.away?.name || '').split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()}
                       </div>
-                      <span style={{ fontSize: 14, fontWeight: awayWin ? 700 : 400, color: awayWin ? C.text : C.textMuted, lineHeight: 1.2 }}>
-                        {shortName(m.away?.name || '')}
-                      </span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: awayWin ? 700 : 400, color: awayWin ? C.text : C.textMuted }}>{shortName(m.away?.name || '')}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>Bortalag</div>
+                      </div>
                     </div>
                   </a>
                 )

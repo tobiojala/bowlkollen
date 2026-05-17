@@ -70,8 +70,11 @@ export default function Home() {
 
         {!loading && Object.entries(grouped).map(([div, divMatches]) => (
           <div key={div}>
-            <div style={{ padding: '12px 20px 6px', fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>
-              {div.toUpperCase()}
+            <div style={{ padding: '10px 20px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: div === 'Elitserien Herrar' ? '#4a90d9' : div === 'Elitserien Damer' ? '#d94a90' : div === 'SM-slutspel' ? '#f5c200' : C.textMuted, flexShrink: 0 }} />
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: div === 'Elitserien Herrar' ? '#4a90d9' : div === 'Elitserien Damer' ? '#d94a90' : div === 'SM-slutspel' ? '#f5c200' : C.textMuted }}>
+                {div === 'Elitserien Herrar' ? 'ELITSERIEN HERRAR' : div === 'Elitserien Damer' ? 'ELITSERIEN DAMER' : div.toUpperCase()}
+              </div>
             </div>
             {divMatches.slice(0, 5).map(m => {
               const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
