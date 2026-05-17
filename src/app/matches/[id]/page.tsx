@@ -311,8 +311,18 @@ export default function MatchPage({ params }: Props) {
           </div>
         )}
 
-        {/* Stream link */}
-        {hasStream && (
+        {/* Scoring link for completed matches */}
+        {hasStream && !isLive && (
+          <div style={{ marginTop: 16, padding: '12px 16px', background: C.card, borderRadius: 10, border: '1px solid ' + C.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 12, color: C.textMuted }}>Scoring fran matchen</div>
+            <a href={match.stream_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none' }}>
+              Oppna scoring &#8599;
+            </a>
+          </div>
+        )}
+
+        {/* Live stream viewer */}
+        {hasStream && isLive && (
           <div style={{ marginTop: 16, background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
             {match.stream_url.includes('scoring.se') ? (
               <LiveLaneViewer streamUrl={match.stream_url} matchName={shortName(home?.name || '') + ' vs ' + shortName(away?.name || '')} />
