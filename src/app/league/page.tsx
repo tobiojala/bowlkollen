@@ -45,7 +45,7 @@ export default function LeaguePage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const supabase = createClient()
@@ -89,7 +89,7 @@ export default function LeaguePage() {
 
         <div style={{ display: 'flex', background: C.card, borderRadius: 10, padding: 4, marginBottom: 20, border: '1px solid ' + C.border, gap: 4 }}>
           {['Elitserien Herrar', 'Elitserien Damer'].map(d => (
-            <button key={d} onClick={() => { setDivision(d); setExpanded(null) }} style={{ flex: 1, background: division === d ? C.surface : 'transparent', border: division === d ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px 6px', fontSize: 12, fontWeight: 700, color: division === d ? C.accent : C.textMuted, cursor: 'pointer' }}>
+            <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }} style={{ flex: 1, background: division === d ? C.surface : 'transparent', border: division === d ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px 6px', fontSize: 12, fontWeight: 700, color: division === d ? C.accent : C.textMuted, cursor: 'pointer' }}>
               {d === 'Elitserien Herrar' ? 'Herrar' : 'Damer'}
             </button>
           ))}
@@ -116,7 +116,7 @@ export default function LeaguePage() {
               const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
               const dc = s.diff > 0 ? C.green : s.diff < 0 ? '#e05555' : C.textMuted
               const dl = s.diff > 0 ? ('+' + s.diff) : String(s.diff)
-              const isExpanded = expanded === s.team.id
+              const isExpanded = expanded.has(s.team.id)
 
               return (
                 <div key={s.team.id}>
@@ -124,7 +124,7 @@ export default function LeaguePage() {
 
                   {/* Main row */}
                   <div
-                    onClick={() => setExpanded(isExpanded ? null : s.team.id)}
+                    onClick={() => setExpanded(prev => { const next = new Set(prev); if (next.has(s.team.id)) next.delete(s.team.id); else next.add(s.team.id); return next })}
                     style={{ display: 'grid', gridTemplateColumns: '28px 1fr 52px 40px 40px', padding: '12px 12px', borderBottom: !isExpanded && i < standings.length - 1 ? '1px solid ' + C.border : 'none', borderLeft: '3px solid ' + zoneColor(i), alignItems: 'center', cursor: 'pointer', background: isExpanded ? C.surface : 'transparent' }}
                   >
                     <div style={{ fontSize: 13, fontWeight: 700, color: i < 2 ? C.accent : C.textMuted, textAlign: 'center' }}>{i + 1}</div>
@@ -143,7 +143,7 @@ export default function LeaguePage() {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div style={{ borderTop: '1px solid ' + C.border, borderBottom: i < standings.length - 1 ? '1px solid ' + C.border : 'none', background: C.surface, padding: '12px 16px 14px' }}>
+                    <div style={{ borderTop: '1px solid ' + C.border, borderBottom: i < standings.length - 1 ? '1px solid ' + C.border : 'none', background: theme === 'dark' ? '#1a2535' : '#f0f4f8', padding: '12px 16px 14px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 12 }}>
                         {[
                           { label: 'Spelade', value: s.played },
@@ -152,18 +152,18 @@ export default function LeaguePage() {
                           { label: 'Forlorade', value: s.losses },
                           { label: 'Poang', value: s.points },
                         ].map(stat => (
-                          <div key={stat.label} style={{ textAlign: 'center', background: C.card, borderRadius: 8, padding: '8px 4px', border: '1px solid ' + C.border }}>
+                          <div key={stat.label} style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#ffffff', borderRadius: 8, padding: '8px 4px', border: '1px solid ' + C.border }}>
                             <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>{stat.value}</div>
                             <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>{stat.label.toUpperCase()}</div>
                           </div>
                         ))}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                        <div style={{ textAlign: 'center', background: C.card, borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
+                        <div style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#ffffff', borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.ptsFor} - {s.ptsAgainst}</div>
                           <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>MATCHPOANG FOR - MOT</div>
                         </div>
-                        <div style={{ textAlign: 'center', background: C.card, borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
+                        <div style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#ffffff', borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: dc }}>{dl}</div>
                           <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>DIFFERENS</div>
                         </div>
