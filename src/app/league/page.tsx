@@ -7,15 +7,10 @@ import { dark, light } from '@/lib/colors'
 
 type Team = { id: string; name: string; club: string }
 type Match = { id: string; home_team_id: string; away_team_id: string; home_score: number | null; away_score: number | null; division: string }
-type Standing = { team: Team; played: number; wins: number; draws: number; losses: number; ptsFor: number; ptsAgainst: number; diff: number; points: number }
+type Standing = { team: Team; played: number; wins: number; losses: number; ptsFor: number; ptsAgainst: number; diff: number; points: number }
 
 function shortName(name: string) {
   return name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
-}
-
-function diffLabel(diff: number) {
-  if (diff > 0) return '+' + diff
-  return String(diff)
 }
 
 function calcStandings(teams: Team[], matches: Match[], division: string): Standing[] {
@@ -23,7 +18,7 @@ function calcStandings(teams: Team[], matches: Match[], division: string): Stand
   const teamIds = new Set([...divMatches.map(m => m.home_team_id), ...divMatches.map(m => m.away_team_id)])
   const table: Record<string, Standing> = {}
   teams.filter(t => teamIds.has(t.id)).forEach(t => {
-    table[t.id] = { team: t, played: 0, wins: 0, draws: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0, points: 0 }
+    table[t.id] = { team: t, played: 0, wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0, points: 0 }
   })
   divMatches.forEach(m => {
     const h = table[m.home_team_id]
@@ -36,7 +31,7 @@ function calcStandings(teams: Team[], matches: Match[], division: string): Stand
     a.ptsFor += as_; a.ptsAgainst += hs
     if (hs > as_) { h.wins++; h.points += 2; a.losses++ }
     else if (as_ > hs) { a.wins++; a.points += 2; h.losses++ }
-    else { h.draws++; h.points++; a.draws++; a.points++ }
+    else { h.points++; a.points++ }
   })
   return Object.values(table)
     .map(s => ({ ...s, diff: s.ptsFor - s.ptsAgainst }))
@@ -109,21 +104,19 @@ export default function LeaguePage() {
           <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px 28px 28px 56px 36px 36px', padding: '9px 12px', background: C.surface, borderBottom: '1px solid ' + C.border }}>
               {['#', 'Lag', 'S', 'V', 'F', 'Tot', 'D', 'P'].map((h, i) => (
-                <div key={h} style={{ fontSize: 10, fontWeight: 700, color: i === 7 ? C.accent : C.textMuted, textAlign: i > 1 ? 'center' : 'left', letterSpacing: 0.5 }}>{h}</div>
+                <div key={h} style={{ fontSize: 10, fontWeight: 700, color: i === 7 ? C.accent : C.textMuted, textAlign: i > 1 ? 'center' : 'left' }}>{h}</div>
               ))}
             </div>
-
             {standings.map((s, i) => {
               const hue = s.team.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
               const tc = 'hsl(' + hue + ',50%,45%)'
               const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
-              const diffColor = s.diff > 0 ? C.green : s.diff < 0 ? '#e05555' : C.textMuted
+              const dc = s.diff > 0 ? C.green : s.diff < 0 ? '#e05555' : C.textMuted
+              const dl = s.diff > 0 ? ('+' + s.diff) : String(s.diff)
               return (
                 <div key={s.team.id}>
                   {showDivider(i) && <div style={{ height: 1, background: zoneColor(i) + '55' }} />}
-                  
-                    href={'/teams/' + s.team.id}
-                    style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px 28px 28px 56px 36px 36px', padding: '11px 12px', borderBottom: i < standings.length - 1 ? '1px solid ' + C.border : 'none', borderLeft: '3px solid ' + zoneColor(i), textDecoration: 'none', alignItems: 'center', background: 'transparent' }}
+                  <a href={'/teams/' + s.team.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px 28px 28px 56px 36px 36px', padding: '11px 12px', borderBottom: i < standings.length - 1 ? '1px solid ' + C.border : 'none', borderLeft: '3px solid ' + zoneColor(i), textDecoration: 'none', alignItems: 'center', background: 'transparent' }}
                     onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -140,7 +133,7 @@ export default function LeaguePage() {
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textAlign: 'center' }}>{s.wins}</div>
                     <div style={{ fontSize: 12, color: C.textMuted, textAlign: 'center' }}>{s.losses}</div>
                     <div style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{s.ptsFor}-{s.ptsAgainst}</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: diffColor, textAlign: 'center' }}>{diffLabel(s.diff)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: dc, textAlign: 'center' }}>{dl}</div>
                     <div style={{ fontSize: 16, fontWeight: 900, color: C.accent, textAlign: 'center' }}>{s.points}</div>
                   </a>
                 </div>
@@ -150,10 +143,10 @@ export default function LeaguePage() {
         )}
 
         <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-          {[{ color: C.accent, label: 'SM-slutspel' }, { color: C.green, label: 'Play-off' }, { color: '#e05555', label: 'Kvalar' }, { color: '#666666', label: 'Nedflyttning' }].map(({ color, label }) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: C.textMuted }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
-              {label}
+          {[{ color: C.accent, label: 'SM-slutspel' }, { color: C.green, label: 'Play-off' }, { color: '#e05555', label: 'Kvalar' }, { color: '#666666', label: 'Nedflyttning' }].map(z => (
+            <div key={z.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: C.textMuted }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: z.color }} />
+              {z.label}
             </div>
           ))}
         </div>
