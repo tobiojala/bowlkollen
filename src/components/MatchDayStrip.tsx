@@ -11,7 +11,7 @@ export default function MatchDayStrip() {
   const [dates, setDates] = useState<string[]>([])
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const activeDateRef = useRef<HTMLButtonElement>(null)
+  const activeDateRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -43,7 +43,7 @@ export default function MatchDayStrip() {
   if (dates.length === 0) return null
 
   const today = new Date().toISOString().slice(0, 10)
-  const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör']
+  const days = ['Son','Man','Tis','Ons','Tor','Fre','Lor']
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
 
   return (
@@ -55,25 +55,22 @@ export default function MatchDayStrip() {
           const isToday = dateKey === today
           const isPast = dateKey < today
           return (
-            
+            <div
               key={dateKey}
-              href={'/schema?date=' + dateKey}
-              ref={isActive ? (activeDateRef as any) : null}
-              onClick={() => setActiveDate(dateKey)}
+              ref={isActive ? activeDateRef : null}
+              onClick={() => { setActiveDate(dateKey); window.location.href = '/schema?date=' + dateKey }}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: '10px 14px',
-                border: 'none',
                 borderBottom: '2px solid ' + (isActive ? '#f5c200' : 'transparent'),
                 background: 'transparent',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 opacity: isPast && !isActive ? 0.35 : 1,
                 gap: 1,
-                textDecoration: 'none',
-                WebkitTapHighlightColor: 'transparent',
+                userSelect: 'none',
               }}
             >
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: isActive ? '#f5c200' : C.textMuted }}>
@@ -82,7 +79,7 @@ export default function MatchDayStrip() {
               <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 400, color: isActive ? '#f5c200' : C.text }}>
                 {d.getDate()} {months[d.getMonth()]}
               </span>
-            </a>
+            </div>
           )
         })}
       </div>
