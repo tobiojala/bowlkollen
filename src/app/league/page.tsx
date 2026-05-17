@@ -158,7 +158,7 @@ export default function LeaguePage() {
                     <div style={{ fontSize: 12, color: C.textMuted, textAlign: 'center' }}>{s.losses}</div>
                     <div style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{s.ptsFor}-{s.ptsAgainst}</div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: s.diff > 0 ? C.green : s.diff < 0 ? '#e05555' : C.textMuted, textAlign: 'center' }}>
-                      {s.diff > 0 ? '+' : ''}{s.diff}
+                      {s.diff > 0 ? '+' + s.diff : s.diff}
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 900, color: C.accent, textAlign: 'center' }}>{s.points}</div>
                   </a>
