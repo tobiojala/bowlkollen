@@ -82,7 +82,7 @@ export default function SLLMPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(10,16,30,0.95) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 32px' }}>
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#f5c200', letterSpacing: 2, marginBottom: 6 }}>KOMMANDE TURNERING · PBA TOUR</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#f5c200', letterSpacing: 2, marginBottom: 6 }}>KOMMANDE TAVLING · PBA TOUR</div>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'white' }}>Storm Lucky Larsen Masters 2026</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>22-30 augusti 2026 &middot; Lucky Bowl, Helsingborg</div>
           </div>

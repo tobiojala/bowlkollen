@@ -41,7 +41,7 @@ const SLIDES: Slide[] = [
     meta: ['22-30 aug 2026', 'Lucky Bowl, Helsingborg', 'PBA Tour'],
     image: 'https://www.luckylarsen.se/wp-content/uploads/2026/02/SLLM26-WEB-HEADER-1440-x-600-px-4.png',
     href: '/sllm',
-    buttonLabel: 'Se turnering',
+    buttonLabel: 'Se tavling',
     buttonHref: '/sllm',
   },
 ]
@@ -112,7 +112,7 @@ export default function HeroCarousel() {
               </div>
             )}
             {slide.id === 'sllm' && (
-              <div style={{ fontSize: 10, fontWeight: 700, color: YELLOW, letterSpacing: 2, marginBottom: 8 }}>KOMMANDE TURNERING · PBA TOUR</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: YELLOW, letterSpacing: 2, marginBottom: 8 }}>KOMMANDE TAVLING · PBA TOUR</div>
             )}
             <div style={{ fontSize: 24, fontWeight: 900, color: 'white', marginBottom: 6, lineHeight: 1.2 }}>
               {slide.id === 'sm'
