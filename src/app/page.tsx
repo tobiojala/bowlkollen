@@ -54,18 +54,18 @@ export default function Home() {
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
 
       {/* Hero carousel */}
-      <div style={{ padding: '16px 16px 0' }}>
-        <HeroCarousel />
-      </div>
+
+
+
 
       {/* Match day strip */}
-      <MatchDayStrip />
+
 
       {/* Latest results */}
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ padding: '20px 20px 8px', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
           SENASTE RESULTAT
-        </div>
+  
 
         {loading && (
           <div style={{ padding: '32px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>Laddar...</div>
@@ -75,7 +75,7 @@ export default function Home() {
           <div key={div}>
             <div style={{ padding: '12px 20px 6px', fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>
               {div.toUpperCase()}
-            </div>
+      
             {divMatches.slice(0, 5).map(m => {
               const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
               const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
@@ -94,13 +94,13 @@ export default function Home() {
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: 14, fontWeight: homeWin ? 700 : 400, color: homeWin ? C.text : C.textMuted, lineHeight: 1.2 }}>
                         {shortName(m.home?.name || '')}
-                      </div>
+                
                       <div style={{ fontSize: 10, color: C.textMuted }}>Hemmalag</div>
-                    </div>
+              
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: tclo(homeHue), border: '1.5px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: tc(homeHue), flexShrink: 0 }}>
                       {shortName(m.home?.name || '').split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()}
-                    </div>
-                  </div>
+              
+            
 
                   {/* Score */}
                   <div style={{ textAlign: 'center', minWidth: 60 }}>
@@ -108,40 +108,40 @@ export default function Home() {
                       <span style={{ fontSize: 20, fontWeight: 900, color: homeWin ? C.accent : C.textMuted, lineHeight: 1 }}>{m.home_score}</span>
                       <span style={{ fontSize: 12, color: C.textMuted }}>-</span>
                       <span style={{ fontSize: 20, fontWeight: 900, color: awayWin ? C.accent : C.textMuted, lineHeight: 1 }}>{m.away_score}</span>
-                    </div>
+              
                     <div style={{ fontSize: 8, color: C.textMuted, marginTop: 2, letterSpacing: 0.5 }}>MP</div>
-                  </div>
+            
 
                   {/* Away */}
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: tclo(awayHue), border: '1.5px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: tc(awayHue), flexShrink: 0 }}>
                       {shortName(m.away?.name || '').split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()}
-                    </div>
+              
                     <div>
                       <div style={{ fontSize: 14, fontWeight: awayWin ? 700 : 400, color: awayWin ? C.text : C.textMuted, lineHeight: 1.2 }}>
                         {shortName(m.away?.name || '')}
-                      </div>
+                
                       <div style={{ fontSize: 10, color: C.textMuted }}>Bortalag</div>
-                    </div>
-                  </div>
+              
+            
                 </a>
               )
             })}
-          </div>
+    
         ))}
 
         {!loading && matches.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
             Inga matcher spelade annu
-          </div>
+    
         )}
 
         <div style={{ padding: '16px 20px' }}>
           <a href="/schema" style={{ fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none' }}>
             Se alla matcher i schema &rarr;
           </a>
-        </div>
-      </div>
+  
+
     </main>
   )
 }
