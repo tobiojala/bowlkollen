@@ -149,7 +149,7 @@ export default function MatchPage({ params }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, padding: '24px 20px', alignItems: 'center' }}>
 
             {/* Home */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+            <a href={'/teams/' + home?.id} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: tc(homeHue) }}>
                 {initials(home?.name || '')}
               </div>
@@ -157,7 +157,7 @@ export default function MatchPage({ params }: Props) {
                 <div style={{ fontSize: 16, fontWeight: 800, color: homeWin ? C.text : C.textMuted, lineHeight: 1.2 }}>{shortName(home?.name || '')}</div>
                 <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Hemmalag</div>
               </div>
-            </div>
+            </a>
 
             {/* Score */}
             <div style={{ textAlign: 'center', minWidth: 100 }}>
@@ -181,7 +181,7 @@ export default function MatchPage({ params }: Props) {
             </div>
 
             {/* Away */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+            <a href={'/teams/' + away?.id} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: tc(awayHue) }}>
                 {initials(away?.name || '')}
               </div>
@@ -189,7 +189,7 @@ export default function MatchPage({ params }: Props) {
                 <div style={{ fontSize: 16, fontWeight: 800, color: awayWin ? C.text : C.textMuted, lineHeight: 1.2 }}>{shortName(away?.name || '')}</div>
                 <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Bortalag</div>
               </div>
-            </div>
+            </a>
           </div>
 
           {/* Serie breakdown — only when lineup data exists */}
