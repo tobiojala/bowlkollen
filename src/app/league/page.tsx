@@ -64,7 +64,7 @@ export default function LeaguePage() {
 
   const zoneColor = (i: number) => {
     if (i < 2) return C.accent
-    if (total <= 8 ? i < 4 : total <= 10 ? i < 6 : i < 6) return C.green
+    if (total <= 8 ? i < 4 : i < 6) return C.green
     if (i === total - 2) return '#e05555'
     if (i === total - 1) return '#666666'
     return 'transparent'
