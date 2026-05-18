@@ -88,7 +88,7 @@ export default function LeaguePage() {
         </div>
 
         <div style={{ display: 'flex', background: C.card, borderRadius: 10, padding: 4, marginBottom: 20, border: '1px solid ' + C.border, gap: 4 }}>
-          {['Elitserien Herrar', 'Elitserien Damer'].map(d => (
+          {divisions.map(d => (
             <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }} style={{ flex: 1, background: division === d ? C.surface : 'transparent', border: division === d ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px 6px', fontSize: 12, fontWeight: 700, color: division === d ? C.accent : C.textMuted, cursor: 'pointer' }}>
               {d === 'Elitserien Herrar' ? 'Elitserien H' : d === 'Elitserien Damer' ? 'Elitserien D' : 'Mellanallsv. H'}
             </button>
