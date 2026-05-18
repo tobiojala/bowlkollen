@@ -8,14 +8,14 @@ export type Division = {
 }
 
 export const DIVISIONS: Division[] = [
-  { name: 'Elitserien Herrar',   short: 'Elitserien H', color: '#4a90d9', bgDark: 'rgba(74,144,217,0.12)',  bgLight: 'rgba(74,144,217,0.1)',  tier: 1 },
-  { name: 'Elitserien Damer',    short: 'Elitserien D', color: '#d94a90', bgDark: 'rgba(217,74,144,0.12)', bgLight: 'rgba(217,74,144,0.1)', tier: 1 },
-  { name: 'SM-slutspel Herrar',  short: 'SM Herrar',    color: '#f5c200', bgDark: 'rgba(245,194,0,0.12)',  bgLight: 'rgba(245,194,0,0.1)',  tier: 1 },
-  { name: 'SM-slutspel Damer',   short: 'SM Damer',     color: '#f5c200', bgDark: 'rgba(245,194,0,0.12)',  bgLight: 'rgba(245,194,0,0.1)',  tier: 1 },
-  { name: 'Division 1 Herrar',   short: 'Div 1 H',      color: '#5ba85a', bgDark: 'rgba(91,168,90,0.12)',  bgLight: 'rgba(91,168,90,0.1)',  tier: 2 },
-  { name: 'Division 1 Damer',    short: 'Div 1 D',      color: '#a85ba8', bgDark: 'rgba(168,91,168,0.12)', bgLight: 'rgba(168,91,168,0.1)', tier: 2 },
-  { name: 'Division 2 Herrar',   short: 'Div 2 H',      color: '#7a9e5a', bgDark: 'rgba(122,158,90,0.12)', bgLight: 'rgba(122,158,90,0.1)', tier: 3 },
-  { name: 'Division 2 Damer',    short: 'Div 2 D',      color: '#9e7a5a', bgDark: 'rgba(158,122,90,0.12)', bgLight: 'rgba(158,122,90,0.1)', tier: 3 },
+  { name: 'Elitserien Herrar',       short: 'Elitserien H',    color: '#4a90d9', bgDark: 'rgba(74,144,217,0.12)',  bgLight: 'rgba(74,144,217,0.1)',  tier: 1 },
+  { name: 'Elitserien Damer',        short: 'Elitserien D',    color: '#d94a90', bgDark: 'rgba(217,74,144,0.12)', bgLight: 'rgba(217,74,144,0.1)', tier: 1 },
+  { name: 'SM-slutspel Herrar',      short: 'SM Herrar',       color: '#f5c200', bgDark: 'rgba(245,194,0,0.12)',  bgLight: 'rgba(245,194,0,0.1)',  tier: 1 },
+  { name: 'SM-slutspel Damer',       short: 'SM Damer',        color: '#f5c200', bgDark: 'rgba(245,194,0,0.12)',  bgLight: 'rgba(245,194,0,0.1)',  tier: 1 },
+  { name: 'Mellanallsvenskan Herrar',short: 'Mellanallsv. H',  color: '#5ba85a', bgDark: 'rgba(91,168,90,0.12)',  bgLight: 'rgba(91,168,90,0.1)',  tier: 2 },
+  { name: 'Mellanallsvenskan Damer', short: 'Mellanallsv. D',  color: '#a85ba8', bgDark: 'rgba(168,91,168,0.12)', bgLight: 'rgba(168,91,168,0.1)', tier: 2 },
+  { name: 'Division 1 Herrar',       short: 'Div 1 H',         color: '#7a9e5a', bgDark: 'rgba(122,158,90,0.12)', bgLight: 'rgba(122,158,90,0.1)', tier: 3 },
+  { name: 'Division 1 Damer',        short: 'Div 1 D',         color: '#9e7a5a', bgDark: 'rgba(158,122,90,0.12)', bgLight: 'rgba(158,122,90,0.1)', tier: 3 },
 ]
 
 export function getDivision(name: string | null): Division | null {
