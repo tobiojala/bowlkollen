@@ -46,7 +46,12 @@ export default function LeaguePage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const divisions = ['Elitserien Herrar', 'Elitserien Damer', 'Mellanallsvenskan Herrar']
+  const divisionGroups = [
+    { label: 'Elitserien', divisions: ['Elitserien Herrar', 'Elitserien Damer'] },
+    { label: 'Allsvenskan', divisions: ['Mellanallsvenskan Herrar', 'Nordallsvenskan Herrar', 'Sydallsvenskan Herrar', 'Norra Allsvenskan Herrar', 'Södra Allsvenskan Herrar'] },
+    { label: 'Division 1', divisions: ['Div 1 Norra Götaland Herrar', 'Div 1 Norra Norrland Herrar', 'Div 1 Norra Svealand Herrar', 'Div 1 Södra Götaland Herrar', 'Div 1 Södra Norrland Herrar', 'Div 1 Södra Svealand Herrar'] },
+  ]
+  const divisions = divisionGroups.flatMap(g => g.divisions)
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
@@ -87,11 +92,20 @@ export default function LeaguePage() {
           <div style={{ fontSize: 13, color: C.textMuted }}>Sasong 2025/2026</div>
         </div>
 
-        <div style={{ display: 'flex', background: C.card, borderRadius: 10, padding: 4, marginBottom: 20, border: '1px solid ' + C.border, gap: 4 }}>
-          {divisions.map(d => (
-            <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }} style={{ flex: 1, background: division === d ? C.surface : 'transparent', border: division === d ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px 6px', fontSize: 12, fontWeight: 700, color: division === d ? C.accent : C.textMuted, cursor: 'pointer' }}>
-              {d === 'Elitserien Herrar' ? 'Elitserien H' : d === 'Elitserien Damer' ? 'Elitserien D' : 'Mellanallsv. H'}
-            </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {divisionGroups.map(group => (
+            <div key={group.label}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 6, paddingLeft: 4 }}>
+                {group.label.toUpperCase()}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {group.divisions.map(d => (
+                  <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }} style={{ background: division === d ? C.accent : C.card, border: '1px solid ' + (division === d ? C.accent : C.border), borderRadius: 8, padding: '7px 12px', fontSize: 11, fontWeight: 700, color: division === d ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {d.replace(' Herrar', ' H').replace(' Damer', ' D').replace('Div 1 ', 'D1 ').replace('Allsvenskan', 'Allsv.').replace('Norra ', 'N.').replace('Södra ', 'S.').replace('Götaland', 'Götal.').replace('Norrland', 'Norrl.').replace('Svealand', 'Sveal.')}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
