@@ -15,7 +15,13 @@ export default function PlayersPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('players').select('*, teams:team_id(name, club)').order('name').then(({ data }) => { if (data) setPlayers(data as any) })
+    supabase.from('players').select('*').order('name').then(async ({ data }) => {
+        if (!data) return
+        const supabase2 = createClient()
+        const { data: teams } = await supabase2.from('teams').select('id, name, club')
+        const teamMap = Object.fromEntries((teams || []).map(t => [t.id, t]))
+        setPlayers(data.map((p: any) => ({ ...p, teams: teamMap[p.team_id] || null })) as any)
+      })
   }, [])
 
   const filtered = players.filter(p =>
