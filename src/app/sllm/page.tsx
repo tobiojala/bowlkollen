@@ -180,8 +180,6 @@ export default function SLLMPage() {
         )}
 
         <div style={{ marginTop: 24, fontSize: 11, color: C.textMuted, textAlign: 'center' }}>
-          Data hamtas fran sllm.bowlres.se &middot; Uppdateras varje timme &middot;
-          <a href="https://sllm.bowlres.se/allplayers.php?contestid=107" target="_blank" rel="noopener noreferrer" style={{ color: '#f5c200', marginLeft: 4, textDecoration: 'none' }}>Se original</a>
         </div>
 
       </div>
