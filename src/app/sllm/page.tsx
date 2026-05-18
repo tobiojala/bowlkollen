@@ -44,6 +44,10 @@ export default function SLLMPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
+    // API access pending - bowlres.se partnership
+    setLoading(false)
+    setError('Spellista tillganglig nar API-avtal ar klart med bowlres.se')
+    return
     fetch('/api/sllm')
       .then(r => r.json())
       .then(data => {
