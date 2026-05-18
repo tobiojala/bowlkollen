@@ -46,7 +46,7 @@ export default function LeaguePage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-
+  const divisions = ['Elitserien Herrar', 'Elitserien Damer', 'Mellanallsvenskan Herrar']
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
