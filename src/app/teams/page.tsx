@@ -12,15 +12,18 @@ function shortName(name: string) {
 }
 
 function divisionLabel(name: string) {
-  if (name.includes(' H A') || (name.endsWith(' A') && !name.includes('DA'))) return 'Herrar'
-  if (name.includes('DA') || name.endsWith(' D')) return 'Damer'
+  if (name.endsWith(' DA') || name.endsWith(' D')) return 'Damer'
+  if (name.endsWith(' A') || name.endsWith(' H A')) return 'Elitserien'
+  if (name.endsWith(' B')) return 'Div B'
+  if (name.endsWith(' F')) return 'Allsvenskan'
   return null
 }
 
 function divisionColor(name: string) {
   const d = divisionLabel(name)
-  if (d === 'Herrar') return '#4a90d9'
   if (d === 'Damer') return '#d94a90'
+  if (d === 'Elitserien') return '#4a90d9'
+  if (d === 'Allsvenskan') return '#5ba85a'
   return '#6b7a99'
 }
 
