@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  return NextResponse.json({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 50),
-    keyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length,
-  })
+  const res = await fetch(
+    process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/players?select=id,name&limit=5',
+    {
+      headers: {
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        'Authorization': 'Bearer ' + process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      }
+    }
+  )
+  const data = await res.json()
+  return NextResponse.json({ status: res.status, data, keyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length })
 }
