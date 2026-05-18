@@ -9,6 +9,7 @@ const links = [
   { href: '/schema',    label: 'Schema'      },
   { href: '/league',    label: 'Serietabell' },
   { href: '/teams',     label: 'Lag'         },
+  { href: '/players',    label: 'Spelare'     },
   { href: '/tavlingar', label: 'Tavlingar'   },
   { href: '/sllm',      label: 'SLLM 2026'   },
   { href: '/login',     label: 'Login'       },
