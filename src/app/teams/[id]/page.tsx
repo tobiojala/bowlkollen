@@ -241,6 +241,12 @@ export default function TeamPage({ params }: Props) {
                 </div>
               )}
 
+              {/* Intern link */}
+              <a href={'/team/' + id + '/intern'}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, background: C.accent, color: '#1a1400', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                Till lagets sida →
+              </a>
+
               {/* Club team switcher */}
               {clubTeams.length > 0 && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
