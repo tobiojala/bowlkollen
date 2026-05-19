@@ -7,6 +7,7 @@ import { dark, light } from '@/lib/colors'
 
 type Player = { id: string; name: string; teamName?: string }
 type Claim = { id: string; player_id: string; status: string; players: { name: string; team_id: string } }
+type ClubClaim = { id: string; team_id: string; role: string; status: string; teams: { name: string; club: string } }
 
 function shortName(n: string) {
   return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
@@ -23,6 +24,12 @@ export default function ProfilePage() {
   const [searchResults, setSearchResults] = useState<Player[]>([])
   const [claiming, setClaiming] = useState(false)
   const [teams, setTeams] = useState<Record<string, string>>({})
+  const [clubClaims, setClubClaims] = useState<ClubClaim[]>([])
+  const [searchingClub, setSearchingClub] = useState(false)
+  const [clubSearchQ, setClubSearchQ] = useState('')
+  const [clubSearchResults, setClubSearchResults] = useState<any[]>([])
+  const [claimingClub, setClaimingClub] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<string>('captain')
 
   useEffect(() => {
     const supabase = createClient()
@@ -38,6 +45,13 @@ export default function ProfilePage() {
         .single()
 
       if (claimData) setClaim(claimData as any)
+
+      // Load club claims
+      const { data: clubClaimData } = await supabase
+        .from('club_claims')
+        .select('id, team_id, role, status, teams:team_id(name, club)')
+        .eq('user_id', session.user.id)
+      if (clubClaimData) setClubClaims(clubClaimData as any)
 
       // Load teams for name lookup
       const { data: teamsData } = await supabase.from('teams').select('id, name')
@@ -88,6 +102,44 @@ export default function ProfilePage() {
     const supabase = createClient()
     await supabase.from('player_claims').delete().eq('id', claim.id)
     setClaim(null)
+  }
+
+  const searchClubs = async () => {
+    if (!clubSearchQ.trim()) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('teams')
+      .select('id, name, club, city')
+      .ilike('club', '%' + clubSearchQ + '%')
+      .limit(10)
+    setClubSearchResults(data || [])
+  }
+
+  const claimClub = async (team: any) => {
+    setClaimingClub(true)
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const { data, error } = await supabase
+      .from('club_claims')
+      .insert({ user_id: session.user.id, team_id: team.id, role: selectedRole, status: 'pending' })
+      .select('id, team_id, role, status, teams:team_id(name, club)')
+      .single()
+
+    if (!error && data) {
+      setClubClaims(prev => [...prev, data as any])
+      setSearchingClub(false)
+      setClubSearchResults([])
+      setClubSearchQ('')
+    }
+    setClaimingClub(false)
+  }
+
+  const removeClubClaim = async (claimId: string) => {
+    const supabase = createClient()
+    await supabase.from('club_claims').delete().eq('id', claimId)
+    setClubClaims(prev => prev.filter(c => c.id !== claimId))
   }
 
   const signOut = async () => {
@@ -235,16 +287,120 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Club claim - coming soon */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, padding: '16px 20px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ fontSize: 22 }}>🏆</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Klubbsida</div>
-              <div style={{ fontSize: 12, color: C.textMuted }}>Hantera din klubbs sida pa Bowlkollen</div>
+        {/* Club claims section */}
+        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
+          <div style={{ padding: '16px 20px', borderBottom: (clubClaims.length > 0 || searchingClub) ? '1px solid ' + C.border : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontSize: 22 }}>🏆</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Mina klubbar</div>
+                <div style={{ fontSize: 12, color: C.textMuted }}>
+                  {clubClaims.length > 0 ? clubClaims.length + ' lag registrerade' : 'Claima din klubb eller ditt lag'}
+                </div>
+              </div>
+              {!searchingClub && (
+                <button onClick={() => setSearchingClub(true)}
+                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  + Lagg till
+                </button>
+              )}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, background: C.border, borderRadius: 8, padding: '4px 10px' }}>Kom snart</div>
           </div>
+
+          {/* Existing club claims */}
+          {clubClaims.map(cc => (
+            <div key={cc.id} style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{(cc.teams as any)?.club || (cc.teams as any)?.name}</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 3 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, background: C.surface, borderRadius: 6, padding: '2px 8px', border: '1px solid ' + C.border }}>
+                    {cc.role === 'captain' ? 'Kapten' : cc.role === 'admin' ? 'Admin' : 'Styrelse'}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: cc.status === 'verified' ? C.green : C.accent, background: (cc.status === 'verified' ? C.green : C.accent) + '18', borderRadius: 6, padding: '2px 8px' }}>
+                    {cc.status === 'verified' ? '✓ Verifierad' : '⏳ Väntar'}
+                  </span>
+                </div>
+              </div>
+              <a href={'/teams/' + cc.team_id}
+                style={{ fontSize: 12, color: C.accent, textDecoration: 'none', fontWeight: 600, marginRight: 8 }}>
+                Se sida →
+              </a>
+              <button onClick={() => removeClubClaim(cc.id)}
+                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.textMuted, cursor: 'pointer' }}>
+                Ta bort
+              </button>
+            </div>
+          ))}
+
+          {/* Club search */}
+          {searchingClub && (
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 10 }}>
+                Sök efter din klubb eller ditt lag:
+              </div>
+
+              {/* Role selector */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, marginBottom: 6 }}>DIN ROLL</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { key: 'captain', label: 'Kapten' },
+                    { key: 'admin', label: 'Admin' },
+                    { key: 'board', label: 'Styrelse' },
+                  ].map(r => (
+                    <button key={r.key} onClick={() => setSelectedRole(r.key)}
+                      style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid ' + (selectedRole === r.key ? C.accent : C.border), background: selectedRole === r.key ? C.accent + '18' : 'transparent', color: selectedRole === r.key ? C.accent : C.textMuted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <input value={clubSearchQ} onChange={e => setClubSearchQ(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && searchClubs()}
+                  placeholder="Klubbnamn..."
+                  style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
+                <button onClick={searchClubs}
+                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  Sok
+                </button>
+              </div>
+
+              {clubSearchResults.map(t => {
+                const alreadyClaimed = clubClaims.some(cc => cc.team_id === t.id)
+                const hue = t.club.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
+                const tc = 'hsl(' + hue + ',50%,45%)'
+                const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+                return (
+                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: C.surface, borderRadius: 10, border: '1px solid ' + C.border, marginBottom: 6 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                      {t.club.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t.club}</div>
+                      {t.city && <div style={{ fontSize: 11, color: C.textMuted }}>{t.city}</div>}
+                    </div>
+                    <button onClick={() => claimClub(t)} disabled={claimingClub || alreadyClaimed}
+                      style={{ background: alreadyClaimed ? C.surface : C.accent, color: alreadyClaimed ? C.textMuted : '#1a1400', border: alreadyClaimed ? '1px solid ' + C.border : 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: alreadyClaimed ? 'default' : 'pointer' }}>
+                      {alreadyClaimed ? 'Redan clamat' : 'Det ar mitt lag'}
+                    </button>
+                  </div>
+                )
+              })}
+
+              {clubSearchResults.length === 0 && clubSearchQ && (
+                <div style={{ fontSize: 13, color: C.textMuted, textAlign: 'center', padding: '16px 0' }}>
+                  Inga klubbar hittades
+                </div>
+              )}
+
+              <button onClick={() => { setSearchingClub(false); setClubSearchResults([]); setClubSearchQ('') }}
+                style={{ marginTop: 8, background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: 0 }}>
+                Avbryt
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Sign out */}
