@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
-type Team = { id: string; name: string; club: string; city: string | null }
+type Team = { id: string; name: string; club: string; city: string | null; slug: string | null }
 
 function shortName(name: string) {
   return name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
@@ -37,7 +37,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('teams').select('id, name, club, city').order('club').then(({ data }) => {
+    supabase.from('teams').select('id, name, club, city, slug').order('club').then(({ data }) => {
       if (data) setTeams(data as Team[])
       setLoading(false)
     })
@@ -106,7 +106,7 @@ export default function TeamsPage() {
                 return (
                   <div key={club} style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, overflow: 'hidden' }}>
                     <div
-                      onClick={() => hasMultiple ? setExpanded(isOpen ? null : club) : window.location.href = '/teams/' + clubTeams[0].id}
+                      onClick={() => hasMultiple ? setExpanded(isOpen ? null : club) : window.location.href = clubTeams[0].slug ? '/' + clubTeams[0].slug : '/teams/' + clubTeams[0].id}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
@@ -137,7 +137,7 @@ export default function TeamsPage() {
                             const div = divisionLabel(t.name)
                             const dc = divisionColor(t.name)
                             return (
-                              <a key={t.id} href={'/teams/' + t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px 11px 62px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
+                              <a key={t.id} href={t.slug ? '/' + t.slug : '/teams/' + t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px 11px 62px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
                                 onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
                                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                               >

@@ -6,7 +6,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
 type Props = { params: Promise<{ id: string }> }
-type Team = { id: string; name: string; club: string; city: string | null }
+type Team = { id: string; name: string; club: string; city: string | null; slug: string | null }
 type Match = {
   id: string; date: string; status: string
   home_score: number | null; away_score: number | null
@@ -39,6 +39,16 @@ export default function TeamPage({ params }: Props) {
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
+  const [copied, setCopied] = useState(false)
+
+  const copyLink = () => {
+    const url = team?.slug
+      ? window.location.origin + '/' + team.slug
+      : window.location.href
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -46,7 +56,7 @@ export default function TeamPage({ params }: Props) {
     if (!id) return
     const supabase = createClient()
     Promise.all([
-      supabase.from('teams').select('*').eq('id', id).single(),
+      supabase.from('teams').select('*, slug').eq('id', id).single(),
       supabase.from('matches')
         .select('id, date, status, home_score, away_score, round, venue, division, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
         .or('home_team_id.eq.' + id + ',away_team_id.eq.' + id)
@@ -127,6 +137,14 @@ export default function TeamPage({ params }: Props) {
                   </span>
                 )}
               </div>
+              {team.slug && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>bowlkollen.vercel.app/{team.slug}</span>
+                  <button onClick={copyLink} style={{ background: copied ? C.green + '22' : C.card, border: '1px solid ' + (copied ? C.green : C.border), borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, color: copied ? C.green : C.textMuted, cursor: 'pointer' }}>
+                    {copied ? '✓ Kopierad' : 'Kopiera'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
