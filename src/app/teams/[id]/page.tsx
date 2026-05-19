@@ -10,7 +10,7 @@ import SeasonTimeline from '@/components/SeasonTimeline'
 import TopPerformers from '@/components/TopPerformers'
 
 type Props = { params: Promise<{ id: string }> }
-type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
+type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null; description: string | null; contact_email: string | null; contact_phone: string | null; home_hall: string | null; website: string | null; instagram: string | null; facebook: string | null; logo_url: string | null }
 type Match = {
   id: string; date: string; status: string
   home_score: number | null; away_score: number | null
@@ -46,6 +46,31 @@ export default function TeamPage({ params }: Props) {
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
   const [copied, setCopied] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [editingTeam, setEditingTeam] = useState(false)
+  const [savingTeam, setSavingTeam] = useState(false)
+  const [teamEdit, setTeamEdit] = useState<any>({})
+
+  const saveTeam = async () => {
+    if (!id) return
+    setSavingTeam(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('teams').update({
+      description: teamEdit.description,
+      contact_email: teamEdit.contact_email,
+      contact_phone: teamEdit.contact_phone,
+      home_hall: teamEdit.home_hall,
+      website: teamEdit.website,
+      instagram: teamEdit.instagram,
+      facebook: teamEdit.facebook,
+      city: teamEdit.city,
+    }).eq('id', id)
+    if (!error) {
+      setTeam((prev: any) => prev ? { ...prev, ...teamEdit } : null)
+      setEditingTeam(false)
+    }
+    setSavingTeam(false)
+  }
 
   const copyLink = () => {
     const url = team?.slug
@@ -71,6 +96,7 @@ export default function TeamPage({ params }: Props) {
     ]).then(([{ data: t }, { data: m }, { data: p }]) => {
       if (t) {
         setTeam(t as Team)
+        setTeamEdit(t)
         if ((t as any).club_slug) {
           supabase.from('teams').select('id, name, club_slug, team_path')
             .eq('club_slug', (t as any).club_slug)
@@ -80,6 +106,18 @@ export default function TeamPage({ params }: Props) {
         }
       }
       if (m) setMatches(m as unknown as Match[])
+
+      // Check if logged in user is admin of this team
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: claim } = await supabase
+          .from('club_claims')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('team_id', id)
+          .single()
+        setIsAdmin(!!claim)
+      }
       if (p) setPlayers(p as Player[])
       setLoading(false)
     })
@@ -153,11 +191,17 @@ export default function TeamPage({ params }: Props) {
                 )}
               </div>
               {team.slug && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' as const }}>
                   <span style={{ fontSize: 11, color: C.textMuted }}>bowlkollen.vercel.app/{team.slug}</span>
                   <button onClick={copyLink} style={{ background: copied ? C.green + '22' : C.card, border: '1px solid ' + (copied ? C.green : C.border), borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, color: copied ? C.green : C.textMuted, cursor: 'pointer' }}>
                     {copied ? '✓ Kopierad' : 'Kopiera'}
                   </button>
+                  {isAdmin && (
+                    <button onClick={() => setEditingTeam(!editingTeam)}
+                      style={{ background: editingTeam ? C.accent + '22' : C.card, border: '1px solid ' + (editingTeam ? C.accent : C.border), borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, color: editingTeam ? C.accent : C.textMuted, cursor: 'pointer' }}>
+                      {editingTeam ? '✕ Stang' : '✏️ Redigera'}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -179,6 +223,63 @@ export default function TeamPage({ params }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Team description (public) */}
+        {team.description && !editingTeam && (
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid ' + C.border, fontSize: 13, color: C.textMuted, lineHeight: 1.6, fontStyle: 'italic' }}>
+            "{team.description}"
+          </div>
+        )}
+
+        {/* Team contact info (public) */}
+        {(team.home_hall || team.website || team.instagram || team.contact_email) && !editingTeam && (
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+            {team.home_hall && <span style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px' }}>📍 {team.home_hall}</span>}
+            {team.website && <a href={team.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.accent, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>🌐 Webbplats</a>}
+            {team.instagram && <a href={'https://instagram.com/' + team.instagram} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>📸 @{team.instagram}</a>}
+            {team.contact_email && <a href={'mailto:' + team.contact_email} style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>✉️ {team.contact_email}</a>}
+          </div>
+        )}
+
+        {/* Admin edit panel */}
+        {editingTeam && isAdmin && (
+          <div style={{ background: theme === 'dark' ? '#0d1a2e' : '#f0f4f8', borderBottom: '1px solid ' + C.border, padding: '16px 20px' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: C.accent, letterSpacing: 1, marginBottom: 14 }}>REDIGERA LAGSIDA</div>
+            {[
+              { label: 'Beskrivning', key: 'description', placeholder: 'Berätta om laget...', type: 'textarea' },
+              { label: 'Stad', key: 'city', placeholder: 'T.ex. Stockholm' },
+              { label: 'Hemmaplan', key: 'home_hall', placeholder: 'T.ex. Nässjö Bowling' },
+              { label: 'Kontakt email', key: 'contact_email', placeholder: 'kapten@klubb.se' },
+              { label: 'Telefon', key: 'contact_phone', placeholder: '+46 70 123 45 67' },
+              { label: 'Webbplats', key: 'website', placeholder: 'https://...' },
+              { label: 'Instagram', key: 'instagram', placeholder: 'användarnamn' },
+              { label: 'Facebook', key: 'facebook', placeholder: 'https://facebook.com/...' },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 4 }}>{f.label.toUpperCase()}</div>
+                {f.type === 'textarea' ? (
+                  <textarea value={teamEdit[f.key] || ''} onChange={e => setTeamEdit((prev: any) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder} rows={3}
+                    style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'system-ui', boxSizing: 'border-box' as const }} />
+                ) : (
+                  <input value={teamEdit[f.key] || ''} onChange={e => setTeamEdit((prev: any) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder}
+                    style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }} />
+                )}
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button onClick={saveTeam} disabled={savingTeam}
+                style={{ flex: 1, background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: savingTeam ? 0.7 : 1 }}>
+                {savingTeam ? 'Sparar...' : 'Spara'}
+              </button>
+              <button onClick={() => { setEditingTeam(false); setTeamEdit(team) }}
+                style={{ flex: 1, background: 'transparent', color: C.textMuted, border: '1px solid ' + C.border, borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Avbryt
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats bar */}
         {completed.length > 0 && (
