@@ -181,7 +181,8 @@ export default function TeamPage({ params }: Props) {
 
         {/* Stats bar */}
         {completed.length > 0 && (
-          <div onClick={() => setStatsOpen(!statsOpen)} style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '14px 20px', display: 'flex', gap: 0, cursor: 'pointer' }}>
+          <div onClick={() => setStatsOpen(!statsOpen)} style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '14px 20px 10px', display: 'flex', flexDirection: 'column', gap: 0, cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: 0 }}>
             {[
               { label: 'Matcher', value: completed.length },
               { label: 'Vunna', value: wins, color: C.green },
@@ -194,6 +195,15 @@ export default function TeamPage({ params }: Props) {
                 <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
               </div>
             ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {last5.map((f, i) => (
+                  <div key={i} style={{ width: 18, height: 18, borderRadius: '50%', background: formColor(f) + '22', border: '1px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: formColor(f) }}>{f}</div>
+                ))}
+              </div>
+              <div style={{ fontSize: 10, color: C.textMuted }}>{statsOpen ? '▲ stang' : '▼ mer statistik'}</div>
+            </div>
           </div>
         )}
 
@@ -227,30 +237,16 @@ export default function TeamPage({ params }: Props) {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Diff + Form */}
-        {completed.length > 0 && (
-          <div style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ fontSize: 12, color: C.textMuted }}>
-              <span style={{ fontWeight: 700, color: diff >= 0 ? C.green : '#e05555' }}>
-                {diff >= 0 ? '+' : ''}{diff}
-              </span>
-              {' '}differens · {ptsFor}-{ptsAgainst} MP
-            </div>
-            {last5.length > 0 && (
-              <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: C.textMuted, marginRight: 4 }}>FORM</span>
-                {last5.map((f, i) => (
-                  <div key={i} style={{ width: 22, height: 22, borderRadius: '50%', background: formColor(f) + '22', border: '1.5px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: formColor(f) }}>
-                    {f}
-                  </div>
-                ))}
+            {/* Season timeline inside curtain */}
+            {id && (
+              <div style={{ marginTop: 12 }}>
+                <SeasonTimeline teamId={id} />
               </div>
             )}
           </div>
         )}
+
+
 
         {/* Next match preview */}
         {upcoming.length > 0 && id && (
@@ -260,11 +256,6 @@ export default function TeamPage({ params }: Props) {
         {/* Table position widget */}
         {division && completed.length > 0 && (
           <TeamTableWidget teamId={id!} division={division} />
-        )}
-
-        {/* Season timeline */}
-        {id && matches.length > 0 && (
-          <SeasonTimeline teamId={id} />
         )}
 
         {/* Tabs */}
