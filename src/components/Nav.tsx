@@ -44,6 +44,7 @@ export default function Nav() {
   const border    = isDark ? '#2a3858' : '#e0e4ed'
   const accent    = '#f5c200'
   const textMuted = isDark ? '#6b7a99' : '#6b7a8d'
+  const accent = '#f5c200'
   const card      = isDark ? '#1c2840' : '#f0f2f5'
   const text      = isDark ? '#ffffff' : '#0f1923'
   const overlay   = isDark ? 'rgba(10,16,30,0.92)' : 'rgba(240,242,245,0.97)'
@@ -77,9 +78,16 @@ export default function Nav() {
               )
             })}
             {user ? (
-              <button onClick={signOut} style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, color: textMuted, cursor: 'pointer' }}>
-                Logga ut
-              </button>
+              <a href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '4px 10px', textDecoration: 'none' }}>
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} style={{ width: 22, height: 22, borderRadius: '50%' }} />
+                ) : (
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: accent + '22', border: '1px solid ' + accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: accent }}>
+                    {(user.user_metadata?.full_name || user.email || '').slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <span style={{ fontSize: 11, fontWeight: 700, color: textMuted }}>Profil</span>
+              </a>
             ) : (
               <a href="/login" style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, color: textMuted, textDecoration: 'none' }}>
                 Logga in
@@ -93,9 +101,15 @@ export default function Nav() {
           {/* Mobile right side */}
           <div className="mobile-nav" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
             {user ? (
-              <button onClick={signOut} style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: textMuted, cursor: 'pointer' }}>
-                Logga ut
-              </button>
+              <a href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '4px 8px', textDecoration: 'none' }}>
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} style={{ width: 22, height: 22, borderRadius: '50%' }} />
+                ) : (
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: accent + '22', border: '1px solid ' + accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: accent }}>
+                    {(user.user_metadata?.full_name || user.email || '').slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </a>
             ) : (
               <a href="/login" style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: textMuted, textDecoration: 'none' }}>
                 Logga in
