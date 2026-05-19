@@ -42,14 +42,40 @@ export default function TeamPage({ params }: Props) {
   const [matches, setMatches] = useState<Match[]>([])
   const [players, setPlayers] = useState<Player[]>([])
   const [clubTeams, setClubTeams] = useState<any[]>([])
+  const [posts, setPosts] = useState<any[]>([])
+  const [newPost, setNewPost] = useState('')
+  const [postingType, setPostingType] = useState<'news' | 'lineup'>('news')
+  const [submittingPost, setSubmittingPost] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
+  const [tab, setTab] = useState<'results' | 'upcoming' | 'squad' | 'community'>('results')
   const [copied, setCopied] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [editingTeam, setEditingTeam] = useState(false)
   const [savingTeam, setSavingTeam] = useState(false)
   const [teamEdit, setTeamEdit] = useState<any>({})
+
+  const submitPost = async () => {
+    if (!newPost.trim() || !id) return
+    setSubmittingPost(true)
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('team_posts')
+      .insert({ team_id: id, user_id: (await supabase.auth.getSession()).data.session?.user.id, content: newPost, post_type: postingType })
+      .select('*')
+      .single()
+    if (!error && data) {
+      setPosts(prev => [data, ...prev])
+      setNewPost('')
+    }
+    setSubmittingPost(false)
+  }
+
+  const deletePost = async (postId: string) => {
+    const supabase = createClient()
+    await supabase.from('team_posts').delete().eq('id', postId)
+    setPosts(prev => prev.filter(p => p.id !== postId))
+  }
 
   const saveTeam = async () => {
     if (!id) return
@@ -119,6 +145,16 @@ export default function TeamPage({ params }: Props) {
         setIsAdmin(!!claim)
       }
       if (p) setPlayers(p as Player[])
+
+      // Load community posts
+      const { data: postsData } = await supabase
+        .from('team_posts')
+        .select('*')
+        .eq('team_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (postsData) setPosts(postsData)
+
       setLoading(false)
     })
   }, [id])
@@ -371,6 +407,7 @@ export default function TeamPage({ params }: Props) {
             { key: 'results', label: 'Resultat', count: completed.length },
             { key: 'upcoming', label: 'Kommande', count: upcoming.length },
             { key: 'squad', label: 'Trupp', count: players.length },
+          { key: 'community', label: 'Community', count: posts.length },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)}
               style={{ flex: 1, padding: '12px 8px', border: 'none', borderBottom: '2px solid ' + (tab === t.key ? '#f5c200' : 'transparent'), background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, color: tab === t.key ? '#f5c200' : C.textMuted, WebkitTapHighlightColor: 'transparent' }}
@@ -490,6 +527,80 @@ export default function TeamPage({ params }: Props) {
             )}
 
 
+          </div>
+        )}
+
+      </div>
+
+        {/* Community tab */}
+        {tab === 'community' && (
+          <div>
+            {/* Post composer - only for admins */}
+            {isAdmin && (
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  {[
+                    { key: 'news', label: '📢 Nyhet' },
+                    { key: 'lineup', label: '📋 Laguttagning' },
+                  ].map(t => (
+                    <button key={t.key} onClick={() => setPostingType(t.key as any)}
+                      style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid ' + (postingType === t.key ? C.accent : C.border), background: postingType === t.key ? C.accent + '18' : 'transparent', color: postingType === t.key ? C.accent : C.textMuted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={newPost}
+                  onChange={e => setNewPost(e.target.value)}
+                  placeholder={postingType === 'news' ? 'Dela en nyhet med laget...' : 'Skriv laguttagningen...'}
+                  rows={3}
+                  style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 10, padding: '10px 12px', color: C.text, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'system-ui', boxSizing: 'border-box' as const, marginBottom: 8 }}
+                />
+                <button onClick={submitPost} disabled={submittingPost || !newPost.trim()}
+                  style={{ background: newPost.trim() ? C.accent : C.border, color: newPost.trim() ? '#1a1400' : C.textMuted, border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: newPost.trim() ? 'pointer' : 'default', float: 'right' as const }}>
+                  {submittingPost ? 'Publicerar...' : 'Publicera'}
+                </button>
+                <div style={{ clear: 'both' }} />
+              </div>
+            )}
+
+            {/* Posts feed */}
+            {posts.length === 0 && (
+              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>📢</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga inlagg an</div>
+                <div style={{ fontSize: 13, color: C.textMuted }}>
+                  {isAdmin ? 'Dela nyheter och laguttagningar med laget' : 'Kapten har inte publicerat nagonting an'}
+                </div>
+              </div>
+            )}
+
+            {posts.map(post => {
+              const postDate = new Date(post.created_at)
+              const dateStr = postDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' })
+              const timeStr = postDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+              const isLineup = post.post_type === 'lineup'
+
+              return (
+                <div key={post.id} style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: isLineup ? C.accent : C.green, background: (isLineup ? C.accent : C.green) + '18', borderRadius: 6, padding: '2px 8px' }}>
+                      {isLineup ? '📋 LAGUTTAGNING' : '📢 NYHET'}
+                    </span>
+                    <span style={{ fontSize: 11, color: C.textMuted, marginLeft: 'auto' }}>{dateStr} {timeStr}</span>
+                    {isAdmin && (
+                      <button onClick={() => deletePost(post.id)}
+                        style={{ background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: '0 4px' }}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 14, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' as const }}>
+                    {post.content}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
 
