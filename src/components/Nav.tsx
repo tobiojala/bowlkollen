@@ -44,7 +44,6 @@ export default function Nav() {
   const border    = isDark ? '#2a3858' : '#e0e4ed'
   const accent    = '#f5c200'
   const textMuted = isDark ? '#6b7a99' : '#6b7a8d'
-  const accent = '#f5c200'
   const card      = isDark ? '#1c2840' : '#f0f2f5'
   const text      = isDark ? '#ffffff' : '#0f1923'
   const overlay   = isDark ? 'rgba(10,16,30,0.92)' : 'rgba(240,242,245,0.97)'
