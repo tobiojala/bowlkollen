@@ -6,32 +6,28 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
 type Props = { params: Promise<{ id: string }> }
-type Team = { id: string; name: string; club: string; city: string; division?: string }
+type Team = { id: string; name: string; club: string; city: string | null }
 type Match = {
-  id: string
-  date: string
-  status: string
-  home_score: number | null
-  away_score: number | null
-  round: number
-  venue: string
-  division: string
-  home_team_id: string
-  away_team_id: string
+  id: string; date: string; status: string
+  home_score: number | null; away_score: number | null
+  round: number; venue: string; division: string
+  home_team_id: string; away_team_id: string
   home: { id: string; name: string }
   away: { id: string; name: string }
 }
+type Player = { id: string; name: string }
 
-function shortName(name: string) {
-  return name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
+function shortName(n: string) {
+  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
 
-function divisionColor(division: string | null) {
-  if (!division) return '#6b7a99'
-  if (division.includes('Herrar')) return '#4a90d9'
-  if (division.includes('Damer')) return '#d94a90'
-  if (division.includes('SM') || division.includes('slutspel')) return '#f5c200'
-  return '#6b7a99'
+function divisionColor(d: string | null) {
+  if (!d) return '#6b7a99'
+  if (d.includes('Elitserien') && d.includes('Herrar')) return '#4a90d9'
+  if (d.includes('Elitserien') && d.includes('Damer')) return '#d94a90'
+  if (d.includes('SM')) return '#f5c200'
+  if (d.includes('Allsvenskan')) return '#5ba85a'
+  return '#8a7a5a'
 }
 
 export default function TeamPage({ params }: Props) {
@@ -40,8 +36,9 @@ export default function TeamPage({ params }: Props) {
   const [id, setId] = useState<string | null>(null)
   const [team, setTeam] = useState<Team | null>(null)
   const [matches, setMatches] = useState<Match[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'results' | 'upcoming'>('results')
+  const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -54,9 +51,11 @@ export default function TeamPage({ params }: Props) {
         .select('id, date, status, home_score, away_score, round, venue, division, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
         .or('home_team_id.eq.' + id + ',away_team_id.eq.' + id)
         .order('date', { ascending: false }),
-    ]).then(([{ data: t }, { data: m }]) => {
+      supabase.from('players').select('id, name').eq('team_id', id).order('name'),
+    ]).then(([{ data: t }, { data: m }, { data: p }]) => {
       if (t) setTeam(t as Team)
       if (m) setMatches(m as unknown as Match[])
+      if (p) setPlayers(p as Player[])
       setLoading(false)
     })
   }, [id])
@@ -80,177 +79,266 @@ export default function TeamPage({ params }: Props) {
 
   const completed = matches.filter(m => m.status === 'completed' && m.home_score !== null)
   const upcoming = matches.filter(m => m.status === 'upcoming' || m.status === 'live')
+  const isHome = (m: Match) => m.home_team_id === id
 
   // Stats
-  const isHome = (m: Match) => m.home_team_id === id
-  const wins = completed.filter(m => isHome(m) ? (m.home_score! > m.away_score!) : (m.away_score! > m.home_score!)).length
-  const losses = completed.filter(m => isHome(m) ? (m.home_score! < m.away_score!) : (m.away_score! < m.home_score!)).length
+  const wins = completed.filter(m => isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!).length
+  const losses = completed.filter(m => isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!).length
   const draws = completed.filter(m => m.home_score === m.away_score).length
   const points = wins * 2 + draws
   const ptsFor = completed.reduce((s, m) => s + (isHome(m) ? m.home_score! : m.away_score!), 0)
   const ptsAgainst = completed.reduce((s, m) => s + (isHome(m) ? m.away_score! : m.home_score!), 0)
   const diff = ptsFor - ptsAgainst
 
-  // Form — last 5 completed
-  const last5 = [...completed].reverse().slice(0, 5).map(m => {
+  // Form last 5
+  const last5 = [...completed].slice(0, 5).map(m => {
     const hw = isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!
     const lw = isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!
-    return hw ? 'W' : lw ? 'L' : 'D'
+    return hw ? 'V' : lw ? 'F' : 'O'
   })
+  const formColor = (f: string) => f === 'V' ? C.green : f === 'F' ? '#e05555' : C.textMuted
 
-  const formColor = (f: string) => f === 'W' ? C.green : f === 'L' ? '#e05555' : C.textMuted
+  // Division from most recent match
+  const division = completed[0]?.division || upcoming[0]?.division || null
+  const divColor = divisionColor(division)
 
   const displayMatches = tab === 'results' ? completed : upcoming
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 16px 48px' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 0 48px' }}>
 
-        <a href="/teams" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
-          ← Alla lag
-        </a>
-
-        {/* Team hero */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, padding: 20, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 14, background: tclo, border: '2px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: tc, flexShrink: 0 }}>
+        {/* Hero banner */}
+        <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '24px 20px 20px', marginBottom: 0 }}>
+          <a href="/teams" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
+            ← Alla lag
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 68, height: 68, borderRadius: 16, background: tclo, border: '2.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: tc, flexShrink: 0 }}>
               {ini}
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 2 }}>{shortName(team.name)}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {team.club && <span style={{ fontSize: 11, color: C.textMuted }}>{team.club}</span>}
-                {team.city && <span style={{ fontSize: 11, color: C.textMuted }}>· {team.city}</span>}
-                {completed.length > 0 && matches[0]?.division && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: divisionColor(matches[0]?.division), background: divisionColor(matches[0]?.division) + '18', borderRadius: 6, padding: '1px 7px' }}>
-                    {matches[0]?.division}
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 4 }}>{shortName(team.name)}</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                {team.city && <span style={{ fontSize: 12, color: C.textMuted }}>{team.city}</span>}
+                {division && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: divColor, background: divColor + '22', borderRadius: 6, padding: '2px 8px' }}>
+                    {division}
                   </span>
                 )}
               </div>
             </div>
           </div>
-
-          {/* Stats grid */}
-          {completed.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
-              {[
-                { label: 'Vunna', value: wins, color: C.green },
-                { label: 'Oavgjorda', value: draws, color: C.textMuted },
-                { label: 'Forlorade', value: losses, color: '#e05555' },
-                { label: 'Poang', value: points, color: C.accent },
-              ].map(s => (
-                <div key={s.label} style={{ background: C.surface, borderRadius: 10, padding: '10px 8px', textAlign: 'center', border: '1px solid ' + C.border }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Points diff and form */}
-          {completed.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ background: C.surface, borderRadius: 10, padding: '8px 12px', border: '1px solid ' + C.border, flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: diff >= 0 ? C.green : '#e05555' }}>
-                  {diff >= 0 ? '+' : ''}{diff}
-                </div>
-                <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>DIFFERENS</div>
-              </div>
-              <div style={{ background: C.surface, borderRadius: 10, padding: '8px 12px', border: '1px solid ' + C.border, flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{ptsFor} - {ptsAgainst}</div>
-                <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>FOR - MOT</div>
-              </div>
-              {last5.length > 0 && (
-                <div style={{ background: C.surface, borderRadius: 10, padding: '8px 12px', border: '1px solid ' + C.border, flex: 1 }}>
-                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                    {last5.map((f, i) => (
-                      <span key={i} style={{ width: 20, height: 20, borderRadius: '50%', background: formColor(f) + '22', border: '1.5px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: formColor(f) }}>
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, textAlign: 'center' }}>FORM</div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
+        {/* Stats bar */}
+        {completed.length > 0 && (
+          <div style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '14px 20px', display: 'flex', gap: 0 }}>
+            {[
+              { label: 'Matcher', value: completed.length },
+              { label: 'Vunna', value: wins, color: C.green },
+              { label: 'Oavgjorda', value: draws, color: C.textMuted },
+              { label: 'Forlorade', value: losses, color: '#e05555' },
+              { label: 'Poang', value: points, color: C.accent },
+            ].map((s, i) => (
+              <div key={s.label} style={{ flex: 1, textAlign: 'center', borderRight: i < 4 ? '1px solid ' + C.border : 'none' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: s.color || C.text, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Diff + Form */}
+        {completed.length > 0 && (
+          <div style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ fontSize: 12, color: C.textMuted }}>
+              <span style={{ fontWeight: 700, color: diff >= 0 ? C.green : '#e05555' }}>
+                {diff >= 0 ? '+' : ''}{diff}
+              </span>
+              {' '}differens · {ptsFor}-{ptsAgainst} MP
+            </div>
+            {last5.length > 0 && (
+              <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: C.textMuted, marginRight: 4 }}>FORM</span>
+                {last5.map((f, i) => (
+                  <div key={i} style={{ width: 22, height: 22, borderRadius: '50%', background: formColor(f) + '22', border: '1.5px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: formColor(f) }}>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Next match banner */}
+        {upcoming.length > 0 && (
+          <a href={'/matches/' + upcoming[0].id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: theme === 'dark' ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.06)', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f5c200', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: '#f5c200', fontWeight: 700, marginBottom: 2 }}>NASTA MATCH</div>
+              <div style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>
+                {shortName(isHome(upcoming[0]) ? (upcoming[0].away?.name || '') : (upcoming[0].home?.name || ''))}
+              </div>
+              <div style={{ fontSize: 11, color: C.textMuted }}>{upcoming[0].date?.slice(0, 10)} · {upcoming[0].venue}</div>
+            </div>
+            <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
+          </a>
+        )}
+
         {/* Tabs */}
-        <div style={{ display: 'flex', background: C.card, borderRadius: 10, padding: 4, marginBottom: 16, border: '1px solid ' + C.border, gap: 4 }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid ' + C.border, background: C.bg }}>
           {[
             { key: 'results', label: 'Resultat', count: completed.length },
             { key: 'upcoming', label: 'Kommande', count: upcoming.length },
+            { key: 'squad', label: 'Trupp', count: players.length },
           ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key as any)} style={{ flex: 1, background: tab === t.key ? C.surface : 'transparent', border: tab === t.key ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px 6px', fontSize: 12, fontWeight: 700, color: tab === t.key ? C.accent : C.textMuted, cursor: 'pointer' }}>
-              {t.label} {t.count > 0 && <span style={{ fontSize: 10, opacity: 0.7 }}>({t.count})</span>}
+            <button key={t.key} onClick={() => setTab(t.key as any)}
+              style={{ flex: 1, padding: '12px 8px', border: 'none', borderBottom: '2px solid ' + (tab === t.key ? '#f5c200' : 'transparent'), background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, color: tab === t.key ? '#f5c200' : C.textMuted, WebkitTapHighlightColor: 'transparent' }}
+            >
+              {t.label}
+              {t.count > 0 && <span style={{ fontSize: 10, marginLeft: 5, opacity: 0.7 }}>({t.count})</span>}
             </button>
           ))}
         </div>
 
-        {/* Match list */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {displayMatches.length === 0 && (
-            <div style={{ padding: '32px', textAlign: 'center', color: C.textMuted, fontSize: 13, background: C.card, borderRadius: 12, border: '1px solid ' + C.border }}>
-              Inga matcher att visa
-            </div>
-          )}
-          {displayMatches.map(m => {
-            const home = isHome(m)
-            const teamScore = home ? m.home_score : m.away_score
-            const oppScore = home ? m.away_score : m.home_score
-            const opp = home ? m.away : m.home
-            const won = teamScore !== null && oppScore !== null && teamScore > oppScore
-            const lost = teamScore !== null && oppScore !== null && teamScore < oppScore
-            const drew = teamScore !== null && oppScore !== null && teamScore === oppScore
-            const oppHue = (opp?.name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-            const oppTc = 'hsl(' + oppHue + ',50%,45%)'
-            const oppTclo = theme === 'dark' ? 'hsl(' + oppHue + ',40%,15%)' : 'hsl(' + oppHue + ',40%,92%)'
-            const resultLabel = won ? 'V' : lost ? 'F' : drew ? 'O' : null
-            const resultColor = won ? C.green : lost ? '#e05555' : C.textMuted
+        {/* Results / Upcoming */}
+        {tab !== 'squad' && (
+          <div>
+            {displayMatches.length === 0 && (
+              <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
+                Inga matcher att visa
+              </div>
+            )}
+            {displayMatches.map(m => {
+              const home = isHome(m)
+              const teamScore = home ? m.home_score : m.away_score
+              const oppScore = home ? m.away_score : m.home_score
+              const opp = home ? m.away : m.home
+              const won = teamScore !== null && oppScore !== null && teamScore > oppScore
+              const lost = teamScore !== null && oppScore !== null && teamScore < oppScore
+              const drew = teamScore !== null && oppScore !== null && teamScore === oppScore
+              const oppHue = (opp?.name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+              const oppTc = 'hsl(' + oppHue + ',50%,45%)'
+              const oppTclo = theme === 'dark' ? 'hsl(' + oppHue + ',40%,15%)' : 'hsl(' + oppHue + ',40%,92%)'
+              const resultLabel = won ? 'V' : lost ? 'F' : drew ? 'O' : null
+              const resultColor = won ? C.green : lost ? '#e05555' : C.textMuted
+              const isLive = m.status === 'live'
+              const divC = divisionColor(m.division)
 
-            return (
-              <a key={m.id} href={'/matches/' + m.id} style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px' }}
-                onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
-                onMouseLeave={e => (e.currentTarget.style.background = C.card)}
-              >
-                {/* Result badge */}
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: resultLabel ? resultColor + '22' : C.surface, border: '1.5px solid ' + (resultLabel ? resultColor : C.border), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: resultLabel ? resultColor : C.textMuted, flexShrink: 0 }}>
-                  {resultLabel || (m.status === 'live' ? '●' : '—')}
-                </div>
-
-                {/* Opponent */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: oppTclo, border: '1.5px solid ' + oppTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: oppTc, flexShrink: 0 }}>
-                    {shortName(opp?.name || '').split(' ').map((w:string) => w[0]).join('').slice(0, 3).toUpperCase()}
+              return (
+                <a key={m.id} href={'/matches/' + m.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  {/* Result badge */}
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: resultLabel ? resultColor + '22' : C.card, border: '1.5px solid ' + (resultLabel ? resultColor : C.border), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: resultLabel ? resultColor : C.textMuted, flexShrink: 0 }}>
+                    {isLive ? '●' : resultLabel || '—'}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {shortName(opp?.name || '')}
+
+                  {/* Opponent */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 7, background: oppTclo, border: '1.5px solid ' + oppTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: oppTc, flexShrink: 0 }}>
+                      {shortName(opp?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
                     </div>
-                    <div style={{ fontSize: 10, color: C.textMuted }}>{home ? 'Hemma' : 'Borta'} · {m.date?.slice(0, 10)}</div>
-                  </div>
-                </div>
-
-                {/* Score */}
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  {teamScore !== null ? (
-                    <>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: won ? C.accent : C.text }}>
-                        {teamScore} - {oppScore}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {shortName(opp?.name || '')}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted }}>MP</div>
-                    </>
-                  ) : (
-                    <div style={{ fontSize: 11, color: m.status === 'live' ? '#e05555' : C.textMuted, fontWeight: m.status === 'live' ? 700 : 400 }}>
-                      {m.status === 'live' ? '● LIVE' : m.date ? new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 1 }}>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>{home ? 'Hemma' : 'Borta'} · {m.date?.slice(0, 10)}</div>
+                        {m.division && (
+                          <span style={{ fontSize: 9, fontWeight: 700, color: divC, background: divC + '18', borderRadius: 4, padding: '1px 5px' }}>
+                            {m.division.replace(' Herrar', ' H').replace(' Damer', ' D')}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Score */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    {teamScore !== null ? (
+                      <>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: won ? C.accent : C.text }}>
+                          {teamScore} - {oppScore}
+                        </div>
+                        <div style={{ fontSize: 9, color: C.textMuted }}>MP</div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 11, color: isLive ? '#e05555' : C.textMuted, fontWeight: isLive ? 700 : 400 }}>
+                        {isLive ? '● LIVE' : m.date ? new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Squad tab */}
+        {tab === 'squad' && (
+          <div>
+            {players.length === 0 ? (
+              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>👤</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
+                <div style={{ fontSize: 13, color: C.textMuted }}>Spelare laggs till nar live scoring anvands</div>
+              </div>
+            ) : (
+              players.map(p => {
+                const phue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+                const ptc = 'hsl(' + phue + ',50%,45%)'
+                const ptclo = theme === 'dark' ? 'hsl(' + phue + ',40%,15%)' : 'hsl(' + phue + ',40%,92%)'
+                return (
+                  <a key={p.id} href={'/players/' + p.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: ptclo, border: '1.5px solid ' + ptc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ptc, flexShrink: 0 }}>
+                      {p.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{p.name}</div>
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
+                  </a>
+                )
+              })
+            )}
+
+            {/* Locked community teaser */}
+            <div style={{ margin: '16px', background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>🔒</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 6 }}>Lagets community</div>
+                <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16, lineHeight: 1.5 }}>
+                  Nyheter, laguttagning, tillganglighet och mer — bara for lagmedlemmar
                 </div>
-              </a>
-            )
-          })}
-        </div>
+                <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
+                    <span>📢</span> Nyheter och laguttagning
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
+                    <span>✅</span> Tillganglighetshantering
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
+                    <span>📅</span> Kalender och aktiviteter
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
+                    <span>💬</span> Diskussionsforum
+                  </div>
+                </div>
+                <button style={{ marginTop: 16, background: '#f5c200', color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 13, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
+                  Kom snart — Club Small fran 99 kr/man
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </main>
