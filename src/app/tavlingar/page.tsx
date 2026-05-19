@@ -171,8 +171,8 @@ export default function TavlingarPage() {
       <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border }}>
         <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px' } as any}>
           {(['alla', 'pagaende', 'kommande', 'avslutad'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              style={{ background: filter === f ? C.accent : 'transparent', border: '1px solid ' + (filter === f ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
+            <button key={f} onClick={() => setActiveSection(f === 'alla' ? null : f)}
+              style={{ background: activeSection === f || (f === 'alla' && !activeSection) ? C.accent : 'transparent', border: '1px solid ' + (activeSection === f || (f === 'alla' && !activeSection) ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 700, color: activeSection === f || (f === 'alla' && !activeSection) ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
             >
               {f === 'alla' ? 'Alla' : f === 'pagaende' ? 'Pagaende' : f === 'kommande' ? 'Kommande' : 'Avslutade'}
             </button>
