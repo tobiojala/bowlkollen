@@ -584,7 +584,7 @@ export default function TeamPage({ params }: Props) {
                 <div key={post.id} style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: isLineup ? C.accent : C.green, background: (isLineup ? C.accent : C.green) + '18', borderRadius: 6, padding: '2px 8px' }}>
-                      {isLineup ? '📋 LAGUTTAGNING' : '📢 NYHET'}
+                      {isLineup ? 'LAGUTTAGNING' : 'NYHET'}
                     </span>
                     <span style={{ fontSize: 11, color: C.textMuted, marginLeft: 'auto' }}>{dateStr} {timeStr}</span>
                     {isAdmin && (
