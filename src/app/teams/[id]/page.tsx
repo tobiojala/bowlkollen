@@ -539,8 +539,8 @@ export default function TeamPage({ params }: Props) {
               <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                   {[
-                    { key: 'news', label: '📢 Nyhet' },
-                    { key: 'lineup', label: '📋 Laguttagning' },
+                    { key: 'news', label: 'Nyhet' },
+                    { key: 'lineup', label: 'Laguttagning' },
                   ].map(t => (
                     <button key={t.key} onClick={() => setPostingType(t.key as any)}
                       style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid ' + (postingType === t.key ? C.accent : C.border), background: postingType === t.key ? C.accent + '18' : 'transparent', color: postingType === t.key ? C.accent : C.textMuted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
@@ -566,7 +566,7 @@ export default function TeamPage({ params }: Props) {
             {/* Posts feed */}
             {posts.length === 0 && (
               <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>📢</div>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>--</div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga inlagg an</div>
                 <div style={{ fontSize: 13, color: C.textMuted }}>
                   {isAdmin ? 'Dela nyheter och laguttagningar med laget' : 'Kapten har inte publicerat nagonting an'}
