@@ -10,6 +10,12 @@ export default function LoginPage() {
   const C = theme === 'dark' ? dark : light
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [magicSent, setMagicSent] = useState(false)
+  const [magicLoading, setMagicLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [magicSent, setMagicSent] = useState(false)
+  const [magicLoading, setMagicLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -17,6 +23,34 @@ export default function LoginPage() {
       if (session) window.location.href = '/'
     })
   }, [])
+
+  const signInWithMagicLink = async () => {
+    if (!email.trim()) return
+    setMagicLoading(true)
+    setError(null)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.origin + '/auth/callback' }
+    })
+    if (error) setError(error.message)
+    else setMagicSent(true)
+    setMagicLoading(false)
+  }
+
+  const signInWithMagicLink = async () => {
+    if (!email.trim()) return
+    setMagicLoading(true)
+    setError(null)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.origin + '/auth/callback' }
+    })
+    if (error) setError(error.message)
+    else setMagicSent(true)
+    setMagicLoading(false)
+  }
 
   const signInWithGoogle = async () => {
     setLoading(true)
@@ -65,6 +99,36 @@ export default function LoginPage() {
         {error && (
           <div style={{ background: '#e05555' + '18', border: '1px solid #e05555', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#e05555', textAlign: 'center', marginBottom: 16 }}>
             {error}
+          </div>
+        )}
+
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: C.border }} />
+          <span style={{ fontSize: 11, color: C.textMuted }}>eller med email</span>
+          <div style={{ flex: 1, height: 1, background: C.border }} />
+        </div>
+
+        {/* Magic link */}
+        {!magicSent ? (
+          <div style={{ marginBottom: 16 }}>
+            <input
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && signInWithMagicLink()}
+              type="email"
+              placeholder="din@email.com"
+              style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 12, padding: '13px 16px', color: C.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, marginBottom: 8 }}
+            />
+            <button onClick={signInWithMagicLink} disabled={magicLoading || !email.trim()}
+              style={{ width: '100%', background: 'transparent', border: '1px solid ' + C.border, borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, color: C.text, cursor: email.trim() ? 'pointer' : 'default', opacity: email.trim() ? 1 : 0.5 }}>
+              {magicLoading ? 'Skickar...' : 'Skicka inloggningslank'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ background: C.green + '18', border: '1px solid ' + C.green, borderRadius: 12, padding: '16px', textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.green, marginBottom: 4 }}>Kolla din email!</div>
+            <div style={{ fontSize: 13, color: C.textMuted }}>Vi har skickat en inloggningslänk till {email}</div>
           </div>
         )}
 
