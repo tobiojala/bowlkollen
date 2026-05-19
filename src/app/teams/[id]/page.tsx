@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import TeamTableWidget from '@/components/TeamTableWidget'
+import NextMatchPreview from '@/components/NextMatchPreview'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
@@ -216,19 +217,9 @@ export default function TeamPage({ params }: Props) {
           </div>
         )}
 
-        {/* Next match banner */}
-        {upcoming.length > 0 && (
-          <a href={'/matches/' + upcoming[0].id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: theme === 'dark' ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.06)', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f5c200', flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, color: '#f5c200', fontWeight: 700, marginBottom: 2 }}>NASTA MATCH</div>
-              <div style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>
-                {shortName(isHome(upcoming[0]) ? (upcoming[0].away?.name || '') : (upcoming[0].home?.name || ''))}
-              </div>
-              <div style={{ fontSize: 11, color: C.textMuted }}>{upcoming[0].date?.slice(0, 10)} · {upcoming[0].venue}</div>
-            </div>
-            <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
-          </a>
+        {/* Next match preview */}
+        {upcoming.length > 0 && id && (
+          <NextMatchPreview teamId={id} nextMatch={upcoming[0] as any} />
         )}
 
         {/* Table position widget */}
