@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
 import { createClient } from '@/lib/supabase'
