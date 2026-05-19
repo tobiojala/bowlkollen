@@ -93,7 +93,7 @@ export default function TeamPage({ params }: Props) {
         .or('home_team_id.eq.' + id + ',away_team_id.eq.' + id)
         .order('date', { ascending: false }),
       supabase.from('players').select('id, name').eq('team_id', id).order('name'),
-    ]).then(([{ data: t }, { data: m }, { data: p }]) => {
+    ]).then(async ([{ data: t }, { data: m }, { data: p }]) => {
       if (t) {
         setTeam(t as Team)
         setTeamEdit(t)
