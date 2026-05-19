@@ -388,33 +388,7 @@ export default function TeamPage({ params }: Props) {
               })
             )}
 
-            {/* Locked community teaser */}
-            <div style={{ margin: '16px', background: C.card, borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-              <div style={{ padding: '20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>🔒</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 6 }}>Lagets community</div>
-                <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 16, lineHeight: 1.5 }}>
-                  Nyheter, laguttagning, tillganglighet och mer — bara for lagmedlemmar
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
-                    <span>📢</span> Nyheter och laguttagning
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
-                    <span>✅</span> Tillganglighetshantering
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
-                    <span>📅</span> Kalender och aktiviteter
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
-                    <span>💬</span> Diskussionsforum
-                  </div>
-                </div>
-                <button style={{ marginTop: 16, background: '#f5c200', color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 13, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
-                  Kom snart — Club Small fran 99 kr/man
-                </button>
-              </div>
-            </div>
+
           </div>
         )}
 
