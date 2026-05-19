@@ -85,30 +85,42 @@ export default function LeaguePage() {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 0 24px' }}>
+        <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, padding: '16px 16px 0', borderBottom: '1px solid ' + C.border }}>
 
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>Serietabell</h1>
           <div style={{ fontSize: 13, color: C.textMuted }}>Sasong 2025/2026</div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        {/* Tier group labels + scrolling pills */}
+        <div style={{ marginBottom: 20 }}>
           {divisionGroups.map(group => (
-            <div key={group.label}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 6, paddingLeft: 4 }}>
+            <div key={group.label} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 6, paddingLeft: 2 }}>
                 {group.label.toUpperCase()}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {group.divisions.map(d => (
-                  <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }} style={{ background: division === d ? C.accent : C.card, border: '1px solid ' + (division === d ? C.accent : C.border), borderRadius: 8, padding: '7px 12px', fontSize: 11, fontWeight: 700, color: division === d ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    {d.replace(' Herrar', ' H').replace(' Damer', ' D').replace('Div 1 ', 'D1 ').replace('Allsvenskan', 'Allsv.').replace('Norra ', 'N.').replace('Södra ', 'S.').replace('Götaland', 'Götal.').replace('Norrland', 'Norrl.').replace('Svealand', 'Sveal.')}
-                  </button>
-                ))}
+              <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, paddingBottom: 2 }}>
+                {group.divisions.map(d => {
+                  const isActive = division === d
+                  const label = d.replace(' Herrar', ' H').replace(' Damer', ' D').replace('Div 1 ', 'D1 ').replace('Allsvenskan', 'Allsv.').replace('Norra ', 'N.').replace('Södra ', 'S.').replace('Götaland', 'Götal.').replace('Norrland', 'Norrl.').replace('Svealand', 'Sveal.')
+                  return (
+                    <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }}
+                      style={{ background: isActive ? C.accent : C.card, border: '1px solid ' + (isActive ? C.accent : C.border), borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))}
         </div>
 
+        </div>
+        <div style={{ padding: '0 16px' }}>
+        </div>
+        <div style={{ padding: '0 16px' }}>
         {loading && <div style={{ padding: 32, textAlign: 'center', color: C.textMuted }}>Laddar...</div>}
         {!loading && standings.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>Inga resultat</div>}
 
@@ -203,6 +215,8 @@ export default function LeaguePage() {
         </div>
 
       </div>
+        </div>
+        </div>
     </main>
   )
 }
