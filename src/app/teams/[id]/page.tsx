@@ -554,7 +554,7 @@ export default function TeamPage({ params }: Props) {
                   placeholder={postingType === 'news' ? 'Dela en nyhet med laget...' : 'Skriv laguttagningen...'}
                   rows={3}
                   style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 10, padding: '10px 12px', color: C.text, fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'system-ui', boxSizing: 'border-box' as const, marginBottom: 8 }}
-                />
+                ></textarea>
                 <button onClick={submitPost} disabled={submittingPost || !newPost.trim()}
                   style={{ background: newPost.trim() ? C.accent : C.border, color: newPost.trim() ? '#1a1400' : C.textMuted, border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: newPost.trim() ? 'pointer' : 'default', float: 'right' as const }}>
                   {submittingPost ? 'Publicerar...' : 'Publicera'}
