@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
+import { createClient } from '@/lib/supabase'
 
 const links = [
   { href: '/',          label: 'Hem'         },
@@ -12,13 +13,31 @@ const links = [
   { href: '/players',    label: 'Spelare'     },
   { href: '/tavlingar', label: 'Tavlingar'   },
   { href: '/sllm',      label: 'SLLM 2026'   },
-  { href: '/login',     label: 'Login'       },
+
 ]
 
 export default function Nav() {
   const path = usePathname()
   const { theme, toggle } = useTheme()
   const [open, setOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
 
   const isDark = theme === 'dark'
   const surface   = isDark ? '#172030' : '#ffffff'
