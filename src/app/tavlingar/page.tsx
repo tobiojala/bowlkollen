@@ -166,85 +166,55 @@ export default function TavlingarPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 16px' }}>
 
-        <div style={{ marginBottom: 20 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>Tavlingar</h1>
-          <div style={{ fontSize: 13, color: C.textMuted }}>{TAVLINGAR.length} tavlingar registrerade</div>
+      {/* Sticky header */}
+      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border }}>
+        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px' } as any}>
+          {(['alla', 'pagaende', 'kommande', 'avslutad'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ background: filter === f ? C.accent : 'transparent', border: '1px solid ' + (filter === f ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 700, color: filter === f ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
+            >
+              {f === 'alla' ? 'Alla' : f === 'pagaende' ? 'Pagaende' : f === 'kommande' ? 'Kommande' : 'Avslutade'}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Filter tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 24, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          <button onClick={() => setActiveSection(null)} style={{ padding: '7px 14px', borderRadius: 20, border: '1px solid ' + (activeSection === null ? C.accent : C.border), background: activeSection === null ? C.accent + '18' : 'transparent', color: activeSection === null ? C.accent : C.textMuted, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Alla ({TAVLINGAR.length})
-          </button>
-          {sections.map(s => {
-            const count = TAVLINGAR.filter(t => t.status === s.key).length
-            if (count === 0) return null
-            const isActive = activeSection === s.key
-            return (
-              <button key={s.key} onClick={() => setActiveSection(isActive ? null : s.key)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 20, border: '1px solid ' + (isActive ? (s.dot || C.border) : C.border), background: isActive ? (s.dot ? s.dot + '18' : C.card) : 'transparent', color: isActive ? (s.dot || C.text) : C.textMuted, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {s.dot && <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.dot, display: 'inline-block' }} />}
-                {s.label} ({count})
-              </button>
-            )
-          })}
-        </div>
-
-        {sections.map(section => {
-          const items = filtered.filter(t => t.status === section.key)
-          if (items.length === 0) return null
-          return (
-            <div key={section.key} style={{ marginBottom: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                {section.dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: section.dot, display: 'inline-block' }} />}
-                <div style={{ fontSize: 10, fontWeight: 800, color: section.dot || C.textMuted, letterSpacing: 2 }}>
-                  {section.label.toUpperCase()} — {items.length} TAVLINGAR
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        {filtered.map(t => (
+          <div key={t.id} style={{ borderBottom: '1px solid ' + C.border, padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t.name}</div>
+                  <span style={{ fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '2px 8px',
+                    background: t.status === 'pagaende' ? '#e05555' + '22' : t.status === 'kommande' ? C.accent + '22' : C.border,
+                    color: t.status === 'pagaende' ? '#e05555' : t.status === 'kommande' ? C.accent : C.textMuted
+                  }}>
+                    {t.status === 'pagaende' ? '● PAGAENDE' : t.status === 'kommande' ? 'KOMMANDE' : 'AVSLUTAD'}
+                  </span>
                 </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {items.map(t => (
-                  <div key={t.id} style={{ background: C.card, borderRadius: 14, border: '1px solid ' + (t.status === 'pagaende' ? 'rgba(224,85,85,0.25)' : t.status === 'kommande' ? 'rgba(245,194,0,0.2)' : C.border), overflow: 'hidden' }}>
-
-                    {t.image && (
-                      <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
-                        <img src={t.image} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.75) 100%)' }} />
-                      </div>
-                    )}
-
-                    <div style={{ padding: '14px 16px' }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 3 }}>{t.name}</div>
-                      <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10 }}>{t.subtitle}</div>
-
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-                        <span style={{ fontSize: 11, color: C.textMuted, background: C.surface, borderRadius: 6, padding: '3px 8px', border: '1px solid ' + C.border }}>{t.date}</span>
-                        <span style={{ fontSize: 11, color: C.textMuted, background: C.surface, borderRadius: 6, padding: '3px 8px', border: '1px solid ' + C.border }}>{t.venue}</span>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <a href={t.href} target={t.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" style={{ background: t.status === 'pagaende' ? '#e05555' : '#f5c200', color: t.status === 'pagaende' ? '#fff' : '#1a1400', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 800, textDecoration: 'none' }}>
-                          {t.buttonLabel}
-                        </a>
-                        {t.extraButtons?.map(b => (
-                          <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer" style={{ background: C.surface, color: b.color || C.text, border: '1px solid ' + (b.color ? b.color + '44' : C.border), borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                            {b.label}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{t.subtitle}</div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>📅 {t.date} · 📍 {t.venue}</div>
               </div>
             </div>
-          )
-        })}
-
-        <div style={{ marginTop: 16, padding: '12px 16px', background: C.card, borderRadius: 10, border: '1px solid ' + C.border, fontSize: 12, color: C.textMuted, textAlign: 'center' }}>
-          Saknar du en tavling? Kontakta oss pa bowlkollen.se
-        </div>
-
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' as const }}>
+              <a href={t.href} style={{ fontSize: 12, fontWeight: 700, color: '#1a1400', background: C.accent, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
+                {t.buttonLabel}
+              </a>
+              {t.officialHref && (
+                <a href={t.officialHref} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
+                  Officiell sida ↗
+                </a>
+              )}
+              {t.extraButtons?.map(b => (
+                <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
+                  {b.label} ↗
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   )
