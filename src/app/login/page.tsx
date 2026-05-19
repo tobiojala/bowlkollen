@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // If already logged in redirect to home
     const supabase = createClient()
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = '/'
@@ -27,7 +26,7 @@ export default function LoginPage() {
       provider: 'google',
       options: {
         redirectTo: window.location.origin + '/auth/callback',
-        queryParams: { access_type: 'offline', prompt: 'consent' },
+        skipBrowserRedirect: false,
       }
     })
     if (error) {
@@ -40,7 +39,6 @@ export default function LoginPage() {
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: 360, padding: '0 24px' }}>
 
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>
             Bowl<span style={{ color: '#f5c200' }}>kollen</span>
@@ -48,7 +46,6 @@ export default function LoginPage() {
           <div style={{ fontSize: 14, color: C.textMuted }}>Logga in for att fortsatta</div>
         </div>
 
-        {/* Google button */}
         <button
           onClick={signInWithGoogle}
           disabled={loading}
@@ -66,7 +63,7 @@ export default function LoginPage() {
         </button>
 
         {error && (
-          <div style={{ background: '#e05555' + '18', border: '1px solid #e05555' + '44', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#e05555', textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ background: '#e05555' + '18', border: '1px solid #e05555', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#e05555', textAlign: 'center', marginBottom: 16 }}>
             {error}
           </div>
         )}
@@ -77,7 +74,6 @@ export default function LoginPage() {
           {' '}och{' '}
           <a href="/privacy" style={{ color: C.accent, textDecoration: 'none' }}>integritetspolicy</a>
         </div>
-
       </div>
     </main>
   )
