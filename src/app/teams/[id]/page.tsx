@@ -7,6 +7,7 @@ import { dark, light } from '@/lib/colors'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
+import TopPerformers from '@/components/TopPerformers'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
@@ -256,6 +257,11 @@ export default function TeamPage({ params }: Props) {
         {/* Table position widget */}
         {division && completed.length > 0 && (
           <TeamTableWidget teamId={id!} division={division} />
+        )}
+
+        {/* Top performers */}
+        {id && (
+          <TopPerformers teamId={id} />
         )}
 
         {/* Tabs */}
