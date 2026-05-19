@@ -13,9 +13,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [magicSent, setMagicSent] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
-  const [email, setEmail] = useState('')
-  const [magicSent, setMagicSent] = useState(false)
-  const [magicLoading, setMagicLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
