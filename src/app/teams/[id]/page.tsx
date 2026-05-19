@@ -407,7 +407,7 @@ export default function TeamPage({ params }: Props) {
             { key: 'results', label: 'Resultat', count: completed.length },
             { key: 'upcoming', label: 'Kommande', count: upcoming.length },
             { key: 'squad', label: 'Trupp', count: players.length },
-          { key: 'community', label: 'Community', count: posts.length },
+            { key: 'community', label: 'Community', count: posts.length },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)}
               style={{ flex: 1, padding: '12px 8px', border: 'none', borderBottom: '2px solid ' + (tab === t.key ? '#f5c200' : 'transparent'), background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, color: tab === t.key ? '#f5c200' : C.textMuted, WebkitTapHighlightColor: 'transparent' }}
@@ -419,7 +419,7 @@ export default function TeamPage({ params }: Props) {
         </div>
 
         {/* Results / Upcoming */}
-        {tab !== 'squad' && (
+        {tab !== 'squad' && tab !== 'community' && (
           <div>
             {displayMatches.length === 0 && (
               <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
