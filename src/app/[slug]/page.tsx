@@ -10,6 +10,8 @@ const BLOCKED = new Set([
   'subscribe','cancel','success','error','maintenance','status','health',
   'robots','sitemap','favicon','manifest','sw','static','assets',
   'bowlkollen','sbf','bits','swebowl','lanetalk','bowlres',
+  'auth','debug','confirm','callback',
+  'auth','debug','confirm','callback',
 ])
 
 type Props = { params: Promise<{ slug: string }> }

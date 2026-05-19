@@ -76,6 +76,15 @@ export default function Nav() {
                 </a>
               )
             })}
+            {user ? (
+              <button onClick={signOut} style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, color: textMuted, cursor: 'pointer' }}>
+                Logga ut
+              </button>
+            ) : (
+              <a href="/login" style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, color: textMuted, textDecoration: 'none' }}>
+                Logga in
+              </a>
+            )}
             <button onClick={toggle} style={{ background: card, border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11, marginLeft: 4, color: textMuted }}>
               {isDark ? 'Light' : 'Dark'}
             </button>
@@ -83,6 +92,15 @@ export default function Nav() {
 
           {/* Mobile right side */}
           <div className="mobile-nav" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
+            {user ? (
+              <button onClick={signOut} style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: textMuted, cursor: 'pointer' }}>
+                Logga ut
+              </button>
+            ) : (
+              <a href="/login" style={{ background: 'transparent', border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: textMuted, textDecoration: 'none' }}>
+                Logga in
+              </a>
+            )}
             <button onClick={toggle} style={{ background: card, border: '1px solid ' + border, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11, color: textMuted }}>
               {isDark ? '☀' : '☾'}
             </button>
