@@ -529,7 +529,6 @@ export default function TeamPage({ params }: Props) {
 
           </div>
         )}
-      </div>
 
         {/* Community tab */}
         {tab === 'community' && (
