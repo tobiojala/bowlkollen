@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import TeamTableWidget from '@/components/TeamTableWidget'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
@@ -228,6 +229,11 @@ export default function TeamPage({ params }: Props) {
             </div>
             <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
           </a>
+        )}
+
+        {/* Table position widget */}
+        {division && completed.length > 0 && (
+          <TeamTableWidget teamId={id!} division={division} />
         )}
 
         {/* Tabs */}
