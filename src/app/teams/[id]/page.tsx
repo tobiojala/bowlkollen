@@ -6,7 +6,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
 type Props = { params: Promise<{ id: string }> }
-type Team = { id: string; name: string; club: string; city: string | null; slug: string | null }
+type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
 type Match = {
   id: string; date: string; status: string
   home_score: number | null; away_score: number | null
@@ -37,6 +37,7 @@ export default function TeamPage({ params }: Props) {
   const [team, setTeam] = useState<Team | null>(null)
   const [matches, setMatches] = useState<Match[]>([])
   const [players, setPlayers] = useState<Player[]>([])
+  const [clubTeams, setClubTeams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
   const [copied, setCopied] = useState(false)
@@ -63,7 +64,16 @@ export default function TeamPage({ params }: Props) {
         .order('date', { ascending: false }),
       supabase.from('players').select('id, name').eq('team_id', id).order('name'),
     ]).then(([{ data: t }, { data: m }, { data: p }]) => {
-      if (t) setTeam(t as Team)
+      if (t) {
+        setTeam(t as Team)
+        if ((t as any).club_slug) {
+          supabase.from('teams').select('id, name, club_slug, team_path')
+            .eq('club_slug', (t as any).club_slug)
+            .neq('id', id)
+            .order('name')
+            .then(({ data: ct }) => { if (ct) setClubTeams(ct as any[]) })
+        }
+      }
       if (m) setMatches(m as unknown as Match[])
       if (p) setPlayers(p as Player[])
       setLoading(false)
@@ -143,6 +153,22 @@ export default function TeamPage({ params }: Props) {
                   <button onClick={copyLink} style={{ background: copied ? C.green + '22' : C.card, border: '1px solid ' + (copied ? C.green : C.border), borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, color: copied ? C.green : C.textMuted, cursor: 'pointer' }}>
                     {copied ? '✓ Kopierad' : 'Kopiera'}
                   </button>
+                </div>
+              )}
+
+              {/* Club team switcher */}
+              {clubTeams.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 10, color: C.textMuted, alignSelf: 'center', marginRight: 2 }}>Fler lag:</div>
+                  {clubTeams.map(ct => {
+                    const label = ct.team_path === 'herrar' ? 'Herrar' : ct.team_path === 'damer' ? 'Damer' : ct.team_path === 'allsvenskan' ? 'Allsvenskan' : ct.name
+                    const url = ct.club_slug && ct.team_path ? '/' + ct.club_slug + '/' + ct.team_path : '/teams/' + ct.id
+                    return (
+                      <a key={ct.id} href={url} style={{ fontSize: 11, fontWeight: 700, color: C.text, background: C.card, border: '1px solid ' + C.border, borderRadius: 20, padding: '4px 12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {label} ›
+                      </a>
+                    )
+                  })}
                 </div>
               )}
             </div>
