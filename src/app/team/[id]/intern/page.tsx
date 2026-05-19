@@ -55,6 +55,7 @@ export default function InternPage({ params }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [polls, setPolls] = useState<Poll[]>([])
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([])
+  const [profiles, setProfiles] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'feed' | 'laguttagning' | 'tillganglighet' | 'medlemmar'>('feed')
   const [newPost, setNewPost] = useState('')
@@ -103,14 +104,29 @@ export default function InternPage({ params }: Props) {
         { data: matches },
       ] = await Promise.all([
         supabase.from('teams').select('id, name, club, city, slug, club_slug').eq('id', id).single(),
-        supabase.from('team_members').select('id, user_id, role, status').eq('team_id', id).eq('status', 'active'),
+        supabase.from('team_members').select('id, user_id, role, status').eq('team_id', id),
         supabase.from('team_posts').select('*').eq('team_id', id).order('created_at', { ascending: false }).limit(20),
         supabase.from('availability_polls').select('*, responses:availability_responses(user_id, response, note)').eq('team_id', id).order('created_at', { ascending: false }).limit(5),
         supabase.from('matches').select('id, date, division, home_team_id, away_team_id, home:teams!home_team_id(name), away:teams!away_team_id(name)').or('home_team_id.eq.' + id + ',away_team_id.eq.' + id).eq('status', 'upcoming').order('date').limit(5),
       ])
 
       if (t) setTeam(t)
-      if (m) setMembers(m as Member[])
+      if (m) {
+        setMembers(m as Member[])
+        // Load profiles for all members
+        const userIds = (m as Member[]).map(x => x.user_id)
+        if (userIds.length > 0) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, email')
+            .in('id', userIds)
+          if (profileData) {
+            const map: Record<string, any> = {}
+            profileData.forEach((p: any) => { map[p.id] = p })
+            setProfiles(map)
+          }
+        }
+      }
       if (p) setPosts(p as Post[])
       if (po) setPolls(po as any[])
       if (matches) setUpcomingMatches(matches)
@@ -414,7 +430,9 @@ export default function InternPage({ params }: Props) {
                 <div style={{ fontSize: 11, fontWeight: 800, color: C.accent, letterSpacing: 1, marginBottom: 8 }}>VÄNTAR PA GODKÄNNANDE</div>
                 {members.filter(m => m.status === 'pending').map(m => (
                   <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                    <div style={{ flex: 1, fontSize: 13, color: C.text }}>{m.user_id}</div>
+                    <div style={{ flex: 1, fontSize: 13, color: C.text }}>
+                    {profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Okänd'}
+                  </div>
                     <button onClick={async () => {
                       const supabase = createClient()
                       await supabase.from('team_members').update({ status: 'active' }).eq('id', m.id)
@@ -443,12 +461,16 @@ export default function InternPage({ params }: Props) {
 
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
-                    👤
-                  </div>
+                  {profiles[m.user_id]?.avatar_url ? (
+                    <img src={profiles[m.user_id].avatar_url} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                      {(profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || '?')[0].toUpperCase()}
+                    </div>
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                      {isMe ? 'Du' : 'Lagmedlem'}
+                      {isMe ? 'Du' : (profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Lagmedlem')}
                     </div>
                     <div style={{ fontSize: 11, color: C.textMuted }}>{roleLabel(m.role)}</div>
                   </div>
