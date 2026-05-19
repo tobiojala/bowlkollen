@@ -44,6 +44,7 @@ export default function TeamPage({ params }: Props) {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad'>('results')
   const [copied, setCopied] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
 
   const copyLink = () => {
     const url = team?.slug
@@ -180,7 +181,7 @@ export default function TeamPage({ params }: Props) {
 
         {/* Stats bar */}
         {completed.length > 0 && (
-          <div style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '14px 20px', display: 'flex', gap: 0 }}>
+          <div onClick={() => setStatsOpen(!statsOpen)} style={{ background: C.card, borderBottom: '1px solid ' + C.border, padding: '14px 20px', display: 'flex', gap: 0, cursor: 'pointer' }}>
             {[
               { label: 'Matcher', value: completed.length },
               { label: 'Vunna', value: wins, color: C.green },
@@ -193,6 +194,39 @@ export default function TeamPage({ params }: Props) {
                 <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Stats curtain */}
+        {statsOpen && completed.length > 0 && (
+          <div style={{ background: theme === 'dark' ? '#1a2535' : '#f0f4f8', borderBottom: '1px solid ' + C.border, padding: '16px 20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
+              {[
+                { label: 'Hemma V/O/F', value: completed.filter(m => m.home_team_id === id).map(m => m.home_score! > m.away_score! ? 'V' : m.home_score! < m.away_score! ? 'F' : 'O').reduce((acc, r) => { acc[r] = (acc[r] || 0) + 1; return acc }, {} as Record<string, number>), isRecord: true },
+                { label: 'Borta V/O/F', value: completed.filter(m => m.away_team_id === id).map(m => m.away_score! > m.home_score! ? 'V' : m.away_score! < m.home_score! ? 'F' : 'O').reduce((acc, r) => { acc[r] = (acc[r] || 0) + 1; return acc }, {} as Record<string, number>), isRecord: true },
+              ].map((s, i) => (
+                <div key={i} style={{ background: C.card, borderRadius: 10, padding: '10px 12px', border: '1px solid ' + C.border }}>
+                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 6, fontWeight: 700, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: C.green }}>{(s.value as any).V || 0}V</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: C.textMuted }}>{(s.value as any).O || 0}O</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: '#e05555' }}>{(s.value as any).F || 0}F</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {[
+                { label: 'MP For', value: ptsFor },
+                { label: 'MP Mot', value: ptsAgainst },
+                { label: 'Differens', value: (diff >= 0 ? '+' : '') + diff, color: diff >= 0 ? C.green : '#e05555' },
+              ].map(s => (
+                <div key={s.label} style={{ background: C.card, borderRadius: 10, padding: '10px 8px', textAlign: 'center', border: '1px solid ' + C.border }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: (s as any).color || C.text }}>{s.value}</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
