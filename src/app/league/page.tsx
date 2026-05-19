@@ -34,11 +34,12 @@ function shortName(n: string) {
   return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
 
-const ALL_DIVISIONS = [
-  'Elitserien Herrar', 'Elitserien Damer',
-  'Mellanallsvenskan Herrar', 'Nordallsvenskan Herrar', 'Sydallsvenskan Herrar', 'Norra Allsvenskan Herrar', 'Södra Allsvenskan Herrar',
-  'Div 1 Norra Götaland Herrar', 'Div 1 Norra Norrland Herrar', 'Div 1 Norra Svealand Herrar', 'Div 1 Södra Götaland Herrar', 'Div 1 Södra Norrland Herrar', 'Div 1 Södra Svealand Herrar',
+const TIER_GROUPS = [
+  { label: 'Elitserien', divisions: ['Elitserien Herrar', 'Elitserien Damer'] },
+  { label: 'Allsvenskan', divisions: ['Mellanallsvenskan Herrar', 'Nordallsvenskan Herrar', 'Sydallsvenskan Herrar', 'Norra Allsvenskan Herrar', 'Södra Allsvenskan Herrar'] },
+  { label: 'Division 1', divisions: ['Div 1 Norra Götaland Herrar', 'Div 1 Norra Norrland Herrar', 'Div 1 Norra Svealand Herrar', 'Div 1 Södra Götaland Herrar', 'Div 1 Södra Norrland Herrar', 'Div 1 Södra Svealand Herrar'] },
 ]
+const ALL_DIVISIONS = TIER_GROUPS.flatMap(g => g.divisions)
 
 function shortDiv(d: string) {
   return d.replace(' Herrar', ' H').replace(' Damer', ' D')
@@ -103,24 +104,46 @@ export default function LeaguePage() {
       {/* Sticky header */}
       <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border }}>
 
-        {/* Single scrolling pill row */}
-        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px' } as any}>
-          {ALL_DIVISIONS.map(d => {
-            const isActive = division === d
+        {/* Level 1 - Tier pills */}
+        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px 6px' } as any}>
+          {TIER_GROUPS.map(group => {
+            const isActive = TIER_GROUPS.find(g => g.divisions.includes(division))?.label === group.label
             return (
-              <button key={d} onClick={() => { setDivision(d); setExpanded(new Set()) }}
-                style={{ background: isActive ? C.accent : 'transparent', border: '1px solid ' + (isActive ? C.accent : C.border), borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700, color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
+              <button key={group.label}
+                onClick={() => { setDivision(group.divisions[0]); setExpanded(new Set()) }}
+                style={{ background: isActive ? C.accent : 'transparent', border: '1px solid ' + (isActive ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700, color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
               >
-                {shortDiv(d)}
+                {group.label}
               </button>
             )
           })}
         </div>
 
+        {/* Level 2 - Division pills for active tier */}
+        {(() => {
+          const activeGroup = TIER_GROUPS.find(g => g.divisions.includes(division))
+          if (!activeGroup || activeGroup.divisions.length <= 1) return null
+          return (
+            <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '4px 16px 8px' } as any}>
+              {activeGroup.divisions.map(d => {
+                const isActive = division === d
+                return (
+                  <button key={d}
+                    onClick={() => { setDivision(d); setExpanded(new Set()) }}
+                    style={{ background: isActive ? C.surface : 'transparent', border: '1px solid ' + (isActive ? C.border : 'transparent'), borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: isActive ? 700 : 400, color: isActive ? C.text : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    {shortDiv(d)}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
+
         {/* Active division title */}
-        <div style={{ padding: '0 16px 12px' }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{division}</div>
-          <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>Säsong 2025/2026</div>
+        <div style={{ padding: '0 16px 10px' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{division}</div>
+          <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Säsong 2025/2026</div>
         </div>
       </div>
 
