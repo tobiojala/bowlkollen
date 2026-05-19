@@ -6,6 +6,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
+import SeasonTimeline from '@/components/SeasonTimeline'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null }
@@ -225,6 +226,11 @@ export default function TeamPage({ params }: Props) {
         {/* Table position widget */}
         {division && completed.length > 0 && (
           <TeamTableWidget teamId={id!} division={division} />
+        )}
+
+        {/* Season timeline */}
+        {id && matches.length > 0 && (
+          <SeasonTimeline teamId={id} />
         )}
 
         {/* Tabs */}
