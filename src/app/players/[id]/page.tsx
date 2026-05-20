@@ -228,13 +228,19 @@ export default function PlayerPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Edit button */}
-            {isOwner && !editing && (
-              <button onClick={() => setEditing(true)}
-                style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', flexShrink: 0 }}>
-                Redigera
+            {/* Header buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+              <button onClick={() => setCardOpen(true)}
+                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.accent, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
+                🃏 Spelarkort
               </button>
-            )}
+              {isOwner && !editing && (
+                <button onClick={() => setEditing(true)}
+                  style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer' }}>
+                  Redigera
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Bio */}
@@ -337,22 +343,7 @@ export default function PlayerPage({ params }: Props) {
           </div>
         )}
 
-        {/* Spelarkort button */}
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
-          <button onClick={() => setCardOpen(true)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: C.card, border: '1px solid ' + C.border, borderRadius: 14, cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 20 }}>🃏</div>
-              <div style={{ textAlign: 'left' as const }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Visa spelarkort</div>
-                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
-                  {isOwner ? 'Se, dela och ladda ner ditt kort' : 'Se spelarkortet'}
-                </div>
-              </div>
-            </div>
-            <div style={{ fontSize: 16, color: C.textMuted }}>›</div>
-          </button>
-        </div>
+
 
         {/* Card drawer */}
         {cardOpen && (
