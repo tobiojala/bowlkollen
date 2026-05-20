@@ -33,6 +33,8 @@ export default function PlayerPage({ params }: Props) {
   const [saving, setSaving] = useState(false)
   const [editData, setEditData] = useState<Partial<Player>>({})
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [cardOpen, setCardOpen] = useState(false)
+  const [cardOpen, setCardOpen] = useState(false)
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -336,26 +338,47 @@ export default function PlayerPage({ params }: Props) {
           </div>
         )}
 
-        {/* TCG Player Card */}
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2, marginBottom: 16 }}>SPELARKORT</div>
-          <PlayerCard
-            name={player.name}
-            teamName={team ? shortName(team.name) : ''}
-            avatarUrl={player.avatar_url}
-            avg={avgScore || 180}
-            bestSeries={bestSeries || 0}
-            over200={over200}
-            matches={results.length}
-            division={team?.name ? (shortName(team.name).includes('Elit') ? 'Elitserien' : 'Allsvenskan') : 'Division'}
-            hand={player.hand}
-            style={player.style}
-            ballBrand={player.ball_brand}
-            bio={player.bio}
-            achievements={[]}
-            isDark={theme === 'dark'}
-          />
+        {/* Spelarkort button */}
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
+          <button onClick={() => setCardOpen(true)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: C.card, border: '1px solid ' + C.border, borderRadius: 14, cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontSize: 20 }}>🃏</div>
+              <div style={{ textAlign: 'left' as const }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Visa spelarkort</div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
+                  {isOwner ? 'Se, dela och ladda ner ditt kort' : 'Se spelarkortet'}
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 16, color: C.textMuted }}>›</div>
+          </button>
         </div>
+
+        {/* Card drawer */}
+        {cardOpen && (
+          <>
+            <div onClick={() => setCardOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }} />
+            <PlayerCard
+              name={player.name}
+              teamName={team ? shortName(team.name) : ''}
+              avatarUrl={player.avatar_url}
+              avg={avgScore || 180}
+              bestSeries={bestSeries || 0}
+              over200={over200}
+              matches={results.length}
+              division={team?.name ? (shortName(team.name).includes('Elit') ? 'Elitserien' : 'Allsvenskan') : 'Division'}
+              hand={player.hand}
+              style={player.style}
+              ballBrand={player.ball_brand}
+              bio={player.bio}
+              achievements={[]}
+              isDark={theme === 'dark'}
+              isOwner={isOwner}
+              onClose={() => setCardOpen(false)}
+            />
+          </>
+        )}
 
         {/* Match history */}
         {results.length > 0 && (
