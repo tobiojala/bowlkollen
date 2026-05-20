@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import PlayerCard from '@/components/PlayerCard'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -334,6 +335,27 @@ export default function PlayerPage({ params }: Props) {
             )}
           </div>
         )}
+
+        {/* TCG Player Card */}
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2, marginBottom: 16 }}>SPELARKORT</div>
+          <PlayerCard
+            name={player.name}
+            teamName={team ? shortName(team.name) : ''}
+            avatarUrl={player.avatar_url}
+            avg={avgScore || 180}
+            bestSeries={bestSeries || 0}
+            over200={over200}
+            matches={results.length}
+            division={team?.name ? (shortName(team.name).includes('Elit') ? 'Elitserien' : 'Allsvenskan') : 'Division'}
+            hand={player.hand}
+            style={player.style}
+            ballBrand={player.ball_brand}
+            bio={player.bio}
+            achievements={[]}
+            isDark={theme === 'dark'}
+          />
+        </div>
 
         {/* Match history */}
         {results.length > 0 && (
