@@ -177,6 +177,8 @@ export default function LaguttagningPage({ params }: Props) {
   const [published, setPublished] = useState(false)
   const [lineupId, setLineupId] = useState<string | null>(null)
   const [splitMode, setSplitMode] = useState(false)
+  const [availability, setAvailability] = useState<Record<string, string>>({})
+  const [availNotes, setAvailNotes] = useState<Record<string, string>>({})
   const [activeSlot, setActiveSlot] = useState<{ bord: number; position: number; isReserve: boolean } | null>(null)
 
   const bg = isDark ? '#0d1520' : '#f0f4f8'
@@ -277,6 +279,14 @@ export default function LaguttagningPage({ params }: Props) {
     setSaving(false)
   }
 
+  const sortedPlayers = [...players].sort((a, b) => {
+    const avOrder: Record<string, number> = { yes: 0, maybe: 1, '': 2, no: 3 }
+    const aAv = availability[a.id] || ''
+    const bAv = availability[b.id] || ''
+    if (avOrder[aAv] !== avOrder[bAv]) return avOrder[aAv] - avOrder[bAv]
+    return b.rating - a.rating
+  })
+
   const filledCount = slots.filter(s => s.player && !s.isReserve).length
   const teamRating = filledCount > 0 ? Math.round(slots.filter(s => s.player && !s.isReserve).reduce((a, s) => a + s.player!.rating, 0) / filledCount) : 0
   const isHome = match?.home_team_id === teamId
@@ -343,6 +353,34 @@ export default function LaguttagningPage({ params }: Props) {
         {published && <div style={{ marginTop: 8, display: 'inline-block', fontSize: 11, fontWeight: 700, color: '#5dcaa5', background: 'rgba(29,158,117,0.15)', borderRadius: 6, padding: '3px 10px' }}>Publicerad</div>}
         <MatchupDials teamId={teamId!} oppId={isHome ? match?.away_team_id : match?.home_team_id} isDark={isDark} muted={muted} />
       </div>
+
+      {/* Availability strip */}
+      {Object.keys(availability).length > 0 && (
+        <div style={{ padding: '10px 20px', borderBottom: '1px solid ' + border, background: isDark ? '#0d1a2e' : '#e8f0f8' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: muted, letterSpacing: 1.5, marginBottom: 8 }}>TILLGANGLIGHET</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+            {sortedPlayers.map(p => {
+              const av = availability[p.id]
+              if (!av) return null
+              const tier = getTier(p.rating)
+              const avColor = av === 'yes' ? '#1d9e75' : av === 'maybe' ? '#f5c200' : '#e24b4a'
+              const avEmoji = av === 'yes' ? '✅' : av === 'maybe' ? '🤔' : '❌'
+              const note = availNotes[p.id]
+              return (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 5, background: avColor + '15', border: '1px solid ' + avColor + '44', borderRadius: 20, padding: '4px 10px 4px 6px' }}
+                  title={note || ''}>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: tier.bg, border: '1.5px solid ' + tier.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 800, color: tier.color, flexShrink: 0 }}>
+                    {initials(p.name)}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: text }}>{p.name.split(' ')[0]}</span>
+                  <span style={{ fontSize: 12 }}>{avEmoji}</span>
+                  {note && <span style={{ fontSize: 10, color: muted, fontStyle: 'italic' }}>"{note}"</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {!splitMode ? (
         /* NORMAL VIEW */
@@ -422,13 +460,13 @@ export default function LaguttagningPage({ params }: Props) {
               {activeSlot ? `BORD ${activeSlot.bord || 'R'} · POS ${activeSlot.position}` : 'VALJ SPELARE'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {players.map(p => {
+              {sortedPlayers.map(p => {
                 const tier = getTier(p.rating)
                 const isUsed = usedIds.includes(p.id)
                 const st = stars(p.rating)
                 return (
                   <div key={p.id} onClick={() => !isUsed && assignPlayer(p)}
-                    style={{ background: tier.cardBg, border: '1.5px solid ' + (isUsed ? border : tier.border), borderRadius: 14, overflow: 'hidden', cursor: isUsed ? 'default' : 'pointer', opacity: isUsed ? 0.35 : 1, transition: 'transform 0.12s' }}
+                    style={{ background: tier.cardBg, border: '1.5px solid ' + (isUsed ? border : tier.border), borderRadius: 14, overflow: 'hidden', cursor: isUsed ? 'default' : 'pointer', opacity: isUsed ? 0.35 : 1, transition: 'transform 0.12s', position: 'relative' as const }}
                     onMouseEnter={e => { if (!isUsed) (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)' }}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1)'}
                   >
@@ -437,6 +475,11 @@ export default function LaguttagningPage({ params }: Props) {
                       <div style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, color: tier.color, background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', padding: '2px 5px', borderRadius: 6 }}>
                         {tier.label}
                       </div>
+                      {availability[p.id] && (
+                        <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 12 }}>
+                          {availability[p.id] === 'yes' ? '✅' : availability[p.id] === 'maybe' ? '🤔' : '❌'}
+                        </div>
+                      )}
                       <div style={{ width: 44, height: 44, borderRadius: '50%', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.4)', border: '2px solid ' + tier.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: tier.color, margin: '0 auto 6px' }}>
                         {initials(p.name)}
                       </div>
