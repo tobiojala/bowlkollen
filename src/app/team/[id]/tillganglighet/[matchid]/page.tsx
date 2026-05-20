@@ -329,9 +329,40 @@ export default function TillganlighetPage({ params }: Props) {
               </div>
             </div>
 
-            <ResponseGroup group={yesGroup} label="KAN SPELA" color="#1d9e75" bg={isDark ? 'rgba(29,158,117,0.08)' : 'rgba(29,158,117,0.05)'} profiles={profiles} text={text} muted={muted} isDark={isDark} />
-            <ResponseGroup group={maybeGroup} label="KANSKE" color="#f5c200" bg={isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.05)'} profiles={profiles} text={text} muted={muted} isDark={isDark} />
-            <ResponseGroup group={noGroup} label="KAN INTE" color="#e24b4a" bg={isDark ? 'rgba(226,75,74,0.08)' : 'rgba(226,75,74,0.05)'} profiles={profiles} text={text} muted={muted} isDark={isDark} />
+            {[
+              { group: yesGroup, label: 'KAN SPELA', color: '#1d9e75', gbg: isDark ? 'rgba(29,158,117,0.08)' : 'rgba(29,158,117,0.05)' },
+              { group: maybeGroup, label: 'KANSKE', color: '#f5c200', gbg: isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.05)' },
+              { group: noGroup, label: 'KAN INTE', color: '#e24b4a', gbg: isDark ? 'rgba(226,75,74,0.08)' : 'rgba(226,75,74,0.05)' },
+            ].map(({ group, label, color, gbg }) => group.length === 0 ? null : (
+              <div key={label} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1, marginBottom: 6 }}>{label} ({group.length})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {group.map((r: any) => {
+                    const p = profiles[r.user_id]
+                    const name = p?.full_name || 'Lagmedlem'
+                    const hue = name.split('').reduce((a: number, ch: string) => a + ch.charCodeAt(0), 0) % 360
+                    const tc = 'hsl(' + hue + ',50%,45%)'
+                    const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+                    return (
+                      <div key={r.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: gbg, borderRadius: 10, border: '1px solid ' + color + '33' }}>
+                        {p?.avatar_url ? (
+                          <img src={p.avatar_url} style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' as const }} />
+                        ) : (
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                            {name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: text }}>{name}</div>
+                          {r.note && <div style={{ fontSize: 11, color: muted, fontStyle: 'italic', marginTop: 1 }}>{r.note}</div>}
+                        </div>
+                        <div style={{ fontSize: 16 }}>{r.response === 'yes' ? '✓' : r.response === 'maybe' ? '?' : '✕'}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
