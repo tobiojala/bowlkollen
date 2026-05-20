@@ -28,8 +28,9 @@ function shortName(n: string) {
   return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
 
-function calcRating(avg: number, best: number, over200: number): number {
-  return Math.min(99, Math.round(avg * 0.5 + (best / 10) * 0.3 + over200 * 2))
+function calcRating(avg: number, best: number, over200: number, hasData: boolean): number {
+  if (!hasData) return Math.min(60, Math.round(avg * 0.3))
+  return Math.min(99, Math.round(avg * 0.4 + (best / 4 / 10) * 0.4 + over200 * 1.5))
 }
 
 function getTier(rating: number): { label: string; color: string; bg: string; border: string } {
@@ -144,7 +145,7 @@ export default function LaguttagningPage({ params }: Props) {
               games.slice(i * 4, i * 4 + 4).reduce((a, b) => a + b, 0)))
           : games.length > 0 ? games.reduce((a, b) => a + b, 0) : 680
         const over200 = games.filter(g => g >= 200).length
-        const rating = calcRating(avg, bestSeries, over200)
+        const rating = calcRating(avg, bestSeries, over200, games.length > 0)
         const tier = getTier(rating)
         return { id, name: data.name, avg, bestSeries, over200, rating, tier: tier.label, color: tier.color }
       }).sort((a, b) => b.rating - a.rating)
@@ -392,34 +393,52 @@ export default function LaguttagningPage({ params }: Props) {
               <div style={{ width: 36, height: 4, background: border, borderRadius: 2, margin: '0 auto 12px' }} />
               <div style={{ fontSize: 11, fontWeight: 800, color: muted, letterSpacing: 1.5 }}>VALJ SPELARE</div>
             </div>
-            <div style={{ overflowY: 'auto', padding: '12px 16px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ overflowX: 'auto', overflowY: 'hidden', padding: '12px 16px 24px', display: 'flex', flexDirection: 'row', gap: 10, scrollbarWidth: 'none' } as any}>
               {players.map(p => {
                 const tier = getTier(p.rating)
                 const isUsed = usedIds.includes(p.id)
                 return (
                   <div key={p.id}
                     onClick={() => !isUsed && assignPlayer(p)}
-                    style={{ background: isUsed ? (isDark ? '#1c2840' : '#f8fafc') : card2, border: '1px solid ' + (isUsed ? border : tier.border), borderRadius: 14, padding: '12px 14px', cursor: isUsed ? 'default' : 'pointer', opacity: isUsed ? 0.45 : 1, display: 'flex', alignItems: 'center', gap: 12 }}
+                    style={{ width: 120, flexShrink: 0, cursor: isUsed ? 'default' : 'pointer', opacity: isUsed ? 0.35 : 1 }}
                   >
-                    {/* Mini TCG card feel */}
-                    <div style={{ width: 44, height: 56, borderRadius: 10, background: tier.bg, border: '1.5px solid ' + tier.border, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, flexShrink: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: tier.color }}>{initials(p.name)}</div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: tier.color, opacity: 0.8 }}>{tier.label}</div>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: text, marginBottom: 4 }}>{p.name}</div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: muted }}>Snitt <span style={{ color: tier.color, fontWeight: 700 }}>{p.avg}</span></span>
-                        <span style={{ fontSize: 11, color: muted }}>200+ <span style={{ color: tier.color, fontWeight: 700 }}>{p.over200}</span></span>
+                    <div style={{ background: tier.bg, border: '2px solid ' + tier.border, borderRadius: 16, overflow: 'hidden', transition: 'transform 0.15s' }}
+                      onMouseEnter={e => { if(!isUsed)(e.currentTarget as HTMLElement).style.transform='scale(1.03)' }}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform='scale(1)'}
+                    >
+                      {/* Card top */}
+                      <div style={{ padding: '10px 8px 6px', textAlign: 'center', borderBottom: '1px solid ' + tier.border + '44' }}>
+                        <div style={{ fontSize: 9, fontWeight: 800, color: tier.color, letterSpacing: 1, marginBottom: 6 }}>{tier.label}</div>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', border: '2px solid ' + tier.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: tier.color, margin: '0 auto 6px' }}>
+                          {initials(p.name)}
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name.split(' ')[0]}</div>
+                        <div style={{ fontSize: 9, color: muted, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name.split(' ').slice(1).join(' ')}</div>
                       </div>
-                      <div style={{ marginTop: 4, fontSize: 10, color: tier.color, letterSpacing: 0.5 }}>
-                        {'★'.repeat(Math.round(p.rating / 20))}{'☆'.repeat(5 - Math.round(p.rating / 20))}
-                        <span style={{ color: muted, marginLeft: 6 }}>{p.rating} rating</span>
+                      {/* Stats */}
+                      <div style={{ padding: '8px 6px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3 }}>
+                        {[
+                          { label: 'SNT', value: p.avg },
+                          { label: 'BST', value: Math.round(p.bestSeries / 100) * 100 || '—' },
+                          { label: '200', value: p.over200 },
+                        ].map(s => (
+                          <div key={s.label} style={{ textAlign: 'center', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)', borderRadius: 6, padding: '4px 2px' }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: tier.color, lineHeight: 1 }}>{s.value}</div>
+                            <div style={{ fontSize: 7, color: muted, marginTop: 1, letterSpacing: 0.5 }}>{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Rating */}
+                      <div style={{ padding: '4px 8px 8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, color: tier.color }}>
+                          {'★'.repeat(Math.round(p.rating / 20))}{'☆'.repeat(5 - Math.round(p.rating / 20))}
+                        </div>
+                        <div style={{ fontSize: 8, color: muted, marginTop: 1 }}>{p.rating} RATING</div>
                       </div>
                     </div>
                     {!isUsed && (
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: 18, color: '#1a1400', fontWeight: 800, lineHeight: 1 }}>+</span>
+                      <div style={{ textAlign: 'center', marginTop: 6 }}>
+                        <div style={{ display: 'inline-block', background: accent, borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 700, color: '#1a1400' }}>Valj</div>
                       </div>
                     )}
                   </div>
