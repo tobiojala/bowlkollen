@@ -24,6 +24,182 @@ type Slot = {
   isReserve: boolean
 }
 
+function MatchupDials({ teamId, matchId, oppId }: { teamId: string; matchId: string; oppId: string }) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const [stats, setStats] = useState<any>(null)
+
+  useEffect(() => {
+    if (!teamId || !oppId) return
+    const supabase = createClient()
+    Promise.all([
+      supabase.from('matches')
+        .select('home_team_id, away_team_id, home_score, away_score')
+        .or('home_team_id.eq.' + teamId + ',away_team_id.eq.' + teamId)
+        .eq('status', 'completed').not('home_score', 'is', null),
+      supabase.from('match_results')
+        .select('games, team_id')
+        .eq('team_id', teamId),
+      supabase.from('match_results')
+        .select('games, team_id')
+        .eq('team_id', oppId),
+      supabase.from('matches')
+        .select('home_team_id, away_team_id, home_score, away_score')
+        .or(
+          'and(home_team_id.eq.' + teamId + ',away_team_id.eq.' + oppId + '),' +
+          'and(home_team_id.eq.' + oppId + ',away_team_id.eq.' + teamId + ')'
+        ).eq('status', 'completed').not('home_score', 'is', null),
+    ]).then(([{ data: myMatches }, { data: myResults }, { data: oppResults }, { data: h2h }]) => {
+      // My snitt
+      const myGames = (myResults || []).flatMap((r: any) => (r.games || []).filter((g: number) => g > 0))
+      const myAvg = myGames.length > 0 ? Math.round(myGames.reduce((a: number, b: number) => a + b, 0) / myGames.length) : 0
+      const my200 = myGames.filter((g: number) => g >= 200).length
+      const myMatchCount = (myMatches || []).length || 1
+      const my200PerMatch = Math.round((my200 / myMatchCount) * 10) / 10
+
+      // Opp snitt
+      const oppGames = (oppResults || []).flatMap((r: any) => (r.games || []).filter((g: number) => g > 0))
+      const oppAvg = oppGames.length > 0 ? Math.round(oppGames.reduce((a: number, b: number) => a + b, 0) / oppGames.length) : 0
+      const opp200 = oppGames.filter((g: number) => g >= 200).length
+      const opp200PerMatch = oppResults && oppResults.length > 0 ? Math.round((opp200 / Math.max(1, oppResults.length / 8)) * 10) / 10 : 0
+
+      // My form last 5
+      const myForm = (myMatches || []).slice(0, 5).map((m: any) => {
+        const isHome = m.home_team_id === teamId
+        const myScore = isHome ? m.home_score : m.away_score
+        const theirScore = isHome ? m.away_score : m.home_score
+        return myScore > theirScore ? 'V' : myScore < theirScore ? 'F' : 'O'
+      })
+
+      // H2H
+      let h2hW = 0, h2hD = 0, h2hL = 0
+      ;(h2h || []).forEach((m: any) => {
+        const isHome = m.home_team_id === teamId
+        const myScore = isHome ? m.home_score : m.away_score
+        const theirScore = isHome ? m.away_score : m.home_score
+        if (myScore > theirScore) h2hW++
+        else if (myScore < theirScore) h2hL++
+        else h2hD++
+      })
+
+      setStats({ myAvg, oppAvg, my200PerMatch, opp200PerMatch, myForm, h2hW, h2hD, h2hL })
+    })
+  }, [teamId, oppId])
+
+  if (!stats) return null
+
+  const avgDiff = stats.myAvg - stats.oppAvg
+  const avgAdvantage = stats.myAvg > stats.oppAvg
+  const twohundredAdvantage = stats.my200PerMatch > stats.opp200PerMatch
+
+  // Circle stroke calc
+  const circle = (val: number, max: number, size: number) => {
+    const r = size / 2 - 5
+    const circ = 2 * Math.PI * r
+    const pct = Math.min(val / max, 1)
+    return { r, circ, offset: circ * (1 - pct) }
+  }
+
+  const avgCirc = circle(stats.myAvg, 300, 80)
+  const oppAvgCirc = circle(stats.oppAvg, 300, 80)
+  const c200 = circle(stats.my200PerMatch, 10, 96)
+  const opp200c = circle(stats.opp200PerMatch, 10, 96)
+  const formWins = stats.myForm.filter((f: string) => f === 'V').length
+  const formCirc = circle(formWins, 5, 80)
+
+  const muted = isDark ? '#6b7a99' : '#4a6080'
+
+  // Analysis tip
+  const tips = []
+  if (avgAdvantage) tips.push('Snittfordel — stark taktik pa alla bord')
+  else tips.push('Motstandaren har snittfordel — satsa pa konsistens')
+  if (twohundredAdvantage) tips.push('200+ fordel — er explosivitet ar ett vapen')
+  const tip = tips[0]
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', marginBottom: 10 }}>
+
+        {/* Snitt dial */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r={avgCirc.r} fill="none" stroke={isDark ? '#1c2840' : '#e0e8f0'} strokeWidth="6"/>
+              <circle cx="40" cy="40" r={oppAvgCirc.r} fill="none" stroke={isDark ? '#2a3858' : '#c8d4e8'} strokeWidth="6"
+                strokeDasharray={oppAvgCirc.circ} strokeDashoffset={oppAvgCirc.offset}
+                transform="rotate(-90 40 40)" strokeLinecap="round"/>
+              <circle cx="40" cy="40" r={avgCirc.r} fill="none" stroke="#7f77dd" strokeWidth="6"
+                strokeDasharray={avgCirc.circ} strokeDashoffset={avgCirc.offset}
+                transform="rotate(-90 40 40)" strokeLinecap="round"/>
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#afa9ec', lineHeight: 1 }}>{stats.myAvg || '—'}</div>
+              <div style={{ fontSize: 8, color: muted, marginTop: 1 }}>{stats.oppAvg || '—'}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: muted, letterSpacing: 0.5, marginTop: 4 }}>SNITT</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: avgAdvantage ? '#7f77dd' : '#e24b4a', marginTop: 1 }}>
+            {avgDiff >= 0 ? '+' : ''}{avgDiff}
+          </div>
+        </div>
+
+        {/* 200+ dial - bigger center */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto' }}>
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r={opp200c.r} fill="none" stroke={isDark ? '#1c2840' : '#e0e8f0'} strokeWidth="7"/>
+              <circle cx="48" cy="48" r={opp200c.r} fill="none" stroke={isDark ? '#2a3858' : '#c8d4e8'} strokeWidth="7"
+                strokeDasharray={opp200c.circ} strokeDashoffset={opp200c.offset}
+                transform="rotate(-90 48 48)" strokeLinecap="round"/>
+              <circle cx="48" cy="48" r={c200.r} fill="none" stroke="#1d9e75" strokeWidth="7"
+                strokeDasharray={c200.circ} strokeDashoffset={c200.offset}
+                transform="rotate(-90 48 48)" strokeLinecap="round"/>
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 17, fontWeight: 900, color: twohundredAdvantage ? '#1d9e75' : '#e24b4a', lineHeight: 1 }}>{stats.my200PerMatch}</div>
+              <div style={{ fontSize: 9, color: muted, marginTop: 1 }}>{stats.opp200PerMatch}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: muted, letterSpacing: 0.5, marginTop: 4 }}>200+ / MATCH</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: twohundredAdvantage ? '#1d9e75' : '#e24b4a', marginTop: 1 }}>
+            {twohundredAdvantage ? 'Fordel' : 'Nackdel'}
+          </div>
+        </div>
+
+        {/* Form dial */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r={formCirc.r} fill="none" stroke={isDark ? '#1c2840' : '#e0e8f0'} strokeWidth="6"/>
+              <circle cx="40" cy="40" r={formCirc.r} fill="none" stroke="#f5c200" strokeWidth="6"
+                strokeDasharray={formCirc.circ} strokeDashoffset={formCirc.offset}
+                transform="rotate(-90 40 40)" strokeLinecap="round"/>
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#f5c200', lineHeight: 1 }}>{formWins}V</div>
+              <div style={{ fontSize: 8, color: '#e24b4a', marginTop: 1 }}>{stats.myForm.filter((f: string) => f === 'F').length}F</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: muted, letterSpacing: 0.5, marginTop: 4 }}>FORM</div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginTop: 4 }}>
+            {stats.myForm.map((f: string, i: number) => (
+              <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: f === 'V' ? '#1d9e75' : f === 'F' ? '#e24b4a' : muted }} />
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Analysis tip */}
+      <div style={{ borderTop: '1px solid ' + (isDark ? '#1c2840' : '#d0d8e8'), paddingTop: 10 }}>
+        <div style={{ fontSize: 12, color: isDark ? '#afa9ec' : '#534ab7' }}>
+          <span style={{ fontWeight: 700 }}>Analys: </span>{tip}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function shortName(n: string) {
   return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
@@ -291,6 +467,9 @@ export default function LaguttagningPage({ params }: Props) {
             Publicerad till laget
           </div>
         )}
+
+        {/* Matchup gyro dials */}
+        <MatchupDials teamId={teamId!} matchId={matchId!} oppId={isHome ? match?.away_team_id : match?.home_team_id} />
       </div>
 
       {/* Bords */}
