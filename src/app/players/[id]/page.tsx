@@ -13,7 +13,7 @@ type Player = {
   bio: string | null; hand: string | null; style: string | null
   hometown: string | null; ball_brand: string | null; avatar_url: string | null
   instagram: string | null; facebook: string | null; youtube: string | null
-  favorite_center: string | null
+  favorite_center: string | null; achievements: string[] | null
 }
 
 function shortName(n: string) {
@@ -85,6 +85,7 @@ export default function PlayerPage({ params }: Props) {
       facebook: editData.facebook,
       youtube: editData.youtube,
       favorite_center: editData.favorite_center,
+      achievements: editData.achievements,
     }).eq('id', id)
 
     if (!error) {
@@ -301,6 +302,58 @@ export default function PlayerPage({ params }: Props) {
             {field('Klotmarke', 'ball_brand', 'T.ex. Storm, Roto Grip...')}
             {field('Favoritcenter', 'favorite_center', 'T.ex. Nässjö Bowling')}
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, marginBottom: 10, marginTop: 4 }}>SOCIALA MEDIER</div>
+            {/* Achievements */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>MERITER & TITLAR</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 8 }}>
+                {(editData.achievements || []).map((a, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 20, padding: '4px 10px' }}>
+                    <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>{a}</span>
+                    <button onClick={() => setEditData(prev => ({ ...prev, achievements: (prev.achievements || []).filter((_, j) => j !== i) }))}
+                      style={{ background: 'transparent', border: 'none', color: C.accent, cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input id="achInput" placeholder='T.ex. "SM-guld 2024"'
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value.trim()
+                      if (val) {
+                        setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
+                        ;(e.target as HTMLInputElement).value = ''
+                      }
+                    }
+                  }}
+                  style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
+                <button onClick={() => {
+                  const input = document.getElementById('achInput') as HTMLInputElement
+                  const val = input?.value.trim()
+                  if (val) {
+                    setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
+                    if (input) input.value = ''
+                  }
+                }} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  +
+                </button>
+              </div>
+              <div style={{ fontSize: 10, color: C.textMuted, marginTop: 6 }}>
+                Tryck Enter eller + for att lagga till. Syns pa baksidan av spelarkort.
+              </div>
+              {/* Quick add presets */}
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 8 }}>
+                {['SM-guld', 'SM-silver', 'SM-brons', 'Landslagsspelare', 'PBA Tour', 'PWBA Tour', 'Weber Cup', '300-serie', 'Elitserien MVP'].map(preset => (
+                  <button key={preset} onClick={() => setEditData(prev => ({
+                    ...prev,
+                    achievements: (prev.achievements || []).includes(preset) ? prev.achievements : [...(prev.achievements || []), preset]
+                  }))}
+                    style={{ fontSize: 10, padding: '3px 8px', borderRadius: 10, background: 'transparent', border: '1px solid ' + C.border, color: C.textMuted, cursor: 'pointer' }}>
+                    + {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {field('Instagram (användarnamn)', 'instagram', 'ditt_användarnamn')}
             {field('Facebook (URL)', 'facebook', 'https://facebook.com/...')}
             {field('YouTube (URL)', 'youtube', 'https://youtube.com/...')}
@@ -313,6 +366,20 @@ export default function PlayerPage({ params }: Props) {
                 style={{ flex: 1, background: 'transparent', color: C.textMuted, border: '1px solid ' + C.border, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 Avbryt
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Achievements */}
+        {!editing && player.achievements && player.achievements.length > 0 && (
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2, marginBottom: 8 }}>MERITER</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+              {player.achievements.map((a, i) => (
+                <span key={i} style={{ fontSize: 11, fontWeight: 600, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '33', borderRadius: 20, padding: '4px 10px' }}>
+                  {a}
+                </span>
+              ))}
             </div>
           </div>
         )}
@@ -362,7 +429,7 @@ export default function PlayerPage({ params }: Props) {
               style={player.style}
               ballBrand={player.ball_brand}
               bio={player.bio}
-              achievements={[]}
+              achievements={player.achievements || []}
               isDark={theme === 'dark'}
               isOwner={isOwner}
               onClose={() => setCardOpen(false)}
