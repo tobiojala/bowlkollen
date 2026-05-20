@@ -34,7 +34,6 @@ export default function PlayerPage({ params }: Props) {
   const [editData, setEditData] = useState<Partial<Player>>({})
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [cardOpen, setCardOpen] = useState(false)
-  const [cardOpen, setCardOpen] = useState(false)
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
