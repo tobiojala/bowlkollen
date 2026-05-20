@@ -312,65 +312,45 @@ export default function InternPage({ params }: Props) {
             {upcomingMatches.map(match => {
               const isHomeTeam = match.home_team_id === id
               const opp = isHomeTeam ? match.away : match.home
-              const poll = polls.find(p => p.match_id === match.id)
-              const myResponse = poll?.responses?.find(r => r.user_id === user?.id)
-              const yesCount = poll?.responses?.filter(r => r.response === 'yes').length || 0
-              const noCount = poll?.responses?.filter(r => r.response === 'no').length || 0
-              const maybeCount = poll?.responses?.filter(r => r.response === 'maybe').length || 0
+              const poll = polls.find((p: any) => p.match_id === match.id)
+              const myResponse = poll?.responses?.find((r: any) => r.user_id === user?.id)
+              const yesCount = poll?.responses?.filter((r: any) => r.response === 'yes').length || 0
+              const noCount = poll?.responses?.filter((r: any) => r.response === 'no').length || 0
+              const maybeCount = poll?.responses?.filter((r: any) => r.response === 'maybe').length || 0
+              const total = yesCount + maybeCount + noCount
 
               return (
-                <div key={match.id} style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                    {shortName(opp?.name || '')}
+                <a key={match.id} href={'/team/' + id + '/tillganglighet/' + match.id}
+                  style={{ display: 'block', padding: '16px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                        vs {shortName(opp?.name || '')}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.textMuted }}>
+                        {new Date(match.date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {' · '}{isHomeTeam ? 'Hemma' : 'Borta'}
+                      </div>
+                    </div>
+                    {myResponse ? (
+                      <span style={{ fontSize: 20 }}>
+                        {myResponse.response === 'yes' ? '✅' : myResponse.response === 'maybe' ? '🤔' : '❌'}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accent + '18', borderRadius: 8, padding: '3px 10px' }}>
+                        Svara →
+                      </span>
+                    )}
                   </div>
-                  <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 12 }}>
-                    {new Date(match.date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    {' · '}{isHomeTeam ? 'Hemma' : 'Borta'}
-                  </div>
-
-                  {/* Response buttons */}
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                    {[
-                      { key: 'yes', label: 'Ja', color: C.green },
-                      { key: 'maybe', label: 'Kanske', color: C.accent },
-                      { key: 'no', label: 'Nej', color: '#e05555' },
-                    ].map(r => {
-                      const isSelected = myResponse?.response === r.key
-                      return (
-                        <button key={r.key}
-                          onClick={async () => {
-                            if (!poll) {
-                              // Create poll first
-                              const supabase = createClient()
-                              const { data: newPoll } = await supabase
-                                .from('availability_polls')
-                                .insert({ team_id: id, match_id: match.id, created_by: user.id, question: 'Kan du spela?' })
-                                .select('*, responses:availability_responses(user_id, response, note)')
-                                .single()
-                              if (newPoll) {
-                                setPolls(prev => [...prev, newPoll as any])
-                                await respondToAvailability(newPoll.id, r.key)
-                              }
-                            } else {
-                              await respondToAvailability(poll.id, r.key)
-                            }
-                          }}
-                          style={{ flex: 1, padding: '10px', borderRadius: 10, border: '2px solid ' + (isSelected ? r.color : C.border), background: isSelected ? r.color + '22' : 'transparent', color: isSelected ? r.color : C.textMuted, fontSize: 13, fontWeight: isSelected ? 700 : 500, cursor: 'pointer' }}>
-                          {r.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Response summary */}
-                  {poll && (yesCount + noCount + maybeCount) > 0 && (
-                    <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
+                  {total > 0 && (
+                    <div style={{ display: 'flex', gap: 10, fontSize: 11 }}>
                       <span style={{ color: C.green, fontWeight: 700 }}>{yesCount} Ja</span>
                       <span style={{ color: C.accent, fontWeight: 700 }}>{maybeCount} Kanske</span>
                       <span style={{ color: '#e05555', fontWeight: 700 }}>{noCount} Nej</span>
                     </div>
                   )}
-                </div>
+                </a>
               )
             })}
           </div>
