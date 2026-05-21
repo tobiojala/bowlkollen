@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { Trophy, LogOut, Circle } from 'lucide-react'
+import { Trophy, LogOut } from 'lucide-react'
 
 type Player = { id: string; name: string; teamName?: string }
 type Claim = { id: string; player_id: string; status: string; players: { name: string; team_id: string } }
@@ -193,7 +193,7 @@ export default function ProfilePage() {
         <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '16px 20px', borderBottom: claim || searching ? '1px solid ' + C.border : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Circle size={22} color='#f5c200' />
+              <div style={{fontSize:22}}>🎳</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Spelarprofil</div>
                 <div style={{ fontSize: 12, color: C.textMuted }}>

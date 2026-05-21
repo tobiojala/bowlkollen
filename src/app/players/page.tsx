@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { Bowling } from 'lucide-react'
 
 type Player = { id: string; name: string; team_id: string; teamName?: string }
 
@@ -63,7 +62,7 @@ export default function PlayersPage() {
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {!loading && players.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🎳</div>
+            <div style={{ fontSize: 32, marginBottom: 12, color: '#6b7a99' }}>🎳</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
             <div style={{ fontSize: 13, color: C.textMuted }}>Spelare laggs till via live scoring i Admin</div>
           </div>
