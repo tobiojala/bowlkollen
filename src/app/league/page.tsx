@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -39,8 +39,6 @@ const TIER_GROUPS = [
   { label: 'Allsvenskan', divisions: ['Mellanallsvenskan Herrar', 'Nordallsvenskan Herrar', 'Sydallsvenskan Herrar', 'Norra Allsvenskan Herrar', 'Södra Allsvenskan Herrar'] },
   { label: 'Division 1', divisions: ['Div 1 Norra Götaland Herrar', 'Div 1 Norra Norrland Herrar', 'Div 1 Norra Svealand Herrar', 'Div 1 Södra Götaland Herrar', 'Div 1 Södra Norrland Herrar', 'Div 1 Södra Svealand Herrar'] },
 ]
-const ALL_DIVISIONS = TIER_GROUPS.flatMap(g => g.divisions)
-
 function shortDiv(d: string) {
   return d.replace(' Herrar', ' H').replace(' Damer', ' D')
     .replace('Mellanallsvenskan', 'Mellanallsv.')
@@ -57,7 +55,6 @@ export default function LeaguePage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const supabase = createClient()
@@ -90,14 +87,6 @@ export default function LeaguePage() {
     return false
   }
 
-  const toggle = (id: string) => {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
 
@@ -110,7 +99,7 @@ export default function LeaguePage() {
             const isActive = TIER_GROUPS.find(g => g.divisions.includes(division))?.label === group.label
             return (
               <button key={group.label}
-                onClick={() => { setDivision(group.divisions[0]); setExpanded(new Set()) }}
+                onClick={() => setDivision(group.divisions[0])}
                 style={{ background: isActive ? C.accent : 'transparent', border: '1px solid ' + (isActive ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700, color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
               >
                 {group.label}
@@ -129,7 +118,7 @@ export default function LeaguePage() {
                 const isActive = division === d
                 return (
                   <button key={d}
-                    onClick={() => { setDivision(d); setExpanded(new Set()) }}
+                    onClick={() => setDivision(d)}
                     style={{ background: isActive ? C.surface : 'transparent', border: '1px solid ' + (isActive ? C.border : 'transparent'), borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: isActive ? 700 : 400, color: isActive ? C.text : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
                   >
                     {shortDiv(d)}
@@ -152,62 +141,36 @@ export default function LeaguePage() {
         {loading && <div style={{ padding: 32, textAlign: 'center', color: C.textMuted }}>Laddar...</div>}
         {!loading && standings.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>Inga resultat</div>}
         {!loading && standings.length > 0 && (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 12 }}>
+            {/* Column headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px 28px 28px 42px 34px', gap: 4, padding: '4px 8px 6px', borderBottom: '1px solid ' + C.border }}>
+              <div />
+              <div />
+              {['V', 'O', 'F', '+/−', 'P'].map(h => (
+                <div key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textAlign: 'center', letterSpacing: 0.5 }}>{h}</div>
+              ))}
+            </div>
+
             {standings.map((s, i) => {
               const zc = zoneColor(i)
-              const isExpanded = expanded.has(s.team.id)
               const dl = s.diff > 0 ? '+' + s.diff : String(s.diff)
-              const dc = s.diff > 0 ? C.green : s.diff < 0 ? '#e05555' : C.textMuted
-
+              const dc = s.diff > 0 ? C.green : s.diff < 0 ? C.red : C.textMuted
               return (
                 <div key={s.team.id}>
-                  {showDivider(i) && <div style={{ height: 2, background: zoneColor(i), margin: '2px 0', borderRadius: 1, opacity: 0.4 }} />}
-                  <div onClick={() => toggle(s.team.id)}
-                    style={{ display: 'grid', gridTemplateColumns: '28px 1fr 32px 32px 32px 40px', gap: 8, padding: '10px 8px', cursor: 'pointer', borderRadius: 8, background: isExpanded ? C.card : 'transparent', alignItems: 'center', borderLeft: '3px solid ' + (zc !== 'transparent' ? zc : 'transparent') }}
-                    onMouseEnter={e => { if (!isExpanded) (e.currentTarget as HTMLElement).style.background = C.card }}
-                    onMouseLeave={e => { if (!isExpanded) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                  {showDivider(i) && <div style={{ height: 2, background: zoneColor(i), margin: '2px 0', borderRadius: 1, opacity: 0.35 }} />}
+                  <a href={'/teams/' + s.team.id}
+                    style={{ display: 'grid', gridTemplateColumns: '28px 1fr 28px 28px 28px 42px 34px', gap: 4, padding: '10px 8px', textDecoration: 'none', borderRadius: 8, alignItems: 'center', borderLeft: '3px solid ' + (zc !== 'transparent' ? zc : 'transparent') }}
+                    onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontSize: 13, fontWeight: 700, color: zc !== 'transparent' ? zc : C.textMuted, textAlign: 'center' }}>{i + 1}</div>
-                    <div style={{ fontSize: 14, fontWeight: isExpanded ? 700 : 400, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {shortName(s.team.name)}
-                    </div>
-                    <div style={{ fontSize: 12, color: C.textMuted, textAlign: 'center' }}>{s.played}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(s.team.name)}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.green, textAlign: 'center' }}>{s.wins}</div>
+                    <div style={{ fontSize: 13, color: C.textMuted, textAlign: 'center' }}>{s.draws}</div>
+                    <div style={{ fontSize: 13, color: C.red, textAlign: 'center' }}>{s.losses}</div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: dc, textAlign: 'center' }}>{dl}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textAlign: 'center' }}>{s.points}</div>
-                    <div style={{ fontSize: 11, color: C.textMuted, textAlign: 'right' }}>{isExpanded ? '▲' : '▼'}</div>
-                  </div>
-
-                  {isExpanded && (
-                    <div style={{ background: C.card, borderRadius: 8, padding: '12px', marginBottom: 4, border: '1px solid ' + C.border }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 12 }}>
-                        {[
-                          { label: 'S', value: s.played },
-                          { label: 'V', value: s.wins, color: C.green },
-                          { label: 'O', value: s.draws },
-                          { label: 'F', value: s.losses, color: '#e05555' },
-                          { label: 'P', value: s.points, color: C.accent },
-                        ].map(stat => (
-                          <div key={stat.label} style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#f0f4f8', borderRadius: 8, padding: '8px 4px', border: '1px solid ' + C.border }}>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: (stat as any).color || C.text }}>{stat.value}</div>
-                            <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>{stat.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                        <div style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#f0f4f8', borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.ptsFor} - {s.ptsAgainst}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>MP FOR - MOT</div>
-                        </div>
-                        <div style={{ textAlign: 'center', background: theme === 'dark' ? '#0f1a28' : '#f0f4f8', borderRadius: 8, padding: '8px', border: '1px solid ' + C.border }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: dc }}>{dl}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>DIFFERENS</div>
-                        </div>
-                      </div>
-                      <a href={'/teams/' + s.team.id} style={{ display: 'block', textAlign: 'center', fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none', padding: '6px' }}>
-                        Se lagprofil →
-                      </a>
-                    </div>
-                  )}
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text, textAlign: 'center' }}>{s.points}</div>
+                  </a>
                 </div>
               )
             })}
