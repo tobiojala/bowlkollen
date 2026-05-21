@@ -249,7 +249,7 @@ export default function TeamPage({ params }: Props) {
                 Till lagets sida →
               </a>
 
-              <FollowButton teamId={id || ''} isDark={theme === 'dark'} />
+              <FollowButton teamId={id || ''} type='team' isDark={theme === 'dark'} />
 
               {/* Club team switcher */}
               {clubTeams.length > 0 && (

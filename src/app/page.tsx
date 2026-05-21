@@ -78,6 +78,7 @@ export default function Home() {
   const [myTeam, setMyTeam] = useState<any>(null)
   const [myNextMatch, setMyNextMatch] = useState<Match | null>(null)
   const [favTeams, setFavTeams] = useState<FavTeam[]>([])
+  const [favPlayers, setFavPlayers] = useState<any[]>([])
   const [availabilityReminder, setAvailabilityReminder] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -117,15 +118,19 @@ export default function Home() {
         }
 
         // Favorite teams
-        const { data: favs } = await supabase.from('favorites').select('team_id,teams:team_id(id,name)').eq('user_id',session.user.id)
+        const { data: favs } = await supabase.from('favorites').select('team_id,teams:team_id(id,name),player_id,players:player_id(id,name),type').eq('user_id',session.user.id)
         if (favs && favs.length > 0) {
-          const favTeamData = await Promise.all((favs as any[]).map(async f => {
+          const favTeamData = await Promise.all((favs as any[]).filter(f => f.type === 'team' && f.teams).map(async f => {
             const team = f.teams as any
             const { data: nextM } = await supabase.from('matches').select('id,date,status,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`).eq('status','upcoming').order('date',{ascending:true}).limit(1).single()
             const { data: lastM } = await supabase.from('matches').select('id,date,status,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`).eq('status','completed').not('home_score','is',null).order('date',{ascending:false}).limit(1).single()
             return { ...team, nextMatch: nextM, lastResult: lastM }
           }))
           setFavTeams(favTeamData)
+
+          // Followed players
+          const playerFavs = (favs as any[]).filter(f => f.type === 'player' && f.players)
+          setFavPlayers(playerFavs.map((f: any) => f.players))
         }
       }
 
@@ -274,6 +279,30 @@ export default function Home() {
                   </div>
                   {m && <MatchRow m={m as Match} compact />}
                 </div>
+              )
+            })}
+          </Section>
+        )}
+
+        {/* Followed players */}
+        {favPlayers.length > 0 && (
+          <Section label="SPELARE JAG FÖLJER" color='#afa9ec' icon={Heart} href="/players">
+            {favPlayers.map((p: any) => {
+              const hue = p.name.split('').reduce((a: number, ch: string) => a + ch.charCodeAt(0), 0) % 360
+              const tc = `hsl(${hue},50%,45%)`
+              const tclo = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
+              return (
+                <a key={p.id} href={'/players/' + p.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '0.5px solid ' + C.border, textDecoration: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                    {p.name.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, fontSize: 13, fontWeight: 500, color: C.text }}>{p.name}</div>
+                  <ChevronRight size={14} color={C.textMuted} />
+                </a>
               )
             })}
           </Section>

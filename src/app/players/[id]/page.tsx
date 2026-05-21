@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { MapPin, Link, Edit2, Globe } from 'lucide-react'
+import FollowButton from '@/components/FollowButton'
 import PlayerCard from '@/components/PlayerCard'
 
 type Props = { params: Promise<{ id: string }> }
@@ -236,6 +237,9 @@ export default function PlayerPage({ params }: Props) {
                 style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.accent, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
                 🃏 Spelarkort
               </button>
+              {!isOwner && id && (
+                <FollowButton playerId={id} type="player" size="sm" isDark={theme === 'dark'} />
+              )}
               {isOwner && !editing && (
                 <button onClick={() => setEditing(true)}
                   style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer' }}>
