@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
+import { Check, X, HelpCircle, MapPin } from 'lucide-react'
 
 type Props = { params: Promise<{ id: string; matchid: string }> }
 
@@ -156,15 +157,15 @@ export default function TillganlighetPage({ params }: Props) {
             {!myResponse ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { key: 'yes', label: 'Ja, jag kan spela!', emoji: '✅', color: '#1d9e75', bg: 'rgba(29,158,117,0.12)', border: '#1d9e75' },
-                  { key: 'maybe', label: 'Kanske, vet inte an', emoji: '🤔', color: '#f5c200', bg: 'rgba(245,194,0,0.12)', border: '#c9960a' },
-                  { key: 'no', label: 'Nej, kan inte', emoji: '❌', color: '#e24b4a', bg: 'rgba(226,75,74,0.12)', border: '#e24b4a' },
+                  { key: 'yes', label: 'Ja, jag kan spela!', icon: Check, color: '#1d9e75', bg: 'rgba(29,158,117,0.12)', border: '#1d9e75' },
+                  { key: 'maybe', label: 'Kanske, vet inte an', icon: HelpCircle, color: '#f5c200', bg: 'rgba(245,194,0,0.12)', border: '#c9960a' },
+                  { key: 'no', label: 'Nej, kan inte', icon: X, color: '#e24b4a', bg: 'rgba(226,75,74,0.12)', border: '#e24b4a' },
                 ].map(r => (
                   <button key={r.key}
                     onClick={() => { setPendingResponse(r.key); setShowNote(true) }}
                     disabled={responding}
                     style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', background: r.bg, border: '2px solid ' + r.border, borderRadius: 14, cursor: 'pointer', textAlign: 'left' as const }}>
-                    <span style={{ fontSize: 24 }}>{r.emoji}</span>
+                    <r.icon size={24} color={r.color} />
                     <span style={{ fontSize: 15, fontWeight: 700, color: r.color }}>{r.label}</span>
                   </button>
                 ))}
@@ -172,8 +173,8 @@ export default function TillganlighetPage({ params }: Props) {
             ) : (
               <div>
                 <div style={{ padding: '16px', background: myResponse === 'yes' ? 'rgba(29,158,117,0.12)' : myResponse === 'maybe' ? 'rgba(245,194,0,0.12)' : 'rgba(226,75,74,0.12)', borderRadius: 14, border: '2px solid ' + (myResponse === 'yes' ? '#1d9e75' : myResponse === 'maybe' ? '#c9960a' : '#e24b4a'), textAlign: 'center', marginBottom: 12 }}>
-                  <div style={{ fontSize: 32, marginBottom: 6 }}>
-                    {myResponse === 'yes' ? '✅' : myResponse === 'maybe' ? '🤔' : '❌'}
+                  <div style={{ marginBottom: 6 }}>
+                    {myResponse === 'yes' ? <Check size={32} color='#1d9e75' /> : myResponse === 'maybe' ? <HelpCircle size={32} color='#f5c200' /> : <X size={32} color='#e24b4a' />}
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: myResponse === 'yes' ? '#1d9e75' : myResponse === 'maybe' ? '#f5c200' : '#e24b4a', marginBottom: 4 }}>
                     {myResponse === 'yes' ? 'Du spelar!' : myResponse === 'maybe' ? 'Kanske' : 'Du kan inte'}
@@ -203,8 +204,8 @@ export default function TillganlighetPage({ params }: Props) {
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => { setShowNote(false); setPendingResponse(null) }} />
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: card, borderRadius: '20px 20px 0 0', border: '1px solid ' + border, padding: '20px 20px 36px' }}>
               <div style={{ width: 36, height: 4, background: border, borderRadius: 2, margin: '0 auto 16px' }} />
-              <div style={{ fontSize: 15, fontWeight: 700, color: text, marginBottom: 4 }}>
-                {pendingResponse === 'yes' ? '✅ Ja, jag spelar!' : pendingResponse === 'maybe' ? '🤔 Kanske' : '❌ Kan inte'}
+              <div style={{ fontSize: 15, fontWeight: 700, color: text, marginBottom: 4, display:'flex', alignItems:'center', gap:8 }}>
+                {pendingResponse === 'yes' ? <><Check size={18} color='#1d9e75'/> Ja, jag spelar!</> : pendingResponse === 'maybe' ? <><HelpCircle size={18} color='#f5c200'/> Kanske</> : <><X size={18} color='#e24b4a'/> Kan inte</>}
               </div>
               <div style={{ fontSize: 13, color: muted, marginBottom: 14 }}>Vill du lagga till en kommentar? (valfritt)</div>
               <input value={note} onChange={e => setNote(e.target.value)}
@@ -277,7 +278,7 @@ export default function TillganlighetPage({ params }: Props) {
                           <div style={{ fontSize: 13, fontWeight: 600, color: text }}>{name}</div>
                           {r.note && <div style={{ fontSize: 11, color: muted, fontStyle: 'italic', marginTop: 1 }}>{r.note}</div>}
                         </div>
-                        <div style={{ fontSize: 16 }}>{r.response === 'yes' ? '✓' : r.response === 'maybe' ? '?' : '✕'}</div>
+                        <div>{r.response === 'yes' ? <Check size={16} color='#1d9e75' /> : r.response === 'maybe' ? <HelpCircle size={16} color='#f5c200' /> : <X size={16} color='#e24b4a' />}</div>
                       </div>
                     )
                   })}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { Trophy, LogOut, Circle } from 'lucide-react'
 
 type Player = { id: string; name: string; teamName?: string }
 type Claim = { id: string; player_id: string; status: string; players: { name: string; team_id: string } }
@@ -192,7 +193,7 @@ export default function ProfilePage() {
         <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '16px 20px', borderBottom: claim || searching ? '1px solid ' + C.border : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 22 }}>🎳</div>
+              <Circle size={22} color='#f5c200' />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Spelarprofil</div>
                 <div style={{ fontSize: 12, color: C.textMuted }}>
@@ -291,7 +292,7 @@ export default function ProfilePage() {
         <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '16px 20px', borderBottom: (clubClaims.length > 0 || searchingClub) ? '1px solid ' + C.border : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 22 }}>🏆</div>
+              <Trophy size={22} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Mina klubbar</div>
                 <div style={{ fontSize: 12, color: C.textMuted }}>
@@ -410,7 +411,7 @@ export default function ProfilePage() {
             onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <div style={{ fontSize: 16 }}>🚪</div>
+            <LogOut size={16} color='#e05555' />
             <div style={{ fontSize: 14, fontWeight: 600, color: '#e05555' }}>Logga ut</div>
           </button>
         </div>

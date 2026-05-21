@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { MapPin, Instagram, Facebook, Youtube, Edit2, Camera, Globe } from 'lucide-react'
 import PlayerCard from '@/components/PlayerCard'
 
 type Props = { params: Promise<{ id: string }> }
@@ -204,14 +205,14 @@ export default function PlayerPage({ params }: Props) {
                 </a>
               )}
               {player.hometown && (
-                <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>📍 {player.hometown}</div>
+                <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}><MapPin size={12} style={{display:'inline' as const,marginRight:4,verticalAlign:'middle'}} color='#6b7a99' />{player.hometown}</div>
               )}
               {/* Social links */}
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 {player.instagram && (
                   <a href={'https://instagram.com/' + player.instagram} target="_blank" rel="noopener noreferrer"
                     style={{ fontSize: 11, color: C.textMuted, textDecoration: 'none', background: C.card, border: '1px solid ' + C.border, borderRadius: 6, padding: '3px 8px' }}>
-                    📸 @{player.instagram}
+                    @{player.instagram}
                   </a>
                 )}
                 {player.facebook && (

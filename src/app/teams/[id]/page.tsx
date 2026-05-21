@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { MapPin, Globe, Instagram, Mail, User } from 'lucide-react'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
@@ -276,10 +277,10 @@ export default function TeamPage({ params }: Props) {
         {/* Team contact info (public) */}
         {(team.home_hall || team.website || team.instagram || team.contact_email) && !editingTeam && (
           <div style={{ padding: '10px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
-            {team.home_hall && <span style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px' }}>📍 {team.home_hall}</span>}
-            {team.website && <a href={team.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.accent, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>🌐 Webbplats</a>}
-            {team.instagram && <a href={'https://instagram.com/' + team.instagram} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>📸 @{team.instagram}</a>}
-            {team.contact_email && <a href={'mailto:' + team.contact_email} style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none' }}>✉️ {team.contact_email}</a>}
+            {team.home_hall && <span style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', display:'inline-flex', alignItems:'center', gap:4 }}><MapPin size={10} />{team.home_hall}</span>}
+            {team.website && <a href={team.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.accent, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none', display:'inline-flex', alignItems:'center', gap:4 }}><Globe size={10} />Webbplats</a>}
+            {team.instagram && <a href={'https://instagram.com/' + team.instagram} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none', display:'inline-flex', alignItems:'center', gap:4 }}><Instagram size={10} />@{team.instagram}</a>}
+            {team.contact_email && <a href={'mailto:' + team.contact_email} style={{ fontSize: 11, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 10px', textDecoration: 'none', display:'inline-flex', alignItems:'center', gap:4 }}><Mail size={10} />{team.contact_email}</a>}
           </div>
         )}
 
@@ -505,7 +506,7 @@ export default function TeamPage({ params }: Props) {
           <div>
             {players.length === 0 ? (
               <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>👤</div>
+                <User size={28} color='#6b7a99' style={{marginBottom:12}} />
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
                 <div style={{ fontSize: 13, color: C.textMuted }}>Spelare laggs till nar live scoring anvands</div>
               </div>

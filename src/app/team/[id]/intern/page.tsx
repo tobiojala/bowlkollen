@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { Lock } from 'lucide-react'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -190,7 +191,7 @@ export default function InternPage({ params }: Props) {
   if (accessDenied) return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ maxWidth: 360, padding: '0 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <Lock size={48} color='#f5c200' style={{marginBottom:16}} />
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{team?.club || team?.name}</div>
         <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 24, lineHeight: 1.6 }}>
           Det har ar lagets privata sida. Bara lagmedlemmar har tillgang.

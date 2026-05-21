@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { Bowling } from 'lucide-react'
 
 type Player = { id: string; name: string; team_id: string; teamName?: string }
 

@@ -18,6 +18,27 @@ export default function BottomNav() {
   const navRef = useRef<HTMLDivElement>(null)
   const [blobStyle, setBlobStyle] = useState({ left: 0, width: 0 })
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [visible, setVisible] = useState(true)
+  const lastScroll = useRef(0)
+
+  // Hide on inner pages
+  const hideOnPaths = ['/intern', '/laguttagning', '/tillganglighet', '/matches/', '/players/', '/teams/']
+  const isInnerPage = hideOnPaths.some(p => pathname.includes(p))
+
+  // Hide on scroll down, show on scroll up
+  useEffect(() => {
+    const onScroll = () => {
+      const current = window.scrollY
+      if (current < 10) { setVisible(true); lastScroll.current = current; return }
+      if (current > lastScroll.current + 6) setVisible(false)
+      else if (current < lastScroll.current - 6) setVisible(true)
+      lastScroll.current = current
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (isInnerPage) return null
 
   const activeIdx = TABS.findIndex(t =>
     t.href === '/' ? pathname === '/' : pathname.startsWith(t.href)
@@ -45,6 +66,8 @@ export default function BottomNav() {
       borderTop: '0.5px solid rgba(255,255,255,0.08)',
       zIndex: 50,
       paddingBottom: 'env(safe-area-inset-bottom)',
+      transform: visible ? 'translateY(0)' : 'translateY(100%)',
+      transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
     }}>
       {/* Sliding yellow line at top */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, overflow: 'visible' }}>
