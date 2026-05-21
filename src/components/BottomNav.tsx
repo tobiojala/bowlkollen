@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Home, Calendar, BarChart2, Users, User } from 'lucide-react'
 
 const TABS = [
-  { label: 'Hem', icon: '🏠', href: '/' },
-  { label: 'Schema', icon: '📅', href: '/schema' },
-  { label: 'Tabell', icon: '🏆', href: '/league' },
-  { label: 'Lag', icon: '👥', href: '/teams' },
-  { label: 'Profil', icon: '👤', href: '/profile' },
+  { label: 'Hem', icon: Home, href: '/' },
+  { label: 'Schema', icon: Calendar, href: '/schema' },
+  { label: 'Tabell', icon: BarChart2, href: '/league' },
+  { label: 'Lag', icon: Users, href: '/teams' },
+  { label: 'Profil', icon: User, href: '/profile' },
 ]
 
 export default function BottomNav() {
@@ -86,14 +87,16 @@ export default function BottomNav() {
                   pointerEvents: 'none',
                 }} />
               )}
-              <span style={{
-                fontSize: 21, lineHeight: 1,
-                transform: isActive ? 'scale(1.18)' : 'scale(1)',
-                transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-                display: 'block',
-              }}>
-                {tab.icon}
-              </span>
+              <tab.icon
+                size={22}
+                strokeWidth={isActive ? 2.2 : 1.8}
+                color={isActive ? '#f5c200' : 'rgba(255,255,255,0.35)'}
+                style={{
+                  transform: isActive ? 'scale(1.12)' : 'scale(1)',
+                  transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+                  display: 'block',
+                }}
+              />
               <span style={{
                 fontSize: 9, fontWeight: 700, letterSpacing: 0.3,
                 color: isActive ? '#f5c200' : 'rgba(255,255,255,0.28)',

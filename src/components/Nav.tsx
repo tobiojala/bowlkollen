@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 export default function Nav() {
