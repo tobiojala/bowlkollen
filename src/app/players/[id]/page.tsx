@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { MapPin, Instagram, Facebook, Youtube, Edit2, Camera, Globe } from 'lucide-react'
+import { MapPin, Link, Edit2, Globe } from 'lucide-react'
 import PlayerCard from '@/components/PlayerCard'
 
 type Props = { params: Promise<{ id: string }> }
