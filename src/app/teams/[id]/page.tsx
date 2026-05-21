@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { MapPin, Globe, Mail, User, Link } from 'lucide-react'
+import FollowButton from '@/components/FollowButton'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
@@ -242,11 +243,13 @@ export default function TeamPage({ params }: Props) {
                 </div>
               )}
 
-              {/* Intern link */}
+              {/* Follow + Intern link */}
               <a href={'/team/' + id + '/intern'}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, background: C.accent, color: '#1a1400', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                 Till lagets sida →
               </a>
+
+              <FollowButton teamId={id || ''} isDark={theme === 'dark'} />
 
               {/* Club team switcher */}
               {clubTeams.length > 0 && (
