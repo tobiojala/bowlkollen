@@ -39,10 +39,10 @@ const METRICS: Metric[] = [
 ]
 
 const SPRING     = { type: 'spring', stiffness: 280, damping: 28 } as const
-const TEAL       = '#00e5cc'
-const TEAL_GLOW  = 'rgba(0,229,204,0.40)'
-const TEAL_CARD  = 'rgba(0,229,204,0.08)'
-const TEAL_RING  = 'rgba(0,229,204,0.28)'
+const TEAL       = '#f5c200'
+const TEAL_GLOW  = 'rgba(245,194,0,0.40)'
+const TEAL_CARD  = 'rgba(245,194,0,0.08)'
+const TEAL_RING  = 'rgba(245,194,0,0.28)'
 
 function computeStats(results: any[]): Stats {
   const allGames = results.flatMap((r: any) => (r.games || []).filter((g: number) => g > 0))

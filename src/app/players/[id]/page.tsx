@@ -256,7 +256,7 @@ export default function PlayerPage({ params }: Props) {
                 <CreditCard size={12} />Spelarkort
               </button>
               <button onClick={() => { setCompareOpen(true); setCompareQuery(''); setCompareResults([]) }}
-                style={{ background: 'rgba(0,229,204,0.10)', border: '1px solid rgba(0,229,204,0.30)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#00e5cc', cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
+                style={{ background: 'rgba(245,194,0,0.10)', border: '1px solid rgba(245,194,0,0.30)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#f5c200', cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
                 H2H ⚔
               </button>
               {!isOwner && id && (
@@ -543,7 +543,7 @@ export default function PlayerPage({ params }: Props) {
               <div style={{ width: 36, height: 4, background: theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', borderRadius: 2, margin: '0 auto 20px' }} />
               <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 4 }}>Head-to-Head</div>
               <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
-                Sök en spelare att jämföra med <span style={{ color: '#00e5cc', fontWeight: 700 }}>{player.name.split(' ')[0]}</span>
+                Sök en spelare att jämföra med <span style={{ color: '#f5c200', fontWeight: 700 }}>{player.name.split(' ')[0]}</span>
               </div>
               <input
                 autoFocus
@@ -551,7 +551,7 @@ export default function PlayerPage({ params }: Props) {
                 onChange={e => searchPlayers(e.target.value)}
                 placeholder="Sök spelarnamn..."
                 style={{ width: '100%', background: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                  border: '1px solid rgba(0,229,204,0.30)', borderRadius: 12, padding: '11px 14px',
+                  border: '1px solid rgba(245,194,0,0.30)', borderRadius: 12, padding: '11px 14px',
                   color: C.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const,
                   fontFamily: 'system-ui',
                 }}
@@ -568,13 +568,13 @@ export default function PlayerPage({ params }: Props) {
                     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
                       background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                       textDecoration: 'none', border: '1px solid ' + C.border }}>
-                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,229,204,0.12)',
-                      border: '1px solid rgba(0,229,204,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 800, color: '#00e5cc', flexShrink: 0 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(245,194,0,0.12)',
+                      border: '1px solid rgba(245,194,0,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 800, color: '#f5c200', flexShrink: 0 }}>
                       {op.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{op.name}</div>
-                    <div style={{ marginLeft: 'auto', fontSize: 16, color: '#00e5cc' }}>⚔</div>
+                    <div style={{ marginLeft: 'auto', fontSize: 16, color: '#f5c200' }}>⚔</div>
                   </a>
                 ))}
               </div>
