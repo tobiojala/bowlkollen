@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { MapPin, Link, Edit2, Globe } from 'lucide-react'
+import { MapPin, Camera, Loader2, CreditCard, Check, Hand } from 'lucide-react'
 import FollowButton from '@/components/FollowButton'
 import PlayerCard from '@/components/PlayerCard'
+import { shortName } from '@/lib/utils'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -16,10 +17,6 @@ type Player = {
   hometown: string | null; ball_brand: string | null; avatar_url: string | null
   instagram: string | null; facebook: string | null; youtube: string | null
   favorite_center: string | null; achievements: string[] | null
-}
-
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
 
 export default function PlayerPage({ params }: Props) {
@@ -170,10 +167,6 @@ export default function PlayerPage({ params }: Props) {
 
         {/* Hero */}
         <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '24px 20px 20px' }}>
-          <a href="/players" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
-            ← Alla spelare
-          </a>
-
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
             {/* Avatar */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -185,8 +178,8 @@ export default function PlayerPage({ params }: Props) {
                 </div>
               )}
               {isOwner && (
-                <label style={{ position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12 }}>
-                  {uploadingAvatar ? '⏳' : '📷'}
+                <label style={{ position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  {uploadingAvatar ? <Loader2 size={12} color="#1a1400" style={{ animation: 'spin 1s linear infinite' }} /> : <Camera size={12} color="#1a1400" />}
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
                 </label>
               )}
@@ -197,7 +190,7 @@ export default function PlayerPage({ params }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>{player.name}</div>
                 {isOwner && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.green, background: C.green + '22', borderRadius: 6, padding: '2px 6px' }}>✓ Din profil</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.green, background: C.green + '22', borderRadius: 6, padding: '2px 6px', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={10} />Din profil</span>
                 )}
               </div>
               {team && (
@@ -234,8 +227,8 @@ export default function PlayerPage({ params }: Props) {
             {/* Header buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
               <button onClick={() => setCardOpen(true)}
-                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.accent, cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
-                🃏 Spelarkort
+                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.accent, cursor: 'pointer', whiteSpace: 'nowrap' as const, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <CreditCard size={12} />Spelarkort
               </button>
               {!isOwner && id && (
                 <FollowButton playerId={id} type="player" size="sm" isDark={theme === 'dark'} />
@@ -288,7 +281,7 @@ export default function PlayerPage({ params }: Props) {
                 {['right', 'left'].map(h => (
                   <button key={h} onClick={() => setEditData(prev => ({ ...prev, hand: h }))}
                     style={{ flex: 1, padding: '8px', borderRadius: 10, border: '1px solid ' + (editData.hand === h ? C.accent : C.border), background: editData.hand === h ? C.accent + '18' : 'transparent', color: editData.hand === h ? C.accent : C.textMuted, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    {h === 'right' ? '👉 Hoger' : '👈 Vanster'}
+                    {h === 'right' ? 'Höger' : 'Vänster'}
                   </button>
                 ))}
               </div>
@@ -393,23 +386,23 @@ export default function PlayerPage({ params }: Props) {
         {!editing && (player.hand || player.style || player.ball_brand || player.favorite_center) && (
           <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
             {player.hand && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                {player.hand === 'right' ? '👉 Hogerhänt' : '👈 Vänsterhänt'}
+              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Hand size={11} />{player.hand === 'right' ? 'Högerhänt' : 'Vänsterhänt'}
               </span>
             )}
             {player.style && (
               <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                🎳 {player.style}
+                {player.style}
               </span>
             )}
             {player.ball_brand && (
               <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                🔵 {player.ball_brand}
+                {player.ball_brand}
               </span>
             )}
             {player.favorite_center && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                📍 {player.favorite_center}
+              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <MapPin size={11} />{player.favorite_center}
               </span>
             )}
           </div>

@@ -1,22 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { Trophy, Target } from 'lucide-react'
 import LiveLaneViewer from '@/components/LiveLaneViewer'
+import { shortName, teamInitials } from '@/lib/utils'
 
 type Props = { params: Promise<{ id: string }> }
 type Lineup = { id: string; team_id: string; player_name: string; bord: number; position: number }
 type Result = { id: string; team_id: string; bord: number; position: number; games: number[] }
-
-function shortName(name: string) {
-  return name.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
-}
-
-function initials(name: string) {
-  return shortName(name).split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()
-}
 
 function divisionColor(division: string | null) {
   if (!division) return '#6b7a99'
@@ -119,11 +113,7 @@ export default function MatchPage({ params }: Props) {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '20px 16px 48px' }}>
-
-        <a href="/" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
-          ← Tillbaka
-        </a>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '16px 16px 48px' }}>
 
         {/* Match hero card */}
         <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
@@ -151,7 +141,7 @@ export default function MatchPage({ params }: Props) {
             {/* Home */}
             <a href={'/teams/' + home?.id} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: tclo(homeHue), border: '2px solid ' + tc(homeHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: tc(homeHue) }}>
-                {initials(home?.name || '')}
+                {teamInitials(home?.name || '')}
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: homeWin ? C.text : C.textMuted, lineHeight: 1.2 }}>{shortName(home?.name || '')}</div>
@@ -183,7 +173,7 @@ export default function MatchPage({ params }: Props) {
             {/* Away */}
             <a href={'/teams/' + away?.id} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: tclo(awayHue), border: '2px solid ' + tc(awayHue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: tc(awayHue) }}>
-                {initials(away?.name || '')}
+                {teamInitials(away?.name || '')}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: awayWin ? C.text : C.textMuted, lineHeight: 1.2 }}>{shortName(away?.name || '')}</div>
@@ -259,7 +249,7 @@ export default function MatchPage({ params }: Props) {
         {/* Best player highlight */}
         {bestPlayer && bestPlayer.total > 0 && (
           <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 20 }}>🏆</div>
+            <Trophy size={20} color={C.accent} />
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 2 }}>BASTA SPELARE</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{bestPlayer.player_name}</div>
@@ -364,7 +354,7 @@ export default function MatchPage({ params }: Props) {
         {/* No lineup — upcoming */}
         {!hasLineup && isUpcoming && (
           <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: 32, textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🎳</div>
+            <Target size={28} color={C.textMuted} style={{ marginBottom: 10 }} />
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>Kommande match</div>
             <div style={{ fontSize: 13, color: C.textMuted }}>Lineup och live scoring visas nar matchen borjar</div>
           </div>
