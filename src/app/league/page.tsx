@@ -129,11 +129,6 @@ export default function LeaguePage() {
           )
         })()}
 
-        {/* Active division title */}
-        <div style={{ padding: '0 16px 10px' }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{division}</div>
-          <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Säsong 2025/2026</div>
-        </div>
       </div>
 
       {/* Table */}
