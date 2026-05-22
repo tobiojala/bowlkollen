@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { MapPin, Globe, Mail, User, Link } from 'lucide-react'
+import { motion } from 'framer-motion'
 import FollowButton from '@/components/FollowButton'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
@@ -56,6 +57,8 @@ export default function TeamPage({ params }: Props) {
   const [editingTeam, setEditingTeam] = useState(false)
   const [savingTeam, setSavingTeam] = useState(false)
   const [teamEdit, setTeamEdit] = useState<any>({})
+  const [playerStats, setPlayerStats] = useState<Record<string, { avg: number; matches: number }>>({})
+  const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
   const submitPost = async () => {
     if (!newPost.trim() || !id) return
@@ -146,7 +149,31 @@ export default function TeamPage({ params }: Props) {
           .single()
         setIsAdmin(!!claim)
       }
-      if (p) setPlayers(p as Player[])
+      if (p) {
+        setPlayers(p as Player[])
+        const playerIds = (p as Player[]).map(pl => pl.id)
+        if (playerIds.length > 0) {
+          const { data: pStats } = await supabase
+            .from('match_results')
+            .select('player_id, games')
+            .in('player_id', playerIds)
+          const grouped: Record<string, number[]> = {}
+          const mCount: Record<string, number> = {}
+          pStats?.forEach((r: any) => {
+            if (!grouped[r.player_id]) { grouped[r.player_id] = []; mCount[r.player_id] = 0 }
+            grouped[r.player_id].push(...(r.games || []).filter((g: number) => g > 0))
+            mCount[r.player_id] = (mCount[r.player_id] || 0) + 1
+          })
+          const statsMap: Record<string, { avg: number; matches: number }> = {}
+          Object.entries(grouped).forEach(([pid, games]) => {
+            statsMap[pid] = {
+              avg: games.length > 0 ? Math.round(games.reduce((a, b) => a + b, 0) / games.length) : 0,
+              matches: mCount[pid] || 0,
+            }
+          })
+          setPlayerStats(statsMap)
+        }
+      }
 
       // Load community posts
       const { data: postsData } = await supabase
@@ -228,6 +255,12 @@ export default function TeamPage({ params }: Props) {
                   </span>
                 )}
               </div>
+              {team.home_hall && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, background: theme === 'dark' ? 'rgba(245,194,0,0.10)' : 'rgba(245,194,0,0.12)', border: '1px solid rgba(245,194,0,0.30)', borderRadius: 8, padding: '4px 10px' }}>
+                  <MapPin size={11} color="#f5c200" />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', letterSpacing: 0.3 }}>{team.home_hall}</span>
+                </div>
+              )}
               {team.slug && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' as const }}>
                   <span style={{ fontSize: 11, color: C.textMuted }}>bowlkollen.vercel.app/{team.slug}</span>
@@ -347,7 +380,10 @@ export default function TeamPage({ params }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {last5.map((f, i) => (
-                  <div key={i} style={{ width: 18, height: 18, borderRadius: '50%', background: formColor(f) + '22', border: '1px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: formColor(f) }}>{f}</div>
+                  <motion.span key={i} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING, delay: i * 0.05 }}
+                    style={{ fontSize: 10, fontWeight: 800, color: formColor(f), background: formColor(f) + '20', border: '1px solid ' + formColor(f) + '55', borderRadius: 20, padding: '3px 9px', letterSpacing: 0.5 }}>
+                    {f}
+                  </motion.span>
                 ))}
               </div>
               <div style={{ fontSize: 10, color: C.textMuted }}>{statsOpen ? '▲ stang' : '▼ mer statistik'}</div>
@@ -509,34 +545,52 @@ export default function TeamPage({ params }: Props) {
           <div>
             {players.length === 0 ? (
               <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <User size={28} color='#6b7a99' style={{marginBottom:12}} />
+                <User size={28} color='#6b7a99' style={{ marginBottom: 12 }} />
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
-                <div style={{ fontSize: 13, color: C.textMuted }}>Spelare laggs till nar live scoring anvands</div>
+                <div style={{ fontSize: 13, color: C.textMuted }}>Spelare läggs till när live scoring används</div>
               </div>
             ) : (
-              players.map(p => {
-                const phue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                const ptc = 'hsl(' + phue + ',50%,45%)'
-                const ptclo = theme === 'dark' ? 'hsl(' + phue + ',40%,15%)' : 'hsl(' + phue + ',40%,92%)'
-                return (
-                  <a key={p.id} href={'/players/' + p.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: ptclo, border: '1.5px solid ' + ptc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ptc, flexShrink: 0 }}>
-                      {p.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{p.name}</div>
-                    </div>
-                    <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
-                  </a>
-                )
-              })
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, padding: '16px' }}>
+                {players.map((p, idx) => {
+                  const stats = playerStats[p.id]
+                  const phue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+                  const ptc = 'hsl(' + phue + ',50%,45%)'
+                  const ptclo = theme === 'dark' ? 'hsl(' + phue + ',40%,15%)' : 'hsl(' + phue + ',40%,92%)'
+                  const ini = p.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+                  return (
+                    <motion.a key={p.id} href={'/players/' + p.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...SPRING, delay: idx * 0.04 }}
+                      style={{
+                        background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : '#ffffff',
+                        border: '1px solid ' + C.border,
+                        borderRadius: 18,
+                        padding: '20px 12px 16px',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 6,
+                        textAlign: 'center',
+                      }}>
+                      <div style={{ width: 54, height: 54, borderRadius: '50%', background: ptclo, border: '2px solid ' + ptc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: ptc, marginBottom: 4 }}>
+                        {ini}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{p.name}</div>
+                      {stats && stats.avg > 0 ? (
+                        <div style={{ marginTop: 4 }}>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: C.accent, lineHeight: 1 }}>{stats.avg}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 1.2, marginTop: 3 }}>SNITT</div>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>—</div>
+                      )}
+                    </motion.a>
+                  )
+                })}
+              </div>
             )}
-
-
           </div>
         )}
 

@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { MapPin, Camera, Loader2, CreditCard, Check, Hand } from 'lucide-react'
+import { motion } from 'framer-motion'
+
+const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 import FollowButton from '@/components/FollowButton'
 import PlayerCard from '@/components/PlayerCard'
 import { shortName } from '@/lib/utils'
@@ -33,6 +36,7 @@ export default function PlayerPage({ params }: Props) {
   const [editData, setEditData] = useState<Partial<Player>>({})
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [cardOpen, setCardOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'oversikt' | 'matchlogg'>('oversikt')
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -139,6 +143,13 @@ export default function PlayerPage({ params }: Props) {
   const bestSeries = seriesTotals.length > 0 ? Math.max(...seriesTotals) : null
   const over200 = allGames.filter((g: number) => g >= 200).length
   const over250 = allGames.filter((g: number) => g >= 250).length
+
+  const recentGames = results.slice(0, 4).flatMap((r: any) => (r.games || []).filter((g: number) => g > 0))
+  const olderGames = results.slice(4, 8).flatMap((r: any) => (r.games || []).filter((g: number) => g > 0))
+  const recentAvg = recentGames.length > 0 ? recentGames.reduce((a: number, b: number) => a + b, 0) / recentGames.length : 0
+  const olderAvg = olderGames.length > 0 ? olderGames.reduce((a: number, b: number) => a + b, 0) / olderGames.length : 0
+  const formTrend = recentGames.length === 0 ? '—' : olderGames.length === 0 ? '→' : recentAvg > olderAvg + 5 ? '↑' : recentAvg < olderAvg - 5 ? '↓' : '→'
+  const trendColor = formTrend === '↑' ? '#4caf7d' : formTrend === '↓' ? '#e05555' : C.textMuted
 
   const field = (label: string, key: keyof Player, placeholder: string, type = 'text') => (
     <div style={{ marginBottom: 14 }}>
@@ -248,20 +259,56 @@ export default function PlayerPage({ params }: Props) {
               "{player.bio}"
             </div>
           )}
+
+          {/* Hero stat dashboard */}
+          {results.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 20, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)' }}>
+              {[
+                { label: 'SNITT', value: avgScore ?? '—', color: '#f5c200' },
+                { label: 'BÄSTA', value: bestSeries ?? '—', color: '#4caf7d' },
+                { label: 'FORM', value: formTrend, color: trendColor },
+              ].map((s, i) => (
+                <div key={s.label} style={{ padding: '16px 8px', textAlign: 'center', background: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.10)' : 'none' }}>
+                  <div style={{ fontSize: 34, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 9, color: theme === 'dark' ? 'rgba(160,175,200,0.6)' : 'rgba(0,0,0,0.4)', marginTop: 6, letterSpacing: 1.5 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid ' + C.border, background: C.bg, position: 'relative' }}>
+          {(['oversikt', 'matchlogg'] as const).map(t => (
+            <button key={t} onClick={() => setActiveTab(t)}
+              style={{ flex: 1, padding: '12px 8px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: activeTab === t ? 700 : 500, color: activeTab === t ? '#f5c200' : C.textMuted, WebkitTapHighlightColor: 'transparent', position: 'relative' } as any}>
+              {activeTab === t && (
+                <motion.div layoutId="player-tab-capsule" transition={SPRING}
+                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#f5c200', borderRadius: 2 }} />
+              )}
+              {t === 'oversikt' ? 'Översikt' : 'Matchlogg'}
+              {t === 'matchlogg' && results.length > 0 && (
+                <span style={{ fontSize: 10, marginLeft: 5, opacity: 0.6 }}>({results.length})</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Översikt tab */}
+        {activeTab === 'oversikt' && (
+          <>
         {/* Stats */}
         {results.length > 0 && (
           <div style={{ borderBottom: '1px solid ' + C.border }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid ' + C.border }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
               {[
                 { label: 'Snitt', value: avgScore || '—', color: C.accent },
-                { label: 'Basta serie', value: bestSeries || '—', color: C.green },
+                { label: 'Bästa', value: bestSeries || '—', color: C.green },
                 { label: '200+', value: over200, color: tc },
                 { label: '250+', value: over250, color: '#f5c200' },
               ].map((s, i) => (
                 <div key={s.label} style={{ padding: '14px 8px', textAlign: 'center', borderRight: i < 3 ? '1px solid ' + C.border : 'none' }}>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, letterSpacing: 0.5 }}>{s.label.toUpperCase()}</div>
                 </div>
               ))}
@@ -269,146 +316,199 @@ export default function PlayerPage({ params }: Props) {
           </div>
         )}
 
-        {/* Edit form */}
-        {editing && (
-          <div style={{ padding: '20px 20px', borderBottom: '1px solid ' + C.border }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 16 }}>Redigera profil</div>
-            {field('Om mig', 'bio', 'Skriv en kort beskrivning...', 'textarea')}
-            {field('Hemstad', 'hometown', 'T.ex. Stockholm')}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 4 }}>HAND</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {['right', 'left'].map(h => (
-                  <button key={h} onClick={() => setEditData(prev => ({ ...prev, hand: h }))}
-                    style={{ flex: 1, padding: '8px', borderRadius: 10, border: '1px solid ' + (editData.hand === h ? C.accent : C.border), background: editData.hand === h ? C.accent + '18' : 'transparent', color: editData.hand === h ? C.accent : C.textMuted, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    {h === 'right' ? 'Höger' : 'Vänster'}
-                  </button>
-                ))}
+          {/* Edit form */}
+          {editing && (
+            <div style={{ padding: '20px 20px', borderBottom: '1px solid ' + C.border }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 16 }}>Redigera profil</div>
+              {field('Om mig', 'bio', 'Skriv en kort beskrivning...', 'textarea')}
+              {field('Hemstad', 'hometown', 'T.ex. Stockholm')}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 4 }}>HAND</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {['right', 'left'].map(h => (
+                    <button key={h} onClick={() => setEditData(prev => ({ ...prev, hand: h }))}
+                      style={{ flex: 1, padding: '8px', borderRadius: 10, border: '1px solid ' + (editData.hand === h ? C.accent : C.border), background: editData.hand === h ? C.accent + '18' : 'transparent', color: editData.hand === h ? C.accent : C.textMuted, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      {h === 'right' ? 'Höger' : 'Vänster'}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 4 }}>STIL</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
-                {['Straight', 'Hook', 'Cranker', 'Tweener', 'Stroker'].map(s => (
-                  <button key={s} onClick={() => setEditData(prev => ({ ...prev, style: s }))}
-                    style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid ' + (editData.style === s ? C.accent : C.border), background: editData.style === s ? C.accent + '18' : 'transparent', color: editData.style === s ? C.accent : C.textMuted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                    {s}
-                  </button>
-                ))}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 4 }}>STIL</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+                  {['Straight', 'Hook', 'Cranker', 'Tweener', 'Stroker'].map(s => (
+                    <button key={s} onClick={() => setEditData(prev => ({ ...prev, style: s }))}
+                      style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid ' + (editData.style === s ? C.accent : C.border), background: editData.style === s ? C.accent + '18' : 'transparent', color: editData.style === s ? C.accent : C.textMuted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            {field('Klotmarke', 'ball_brand', 'T.ex. Storm, Roto Grip...')}
-            {field('Favoritcenter', 'favorite_center', 'T.ex. Nässjö Bowling')}
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, marginBottom: 10, marginTop: 4 }}>SOCIALA MEDIER</div>
-            {/* Achievements */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>MERITER & TITLAR</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 8 }}>
-                {(editData.achievements || []).map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 20, padding: '4px 10px' }}>
-                    <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>{a}</span>
-                    <button onClick={() => setEditData(prev => ({ ...prev, achievements: (prev.achievements || []).filter((_, j) => j !== i) }))}
-                      style={{ background: 'transparent', border: 'none', color: C.accent, cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input id="achInput" placeholder='T.ex. "SM-guld 2024"'
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      const val = (e.target as HTMLInputElement).value.trim()
-                      if (val) {
-                        setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
-                        ;(e.target as HTMLInputElement).value = ''
+              {field('Klotmarke', 'ball_brand', 'T.ex. Storm, Roto Grip...')}
+              {field('Favoritcenter', 'favorite_center', 'T.ex. Nässjö Bowling')}
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, marginBottom: 10, marginTop: 4 }}>SOCIALA MEDIER</div>
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>MERITER & TITLAR</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 8 }}>
+                  {(editData.achievements || []).map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 20, padding: '4px 10px' }}>
+                      <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>{a}</span>
+                      <button onClick={() => setEditData(prev => ({ ...prev, achievements: (prev.achievements || []).filter((_, j) => j !== i) }))}
+                        style={{ background: 'transparent', border: 'none', color: C.accent, cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input id="achInput" placeholder='T.ex. "SM-guld 2024"'
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const val = (e.target as HTMLInputElement).value.trim()
+                        if (val) {
+                          setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
+                          ;(e.target as HTMLInputElement).value = ''
+                        }
                       }
+                    }}
+                    style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
+                  <button onClick={() => {
+                    const input = document.getElementById('achInput') as HTMLInputElement
+                    const val = input?.value.trim()
+                    if (val) {
+                      setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
+                      if (input) input.value = ''
                     }
-                  }}
-                  style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
-                <button onClick={() => {
-                  const input = document.getElementById('achInput') as HTMLInputElement
-                  const val = input?.value.trim()
-                  if (val) {
-                    setEditData(prev => ({ ...prev, achievements: [...(prev.achievements || []), val] }))
-                    if (input) input.value = ''
-                  }
-                }} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  +
+                  }} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    +
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, color: C.textMuted, marginTop: 6 }}>
+                  Tryck Enter eller + för att lägga till. Syns på baksidan av spelarkort.
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 8 }}>
+                  {['SM-guld', 'SM-silver', 'SM-brons', 'Landslagsspelare', 'PBA Tour', 'PWBA Tour', 'Weber Cup', '300-serie', 'Elitserien MVP'].map(preset => (
+                    <button key={preset} onClick={() => setEditData(prev => ({
+                      ...prev,
+                      achievements: (prev.achievements || []).includes(preset) ? prev.achievements : [...(prev.achievements || []), preset]
+                    }))}
+                      style={{ fontSize: 10, padding: '3px 8px', borderRadius: 10, background: 'transparent', border: '1px solid ' + C.border, color: C.textMuted, cursor: 'pointer' }}>
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {field('Instagram (användarnamn)', 'instagram', 'ditt_användarnamn')}
+              {field('Facebook (URL)', 'facebook', 'https://facebook.com/...')}
+              {field('YouTube (URL)', 'youtube', 'https://youtube.com/...')}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button onClick={save} disabled={saving}
+                  style={{ flex: 1, background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                  {saving ? 'Sparar...' : 'Spara'}
+                </button>
+                <button onClick={() => { setEditing(false); setEditData(player) }}
+                  style={{ flex: 1, background: 'transparent', color: C.textMuted, border: '1px solid ' + C.border, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  Avbryt
                 </button>
               </div>
-              <div style={{ fontSize: 10, color: C.textMuted, marginTop: 6 }}>
-                Tryck Enter eller + for att lagga till. Syns pa baksidan av spelarkort.
-              </div>
-              {/* Quick add presets */}
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 8 }}>
-                {['SM-guld', 'SM-silver', 'SM-brons', 'Landslagsspelare', 'PBA Tour', 'PWBA Tour', 'Weber Cup', '300-serie', 'Elitserien MVP'].map(preset => (
-                  <button key={preset} onClick={() => setEditData(prev => ({
-                    ...prev,
-                    achievements: (prev.achievements || []).includes(preset) ? prev.achievements : [...(prev.achievements || []), preset]
-                  }))}
-                    style={{ fontSize: 10, padding: '3px 8px', borderRadius: 10, background: 'transparent', border: '1px solid ' + C.border, color: C.textMuted, cursor: 'pointer' }}>
-                    + {preset}
-                  </button>
+            </div>
+          )}
+
+          {/* Achievements */}
+          {!editing && player.achievements && player.achievements.length > 0 && (
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2, marginBottom: 8 }}>MERITER</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                {player.achievements.map((a, i) => (
+                  <span key={i} style={{ fontSize: 11, fontWeight: 600, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '33', borderRadius: 20, padding: '4px 10px' }}>
+                    {a}
+                  </span>
                 ))}
               </div>
             </div>
+          )}
 
-            {field('Instagram (användarnamn)', 'instagram', 'ditt_användarnamn')}
-            {field('Facebook (URL)', 'facebook', 'https://facebook.com/...')}
-            {field('YouTube (URL)', 'youtube', 'https://youtube.com/...')}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button onClick={save} disabled={saving}
-                style={{ flex: 1, background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-                {saving ? 'Sparar...' : 'Spara'}
-              </button>
-              <button onClick={() => { setEditing(false); setEditData(player) }}
-                style={{ flex: 1, background: 'transparent', color: C.textMuted, border: '1px solid ' + C.border, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                Avbryt
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Achievements */}
-        {!editing && player.achievements && player.achievements.length > 0 && (
-          <div style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2, marginBottom: 8 }}>MERITER</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-              {player.achievements.map((a, i) => (
-                <span key={i} style={{ fontSize: 11, fontWeight: 600, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '33', borderRadius: 20, padding: '4px 10px' }}>
-                  {a}
+          {/* Profile details (non-editing) */}
+          {!editing && (player.hand || player.style || player.ball_brand || player.favorite_center) && (
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+              {player.hand && (
+                <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <Hand size={11} />{player.hand === 'right' ? 'Högerhänt' : 'Vänsterhänt'}
                 </span>
-              ))}
+              )}
+              {player.style && (
+                <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
+                  {player.style}
+                </span>
+              )}
+              {player.ball_brand && (
+                <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
+                  {player.ball_brand}
+                </span>
+              )}
+              {player.favorite_center && (
+                <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <MapPin size={11} />{player.favorite_center}
+                </span>
+              )}
             </div>
-          </div>
+          )}
+
+          {results.length === 0 && !editing && (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 13, color: C.textMuted }}>Inga registrerade resultat ännu</div>
+            </div>
+          )}
+          </>
         )}
 
-        {/* Profile details (non-editing) */}
-        {!editing && (player.hand || player.style || player.ball_brand || player.favorite_center) && (
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
-            {player.hand && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <Hand size={11} />{player.hand === 'right' ? 'Högerhänt' : 'Vänsterhänt'}
-              </span>
-            )}
-            {player.style && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                {player.style}
-              </span>
-            )}
-            {player.ball_brand && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px' }}>
-                {player.ball_brand}
-              </span>
-            )}
-            {player.favorite_center && (
-              <span style={{ fontSize: 12, color: C.textMuted, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <MapPin size={11} />{player.favorite_center}
-              </span>
+        {/* Matchlogg tab */}
+        {activeTab === 'matchlogg' && (
+          <div>
+            {results.length === 0 ? (
+              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: 13, color: C.textMuted }}>Inga registrerade resultat ännu</div>
+              </div>
+            ) : (
+              results.map(r => {
+                const games = (r.games || []).filter((g: number) => g > 0)
+                const total = games.reduce((a: number, b: number) => a + b, 0)
+                const match = r.matches
+                return (
+                  <a key={r.id} href={'/matches/' + r.match_id}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3 }}>
+                        {match?.home?.name ? shortName(match.home.name) : ''} vs {match?.away?.name ? shortName(match.away.name) : ''}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>
+                        {match?.date?.slice(0, 10) || ''}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' as const }}>
+                        {games.map((g: number, i: number) => (
+                          <React.Fragment key={i}>
+                            <span style={{
+                              fontSize: g >= 250 ? 18 : g >= 200 ? 16 : 14,
+                              fontWeight: g >= 250 ? 900 : g >= 200 ? 700 : 400,
+                              color: g >= 250 ? '#ffffff' : g >= 200 ? '#4caf7d' : C.textMuted,
+                              textShadow: g >= 250 ? '0 0 8px rgba(0,240,255,0.5), 0 0 20px rgba(0,240,255,0.2)' : 'none',
+                            }}>{g}</span>
+                            {i < games.length - 1 && <span style={{ color: C.border, fontSize: 13, userSelect: 'none' }}>|</span>}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: total >= 800 ? '#4caf7d' : C.accent }}>{total}</div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, letterSpacing: 0.5 }}>TOTALT</div>
+                    </div>
+                  </a>
+                )
+              })
             )}
           </div>
         )}
-
-
 
         {/* Card drawer */}
         {cardOpen && (
@@ -433,50 +533,6 @@ export default function PlayerPage({ params }: Props) {
               onClose={() => setCardOpen(false)}
             />
           </>
-        )}
-
-        {/* Match history */}
-        {results.length > 0 && (
-          <div>
-            <div style={{ padding: '14px 20px 8px', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
-              MATCHHISTORIK
-            </div>
-            {results.map(r => {
-              const games = r.games || []
-              const total = games.filter((g: number) => g > 0).reduce((a: number, b: number) => a + b, 0)
-              const match = r.matches
-              return (
-                <a key={r.id} href={'/matches/' + r.match_id}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                      {match?.home?.name ? shortName(match.home.name) : ''} vs {match?.away?.name ? shortName(match.away.name) : ''}
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {games.filter((g: number) => g > 0).map((g: number, i: number) => (
-                        <span key={i} style={{ fontSize: 12, fontWeight: g >= 200 ? 700 : 400, color: g >= 250 ? '#f5c200' : g >= 200 ? C.green : C.textMuted }}>
-                          {g}{i < games.filter((g: number) => g > 0).length - 1 ? ' ·' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: total >= 800 ? C.green : C.accent }}>{total}</div>
-                    <div style={{ fontSize: 9, color: C.textMuted }}>TOTALT</div>
-                  </div>
-                </a>
-              )
-            })}
-          </div>
-        )}
-
-        {results.length === 0 && (
-          <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, color: C.textMuted }}>Inga registrerade resultat ännu</div>
-          </div>
         )}
 
       </div>
