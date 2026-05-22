@@ -25,7 +25,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
-      <div data-theme={theme} style={{ minHeight: '100vh', background: theme === 'dark' ? '#10161e' : '#f0f2f5', transition: 'background 0.2s' }}>
+      <div data-theme={theme} style={{ minHeight: '100vh', background: theme === 'dark' ? '#10161e' : '#f5f2ec', transition: 'background 0.2s' }}>
         {children}
       </div>
     </ThemeContext.Provider>

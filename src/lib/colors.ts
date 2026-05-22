@@ -11,15 +11,15 @@ export const dark = {
 }
 
 export const light = {
-  bg:       '#f0f4f8',
+  bg:       '#f5f2ec',
   surface:  '#ffffff',
   card:     '#ffffff',
-  border:   '#d0d8e8',
-  accent:   '#0a5c8a',
-  text:     '#0d1f35',
-  textMuted:'#4a6080',
-  green:    '#2e7d52',
-  red:      '#c0392b',
+  border:   '#e8e0d4',
+  accent:   '#f5c200',
+  text:     '#18120a',
+  textMuted:'#7c7269',
+  green:    '#1a9e6b',
+  red:      '#d63b3b',
 }
 
 export type Colors = typeof dark
