@@ -224,22 +224,20 @@ export default function ComparePage({ params }: Props) {
           )}
         </motion.div>
 
-        {/* VS badge — floats dead-center */}
+        {/* VS label — floats dead-center */}
         <motion.div
-          initial={{ scale: 0, rotate: -12 }} animate={{ scale: 1, rotate: 0 }}
+          initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           transition={{ ...SPRING, delay: 0.18 }}
           style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 46, height: 46, borderRadius: '50%',
-            background: isDark ? '#0B1528' : '#ffffff',
-            border: `2px solid ${C.border}`,
-            boxShadow: isDark
-              ? `0 0 0 4px rgba(11,21,40,0.8), 0 4px 24px rgba(0,0,0,0.5)`
-              : `0 0 0 4px rgba(255,255,255,0.8), 0 4px 16px rgba(0,0,0,0.12)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 900, color: '#f5c200', letterSpacing: 0.5,
+            position: 'absolute', top: '50%', left: 0, right: 0,
+            transform: 'translateY(-50%)',
+            textAlign: 'center',
+            fontSize: 20, fontWeight: 900, color: '#f5c200',
+            letterSpacing: 3,
+            textShadow: '0 0 12px rgba(245,194,0,0.9), 0 0 32px rgba(245,194,0,0.45)',
             zIndex: 10,
+            pointerEvents: 'none',
+            userSelect: 'none' as const,
           }}>
           VS
         </motion.div>
