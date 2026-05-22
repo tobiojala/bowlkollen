@@ -18,7 +18,7 @@ const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
 const HIDE_PATHS = [
   '/intern', '/laguttagning', '/tillganglighet',
-  '/matches/', '/players/', '/teams/',
+  '/matches/', '/players/', '/teams/', '/compare/',
 ]
 
 export default function BottomNav() {

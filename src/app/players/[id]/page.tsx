@@ -37,6 +37,10 @@ export default function PlayerPage({ params }: Props) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [cardOpen, setCardOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'oversikt' | 'matchlogg'>('oversikt')
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [compareQuery, setCompareQuery] = useState('')
+  const [compareResults, setCompareResults] = useState<{ id: string; name: string }[]>([])
+  const [searchingCompare, setSearchingCompare] = useState(false)
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -118,6 +122,16 @@ export default function PlayerPage({ params }: Props) {
       setPlayer(prev => prev ? { ...prev, avatar_url: publicUrl } : null)
     }
     setUploadingAvatar(false)
+  }
+
+  const searchPlayers = async (q: string) => {
+    setCompareQuery(q)
+    if (q.trim().length < 2) { setCompareResults([]); return }
+    setSearchingCompare(true)
+    const supabase = createClient()
+    const { data } = await supabase.from('players').select('id, name').ilike('name', `%${q.trim()}%`).neq('id', id || '').limit(6)
+    setCompareResults(data || [])
+    setSearchingCompare(false)
   }
 
   if (loading) return (
@@ -240,6 +254,10 @@ export default function PlayerPage({ params }: Props) {
               <button onClick={() => setCardOpen(true)}
                 style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: C.accent, cursor: 'pointer', whiteSpace: 'nowrap' as const, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <CreditCard size={12} />Spelarkort
+              </button>
+              <button onClick={() => { setCompareOpen(true); setCompareQuery(''); setCompareResults([]) }}
+                style={{ background: 'rgba(0,229,204,0.10)', border: '1px solid rgba(0,229,204,0.30)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, color: '#00e5cc', cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
+                H2H ⚔
               </button>
               {!isOwner && id && (
                 <FollowButton playerId={id} type="player" size="sm" isDark={theme === 'dark'} />
@@ -508,6 +526,60 @@ export default function PlayerPage({ params }: Props) {
               })
             )}
           </div>
+        )}
+
+        {/* Compare search sheet */}
+        {compareOpen && (
+          <>
+            <div onClick={() => setCompareOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 99 }} />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={SPRING}
+              style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+                background: theme === 'dark' ? '#131e2e' : '#ffffff',
+                borderRadius: '20px 20px 0 0', padding: '20px 20px 40px',
+                maxWidth: 600, margin: '0 auto',
+              }}>
+              <div style={{ width: 36, height: 4, background: theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', borderRadius: 2, margin: '0 auto 20px' }} />
+              <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 4 }}>Head-to-Head</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
+                Sök en spelare att jämföra med <span style={{ color: '#00e5cc', fontWeight: 700 }}>{player.name.split(' ')[0]}</span>
+              </div>
+              <input
+                autoFocus
+                value={compareQuery}
+                onChange={e => searchPlayers(e.target.value)}
+                placeholder="Sök spelarnamn..."
+                style={{ width: '100%', background: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,229,204,0.30)', borderRadius: 12, padding: '11px 14px',
+                  color: C.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const,
+                  fontFamily: 'system-ui',
+                }}
+              />
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {searchingCompare && (
+                  <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 12, color: C.textMuted }}>Söker...</div>
+                )}
+                {!searchingCompare && compareQuery.length >= 2 && compareResults.length === 0 && (
+                  <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 12, color: C.textMuted }}>Inga spelare hittades</div>
+                )}
+                {compareResults.map(op => (
+                  <a key={op.id} href={`/compare/${id}/${op.id}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
+                      background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                      textDecoration: 'none', border: '1px solid ' + C.border }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,229,204,0.12)',
+                      border: '1px solid rgba(0,229,204,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 800, color: '#00e5cc', flexShrink: 0 }}>
+                      {op.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{op.name}</div>
+                    <div style={{ marginLeft: 'auto', fontSize: 16, color: '#00e5cc' }}>⚔</div>
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
 
         {/* Card drawer */}
