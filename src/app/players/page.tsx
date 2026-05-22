@@ -14,7 +14,6 @@ export default function PlayersPage() {
   const C = theme === 'dark' ? dark : light
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
-  const [q, setQ] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -29,12 +28,7 @@ export default function PlayersPage() {
     load()
   }, [])
 
-  const filtered = players.filter(p =>
-    !q || p.name.toLowerCase().includes(q.toLowerCase()) ||
-    (p.teamName || '').toLowerCase().includes(q.toLowerCase())
-  )
-
-  const grouped = filtered.reduce((acc, p) => {
+  const grouped = players.reduce((acc, p) => {
     const letter = p.name[0]?.toUpperCase() || '#'
     if (!acc[letter]) acc[letter] = []
     acc[letter].push(p)
@@ -43,20 +37,6 @@ export default function PlayersPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-
-      {/* Sticky header */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border, padding: '10px 16px' }}>
-        <input
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Sok spelare eller lag..."
-          style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 20, padding: '7px 14px', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }}
-        />
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
-          {loading ? 'Laddar...' : players.length + ' spelare registrerade'}
-        </div>
-      </div>
-
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {!loading && players.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>

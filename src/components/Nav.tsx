@@ -29,7 +29,8 @@ function getConfig(pathname: string): NavConfig {
   return { logo: true, title: null, backHref: null }
 }
 
-type Result = { id: string; name: string; teamName: string }
+type PlayerResult = { kind: 'player'; id: string; name: string; teamName: string }
+type TeamResult   = { kind: 'team';   id: string; name: string; club: string; city: string; href: string }
 
 export default function Nav() {
   const pathname = usePathname()
@@ -40,7 +41,8 @@ export default function Nav() {
 
   const [searching, setSearching] = useState(false)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Result[]>([])
+  const [players, setPlayers] = useState<PlayerResult[]>([])
+  const [teams, setTeams] = useState<TeamResult[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -63,26 +65,40 @@ export default function Nav() {
   // Focus input when search opens
   useEffect(() => {
     if (searching) setTimeout(() => inputRef.current?.focus(), 50)
-    else { setQuery(''); setResults([]) }
+    else { setQuery(''); setPlayers([]); setTeams([]) }
   }, [searching])
 
   // Close search on route change
   useEffect(() => { setSearching(false) }, [pathname])
 
-  // Debounced player search
+  // Debounced search across players + teams
   useEffect(() => {
-    if (!query.trim()) { setResults([]); return }
+    if (!query.trim()) { setPlayers([]); setTeams([]); return }
     const t = setTimeout(async () => {
       const supabase = createClient()
-      const [{ data: ps }, { data: ts }] = await Promise.all([
-        supabase.from('players').select('id, name, team_id').ilike('name', `%${query}%`).limit(7),
+      const [{ data: ps }, { data: allTeams }, { data: ts }] = await Promise.all([
+        supabase.from('players').select('id, name, team_id').ilike('name', `%${query}%`).limit(5),
         supabase.from('teams').select('id, name'),
+        supabase.from('teams').select('id, name, club, city, club_slug, team_path')
+          .or(`club.ilike.%${query}%,name.ilike.%${query}%,city.ilike.%${query}%`)
+          .limit(10),
       ])
-      if (ps) {
-        const teamMap: Record<string, string> = {}
-        ts?.forEach((t: any) => { teamMap[t.id] = t.name })
-        setResults(ps.map((p: any) => ({ id: p.id, name: p.name, teamName: shortName(teamMap[p.team_id] || '') })))
+      const teamMap: Record<string, string> = {}
+      allTeams?.forEach((t: any) => { teamMap[t.id] = t.name })
+      setPlayers((ps || []).map((p: any) => ({ kind: 'player', id: p.id, name: p.name, teamName: shortName(teamMap[p.team_id] || '') })))
+
+      // Deduplicate by club name, keep one entry per club
+      const seen = new Set<string>()
+      const clubResults: TeamResult[] = []
+      for (const t of (ts || [])) {
+        const club = t.club || shortName(t.name)
+        if (seen.has(club)) continue
+        seen.add(club)
+        const href = t.club_slug ? `/${t.club_slug}` : `/teams/${t.id}`
+        clubResults.push({ kind: 'team', id: t.id, name: shortName(t.name), club, city: t.city || '', href })
+        if (clubResults.length >= 4) break
       }
+      setTeams(clubResults)
     }, 220)
     return () => clearTimeout(t)
   }, [query])
@@ -232,48 +248,85 @@ export default function Nav() {
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
             maxHeight: '60vh', overflowY: 'auto',
           }}>
-            {results.length === 0 && query.trim() && (
-              <div style={{ padding: '20px 20px', fontSize: 13, color: mutedColor, textAlign: 'center' }}>
-                Inga spelare hittades
-              </div>
-            )}
-            {results.length === 0 && !query.trim() && (
+            {!query.trim() && (
               <div style={{ padding: '16px 20px', fontSize: 13, color: mutedColor }}>
-                Börja skriva för att söka...
+                Sök efter spelare, lag eller klubb...
               </div>
             )}
-            {results.map((p, i) => {
-              const hue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-              const tc = `hsl(${hue},50%,45%)`
-              const tclo = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
-              return (
-                <a key={p.id} href={`/players/${p.id}`}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '11px 20px',
-                    borderTop: i > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none',
-                    textDecoration: 'none',
-                    background: 'transparent',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: tclo, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                    {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{p.name}</div>
-                    {p.teamName && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{p.teamName}</div>}
-                  </div>
-                  <ChevronLeft size={16} color={mutedColor} style={{ transform: 'rotate(180deg)' }} />
+            {query.trim() && players.length === 0 && teams.length === 0 && (
+              <div style={{ padding: '20px', fontSize: 13, color: mutedColor, textAlign: 'center' }}>
+                Inga resultat hittades
+              </div>
+            )}
+
+            {/* Players section */}
+            {players.length > 0 && (
+              <>
+                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5 }}>SPELARE</div>
+                {players.map((p, i) => {
+                  const hue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+                  const tc = `hsl(${hue},50%,45%)`
+                  const tclo = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
+                  const divider = `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                  return (
+                    <a key={p.id} href={`/players/${p.id}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? divider : 'none', textDecoration: 'none', background: 'transparent' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: tclo, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                        {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{p.name}</div>
+                        {p.teamName && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{p.teamName}</div>}
+                      </div>
+                      <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
+                    </a>
+                  )
+                })}
+              </>
+            )}
+
+            {/* Teams section */}
+            {teams.length > 0 && (
+              <>
+                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5, borderTop: players.length > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` : 'none' }}>LAG & KLUBBAR</div>
+                {teams.map((t, i) => {
+                  const hue = t.club.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+                  const tc = `hsl(${hue},50%,45%)`
+                  const tclo = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
+                  const ini = t.club.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+                  const divider = `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                  return (
+                    <a key={t.id} href={t.href}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? divider : 'none', textDecoration: 'none', background: 'transparent' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: tclo, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                        {ini}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{t.club}</div>
+                        {t.city && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{t.city}</div>}
+                      </div>
+                      <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
+                    </a>
+                  )
+                })}
+              </>
+            )}
+
+            {(players.length > 0 || teams.length > 0) && (
+              <div style={{ display: 'flex', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                <a href="/players" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center' }}>
+                  Alla spelare →
                 </a>
-              )
-            })}
-            {results.length > 0 && (
-              <a href={`/players?q=${encodeURIComponent(query)}`}
-                style={{ display: 'block', padding: '12px 20px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                Visa alla resultat →
-              </a>
+                <a href="/teams" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center', borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                  Alla lag →
+                </a>
+              </div>
             )}
           </div>
         </>

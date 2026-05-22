@@ -29,7 +29,6 @@ export default function TeamsPage() {
   const C = theme === 'dark' ? dark : light
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -46,28 +45,10 @@ export default function TeamsPage() {
     return acc
   }, {} as Record<string, Team[]>)
 
-  const filtered = Object.entries(clubs).filter(([club, clubTeams]) =>
-    !search ||
-    club.toLowerCase().includes(search.toLowerCase()) ||
-    (clubTeams as Team[]).some(t => t.city?.toLowerCase().includes(search.toLowerCase()))
-  ).sort(([a], [b]) => a.localeCompare(b, 'sv'))
+  const filtered = Object.entries(clubs).sort(([a], [b]) => a.localeCompare(b, 'sv'))
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-
-      {/* Sticky header */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border, padding: '10px 16px' }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Sok klubb eller stad..."
-          style={{ width: '100%', background: C.card, border: '1px solid ' + C.border, borderRadius: 20, padding: '7px 14px', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const }}
-        />
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
-          {loading ? 'Laddar...' : filtered.length + ' klubbar'}
-        </div>
-      </div>
-
       {/* Club list */}
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {filtered.map(([club, clubTeams]) => {
