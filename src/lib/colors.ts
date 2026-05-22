@@ -16,8 +16,8 @@ export const light = {
   card:     '#ffffff',
   border:   '#e8e0d4',
   accent:   '#f5c200',
-  text:     '#18120a',
-  textMuted:'#7c7269',
+  text:     '#1a2535',
+  textMuted:'#6b7a8d',
   green:    '#1a9e6b',
   red:      '#d63b3b',
 }
