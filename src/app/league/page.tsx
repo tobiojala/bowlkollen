@@ -6,26 +6,28 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
 type Team = { id: string; name: string; club: string }
-type Match = { id: string; home_team_id: string; away_team_id: string; home_score: number | null; away_score: number | null; division: string }
-type Standing = { team: Team; played: number; wins: number; draws: number; losses: number; ptsFor: number; ptsAgainst: number; diff: number; points: number }
+type Match = { id: string; home_team_id: string; away_team_id: string; home_score: number | null; away_score: number | null; division: string; date: string }
+type Standing = { team: Team; played: number; wins: number; draws: number; losses: number; ptsFor: number; ptsAgainst: number; diff: number; points: number; form: ('W' | 'D' | 'L')[] }
 
 function calcStandings(teams: Team[], matches: Match[], division: string): Standing[] {
-  const divMatches = matches.filter(m => m.division === division && m.home_score !== null)
-  const table: Record<string, Standing> = {}
-  teams.forEach(t => { table[t.id] = { team: t, played: 0, wins: 0, draws: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0, points: 0 } })
+  const divMatches = matches
+    .filter(m => m.division === division && m.home_score !== null)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const table: Record<string, { s: Standing; fl: ('W' | 'D' | 'L')[] }> = {}
+  teams.forEach(t => { table[t.id] = { s: { team: t, played: 0, wins: 0, draws: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0, points: 0, form: [] }, fl: [] } })
   divMatches.forEach(m => {
     const h = table[m.home_team_id]
     const a = table[m.away_team_id]
     if (!h || !a) return
     const hs = m.home_score!, as_ = m.away_score!
-    h.played++; a.played++
-    h.ptsFor += hs; h.ptsAgainst += as_; a.ptsFor += as_; a.ptsAgainst += hs
-    if (hs > as_) { h.wins++; h.points += 2; a.losses++ }
-    else if (as_ > hs) { a.wins++; a.points += 2; h.losses++ }
-    else { h.draws++; h.points++; a.draws++; a.points++ }
+    h.s.played++; a.s.played++
+    h.s.ptsFor += hs; h.s.ptsAgainst += as_; a.s.ptsFor += as_; a.s.ptsAgainst += hs
+    if (hs > as_) { h.s.wins++; h.s.points += 2; a.s.losses++; h.fl.push('W'); a.fl.push('L') }
+    else if (as_ > hs) { a.s.wins++; a.s.points += 2; h.s.losses++; a.fl.push('W'); h.fl.push('L') }
+    else { h.s.draws++; h.s.points++; a.s.draws++; a.s.points++; h.fl.push('D'); a.fl.push('D') }
   })
   return Object.values(table)
-    .map(s => ({ ...s, diff: s.ptsFor - s.ptsAgainst }))
+    .map(({ s, fl }) => ({ ...s, diff: s.ptsFor - s.ptsAgainst, form: fl.slice(-5) }))
     .sort((a, b) => b.points - a.points || b.diff - a.diff || b.ptsFor - a.ptsFor)
     .filter(s => s.played > 0)
 }
@@ -60,7 +62,7 @@ export default function LeaguePage() {
     const supabase = createClient()
     Promise.all([
       supabase.from('teams').select('id, name, club'),
-      supabase.from('matches').select('id, home_team_id, away_team_id, home_score, away_score, division').eq('status', 'completed').not('home_score', 'is', null).not('division', 'is', null),
+      supabase.from('matches').select('id, home_team_id, away_team_id, home_score, away_score, division, date').eq('status', 'completed').not('home_score', 'is', null).not('division', 'is', null),
     ]).then(([{ data: t }, { data: m }]) => {
       if (t) setTeams(t as Team[])
       if (m) setMatches(m as Match[])
@@ -159,7 +161,16 @@ export default function LeaguePage() {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontSize: 13, fontWeight: 700, color: zc !== 'transparent' ? zc : C.textMuted, textAlign: 'center' }}>{i + 1}</div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(s.team.name)}</div>
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(s.team.name)}</div>
+                      {s.form.length > 0 && (
+                        <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+                          {s.form.map((r, fi) => (
+                            <div key={fi} style={{ width: 6, height: 6, borderRadius: '50%', background: r === 'W' ? C.green : r === 'L' ? C.red : C.accent, flexShrink: 0 }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: C.green, textAlign: 'center' }}>{s.wins}</div>
                     <div style={{ fontSize: 13, color: C.textMuted, textAlign: 'center' }}>{s.draws}</div>
                     <div style={{ fontSize: 13, color: C.red, textAlign: 'center' }}>{s.losses}</div>
