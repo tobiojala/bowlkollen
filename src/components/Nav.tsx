@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Sun, Moon, ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
@@ -31,7 +31,6 @@ function getConfig(pathname: string): NavConfig {
 
 export default function Nav() {
   const pathname = usePathname()
-  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [scrolled, setScrolled] = useState(false)
   const { theme, toggle } = useTheme()
@@ -95,11 +94,11 @@ export default function Nav() {
             </span>
           </a>
         ) : cfg.backHref ? (
-          <button onClick={() => router.push(cfg.backHref!)}
-            style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px 4px 0', WebkitTapHighlightColor: 'transparent' }}>
+          <a href={cfg.backHref}
+            style={{ display: 'flex', alignItems: 'center', gap: 2, textDecoration: 'none', padding: '4px 6px 4px 0', WebkitTapHighlightColor: 'transparent' }}>
             <ChevronLeft size={22} color={isDark ? '#f5c200' : '#1a2535'} strokeWidth={2.5} />
             <span style={{ fontSize: 13, fontWeight: 600, color: isDark ? '#f5c200' : '#1a2535' }}>Tillbaka</span>
-          </button>
+          </a>
         ) : (
           <div />
         )}
