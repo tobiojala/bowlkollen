@@ -73,10 +73,10 @@ export default function Home() {
         .order('date', { ascending: true })
         .limit(15),
     ]).then(([{ data: recentLive }, { data: upcomingData }]) => {
-      const all = (recentLive || []) as Match[]
+      const all = (recentLive || []) as unknown as Match[]
       setLive(all.filter(m => m.status === 'live'))
       setRecent(all.filter(m => m.status === 'completed'))
-      setUpcoming((upcomingData || []) as Match[])
+      setUpcoming((upcomingData || []) as unknown as Match[])
       setLoading(false)
     })
   }, [])
