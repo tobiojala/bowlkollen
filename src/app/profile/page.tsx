@@ -1,22 +1,21 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { Trophy, LogOut } from 'lucide-react'
+import { Trophy, LogOut, User } from 'lucide-react'
+import { shortName } from '@/lib/utils'
+import WidgetGrid from '@/components/widgets/WidgetGrid'
 
 type Player = { id: string; name: string; teamName?: string }
 type Claim = { id: string; player_id: string; status: string; players: { name: string; team_id: string } }
 type ClubClaim = { id: string; team_id: string; role: string; status: string; teams: { name: string; club: string } }
 
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
-}
-
 export default function ProfilePage() {
   const { theme } = useTheme()
   const C = theme === 'dark' ? dark : light
+  const isDark = theme === 'dark'
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [claim, setClaim] = useState<Claim | null>(null)
@@ -38,23 +37,19 @@ export default function ProfilePage() {
       if (!session) { window.location.href = '/login'; return }
       setUser(session.user)
 
-      // Load existing claim
       const { data: claimData } = await supabase
         .from('player_claims')
         .select('id, player_id, status, players:player_id(name, team_id)')
         .eq('user_id', session.user.id)
         .single()
-
       if (claimData) setClaim(claimData as any)
 
-      // Load club claims
       const { data: clubClaimData } = await supabase
         .from('club_claims')
         .select('id, team_id, role, status, teams:team_id(name, club)')
         .eq('user_id', session.user.id)
       if (clubClaimData) setClubClaims(clubClaimData as any)
 
-      // Load teams for name lookup
       const { data: teamsData } = await supabase.from('teams').select('id, name')
       if (teamsData) {
         const map: Record<string, string> = {}
@@ -69,11 +64,7 @@ export default function ProfilePage() {
   const search = async () => {
     if (!searchQ.trim()) return
     const supabase = createClient()
-    const { data } = await supabase
-      .from('players')
-      .select('id, name, team_id')
-      .ilike('name', '%' + searchQ + '%')
-      .limit(10)
+    const { data } = await supabase.from('players').select('id, name, team_id').ilike('name', '%' + searchQ + '%').limit(10)
     setSearchResults(data?.map((p: any) => ({ ...p, teamName: teams[p.team_id] || '' })) || [])
   }
 
@@ -82,37 +73,22 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-
-    const { data, error } = await supabase
-      .from('player_claims')
+    const { data, error } = await supabase.from('player_claims')
       .insert({ user_id: session.user.id, player_id: player.id, status: 'pending' })
-      .select('id, player_id, status, players:player_id(name, team_id)')
-      .single()
-
-    if (!error && data) {
-      setClaim(data as any)
-      setSearching(false)
-      setSearchResults([])
-      setSearchQ('')
-    }
+      .select('id, player_id, status, players:player_id(name, team_id)').single()
+    if (!error && data) { setClaim(data as any); setSearching(false); setSearchResults([]); setSearchQ('') }
     setClaiming(false)
   }
 
   const removeClaim = async () => {
     if (!claim) return
-    const supabase = createClient()
-    await supabase.from('player_claims').delete().eq('id', claim.id)
+    await createClient().from('player_claims').delete().eq('id', claim.id)
     setClaim(null)
   }
 
   const searchClubs = async () => {
     if (!clubSearchQ.trim()) return
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('teams')
-      .select('id, name, club, city')
-      .ilike('club', '%' + clubSearchQ + '%')
-      .limit(10)
+    const { data } = await createClient().from('teams').select('id, name, club, city').ilike('club', '%' + clubSearchQ + '%').limit(10)
     setClubSearchResults(data || [])
   }
 
@@ -121,31 +97,20 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-
-    const { data, error } = await supabase
-      .from('club_claims')
+    const { data, error } = await supabase.from('club_claims')
       .insert({ user_id: session.user.id, team_id: team.id, role: selectedRole, status: 'pending' })
-      .select('id, team_id, role, status, teams:team_id(name, club)')
-      .single()
-
-    if (!error && data) {
-      setClubClaims(prev => [...prev, data as any])
-      setSearchingClub(false)
-      setClubSearchResults([])
-      setClubSearchQ('')
-    }
+      .select('id, team_id, role, status, teams:team_id(name, club)').single()
+    if (!error && data) { setClubClaims(prev => [...prev, data as any]); setSearchingClub(false); setClubSearchResults([]); setClubSearchQ('') }
     setClaimingClub(false)
   }
 
   const removeClubClaim = async (claimId: string) => {
-    const supabase = createClient()
-    await supabase.from('club_claims').delete().eq('id', claimId)
+    await createClient().from('club_claims').delete().eq('id', claimId)
     setClubClaims(prev => prev.filter(c => c.id !== claimId))
   }
 
   const signOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await createClient().auth.signOut()
     window.location.href = '/'
   }
 
@@ -160,157 +125,129 @@ export default function ProfilePage() {
   const email = user?.email
   const hue = email?.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
   const tc = 'hsl(' + hue + ',50%,45%)'
-  const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+  const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 500, margin: '0 auto', padding: '24px 16px 48px' }}>
-
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>Min profil</h1>
-          <div style={{ fontSize: 13, color: C.textMuted }}>Hantera ditt konto</div>
-        </div>
+      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
 
         {/* User card */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, padding: 20, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {avatar ? (
-              <img src={avatar} alt={name} style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid ' + C.border }} />
-            ) : (
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: tclo, border: '2px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: tc }}>
-                {name?.slice(0, 2).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: C.text }}>{name}</div>
-              <div style={{ fontSize: 12, color: C.textMuted }}>{email}</div>
-              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>Inloggad med Google</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 16px 16px', borderBottom: '1px solid ' + C.border }}>
+          {avatar ? (
+            <img src={avatar} alt={name} style={{ width: 48, height: 48, borderRadius: '50%', border: '2px solid ' + C.border, flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: tclo, border: '2px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: tc, flexShrink: 0 }}>
+              {name?.slice(0, 2).toUpperCase()}
             </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>{email}</div>
           </div>
         </div>
 
-        {/* Player claim section */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
-          <div style={{ padding: '16px 20px', borderBottom: claim || searching ? '1px solid ' + C.border : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{fontSize:22}}>🎳</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Spelarprofil</div>
-                <div style={{ fontSize: 12, color: C.textMuted }}>
-                  {claim ? 'Kopplad till ' + (claim.players as any)?.name : 'Länka ditt konto till din spelarprofil'}
-                </div>
+        {/* Personal dashboard */}
+        <WidgetGrid isDark={isDark} C={C} showGreeting={false} />
+
+        {/* Account section header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 6px', borderBottom: '1px solid ' + C.border }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: C.textMuted, flexShrink: 0 }} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>KONTO</span>
+        </div>
+
+        {/* Player claim */}
+        <div style={{ borderBottom: '1px solid ' + C.border }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+            <User size={18} color={C.textMuted} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Spelarprofil</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>
+                {claim ? 'Kopplad till ' + (claim.players as any)?.name : 'Länka till din spelarprofil'}
               </div>
-              {!claim && !searching && (
-                <button onClick={() => setSearching(true)}
-                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  Claima
-                </button>
-              )}
-              {claim && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: claim.status === 'verified' ? C.green : C.accent, background: (claim.status === 'verified' ? C.green : C.accent) + '18', borderRadius: 6, padding: '3px 8px' }}>
-                    {claim.status === 'verified' ? '✓ Verifierad' : '⏳ Väntar'}
-                  </span>
-                </div>
-              )}
             </div>
+            {!claim && !searching && (
+              <button onClick={() => setSearching(true)}
+                style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                Koppla
+              </button>
+            )}
+            {claim && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: claim.status === 'verified' ? C.green : C.accent, background: (claim.status === 'verified' ? C.green : C.accent) + '18', borderRadius: 6, padding: '3px 8px' }}>
+                {claim.status === 'verified' ? 'Verifierad' : 'Väntar'}
+              </span>
+            )}
           </div>
 
-          {/* Claim search */}
           {searching && !claim && (
-            <div style={{ padding: '16px 20px' }}>
-              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 10 }}>
-                Sök efter ditt namn i bowlingregistret:
-              </div>
+            <div style={{ padding: '0 16px 16px' }}>
+              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10 }}>Sök efter ditt namn i bowlingregistret:</div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <input
-                  value={searchQ}
-                  onChange={e => setSearchQ(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && search()}
-                  placeholder="Ditt namn..."
-                  style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }}
-                />
-                <button onClick={search}
-                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  Sok
-                </button>
+                <input value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()}
+                  placeholder="Ditt namn..." style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
+                <button onClick={search} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Sök</button>
               </div>
-
-              {searchResults.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {searchResults.map(p => {
-                    const phue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                    const ptc = 'hsl(' + phue + ',50%,45%)'
-                    const ptclo = theme === 'dark' ? 'hsl(' + phue + ',40%,15%)' : 'hsl(' + phue + ',40%,92%)'
-                    return (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: C.surface, borderRadius: 10, border: '1px solid ' + C.border }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: ptclo, border: '1.5px solid ' + ptc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: ptc, flexShrink: 0 }}>
-                          {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{p.name}</div>
-                          {p.teamName && <div style={{ fontSize: 11, color: C.textMuted }}>{p.teamName}</div>}
-                        </div>
-                        <button onClick={() => claimPlayer(p)} disabled={claiming}
-                          style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: claiming ? 0.7 : 1 }}>
-                          Det ar jag
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
+              {searchResults.map(p => {
+                const ph = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+                const ptc = 'hsl(' + ph + ',50%,45%)'
+                const ptclo = isDark ? 'hsl(' + ph + ',40%,15%)' : 'hsl(' + ph + ',40%,92%)'
+                return (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: C.surface, borderRadius: 10, border: '1px solid ' + C.border, marginBottom: 6 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: ptclo, border: '1.5px solid ' + ptc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: ptc, flexShrink: 0 }}>
+                      {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{p.name}</div>
+                      {p.teamName && <div style={{ fontSize: 11, color: C.textMuted }}>{p.teamName}</div>}
+                    </div>
+                    <button onClick={() => claimPlayer(p)} disabled={claiming}
+                      style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: claiming ? 0.7 : 1 }}>
+                      Det är jag
+                    </button>
+                  </div>
+                )
+              })}
               {searchResults.length === 0 && searchQ && (
-                <div style={{ fontSize: 13, color: C.textMuted, textAlign: 'center', padding: '16px 0' }}>
-                  Inga spelare hittades — prova ett annat namn
-                </div>
+                <div style={{ fontSize: 12, color: C.textMuted, padding: '8px 0' }}>Inga spelare hittades — prova ett annat namn</div>
               )}
-
               <button onClick={() => { setSearching(false); setSearchResults([]); setSearchQ('') }}
-                style={{ marginTop: 12, background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: 0 }}>
+                style={{ marginTop: 8, background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: 0 }}>
                 Avbryt
               </button>
             </div>
           )}
 
-          {/* Claimed player info */}
           {claim && (
-            <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: '0 16px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <a href={'/players/' + claim.player_id} style={{ flex: 1, fontSize: 13, color: C.accent, fontWeight: 600, textDecoration: 'none' }}>
                 Se min spelarprofil →
               </a>
-              <button onClick={removeClaim}
-                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.textMuted, cursor: 'pointer' }}>
+              <button onClick={removeClaim} style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.textMuted, cursor: 'pointer' }}>
                 Ta bort
               </button>
             </div>
           )}
         </div>
 
-        {/* Club claims section */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden', marginBottom: 16 }}>
-          <div style={{ padding: '16px 20px', borderBottom: (clubClaims.length > 0 || searchingClub) ? '1px solid ' + C.border : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Trophy size={22} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Mina klubbar</div>
-                <div style={{ fontSize: 12, color: C.textMuted }}>
-                  {clubClaims.length > 0 ? clubClaims.length + ' lag registrerade' : 'Claima din klubb eller ditt lag'}
-                </div>
+        {/* Club claims */}
+        <div style={{ borderBottom: '1px solid ' + C.border }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+            <Trophy size={18} color={C.textMuted} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Mina klubbar</div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>
+                {clubClaims.length > 0 ? clubClaims.length + ' lag registrerade' : 'Koppla till din klubb eller ditt lag'}
               </div>
-              {!searchingClub && (
-                <button onClick={() => setSearchingClub(true)}
-                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  + Lagg till
-                </button>
-              )}
             </div>
+            {!searchingClub && (
+              <button onClick={() => setSearchingClub(true)}
+                style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                + Lägg till
+              </button>
+            )}
           </div>
 
-          {/* Existing club claims */}
           {clubClaims.map(cc => (
-            <div key={cc.id} style={{ padding: '12px 20px', borderBottom: '1px solid ' + C.border, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={cc.id} style={{ padding: '10px 16px', borderTop: '1px solid ' + C.border, display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{(cc.teams as any)?.club || (cc.teams as any)?.name}</div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 3 }}>
@@ -318,64 +255,41 @@ export default function ProfilePage() {
                     {cc.role === 'captain' ? 'Kapten' : cc.role === 'admin' ? 'Admin' : 'Styrelse'}
                   </span>
                   <span style={{ fontSize: 10, fontWeight: 700, color: cc.status === 'verified' ? C.green : C.accent, background: (cc.status === 'verified' ? C.green : C.accent) + '18', borderRadius: 6, padding: '2px 8px' }}>
-                    {cc.status === 'verified' ? '✓ Verifierad' : '⏳ Väntar'}
+                    {cc.status === 'verified' ? 'Verifierad' : 'Väntar'}
                   </span>
                 </div>
               </div>
-              <a href={'/teams/' + cc.team_id}
-                style={{ fontSize: 12, color: C.accent, textDecoration: 'none', fontWeight: 600, marginRight: 8 }}>
-                Se sida →
-              </a>
-              <button onClick={() => removeClubClaim(cc.id)}
-                style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.textMuted, cursor: 'pointer' }}>
+              <a href={'/teams/' + cc.team_id} style={{ fontSize: 12, color: C.accent, textDecoration: 'none', fontWeight: 600, marginRight: 8 }}>Se sida →</a>
+              <button onClick={() => removeClubClaim(cc.id)} style={{ background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: C.textMuted, cursor: 'pointer' }}>
                 Ta bort
               </button>
             </div>
           ))}
 
-          {/* Club search */}
           {searchingClub && (
-            <div style={{ padding: '16px 20px' }}>
-              <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 10 }}>
-                Sök efter din klubb eller ditt lag:
+            <div style={{ padding: '0 16px 16px', borderTop: '1px solid ' + C.border }}>
+              <div style={{ fontSize: 12, color: C.textMuted, margin: '12px 0 10px' }}>Sök efter din klubb:</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                {[{ key: 'captain', label: 'Kapten' }, { key: 'admin', label: 'Admin' }, { key: 'board', label: 'Styrelse' }].map(r => (
+                  <button key={r.key} onClick={() => setSelectedRole(r.key)}
+                    style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid ' + (selectedRole === r.key ? C.accent : C.border), background: selectedRole === r.key ? C.accent + '18' : 'transparent', color: selectedRole === r.key ? C.accent : C.textMuted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    {r.label}
+                  </button>
+                ))}
               </div>
-
-              {/* Role selector */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, marginBottom: 6 }}>DIN ROLL</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[
-                    { key: 'captain', label: 'Kapten' },
-                    { key: 'admin', label: 'Admin' },
-                    { key: 'board', label: 'Styrelse' },
-                  ].map(r => (
-                    <button key={r.key} onClick={() => setSelectedRole(r.key)}
-                      style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid ' + (selectedRole === r.key ? C.accent : C.border), background: selectedRole === r.key ? C.accent + '18' : 'transparent', color: selectedRole === r.key ? C.accent : C.textMuted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <input value={clubSearchQ} onChange={e => setClubSearchQ(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && searchClubs()}
-                  placeholder="Klubbnamn..."
-                  style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
-                <button onClick={searchClubs}
-                  style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  Sok
-                </button>
+                <input value={clubSearchQ} onChange={e => setClubSearchQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchClubs()}
+                  placeholder="Klubbnamn..." style={{ flex: 1, background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none' }} />
+                <button onClick={searchClubs} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Sök</button>
               </div>
-
               {clubSearchResults.map(t => {
                 const alreadyClaimed = clubClaims.some(cc => cc.team_id === t.id)
-                const hue = t.club.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
-                const tc = 'hsl(' + hue + ',50%,45%)'
-                const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+                const ch = t.club.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
+                const ctc = 'hsl(' + ch + ',50%,45%)'
+                const ctclo = isDark ? 'hsl(' + ch + ',40%,15%)' : 'hsl(' + ch + ',40%,92%)'
                 return (
                   <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: C.surface, borderRadius: 10, border: '1px solid ' + C.border, marginBottom: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: ctclo, border: '1.5px solid ' + ctc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: ctc, flexShrink: 0 }}>
                       {t.club.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -384,18 +298,11 @@ export default function ProfilePage() {
                     </div>
                     <button onClick={() => claimClub(t)} disabled={claimingClub || alreadyClaimed}
                       style={{ background: alreadyClaimed ? C.surface : C.accent, color: alreadyClaimed ? C.textMuted : '#1a1400', border: alreadyClaimed ? '1px solid ' + C.border : 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: alreadyClaimed ? 'default' : 'pointer' }}>
-                      {alreadyClaimed ? 'Redan clamat' : 'Det ar mitt lag'}
+                      {alreadyClaimed ? 'Redan kopplat' : 'Det är mitt lag'}
                     </button>
                   </div>
                 )
               })}
-
-              {clubSearchResults.length === 0 && clubSearchQ && (
-                <div style={{ fontSize: 13, color: C.textMuted, textAlign: 'center', padding: '16px 0' }}>
-                  Inga klubbar hittades
-                </div>
-              )}
-
               <button onClick={() => { setSearchingClub(false); setClubSearchResults([]); setClubSearchQ('') }}
                 style={{ marginTop: 8, background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: 0 }}>
                 Avbryt
@@ -405,16 +312,14 @@ export default function ProfilePage() {
         </div>
 
         {/* Sign out */}
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-          <button onClick={signOut}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-            onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <LogOut size={16} color='#e05555' />
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e05555' }}>Logga ut</div>
-          </button>
-        </div>
+        <button onClick={signOut}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid ' + C.border, cursor: 'pointer', textAlign: 'left' }}
+          onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <LogOut size={16} color='#e05555' />
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#e05555' }}>Logga ut</div>
+        </button>
 
       </div>
     </main>

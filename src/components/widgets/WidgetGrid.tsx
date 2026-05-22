@@ -43,7 +43,7 @@ function smartLayout(data: any): Zone[] {
   return zones.map((z, i) => ({ ...z, id: 'z' + i }))
 }
 
-export default function WidgetGrid({ isDark, C }: { isDark: boolean; C: any }) {
+export default function WidgetGrid({ isDark, C, showGreeting = true }: { isDark: boolean; C: any; showGreeting?: boolean }) {
   const data = useWidgetData()
   const [editing, setEditing] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
@@ -107,9 +107,12 @@ export default function WidgetGrid({ isDark, C }: { isDark: boolean; C: any }) {
     <div>
       {/* Edit bar */}
       <div style={{ padding: '8px 16px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-          {data.user ? `Hej${data.user.user_metadata?.full_name ? ', ' + data.user.user_metadata.full_name.split(' ')[0] : ''}` : 'Bowlkollen'}
-        </div>
+        {showGreeting && (
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+            {data.user ? `Hej${data.user.user_metadata?.full_name ? ', ' + data.user.user_metadata.full_name.split(' ')[0] : ''}` : 'Bowlkollen'}
+          </div>
+        )}
+        <div style={{ flex: 1 }} />
         <button onClick={() => { setEditing(e => !e); setPickerZone(null) }}
           style={{ fontSize: 11, fontWeight: 600, color: editing ? '#f5c200' : C.textMuted, background: editing ? 'rgba(245,194,0,0.1)' : 'transparent', border: editing ? '1px solid rgba(245,194,0,0.25)' : '1px solid transparent', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}>
           {editing ? 'Klar' : 'Anpassa'}
