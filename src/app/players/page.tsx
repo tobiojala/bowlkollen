@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { ChevronRight, Users } from 'lucide-react'
+import { shortName } from '@/lib/utils'
 
 type Player = { id: string; name: string; team_id: string; teamName?: string }
 
@@ -26,10 +28,6 @@ export default function PlayersPage() {
     }
     load()
   }, [])
-
-  function shortName(n: string) {
-    return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
-  }
 
   const filtered = players.filter(p =>
     !q || p.name.toLowerCase().includes(q.toLowerCase()) ||
@@ -62,7 +60,7 @@ export default function PlayersPage() {
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {!loading && players.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12, color: '#6b7a99' }}>🎳</div>
+            <Users size={32} color={C.textMuted} style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
             <div style={{ fontSize: 13, color: C.textMuted }}>Spelare laggs till via live scoring i Admin</div>
           </div>
@@ -90,7 +88,7 @@ export default function PlayersPage() {
                     <div style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{p.name}</div>
                     {p.teamName && <div style={{ fontSize: 11, color: C.textMuted }}>{shortName(p.teamName)}</div>}
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: 13 }}>›</div>
+                  <ChevronRight size={16} color={C.textMuted} />
                 </a>
               )
             })}

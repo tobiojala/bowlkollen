@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User } from 'lucide-react'
+import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User, Check, HelpCircle, X } from 'lucide-react'
 
 function shortName(n: string) {
   return n?.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim() || ''
@@ -189,9 +189,11 @@ export function AvailabilityWidget({ isDark, C, data, onRespond }: WProps & { on
       <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 10 }}>{new Date(m.date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
       {myResponse ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontSize: 20 }}>{myResponse === 'yes' ? '✅' : myResponse === 'maybe' ? '🤔' : '❌'}</div>
+          {myResponse === 'yes' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.green + '22', border: '2px solid ' + C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Check size={16} color={C.green} /></div>}
+          {myResponse === 'maybe' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f5c20022', border: '2px solid #f5c200', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><HelpCircle size={16} color="#f5c200" /></div>}
+          {myResponse === 'no' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.red + '22', border: '2px solid ' + C.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} color={C.red} /></div>}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: myResponse === 'yes' ? '#1d9e75' : myResponse === 'maybe' ? '#f5c200' : '#e24b4a' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: myResponse === 'yes' ? C.green : myResponse === 'maybe' ? '#f5c200' : C.red }}>
               {myResponse === 'yes' ? 'Du spelar!' : myResponse === 'maybe' ? 'Kanske' : 'Kan inte'}
             </div>
             <a href={'/team/' + teamId + '/tillganglighet/' + m.id} style={{ fontSize: 10, color: C.textMuted, textDecoration: 'none' }}>Ändra →</a>
@@ -199,7 +201,7 @@ export function AvailabilityWidget({ isDark, C, data, onRespond }: WProps & { on
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
-          {[{k:'yes',l:'Ja',c:'#1d9e75'},{k:'maybe',l:'?',c:'#f5c200'},{k:'no',l:'Nej',c:'#e24b4a'}].map(r => (
+          {[{k:'yes',l:'Ja',c:C.green},{k:'maybe',l:'?',c:'#f5c200'},{k:'no',l:'Nej',c:C.red}].map(r => (
             <button key={r.k} onClick={() => onRespond(r.k)}
               style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: `1.5px solid ${r.c}44`, background: r.c + '18', color: r.c, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               {r.l}

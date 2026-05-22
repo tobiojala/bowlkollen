@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, Calendar, BarChart2, Users, User } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 const TABS = [
   { label: 'Hem', icon: Home, href: '/' },
@@ -15,6 +16,8 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const navRef = useRef<HTMLDivElement>(null)
   const [blobStyle, setBlobStyle] = useState({ left: 0, width: 0 })
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -60,10 +63,10 @@ export default function BottomNav() {
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, height: 68,
-      background: 'rgba(8,14,24,0.97)',
+      background: isDark ? 'rgba(8,14,24,0.97)' : 'rgba(255,255,255,0.97)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      borderTop: '0.5px solid rgba(255,255,255,0.08)',
+      borderTop: isDark ? '0.5px solid rgba(255,255,255,0.08)' : '0.5px solid rgba(0,0,0,0.1)',
       zIndex: 50,
       paddingBottom: 'env(safe-area-inset-bottom)',
       transform: visible ? 'translateY(0)' : 'translateY(100%)',
@@ -113,7 +116,7 @@ export default function BottomNav() {
               <tab.icon
                 size={22}
                 strokeWidth={isActive ? 2.2 : 1.8}
-                color={isActive ? '#f5c200' : 'rgba(255,255,255,0.35)'}
+                color={isActive ? '#f5c200' : isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)'}
                 style={{
                   transform: isActive ? 'scale(1.12)' : 'scale(1)',
                   transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
@@ -122,7 +125,7 @@ export default function BottomNav() {
               />
               <span style={{
                 fontSize: 9, fontWeight: 700, letterSpacing: 0.3,
-                color: isActive ? '#f5c200' : 'rgba(255,255,255,0.28)',
+                color: isActive ? '#f5c200' : isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.35)',
                 transition: 'color 0.2s',
               }}>
                 {tab.label}
