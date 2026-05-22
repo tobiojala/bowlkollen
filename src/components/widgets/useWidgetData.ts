@@ -14,6 +14,7 @@ export type WidgetData = {
   myStats: { avg: number; best: number; over200: number; matches: number } | null
   availabilityStatus: 'yes' | 'no' | 'maybe' | null
   availabilityMatch: any
+  availabilityCounts: { yes: number; maybe: number; no: number } | null
   teamPosts: any[]
   loading: boolean
 }
@@ -39,7 +40,7 @@ export function useWidgetData(): WidgetData {
     user: null, myTeam: null, myNextMatch: null, myLastMatch: null,
     favTeams: [], standings: [], upcoming: [], recentResults: [],
     myPlayer: null, myStats: null, availabilityStatus: null,
-    availabilityMatch: null, teamPosts: [], loading: true
+    availabilityMatch: null, availabilityCounts: null, teamPosts: [], loading: true
   })
 
   useEffect(() => {
@@ -76,13 +77,13 @@ export function useWidgetData(): WidgetData {
       ])
 
       let myTeam = null, myNextMatch = null, myLastMatch = null
-      let availabilityStatus = null, availabilityMatch = null, teamPosts: any[] = []
+      let availabilityStatus = null, availabilityMatch = null, availabilityCounts = null, teamPosts: any[] = []
 
       if (claim?.teams) {
         myTeam = claim.teams as any
         const [{ data: nextM }, { data: lastM }, { data: posts }] = await Promise.all([
-          supabase.from('matches').select('id,date,status,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${myTeam.id},away_team_id.eq.${myTeam.id}`).eq('status','upcoming').order('date',{ascending:true}).limit(1).single(),
-          supabase.from('matches').select('id,date,status,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${myTeam.id},away_team_id.eq.${myTeam.id}`).eq('status','completed').not('home_score','is',null).order('date',{ascending:false}).limit(1).single(),
+          supabase.from('matches').select('id,date,status,home_team_id,away_team_id,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${myTeam.id},away_team_id.eq.${myTeam.id}`).eq('status','upcoming').order('date',{ascending:true}).limit(1).single(),
+          supabase.from('matches').select('id,date,status,home_team_id,away_team_id,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)').or(`home_team_id.eq.${myTeam.id},away_team_id.eq.${myTeam.id}`).eq('status','completed').not('home_score','is',null).order('date',{ascending:false}).limit(1).single(),
           supabase.from('team_posts').select('*').eq('team_id', myTeam.id).order('created_at',{ascending:false}).limit(3),
         ])
         myNextMatch = nextM || null
@@ -92,8 +93,14 @@ export function useWidgetData(): WidgetData {
         if (nextM) {
           const { data: poll } = await supabase.from('availability_polls').select('id,responses:availability_responses(user_id,response)').eq('team_id', myTeam.id).eq('match_id', (nextM as any).id).single()
           if (poll) {
-            const mine = (poll.responses as any[])?.find(r => r.user_id === user.id)
+            const responses = (poll.responses as any[]) || []
+            const mine = responses.find(r => r.user_id === user.id)
             availabilityStatus = mine?.response || null
+            availabilityCounts = {
+              yes: responses.filter(r => r.response === 'yes').length,
+              maybe: responses.filter(r => r.response === 'maybe').length,
+              no: responses.filter(r => r.response === 'no').length,
+            }
           }
           availabilityMatch = nextM
         }
@@ -123,7 +130,7 @@ export function useWidgetData(): WidgetData {
         user, myTeam, myNextMatch, myLastMatch, favTeams,
         standings, upcoming: upcoming || [], recentResults: recent || [],
         myPlayer: playerClaim?.players || null, myStats,
-        availabilityStatus, availabilityMatch, teamPosts, loading: false
+        availabilityStatus, availabilityMatch, availabilityCounts, teamPosts, loading: false
       })
     }
     load()

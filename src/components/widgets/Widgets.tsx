@@ -6,6 +6,15 @@ import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User,
 function shortName(n: string) {
   return n?.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim() || ''
 }
+function shortDiv(d: string) {
+  return d.replace(' Herrar', ' H').replace(' Damer', ' D')
+    .replace('Mellanallsvenskan', 'Mellansv.').replace('Allsvenskan', 'Allsv.')
+    .replace('Elitserien', 'Elit.').replace('Div 1 ', 'D1 ')
+    .replace('Norra ', 'N.').replace('Södra ', 'S.')
+}
+function localDate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 function teamInitials(n: string) {
   return shortName(n).split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
 }
@@ -57,8 +66,16 @@ export function NextMatchWidget({ isDark, C, data }: WProps) {
   )
   const isHome = m.home_team_id === data.myTeam?.id
   const opp = isHome ? m.away : m.home
-  const days = Math.max(0, Math.ceil((new Date(m.date).getTime() - Date.now()) / 86400000))
   const tc = teamColor(opp?.name || '', isDark)
+
+  const today = localDate(new Date())
+  const tomorrow = localDate(new Date(Date.now() + 86400000))
+  const mDate = (m.date as string).slice(0, 10)
+  const days = Math.max(0, Math.round((new Date(mDate).getTime() - new Date(today).getTime()) / 86400000))
+  const urgent = days <= 1
+  const countdownLabel = mDate === today ? 'IDAG' : mDate === tomorrow ? 'IMORGON' : String(days)
+  const countdownSub = mDate === today || mDate === tomorrow ? '' : days === 1 ? 'DAG' : 'DAGAR'
+
   return (
     <a href={'/matches/' + m.id} style={{ ...base(isDark, isDark ? 'linear-gradient(135deg,#0d1a2e,#192540)' : 'linear-gradient(135deg,#e8f4ff,#ddeeff)', isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'), textDecoration: 'none' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -71,15 +88,16 @@ export function NextMatchWidget({ isDark, C, data }: WProps) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{new Date(m.date).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+          {m.division && <div style={{ fontSize: 9, color: '#f5c200', marginTop: 1, opacity: 0.7 }}>{shortDiv(m.division)}</div>}
         </div>
-        <div style={{ textAlign: 'center', background: days <= 3 ? 'rgba(245,194,0,0.12)' : 'rgba(255,255,255,0.06)', border: `1px solid ${days <= 3 ? 'rgba(245,194,0,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '6px 10px', flexShrink: 0 }}>
-          <div style={{ fontSize: 20, fontWeight: 900, color: days <= 3 ? '#f5c200' : C.text, lineHeight: 1 }}>{days}</div>
-          <div style={{ fontSize: 7, color: C.textMuted, marginTop: 1 }}>DAGAR</div>
+        <div style={{ textAlign: 'center', background: urgent ? 'rgba(245,194,0,0.15)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: `1px solid ${urgent ? 'rgba(245,194,0,0.4)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 10, padding: '6px 10px', flexShrink: 0, minWidth: 52 }}>
+          <div style={{ fontSize: countdownLabel.length > 4 ? 11 : 20, fontWeight: 900, color: urgent ? '#f5c200' : C.text, lineHeight: 1 }}>{countdownLabel}</div>
+          {countdownSub && <div style={{ fontSize: 7, color: C.textMuted, marginTop: 1 }}>{countdownSub}</div>}
         </div>
       </div>
-      <div style={{ marginTop: 10, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: Math.max(5, Math.min(95, (1 - days/30)*100)) + '%', height: '100%', background: 'linear-gradient(90deg,#f5c200,#f5c20066)', borderRadius: 2 }} />
+      <div style={{ marginTop: 10, height: 3, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ width: Math.max(5, Math.min(95, (1 - days / 14) * 100)) + '%', height: '100%', background: 'linear-gradient(90deg,#f5c200,#f5c20066)', borderRadius: 2 }} />
       </div>
     </a>
   )
@@ -101,14 +119,20 @@ export function LastResultWidget({ isDark, C, data }: WProps) {
   const drew = myScore === oppScore
   const rc = won ? '#1d9e75' : drew ? '#f5c200' : '#e24b4a'
   const rl = won ? 'V' : drew ? 'O' : 'F'
+  const mDate = (m.date as string).slice(0, 10)
+  const dateStr = new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
   return (
     <a href={'/matches/' + m.id} style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 8 }}>SENASTE MATCH</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>SENASTE MATCH</div>
+        <div style={{ fontSize: 9, color: C.textMuted }}>{isHome ? 'HEMMA' : 'BORTA'}</div>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: rc + '22', border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: rc, flexShrink: 0 }}>{rl}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>{myScore} – {oppScore}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>vs {shortName(opp?.name || '')}</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: C.text, lineHeight: 1 }}>{myScore} – {oppScore}</div>
+          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>vs {shortName(opp?.name || '')}</div>
+          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 1 }}>{dateStr}</div>
         </div>
       </div>
     </a>
@@ -116,20 +140,43 @@ export function LastResultWidget({ isDark, C, data }: WProps) {
 }
 
 export function StandingsWidget({ isDark, C, data }: WProps) {
+  const myTeamId = data.myTeam?.id
+  const all = data.standings
+  const myPos = myTeamId ? all.findIndex((r: any) => r.team.id === myTeamId) : -1
+
+  type RowEntry = { row: any; pos: number; ellipsis?: true }
+  let rows: RowEntry[]
+  if (myPos >= 4) {
+    rows = [
+      { row: all[0], pos: 0 },
+      { row: all[1], pos: 1 },
+      { row: null, pos: -1, ellipsis: true },
+      { row: all[myPos], pos: myPos },
+    ]
+  } else {
+    rows = all.slice(0, 4).map((r: any, i: number) => ({ row: r, pos: i }))
+  }
+
   return (
     <a href="/league" style={{ ...base(isDark), textDecoration: 'none' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#4a90d9', letterSpacing: 1.5 }}>ELITSERIEN H</div>
         <ChevronRight size={12} color={C.textMuted} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1, justifyContent: 'center' }}>
-        {data.standings.slice(0, 4).map((row: any, i: number) => (
-          <div key={row.team.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 2 ? '#f5c200' : C.textMuted }}>{i+1}</div>
-            <div style={{ flex: 1, fontSize: 11, color: i === 0 ? C.text : C.textMuted, fontWeight: i === 0 ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(row.team.name)}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: i === 0 ? '#f5c200' : C.textMuted }}>{row.points}p</div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, justifyContent: 'center' }}>
+        {rows.map(({ row, pos, ellipsis }) => {
+          if (ellipsis) return (
+            <div key="ellipsis" style={{ textAlign: 'center', fontSize: 10, color: C.textMuted, letterSpacing: 3, lineHeight: 1 }}>···</div>
+          )
+          const isMe = myTeamId && row.team.id === myTeamId
+          return (
+            <div key={row.team.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: isMe ? 'rgba(245,194,0,0.09)' : 'transparent', borderRadius: 6, padding: isMe ? '3px 4px' : '1px 0', margin: isMe ? '0 -4px' : '0' }}>
+              <div style={{ width: 14, fontSize: 10, fontWeight: 700, color: pos < 2 ? '#f5c200' : C.textMuted }}>{pos + 1}</div>
+              <div style={{ flex: 1, fontSize: 11, color: isMe ? C.accent : pos === 0 ? C.text : C.textMuted, fontWeight: isMe ? 700 : pos === 0 ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(row.team.name)}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: isMe ? C.accent : pos < 2 ? '#f5c200' : C.textMuted }}>{row.points}p</div>
+            </div>
+          )
+        })}
       </div>
     </a>
   )
@@ -188,25 +235,47 @@ export function AvailabilityWidget({ isDark, C, data, onRespond }: WProps & { on
       <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 2 }}>vs {shortName(opp?.name || '')}</div>
       <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 10 }}>{new Date(m.date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
       {myResponse ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {myResponse === 'yes' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.green + '22', border: '2px solid ' + C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Check size={16} color={C.green} /></div>}
-          {myResponse === 'maybe' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f5c20022', border: '2px solid #f5c200', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><HelpCircle size={16} color="#f5c200" /></div>}
-          {myResponse === 'no' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.red + '22', border: '2px solid ' + C.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} color={C.red} /></div>}
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: myResponse === 'yes' ? C.green : myResponse === 'maybe' ? '#f5c200' : C.red }}>
-              {myResponse === 'yes' ? 'Du spelar!' : myResponse === 'maybe' ? 'Kanske' : 'Kan inte'}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            {myResponse === 'yes' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.green + '22', border: '2px solid ' + C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Check size={16} color={C.green} /></div>}
+            {myResponse === 'maybe' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f5c20022', border: '2px solid #f5c200', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><HelpCircle size={16} color="#f5c200" /></div>}
+            {myResponse === 'no' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.red + '22', border: '2px solid ' + C.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} color={C.red} /></div>}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: myResponse === 'yes' ? C.green : myResponse === 'maybe' ? '#f5c200' : C.red }}>
+                {myResponse === 'yes' ? 'Du spelar!' : myResponse === 'maybe' ? 'Kanske' : 'Kan inte'}
+              </div>
+              <a href={'/team/' + teamId + '/tillganglighet/' + m.id} style={{ fontSize: 10, color: C.textMuted, textDecoration: 'none' }}>Ändra →</a>
             </div>
-            <a href={'/team/' + teamId + '/tillganglighet/' + m.id} style={{ fontSize: 10, color: C.textMuted, textDecoration: 'none' }}>Ändra →</a>
           </div>
+          {data.availabilityCounts && (
+            <div style={{ fontSize: 10, color: C.textMuted, display: 'flex', gap: 6 }}>
+              <span style={{ color: C.green, fontWeight: 600 }}>{data.availabilityCounts.yes} ja</span>
+              <span>·</span>
+              <span style={{ color: '#f5c200', fontWeight: 600 }}>{data.availabilityCounts.maybe} kanske</span>
+              <span>·</span>
+              <span style={{ color: C.red, fontWeight: 600 }}>{data.availabilityCounts.no} nej</span>
+            </div>
+          )}
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
-          {[{k:'yes',l:'Ja',c:C.green},{k:'maybe',l:'?',c:'#f5c200'},{k:'no',l:'Nej',c:C.red}].map(r => (
-            <button key={r.k} onClick={() => onRespond(r.k)}
-              style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: `1.5px solid ${r.c}44`, background: r.c + '18', color: r.c, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              {r.l}
-            </button>
-          ))}
+        <div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+            {[{k:'yes',l:'Ja',c:C.green},{k:'maybe',l:'?',c:'#f5c200'},{k:'no',l:'Nej',c:C.red}].map(r => (
+              <button key={r.k} onClick={() => onRespond(r.k)}
+                style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: `1.5px solid ${r.c}44`, background: r.c + '18', color: r.c, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                {r.l}
+              </button>
+            ))}
+          </div>
+          {data.availabilityCounts && (data.availabilityCounts.yes + data.availabilityCounts.maybe + data.availabilityCounts.no) > 0 && (
+            <div style={{ fontSize: 10, color: C.textMuted, display: 'flex', gap: 6 }}>
+              <span style={{ color: C.green, fontWeight: 600 }}>{data.availabilityCounts.yes} ja</span>
+              <span>·</span>
+              <span style={{ color: '#f5c200', fontWeight: 600 }}>{data.availabilityCounts.maybe} kanske</span>
+              <span>·</span>
+              <span style={{ color: C.red, fontWeight: 600 }}>{data.availabilityCounts.no} nej</span>
+            </div>
+          )}
         </div>
       )}
     </div>
