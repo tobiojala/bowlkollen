@@ -257,22 +257,23 @@ export default function Home() {
             <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 8, padding: '10px 16px 14px' } as any}>
               {honor.map((e, i) => {
                 const isPerfect = e.score === 300
-                const isFirst   = i === 0
-                const isSecond  = i === 1
-                const isThird   = i === 2
-                const scoreColor = isFirst ? '#ffffff' : isSecond ? '#f5c200' : isThird ? '#4caf7d' : C.textMuted
-                const scoreGlow  = isFirst ? '0 0 10px rgba(245,194,0,0.7), 0 0 28px rgba(245,194,0,0.35)' : 'none'
-                const cardBorder = isFirst  ? 'rgba(245,194,0,0.45)'
-                                 : isSecond ? 'rgba(245,194,0,0.22)'
-                                 : isThird  ? 'rgba(76,175,125,0.28)'
-                                 : isDark   ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
+                const isElite  = e.score >= 250
+                const isGold   = e.score >= 220 && e.score < 250
+                const isGood   = e.score >= 200 && e.score < 220
+                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#4caf7d' : C.textMuted
+                const scoreGlow  = isElite ? '0 0 10px rgba(0,240,255,0.4), 0 0 24px rgba(0,240,255,0.2)' : 'none'
+                const cardBorder = isElite ? 'rgba(0,240,255,0.30)'
+                                 : isGold  ? 'rgba(245,194,0,0.35)'
+                                 : isGood  ? 'rgba(76,175,125,0.28)'
+                                 : isDark  ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
                 const nameParts = e.playerName.split(' ')
                 const firstName = nameParts[0]
                 const lastName = nameParts.slice(1).join(' ')
                 return (
                   <a key={i} href={'/matches/' + e.matchId}
-                    style={{ flexShrink: 0, textDecoration: 'none', background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: '10px 12px', textAlign: 'center', minWidth: 74, boxShadow: isFirst ? '0 0 16px rgba(245,194,0,0.10)' : 'none' }}>
-                    <div style={{ fontSize: isFirst ? 30 : 26, fontWeight: 900, color: scoreColor, lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
+                    style={{ flexShrink: 0, textDecoration: 'none', background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: '10px 12px', textAlign: 'center', minWidth: 74,
+                      boxShadow: isElite ? '0 0 16px rgba(0,240,255,0.08)' : 'none' }}>
+                    <div style={{ fontSize: isElite ? 30 : isGold ? 28 : 26, fontWeight: 900, color: scoreColor, lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: C.text, marginTop: 5, maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                     <div style={{ fontSize: 9, color: C.textMuted, maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                     {isPerfect && <div style={{ fontSize: 7, fontWeight: 800, color: '#f5c200', letterSpacing: 1, marginTop: 3 }}>PERFECT</div>}
