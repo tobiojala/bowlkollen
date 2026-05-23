@@ -184,6 +184,7 @@ export default function SchedulePage() {
   const [filter, setFilter]         = useState<'all' | 'elite' | 'allsvenskan' | 'div1'>('all')
   const [showPast, setShowPast]         = useState(false)
   const [contentFilter, setContentFilter] = useState<'all' | 'liga' | 'tavlingar'>('all')
+  const [showAllFuzzy, setShowAllFuzzy]   = useState(false)
   const [now, setNow]               = useState(Date.now())
 
   const scrollRef     = useRef<HTMLDivElement>(null)
@@ -630,7 +631,7 @@ export default function SchedulePage() {
                 KOMMANDE TÄVLINGAR
               </span>
             </div>
-            {FUZZY_TAV.map(t => {
+            {(showAllFuzzy ? FUZZY_TAV : FUZZY_TAV.slice(0, 2)).map(t => {
               const isLive = t.status === 'pagaende'
               const dc     = isLive ? '#e05555' : C.accent
               return (
@@ -676,6 +677,20 @@ export default function SchedulePage() {
                 </div>
               )
             })}
+            {!showAllFuzzy && FUZZY_TAV.length > 2 && (
+              <button onClick={() => setShowAllFuzzy(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%',
+                  padding: '12px 16px', border: 'none', background: 'transparent',
+                  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                  borderTop: '1px solid ' + C.border } as any}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>
+                  Visa alla tävlingar
+                </span>
+                <span style={{ fontSize: 12, color: C.textMuted }}>
+                  +{FUZZY_TAV.length - 2} till →
+                </span>
+              </button>
+            )}
           </div>
         )}
       </div>
