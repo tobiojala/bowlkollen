@@ -52,12 +52,15 @@ export default function MatchPage({ params }: Props) {
   const C      = theme === 'dark' ? dark : light
   const isDark = theme === 'dark'
 
-  const [id, setId]           = useState<string | null>(null)
-  const [match, setMatch]     = useState<any>(null)
-  const [lineup, setLineup]   = useState<Lineup[]>([])
-  const [results, setResults] = useState<Result[]>([])
-  const [loading, setLoading] = useState(true)
+  const [id, setId]                 = useState<string | null>(null)
+  const [match, setMatch]           = useState<any>(null)
+  const [lineup, setLineup]         = useState<Lineup[]>([])
+  const [results, setResults]       = useState<Result[]>([])
+  const [loading, setLoading]       = useState(true)
   const [activeSerie, setActiveSerie] = useState(0)
+  const [playerIds, setPlayerIds]   = useState<Record<string, string>>({}) // name → player id
+  const [h2h, setH2h]               = useState<any[]>([])
+  const [now, setNow]               = useState(Date.now())
 
   useEffect(() => { params.then(p => setId(p.id)) }, [params])
 
@@ -73,16 +76,45 @@ export default function MatchPage({ params }: Props) {
       setMatch(m)
       setLineup((lu || []) as Lineup[])
       setResults((rs || []) as Result[])
+
+      // Look up player IDs by name for deep-link
+      const names = [...new Set((lu || []).map((l: any) => l.player_name).filter(Boolean))]
+      if (names.length > 0) {
+        const { data: players } = await supabase
+          .from('players')
+          .select('id, name')
+          .in('name', names)
+        if (players) {
+          const map: Record<string, string> = {}
+          players.forEach((p: any) => { map[p.name] = p.id })
+          setPlayerIds(map)
+        }
+      }
+
+      // H2H — last 5 meetings between these two teams
+      if (m) {
+        const { data: h2hData } = await supabase
+          .from('matches')
+          .select('id, date, home_score, away_score, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
+          .neq('id', id)
+          .not('home_score', 'is', null)
+          .or(`and(home_team_id.eq.${m.home_team_id},away_team_id.eq.${m.away_team_id}),and(home_team_id.eq.${m.away_team_id},away_team_id.eq.${m.home_team_id})`)
+          .order('date', { ascending: false })
+          .limit(5)
+        setH2h(h2hData || [])
+      }
+
       setLoading(false)
     }
     loadAll()
+    const ticker = setInterval(() => setNow(Date.now()), 1000)
     const channel = supabase
       .channel('match-' + id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'match_results',  filter: 'match_id=eq.' + id }, () => loadAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'match_lineups',  filter: 'match_id=eq.' + id }, () => loadAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches',        filter: 'id=eq.' + id },       () => loadAll())
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => { clearInterval(ticker); supabase.removeChannel(channel) }
   }, [id])
 
   if (loading) return (
@@ -143,6 +175,15 @@ export default function MatchPage({ params }: Props) {
   const serieSummary = [0, 1, 2, 3].map(gi => ({
     gi, h: seriesTotal(match.home_team_id, gi), a: seriesTotal(match.away_team_id, gi),
   })).filter(s => s.h > 0 || s.a > 0)
+
+  // Countdown to match start
+  const matchTime  = match.date ? new Date(match.date).getTime() : null
+  const msLeft     = matchTime ? Math.max(0, matchTime - now) : null
+  const cdDays     = msLeft !== null ? Math.floor(msLeft / 86_400_000) : null
+  const cdHours    = msLeft !== null ? Math.floor((msLeft % 86_400_000) / 3_600_000) : null
+  const cdMinutes  = msLeft !== null ? Math.floor((msLeft % 3_600_000) / 60_000) : null
+  const cdSeconds  = msLeft !== null ? Math.floor((msLeft % 60_000) / 1_000) : null
+  const matchStarted = msLeft === 0
 
   const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
   const cardBg = isDark ? 'rgba(255,255,255,0.035)' : '#ffffff'
@@ -365,14 +406,20 @@ export default function MatchPage({ params }: Props) {
                         }}>
                           {/* Home player */}
                           <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: hWins ? 700 : 500,
-                              color: hWins ? C.text : C.textMuted,
-                              textAlign: 'right', overflow: 'hidden',
-                              textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
-                            }}>
-                              {hp.player?.player_name || '—'}
-                            </span>
+                            {(() => {
+                              const name = hp.player?.player_name
+                              const pid  = name ? playerIds[name] : null
+                              const style: React.CSSProperties = {
+                                fontSize: 11, fontWeight: hWins ? 700 : 500,
+                                color: pid ? C.accent : (hWins ? C.text : C.textMuted),
+                                textAlign: 'right', overflow: 'hidden',
+                                textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
+                                textDecoration: 'none',
+                              }
+                              return pid
+                                ? <a href={`/players/${pid}`} style={style}>{name}</a>
+                                : <span style={style}>{name || '—'}</span>
+                            })()}
                             <ScoreChip score={hp.score} C={C} />
                           </div>
 
@@ -381,13 +428,19 @@ export default function MatchPage({ params }: Props) {
 
                           {/* Away player */}
                           <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: aWins ? 700 : 500,
-                              color: aWins ? C.text : C.textMuted,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
-                            }}>
-                              {ap.player?.player_name || '—'}
-                            </span>
+                            {(() => {
+                              const name = ap.player?.player_name
+                              const pid  = name ? playerIds[name] : null
+                              const style: React.CSSProperties = {
+                                fontSize: 11, fontWeight: aWins ? 700 : 500,
+                                color: pid ? C.accent : (aWins ? C.text : C.textMuted),
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
+                                textDecoration: 'none',
+                              }
+                              return pid
+                                ? <a href={`/players/${pid}`} style={style}>{name}</a>
+                                : <span style={style}>{name || '—'}</span>
+                            })()}
                             <ScoreChip score={ap.score} C={C} />
                           </div>
                         </div>
@@ -410,7 +463,13 @@ export default function MatchPage({ params }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${C.border}` }}>
               <Trophy size={16} color={C.accent} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{bestPlayer.player_name}</div>
+                {playerIds[bestPlayer.player_name] ? (
+                  <a href={`/players/${playerIds[bestPlayer.player_name]}`} style={{ fontSize: 14, fontWeight: 700, color: C.accent, textDecoration: 'none' }}>
+                    {bestPlayer.player_name}
+                  </a>
+                ) : (
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{bestPlayer.player_name}</div>
+                )}
                 <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>
                   {shortName(bestPlayer.team_id === match.home_team_id ? home?.name || '' : away?.name || '')}
                 </div>
@@ -423,11 +482,106 @@ export default function MatchPage({ params }: Props) {
           </div>
         )}
 
-        {/* ── Empty states ── */}
+        {/* ── Upcoming: countdown + H2H ── */}
         {!hasLineup && isUpcoming && (
-          <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Kommande match</div>
-            <div style={{ fontSize: 13, color: C.textMuted }}>Lineup och live scoring visas när matchen börjar</div>
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            {/* Countdown card */}
+            <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 18, overflow: 'hidden' }}>
+              <div style={{ padding: '9px 14px', background: cardHeaderBg, borderBottom: `1px solid ${border}` }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+                  {matchStarted ? 'MATCHEN BÖRJAR SNART' : 'MATCHEN BÖRJAR OM'}
+                </span>
+              </div>
+              <div style={{ padding: '28px 20px', textAlign: 'center' }}>
+                {msLeft !== null && !matchStarted ? (
+                  cdDays! > 0 ? (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 20, alignItems: 'flex-end' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 48, fontWeight: 900, color: C.accent, lineHeight: 1 }}>{cdDays}</div>
+                          <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 1.5, marginTop: 4 }}>DAGAR</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 48, fontWeight: 900, color: C.text, lineHeight: 1 }}>{String(cdHours).padStart(2, '0')}</div>
+                          <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 1.5, marginTop: 4 }}>TIMMAR</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 4, alignItems: 'flex-end' }}>
+                      {[
+                        { val: String(cdHours).padStart(2, '0'), label: 'TIM' },
+                        { val: String(cdMinutes).padStart(2, '0'), label: 'MIN' },
+                        { val: String(cdSeconds).padStart(2, '0'), label: 'SEK' },
+                      ].map(({ val, label }, i) => (
+                        <div key={label} style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+                          {i > 0 && <span style={{ fontSize: 36, fontWeight: 900, color: C.textMuted, lineHeight: 1, marginBottom: 18, opacity: 0.4 }}>:</span>}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 52, fontWeight: 900, color: i === 0 ? C.text : i === 1 ? C.accent : C.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{val}</div>
+                            <div style={{ fontSize: 10, color: C.textMuted, letterSpacing: 1.5, marginTop: 4 }}>{label}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.textMuted }}>Lineup visas när matchen börjar</div>
+                )}
+              </div>
+            </div>
+
+            {/* H2H card */}
+            {h2h.length > 0 && (
+              <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 18, overflow: 'hidden' }}>
+                <div style={{ padding: '9px 14px', background: cardHeaderBg, borderBottom: `1px solid ${border}` }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>TIDIGARE MÖTEN</span>
+                </div>
+                {h2h.map((hm, i) => {
+                  const hmHome   = (hm.home as any)
+                  const hmAway   = (hm.away as any)
+                  const hmHScore = hm.home_score ?? 0
+                  const hmAScore = hm.away_score ?? 0
+                  const hmHWin   = hmHScore > hmAScore
+                  const hmAWin   = hmAScore > hmHScore
+                  const hmDraw   = hmHScore === hmAScore
+                  const hmDate   = hm.date ? new Date(hm.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+                  return (
+                    <a
+                      key={hm.id}
+                      href={`/matches/${hm.id}`}
+                      style={{
+                        display: 'block', textDecoration: 'none',
+                        padding: '11px 14px',
+                        borderBottom: i < h2h.length - 1 ? `1px solid ${dividerColor}` : 'none',
+                      }}
+                    >
+                      <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 5 }}>{hmDate}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: hmHWin ? 800 : 500, color: hmHWin ? C.text : C.textMuted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {shortName(hmHome?.name || '')}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: hmHWin ? C.accent : C.textMuted, minWidth: 18, textAlign: 'right' }}>{hmHScore}</span>
+                          <span style={{ fontSize: 11, color: C.textMuted }}>–</span>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: hmAWin ? C.accent : C.textMuted, minWidth: 18, textAlign: 'left' }}>{hmAScore}</span>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: hmAWin ? 800 : 500, color: hmAWin ? C.text : C.textMuted, flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {shortName(hmAway?.name || '')}
+                        </span>
+                      </div>
+                    </a>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* No H2H note */}
+            {h2h.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '12px 0', fontSize: 12, color: C.textMuted }}>
+                Inga tidigare möten hittades
+              </div>
+            )}
           </div>
         )}
         {!hasLineup && !isUpcoming && !isLive && hasScore && (
