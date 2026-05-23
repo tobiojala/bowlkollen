@@ -182,7 +182,8 @@ export default function SchedulePage() {
   const [loading, setLoading]       = useState(true)
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [filter, setFilter]         = useState<'all' | 'elite' | 'allsvenskan' | 'div1'>('all')
-  const [showPast, setShowPast]     = useState(false)
+  const [showPast, setShowPast]         = useState(false)
+  const [contentFilter, setContentFilter] = useState<'all' | 'liga' | 'tavlingar'>('all')
   const [now, setNow]               = useState(Date.now())
 
   const scrollRef     = useRef<HTMLDivElement>(null)
@@ -256,10 +257,10 @@ export default function SchedulePage() {
     ? matches.filter(m => m.date.slice(0, 10) === activeDate)
         .sort((a, b) => getTier(a.division) - getTier(b.division))
     : []
-  const activeMatches = filterMatches(dayLigaMatches)
+  const activeMatches = contentFilter !== 'tavlingar' ? filterMatches(dayLigaMatches) : []
   const divisions     = [...new Set(activeMatches.map(m => m.division))]
     .sort((a, b) => getTier(a) - getTier(b))
-  const dayTavlingar  = activeDate ? (TAV_MAP.get(activeDate) ?? []) : []
+  const dayTavlingar  = activeDate && contentFilter !== 'liga' ? (TAV_MAP.get(activeDate) ?? []) : []
 
   const countOnDate = (dateKey: string, f: typeof filter) => {
     const ms = matches.filter(m => m.date.slice(0, 10) === dateKey)
@@ -405,11 +406,11 @@ export default function SchedulePage() {
                 </span>
                 {/* Content-type dots */}
                 <div style={{ display: 'flex', gap: 3, alignItems: 'center', minHeight: 8, marginTop: 2 }}>
-                  {hasLiga && (
+                  {hasLiga && contentFilter !== 'tavlingar' && (
                     <div style={{ width: 4, height: 4, borderRadius: '50%',
                       background: isActive ? C.accent : 'hsl(210,35%,58%)' }} />
                   )}
-                  {hasTav && (
+                  {hasTav && contentFilter !== 'liga' && (
                     <div style={{ width: 4, height: 4, borderRadius: 1, transform: 'rotate(45deg)',
                       background: isActive ? C.accent : '#f5c200' }} />
                   )}
@@ -419,9 +420,31 @@ export default function SchedulePage() {
           })}
         </div>
 
-        {/* Filter pills — shown only when there are liga matches on this day */}
-        {dayLigaMatches.length > 0 && (
-          <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '8px 16px' } as any}>
+        {/* Content-type filter pills — always shown */}
+        <div style={{ display: 'flex', gap: 6, padding: '8px 16px 6px', borderTop: '1px solid ' + C.border }}>
+          {([
+            { key: 'all',       label: 'Allt' },
+            { key: 'liga',      label: 'Liga' },
+            { key: 'tavlingar', label: 'Tävlingar' },
+          ] as const).map(f => {
+            const isActive = contentFilter === f.key
+            return (
+              <button key={f.key} onClick={() => setContentFilter(f.key)}
+                style={{ background: isActive ? C.accent : 'transparent',
+                  border: '1px solid ' + (isActive ? C.accent : C.border),
+                  borderRadius: 20, padding: '4px 14px', fontSize: 11, fontWeight: 700,
+                  color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  WebkitTapHighlightColor: 'transparent' } as any}>
+                {f.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Division filter pills — shown only when liga content is visible and there are matches */}
+        {contentFilter !== 'tavlingar' && dayLigaMatches.length > 0 && (
+          <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '2px 16px 8px' } as any}>
             {([
               { key: 'all',         label: 'Alla' },
               { key: 'elite',       label: 'Elitserien' },
