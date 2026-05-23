@@ -293,10 +293,17 @@ export default function TeamPage({ params }: Props) {
               )}
 
               {/* Follow + Intern link */}
-              <a href={'/team/' + id + '/intern'}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, background: C.accent, color: '#1a1400', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-                Till lagets sida →
-              </a>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' as const }}>
+                <a href={'/team/' + id + '/intern'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.accent, color: '#1a1400', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                  Till lagets sida →
+                </a>
+                <button
+                  onClick={() => { setTab('h2h'); setTimeout(() => document.getElementById('team-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50) }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: C.accent, border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  Jämför →
+                </button>
+              </div>
 
               <FollowButton teamId={id || ''} type='team' isDark={theme === 'dark'} />
 
@@ -464,7 +471,7 @@ export default function TeamPage({ params }: Props) {
         )}
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid ' + C.border, background: C.bg }}>
+        <div id="team-tabs" style={{ display: 'flex', borderBottom: '1px solid ' + C.border, background: C.bg }}>
           {[
             { key: 'results', label: 'Resultat', count: completed.length },
             { key: 'upcoming', label: 'Kommande', count: upcoming.length },
@@ -560,9 +567,20 @@ export default function TeamPage({ params }: Props) {
         {/* H2H tab */}
         {tab === 'h2h' && (
           <div>
+            {/* H2H tab header — always visible */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+                {h2hList.length > 0 ? `${h2hList.length} MOTSTÅNDARE` : 'TIDIGARE MÖTEN'}
+              </span>
+              <a href="/teams"
+                style={{ fontSize: 11, fontWeight: 700, color: C.accent, textDecoration: 'none', background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 8, padding: '5px 12px' }}>
+                Hitta ett lag →
+              </a>
+            </div>
+
             {h2hList.length === 0 ? (
               <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
-                Inga spelade matcher ännu
+                Inga spelade matcher registrerade ännu
               </div>
             ) : h2hList.map(opp => {
               const isExp = expandedOpp === opp.oppId
