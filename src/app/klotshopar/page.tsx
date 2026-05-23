@@ -95,12 +95,7 @@ export default function KlotshoparPage() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, paddingBottom: 96 }}>
       {/* Header */}
-      <div style={{
-        padding: '56px 20px 16px',
-        background: isDark
-          ? 'linear-gradient(180deg, rgba(245,194,0,0.06) 0%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(245,194,0,0.04) 0%, transparent 100%)',
-      }}>
+      <div style={{ padding: '56px 20px 16px' }}>
         <h1 style={{ fontSize: 26, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
           Klotshopar
         </h1>

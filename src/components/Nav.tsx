@@ -126,6 +126,16 @@ export default function Nav() {
 
   return (
     <>
+      {/* Global gold glow below nav */}
+      <div style={{
+        position: 'fixed', top: 56, left: 0, right: 0, height: 90,
+        background: isDark
+          ? 'linear-gradient(180deg, rgba(245,194,0,0.07) 0%, transparent 100%)'
+          : 'linear-gradient(180deg, rgba(245,194,0,0.05) 0%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 39,
+      }} />
+
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
         background: navBg,

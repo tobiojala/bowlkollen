@@ -38,12 +38,7 @@ export default function MerPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, paddingBottom: 96 }}>
-      <div style={{
-        padding: '20px 20px 16px',
-        background: isDark
-          ? 'linear-gradient(180deg, rgba(245,194,0,0.05) 0%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(245,194,0,0.04) 0%, transparent 100%)',
-      }}>
+      <div style={{ padding: '20px 20px 16px' }}>
         <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>Utforska</p>
       </div>
 
