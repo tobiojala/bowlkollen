@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calendar, BarChart2, Users, User } from 'lucide-react'
+import { Home, Calendar, BarChart2, Users, LayoutGrid } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 
@@ -11,14 +11,14 @@ const TABS = [
   { label: 'Schema', icon: Calendar,  href: '/schema' },
   { label: 'Tabell', icon: BarChart2, href: '/league' },
   { label: 'Lag',    icon: Users,     href: '/teams' },
-  { label: 'Profil', icon: User,      href: '/profile' },
+  { label: 'Mer',    icon: LayoutGrid, href: '/mer' },
 ]
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
 const HIDE_PATHS = [
   '/intern', '/laguttagning', '/tillganglighet',
-  '/matches/', '/players/', '/teams/', '/compare/',
+  '/matches/', '/players/', '/teams/', '/compare/', '/hallar/', '/klotshopar/',
 ]
 
 export default function BottomNav() {
