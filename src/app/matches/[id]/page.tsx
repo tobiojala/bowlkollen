@@ -31,13 +31,14 @@ function ScoreChip({ score, C }: { score: number; C: any }) {
     <span style={{ fontSize: 20, color: C.textMuted, opacity: 0.3, fontWeight: 400, lineHeight: 1 }}>—</span>
   )
   const isElite = score >= 250
-  const isGood  = score >= 200
+  const isGold  = score >= 220 && score < 250
+  const isGood  = score >= 200 && score < 220
   return (
     <span style={{
-      fontSize: isElite ? 28 : isGood ? 25 : 21,
-      fontWeight: isElite ? 900 : isGood ? 700 : 500,
+      fontSize: isElite ? 28 : isGold ? 25 : isGood ? 23 : 21,
+      fontWeight: isElite ? 900 : isGold ? 800 : isGood ? 700 : 500,
       lineHeight: 1,
-      color: isElite ? '#ffffff' : isGood ? '#4caf7d' : C.text,
+      color: isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#4caf7d' : C.text,
       textShadow: isElite
         ? '0 0 10px rgba(0,240,255,0.3), 0 0 24px rgba(0,240,255,0.15)'
         : 'none',
