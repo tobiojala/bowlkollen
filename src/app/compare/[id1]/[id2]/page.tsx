@@ -86,6 +86,18 @@ export default function ComparePage({ params }: Props) {
   const [stats1,  setStats1]  = useState<Stats | null>(null)
   const [stats2,  setStats2]  = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [copied,  setCopied]  = useState(false)
+
+  const handleShare = async () => {
+    const url = window.location.href
+    if (navigator.share) {
+      await navigator.share({ title: `${p1?.name} vs ${p2?.name} — Bowlkollen`, url })
+    } else {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   useEffect(() => { params.then(p => setIds(p)) }, [params])
 
@@ -422,6 +434,12 @@ export default function ComparePage({ params }: Props) {
               </div>
             </>
           )}
+          <button onClick={handleShare}
+            style={{ marginTop: 16, padding: '9px 24px', borderRadius: 12, border: `1px solid ${TEAL_RING}`,
+              background: 'transparent', color: TEAL, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              width: '100%' }}>
+            {copied ? '✓ Länk kopierad!' : 'Dela jämförelsen →'}
+          </button>
         </motion.div>
       </div>
 

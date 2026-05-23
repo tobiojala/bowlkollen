@@ -87,6 +87,18 @@ export default function TeamComparePage({ params }: Props) {
   const [stats2,  setStats2]  = useState<TeamStats | null>(null)
   const [h2h,     setH2h]     = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [copied,  setCopied]  = useState(false)
+
+  const handleShare = async () => {
+    const url = window.location.href
+    if (navigator.share) {
+      await navigator.share({ title: `${t1?.name} vs ${t2?.name} — Bowlkollen`, url })
+    } else {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   useEffect(() => { params.then(p => setIds(p)) }, [params])
 
@@ -398,6 +410,12 @@ export default function TeamComparePage({ params }: Props) {
               </div>
             </>
           )}
+          <button onClick={handleShare}
+            style={{ marginTop: 16, padding: '9px 24px', borderRadius: 12, border: `1px solid ${GOLD_RING}`,
+              background: 'transparent', color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              width: '100%' }}>
+            {copied ? '✓ Länk kopierad!' : 'Dela jämförelsen →'}
+          </button>
         </motion.div>
 
         {/* H2H direct meetings */}
