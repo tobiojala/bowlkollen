@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { MapPin, ShoppingBag } from 'lucide-react'
+import { MapPin, ShoppingBag, Droplets } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
@@ -21,6 +21,13 @@ const ITEMS = [
     label: 'Klotshopar',
     sub: '16 pro shops',
     description: 'Hitta pro shops med IBPSIA-certifierade tekniker.',
+  },
+  {
+    href: '/oljeprofiler',
+    icon: Droplets,
+    label: 'Oljeprofiler',
+    sub: 'Säsong 2025/2026',
+    description: 'Svenska Bowlingförbundets godkända oljeprofiler för alla divisioner.',
   },
 ]
 

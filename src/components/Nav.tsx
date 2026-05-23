@@ -23,7 +23,8 @@ function getConfig(pathname: string): NavConfig {
   if (pathname === '/mer')        return { logo: false, title: 'Utforska',      backHref: '/' }
   if (pathname === '/hallar')    return { logo: false, title: 'Bowlinghallar',  backHref: '/mer' }
   if (pathname === '/klotshopar') return { logo: false, title: 'Klotshopar',   backHref: '/mer' }
-  if (pathname.startsWith('/hallar/'))    return { logo: false, title: 'Bowlinghall', backHref: '/hallar' }
+  if (pathname.startsWith('/hallar/'))      return { logo: false, title: 'Bowlinghall',  backHref: '/hallar' }
+  if (pathname === '/oljeprofiler')         return { logo: false, title: 'Oljeprofiler', backHref: '/mer' }
   if (pathname === '/sllm')      return { logo: false, title: 'SLLM 2026',     backHref: null }
   if (pathname === '/login')     return { logo: false, title: 'Logga in',      backHref: null }
   if (pathname.startsWith('/players/'))  return { logo: false, title: 'Spelarprofil', backHref: '/players' }
