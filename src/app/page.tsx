@@ -262,8 +262,8 @@ export default function Home() {
                 const isGood   = e.score >= 200 && e.score < 220
                 const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#4caf7d' : C.textMuted
                 const scoreGlow  = isElite ? '0 0 10px rgba(0,240,255,0.4), 0 0 24px rgba(0,240,255,0.2)' : 'none'
-                const cardBorder = isElite ? 'rgba(0,240,255,0.30)'
-                                 : isGold  ? 'rgba(245,194,0,0.35)'
+                const cardBorder = isElite ? 'rgba(245,194,0,0.45)'
+                                 : isGold  ? 'rgba(245,194,0,0.25)'
                                  : isGood  ? 'rgba(76,175,125,0.28)'
                                  : isDark  ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
                 const nameParts = e.playerName.split(' ')
@@ -272,7 +272,7 @@ export default function Home() {
                 return (
                   <a key={i} href={'/matches/' + e.matchId}
                     style={{ flexShrink: 0, textDecoration: 'none', background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: '10px 12px', textAlign: 'center', minWidth: 74,
-                      boxShadow: isElite ? '0 0 16px rgba(0,240,255,0.08)' : 'none' }}>
+                      boxShadow: isElite ? '0 0 16px rgba(245,194,0,0.10)' : 'none' }}>
                     <div style={{ fontSize: isElite ? 30 : isGold ? 28 : 26, fontWeight: 900, color: scoreColor, lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: C.text, marginTop: 5, maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                     <div style={{ fontSize: 9, color: C.textMuted, maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
