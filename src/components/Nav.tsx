@@ -20,6 +20,10 @@ function getConfig(pathname: string): NavConfig {
   if (pathname === '/teams')     return { logo: false, title: 'Lag',           backHref: null }
   if (pathname === '/players')   return { logo: false, title: 'Spelare',       backHref: null }
   if (pathname === '/profile')   return { logo: false, title: 'Min profil',    backHref: null }
+  if (pathname === '/mer')       return { logo: false, title: 'Utforska',       backHref: null }
+  if (pathname === '/hallar')    return { logo: false, title: 'Bowlinghallar',  backHref: null }
+  if (pathname === '/klotshopar') return { logo: false, title: 'Klotshopar',   backHref: null }
+  if (pathname.startsWith('/hallar/'))    return { logo: false, title: 'Bowlinghall', backHref: '/hallar' }
   if (pathname === '/sllm')      return { logo: false, title: 'SLLM 2026',     backHref: null }
   if (pathname === '/login')     return { logo: false, title: 'Logga in',      backHref: null }
   if (pathname.startsWith('/players/'))  return { logo: false, title: 'Spelarprofil', backHref: '/players' }
