@@ -73,6 +73,12 @@ export default function Home() {
   const [tab, setTab] = useState<'alla' | 'foljer'>('alla')
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
   const [now, setNow] = useState(Date.now())
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
+
+  const toggleDate = (date: string) =>
+    setExpandedDates(prev => { const s = new Set(prev); s.has(date) ? s.delete(date) : s.add(date); return s })
+
+  const LIMIT = 3
 
   useEffect(() => {
     const ticker = setInterval(() => setNow(Date.now()), 1000)
@@ -293,25 +299,60 @@ export default function Home() {
         )}
 
         {/* Recent results — newest date first */}
-        {recentDates.map(date => (
-          <div key={date}>
-            <SectionHeader label={dateLabel(date)} count={recentByDate[date].length} />
-            {recentByDate[date].map(m => <MatchRow key={m.id} m={m} />)}
-          </div>
-        ))}
+        {recentDates.map(date => {
+          const all = recentByDate[date]
+          const isExpanded = expandedDates.has(date)
+          const visible = isExpanded ? all : all.slice(0, LIMIT)
+          const hidden = all.length - LIMIT
+          return (
+            <div key={date}>
+              <SectionHeader label={dateLabel(date)} count={all.length} />
+              {visible.map(m => <MatchRow key={m.id} m={m} />)}
+              {hidden > 0 && (
+                <button onClick={() => toggleDate(date)}
+                  style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none',
+                    borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                    color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
+                  {isExpanded
+                    ? <>&#8593; Visa färre</>
+                    : <>{`Visa alla ${all.length} matcher`} &#8595;</>}
+                </button>
+              )}
+            </div>
+          )
+        })}
 
         {/* Upcoming */}
         {upcomingDates.length > 0 && (
           <div>
             <SectionHeader label="KOMMANDE" count={filteredUpcoming.length} />
-            {upcomingDates.map(date => (
-              <div key={date}>
-                <div style={{ padding: '10px 16px 2px', fontSize: 11, fontWeight: 600, color: C.textMuted }}>
-                  {dateLabel(date)}
+            {upcomingDates.map(date => {
+              const all = upcomingByDate[date]
+              const key = 'up-' + date
+              const isExpanded = expandedDates.has(key)
+              const visible = isExpanded ? all : all.slice(0, LIMIT)
+              const hidden = all.length - LIMIT
+              return (
+                <div key={date}>
+                  <div style={{ padding: '10px 16px 2px', fontSize: 11, fontWeight: 600, color: C.textMuted }}>
+                    {dateLabel(date)}
+                  </div>
+                  {visible.map(m => <MatchRow key={m.id} m={m} />)}
+                  {hidden > 0 && (
+                    <button onClick={() => toggleDate(key)}
+                      style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none',
+                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                        color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                        WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
+                      {isExpanded
+                        ? <>&#8593; Visa färre</>
+                        : <>{`Visa alla ${all.length} matcher`} &#8595;</>}
+                    </button>
+                  )}
                 </div>
-                {upcomingByDate[date].map(m => <MatchRow key={m.id} m={m} />)}
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
