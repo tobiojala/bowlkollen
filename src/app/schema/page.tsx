@@ -533,19 +533,34 @@ export default function SchedulePage() {
                     const isToday     = m.date.slice(0, 10) === today
                     const cd          = !isCompleted && !isLive && isToday ? cdStr(m.date, now) : null
                     const time        = matchTime(m.date)
+                    const tier        = getTier(m.division)
+
+                    // Tier-based sizing
+                    const nameFontSize  = tier === 1 ? 15 : tier === 3 ? 13 : 14
+                    const nameWeight    = tier === 1 ? 600 : 400
+                    const winWeight     = tier === 1 ? 800 : 700
+                    const scoreFontSize = tier === 1 ? 20 : tier === 3 ? 14 : 16
+                    const rowPadding    = tier === 1 ? '13px 8px' : tier === 3 ? '7px 8px' : '10px 8px'
+                    const borderWidth   = tier === 1 ? 4 : tier === 3 ? 2 : 3
+                    const rowMargin     = tier === 1 ? '3px 6px' : tier === 3 ? '1px 10px' : '2px 8px'
+                    const rowBg         = tier === 1 && isDark
+                      ? `rgba(${dc.includes('320') ? '180,120,160' : dc.includes('44') ? '180,150,60' : '90,130,180'},0.05)`
+                      : 'transparent'
 
                     return (
                       <a key={m.id} href={'/matches/' + m.id}
                         style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none',
-                          borderRadius: 8, margin: '2px 8px', overflow: 'hidden',
+                          borderRadius: tier === 1 ? 10 : 8, margin: rowMargin, overflow: 'hidden',
+                          background: rowBg,
                           WebkitTapHighlightColor: 'transparent' } as any}
                         onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
                       >
-                        <div style={{ width: 3, flexShrink: 0, background: dc }} />
+                        <div style={{ width: borderWidth, flexShrink: 0, background: dc }} />
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 8px', gap: 8 }}>
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: homeWin ? 700 : 400,
+                          <div style={{ display: 'flex', alignItems: 'center', padding: rowPadding, gap: 8 }}>
+                            <div style={{ flex: 1, minWidth: 0, fontSize: nameFontSize,
+                              fontWeight: homeWin ? winWeight : nameWeight,
                               color: isCompleted ? (homeWin ? C.text : C.textMuted) : C.text,
                               textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {shortName(m.home?.name || '')}
@@ -560,20 +575,21 @@ export default function SchedulePage() {
                               )}
                               {isCompleted || isLive ? (
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                  <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
+                                  <span style={{ fontSize: scoreFontSize, fontWeight: 900, lineHeight: 1,
                                     color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                                  <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
-                                  <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
+                                  <span style={{ fontSize: scoreFontSize - 5, color: C.textMuted, fontWeight: 300 }}>–</span>
+                                  <span style={{ fontSize: scoreFontSize, fontWeight: 900, lineHeight: 1,
                                     color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
                                 </div>
                               ) : cd ? (
-                                <div style={{ fontSize: 12, fontWeight: 800, color: C.accent,
+                                <div style={{ fontSize: tier === 1 ? 13 : 12, fontWeight: 800, color: C.accent,
                                   fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
                               ) : (
-                                <div style={{ fontSize: 12, fontWeight: 600, color: C.textMuted }}>{time}</div>
+                                <div style={{ fontSize: tier === 3 ? 11 : 12, fontWeight: 600, color: C.textMuted }}>{time}</div>
                               )}
                             </div>
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: awayWin ? 700 : 400,
+                            <div style={{ flex: 1, minWidth: 0, fontSize: nameFontSize,
+                              fontWeight: awayWin ? winWeight : nameWeight,
                               color: isCompleted ? (awayWin ? C.text : C.textMuted) : C.text,
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {shortName(m.away?.name || '')}
