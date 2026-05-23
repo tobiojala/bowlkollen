@@ -50,7 +50,8 @@ export default function TeamPage({ params }: Props) {
   const [postingType, setPostingType] = useState<'news' | 'lineup'>('news')
   const [submittingPost, setSubmittingPost] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'results' | 'upcoming' | 'squad' | 'community'>('results')
+  const [tab, setTab] = useState<'results' | 'upcoming' | 'squad' | 'community' | 'h2h'>('results')
+  const [expandedOpp, setExpandedOpp] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -229,6 +230,21 @@ export default function TeamPage({ params }: Props) {
   // Division from most recent match
   const division = completed[0]?.division || upcoming[0]?.division || null
   const divColor = divisionColor(division)
+
+  // H2H breakdown by opponent
+  const h2hMap: Record<string, { team: any; oppId: string; matches: Match[]; w: number; d: number; l: number }> = {}
+  completed.forEach(m => {
+    const oppId = isHome(m) ? m.away_team_id : m.home_team_id
+    const opp   = isHome(m) ? m.away : m.home
+    if (!h2hMap[oppId]) h2hMap[oppId] = { team: opp, oppId, matches: [], w: 0, d: 0, l: 0 }
+    const won  = isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!
+    const lost = isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!
+    h2hMap[oppId].matches.push(m)
+    if (won) h2hMap[oppId].w++
+    else if (lost) h2hMap[oppId].l++
+    else h2hMap[oppId].d++
+  })
+  const h2hList = Object.values(h2hMap).sort((a, b) => b.matches.length - a.matches.length)
 
   const displayMatches = tab === 'results' ? completed : upcoming
 
@@ -452,6 +468,7 @@ export default function TeamPage({ params }: Props) {
           {[
             { key: 'results', label: 'Resultat', count: completed.length },
             { key: 'upcoming', label: 'Kommande', count: upcoming.length },
+            { key: 'h2h', label: 'H2H', count: h2hList.length },
             { key: 'squad', label: 'Trupp', count: players.length },
             { key: 'community', label: 'Community', count: posts.length },
           ].map(t => (
@@ -465,7 +482,7 @@ export default function TeamPage({ params }: Props) {
         </div>
 
         {/* Results / Upcoming */}
-        {tab !== 'squad' && tab !== 'community' && (
+        {tab !== 'squad' && tab !== 'community' && tab !== 'h2h' && (
           <div>
             {displayMatches.length === 0 && (
               <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
@@ -535,6 +552,104 @@ export default function TeamPage({ params }: Props) {
                     )}
                   </div>
                 </a>
+              )
+            })}
+          </div>
+        )}
+
+        {/* H2H tab */}
+        {tab === 'h2h' && (
+          <div>
+            {h2hList.length === 0 ? (
+              <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
+                Inga spelade matcher ännu
+              </div>
+            ) : h2hList.map(opp => {
+              const isExp = expandedOpp === opp.oppId
+              const oppHue = (opp.team?.name || '').split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
+              const oppTc   = `hsl(${oppHue},50%,45%)`
+              const oppTclo = theme === 'dark' ? `hsl(${oppHue},40%,15%)` : `hsl(${oppHue},40%,92%)`
+              const oppIni  = shortName(opp.team?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()
+              const total   = opp.matches.length
+              const winPct  = total > 0 ? Math.round((opp.w / total) * 100) : 0
+
+              return (
+                <div key={opp.oppId} style={{ borderBottom: '1px solid ' + C.border }}>
+                  {/* Opponent summary row */}
+                  <div
+                    onClick={() => setExpandedOpp(isExp ? null : opp.oppId)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
+                  >
+                    {/* Avatar */}
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: oppTclo, border: '1.5px solid ' + oppTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: oppTc, flexShrink: 0 }}>
+                      {oppIni}
+                    </div>
+
+                    {/* Name + record */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {shortName(opp.team?.name || '')}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 3, alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: C.green }}>{opp.w}V</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: C.textMuted }}>{opp.d}O</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#e05555' }}>{opp.l}F</span>
+                        <span style={{ fontSize: 10, color: C.textMuted }}>· {total} matcher · {winPct}% vunna</span>
+                      </div>
+                    </div>
+
+                    {/* Jämför link */}
+                    <a
+                      href={'/teams/' + opp.oppId}
+                      onClick={e => e.stopPropagation()}
+                      style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 8, padding: '5px 10px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' } as React.CSSProperties}
+                    >
+                      Jämför →
+                    </a>
+
+                    {/* Chevron */}
+                    <motion.div animate={{ rotate: isExp ? 90 : 0 }} transition={SPRING}
+                      style={{ color: C.textMuted, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>
+                      ›
+                    </motion.div>
+                  </div>
+
+                  {/* Expandable match list */}
+                  <motion.div
+                    initial={false}
+                    animate={{ height: isExp ? 'auto' : 0, opacity: isExp ? 1 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                      {[...opp.matches].sort((a, b) => b.date.localeCompare(a.date)).map((m, mi) => {
+                        const home    = isHome(m)
+                        const myScore = home ? m.home_score : m.away_score
+                        const thScore = home ? m.away_score : m.home_score
+                        const won     = myScore !== null && thScore !== null && myScore! > thScore!
+                        const lost    = myScore !== null && thScore !== null && myScore! < thScore!
+                        const drew    = myScore !== null && thScore !== null && myScore === thScore
+                        const label   = won ? 'V' : lost ? 'F' : drew ? 'O' : null
+                        const lColor  = won ? C.green : lost ? '#e05555' : C.textMuted
+                        const dateStr = m.date ? new Date(m.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+                        return (
+                          <a key={m.id} href={'/matches/' + m.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px 10px 28px', borderTop: mi === 0 ? '1px solid ' + C.border : '1px solid ' + (theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'), textDecoration: 'none' }}>
+                            <div style={{ width: 24, height: 24, borderRadius: 6, background: label ? lColor + '22' : C.card, border: '1px solid ' + (label ? lColor : C.border), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: label ? lColor : C.textMuted, flexShrink: 0 }}>
+                              {label || '—'}
+                            </div>
+                            <div style={{ flex: 1, fontSize: 12, color: C.textMuted }}>{dateStr} · {home ? 'Hemma' : 'Borta'}</div>
+                            {myScore !== null && (
+                              <div style={{ fontSize: 13, fontWeight: 800, color: won ? C.accent : C.text }}>
+                                {myScore} – {thScore}
+                              </div>
+                            )}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                </div>
               )
             })}
           </div>

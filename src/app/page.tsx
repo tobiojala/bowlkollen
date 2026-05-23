@@ -39,6 +39,18 @@ function dateLabel(dateStr: string) {
     .toUpperCase()
 }
 
+function countdown(dateStr: string, now: number) {
+  const ms = Math.max(0, new Date(dateStr).getTime() - now)
+  if (ms === 0) return null
+  const d = Math.floor(ms / 86_400_000)
+  const h = Math.floor((ms % 86_400_000) / 3_600_000)
+  const m = Math.floor((ms % 3_600_000) / 60_000)
+  const s = Math.floor((ms % 60_000) / 1_000)
+  if (d > 0) return `${d}d ${h}h`
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 function group(ms: Match[]) {
   const byDate: Record<string, Match[]> = {}
   ms.forEach(m => {
@@ -60,6 +72,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'alla' | 'foljer'>('alla')
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    const ticker = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(ticker)
+  }, [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -180,12 +198,20 @@ export default function Home() {
               </div>
               <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
             </>
-          ) : (
-            <>
-              <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 300 }}>vs</div>
-              <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 1 }}>{shortDiv(m.division)}</div>
-            </>
-          )}
+          ) : (() => {
+            const cd = m.date ? countdown(m.date, now) : null
+            const timeStr = m.date ? new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : ''
+            return (
+              <>
+                {cd ? (
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                ) : (
+                  <div style={{ fontSize: 11, color: C.textMuted }}>{timeStr || 'vs'}</div>
+                )}
+                <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
+              </>
+            )
+          })()}
         </div>
         <div style={{ fontSize: 14, fontWeight: awayWin ? 700 : 400, color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {shortName(m.away?.name || '')}
