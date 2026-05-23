@@ -168,6 +168,7 @@ export default function SchedulePage() {
   const [tabDir, setTabDir]       = useState(1)
   const [tavFilter, setTavFilter] = useState<'alla' | 'pagaende' | 'kommande' | 'avslutad'>('alla')
   const [now, setNow]             = useState(Date.now())
+  const [showPast, setShowPast]   = useState(false)
 
   const scrollRef     = useRef<HTMLDivElement>(null)
   const activeDateRef = useRef<HTMLButtonElement>(null)
@@ -191,8 +192,10 @@ export default function SchedulePage() {
           const allDates = [...new Set((data as any[]).map((m: any) => m.date.slice(0, 10)))].sort()
           const params = new URLSearchParams(window.location.search)
           const dateParam = params.get('date')
-          if (dateParam && allDates.includes(dateParam)) setActiveDate(dateParam)
-          else {
+          if (dateParam && allDates.includes(dateParam)) {
+            setActiveDate(dateParam)
+            if (dateParam < today) setShowPast(true)
+          } else {
             const upcoming = allDates.find(d => d >= today)
             setActiveDate(upcoming || allDates[allDates.length - 1] || null)
           }
@@ -215,6 +218,15 @@ export default function SchedulePage() {
   const days   = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör']
   const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
   const dates  = [...new Set(matches.map(m => m.date.slice(0, 10)))].sort()
+
+  // Always show today+future; past dates revealed by toggle. Keep active past date visible.
+  const visibleDates = showPast ? dates : dates.filter(d => d >= today || d === activeDate)
+  const nextDate     = dates.find(d => d >= today) ?? null
+
+  const fmtDate = (d: string) => {
+    const dt = new Date(d + 'T12:00:00')
+    return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]}`
+  }
 
   const filterMatches = (ms: Match[]) => {
     if (filter === 'elite')      return ms.filter(m => getTier(m.division) === 1)
@@ -279,8 +291,19 @@ export default function SchedulePage() {
         {mainTab === 'liga' && (
           <>
             {/* Date strip */}
-            <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex' } as any}>
-              {dates.map(dateKey => {
+            <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', alignItems: 'stretch' } as any}>
+              {/* Historik toggle — sits at the left edge */}
+              <button onClick={() => setShowPast(p => !p)}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '6px 10px', border: 'none', borderBottom: '2px solid transparent',
+                  background: 'transparent', cursor: 'pointer', flexShrink: 0,
+                  borderRight: '1px solid ' + C.border, WebkitTapHighlightColor: 'transparent' } as any}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+                  {showPast ? '✕' : '← Historik'}
+                </span>
+              </button>
+
+              {visibleDates.map(dateKey => {
                 const d        = new Date(dateKey + 'T12:00:00')
                 const isActive = dateKey === activeDate
                 const isToday  = dateKey === today
@@ -292,14 +315,15 @@ export default function SchedulePage() {
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
                       padding: '8px 12px 5px', border: 'none',
                       borderBottom: '2px solid ' + (isActive ? C.accent : 'transparent'),
-                      background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap',
+                      background: isToday && !isActive ? (isDark ? 'rgba(245,194,0,0.04)' : 'rgba(245,194,0,0.06)') : 'transparent',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
                       opacity: isPast && !isActive ? 0.32 : 1, gap: 1,
                       WebkitTapHighlightColor: 'transparent' } as any}>
                     <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1,
-                      color: isActive ? C.accent : C.textMuted }}>
+                      color: isActive ? C.accent : isToday ? C.accent : C.textMuted }}>
                       {isToday ? 'IDAG' : days[d.getDay()].toUpperCase()}
                     </span>
-                    <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 400,
+                    <span style={{ fontSize: 14, fontWeight: isActive || isToday ? 700 : 400,
                       color: isActive ? C.accent : C.text }}>
                       {d.getDate()} {months[d.getMonth()]}
                     </span>
@@ -380,9 +404,31 @@ export default function SchedulePage() {
           {/* ── LIGA content ──────────────────────────────────────────────────── */}
           {mainTab === 'liga' && (
             <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
+              {/* Jump back to next upcoming when browsing history */}
+              {activeDate && activeDate < today && nextDate && (
+                <div style={{ padding: '10px 16px' }}>
+                  <button onClick={() => setActiveDate(nextDate)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent',
+                      border: '1px solid ' + C.border, borderRadius: 20, padding: '6px 14px',
+                      cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as any}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.accent }}>Nästa omgång</span>
+                    <span style={{ fontSize: 11, color: C.textMuted }}>{fmtDate(nextDate)} →</span>
+                  </button>
+                </div>
+              )}
+
               {activeMatches.length === 0 && (
-                <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
-                  Inga matcher den här dagen
+                <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 6 }}>
+                    Inga matcher den här dagen
+                  </div>
+                  {nextDate && activeDate !== nextDate && (
+                    <button onClick={() => setActiveDate(nextDate)}
+                      style={{ fontSize: 12, fontWeight: 700, color: C.accent, background: 'transparent',
+                        border: 'none', cursor: 'pointer', padding: 0 } as any}>
+                      Nästa matcher: {fmtDate(nextDate)} →
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -425,49 +471,56 @@ export default function SchedulePage() {
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
                           <div style={{ width: 3, flexShrink: 0, background: dc }} />
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center',
-                            padding: '10px 8px', gap: 8 }}>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                            {/* Teams + score row */}
+                            <div style={{ display: 'flex', alignItems: 'center', padding: '10px 8px', gap: 8 }}>
+                              <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: homeWin ? 700 : 400,
+                                color: isCompleted ? (homeWin ? C.text : C.textMuted) : C.text,
+                                textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {shortName(m.home?.name || '')}
+                              </div>
 
-                            {/* Home */}
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: homeWin ? 700 : 400,
-                              color: isCompleted ? (homeWin ? C.text : C.textMuted) : C.text,
-                              textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {shortName(m.home?.name || '')}
+                              {/* Center */}
+                              <div style={{ flexShrink: 0, width: 68, display: 'flex',
+                                flexDirection: 'column', alignItems: 'center' }}>
+                                {isLive && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
+                                    <span style={{ width: 5, height: 5, borderRadius: '50%',
+                                      background: '#e05555', display: 'inline-block',
+                                      boxShadow: '0 0 4px #e05555' }} />
+                                    <span style={{ fontSize: 8, fontWeight: 800, color: '#e05555', letterSpacing: 0.5 }}>LIVE</span>
+                                  </div>
+                                )}
+                                {isCompleted || isLive ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                    <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
+                                      color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
+                                    <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
+                                    <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
+                                      color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
+                                  </div>
+                                ) : cd ? (
+                                  <div style={{ fontSize: 12, fontWeight: 800, color: C.accent,
+                                    fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                                ) : (
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: C.textMuted }}>{time}</div>
+                                )}
+                              </div>
+
+                              <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: awayWin ? 700 : 400,
+                                color: isCompleted ? (awayWin ? C.text : C.textMuted) : C.text,
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {shortName(m.away?.name || '')}
+                              </div>
                             </div>
 
-                            {/* Center */}
-                            <div style={{ flexShrink: 0, width: 68, display: 'flex',
-                              flexDirection: 'column', alignItems: 'center' }}>
-                              {isLive && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-                                  <span style={{ width: 5, height: 5, borderRadius: '50%',
-                                    background: '#e05555', display: 'inline-block',
-                                    boxShadow: '0 0 4px #e05555' }} />
-                                  <span style={{ fontSize: 8, fontWeight: 800, color: '#e05555', letterSpacing: 0.5 }}>LIVE</span>
-                                </div>
-                              )}
-                              {isCompleted || isLive ? (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                  <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
-                                    color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                                  <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
-                                  <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1,
-                                    color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
-                                </div>
-                              ) : cd ? (
-                                <div style={{ fontSize: 12, fontWeight: 800, color: C.accent,
-                                  fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                              ) : (
-                                <div style={{ fontSize: 12, fontWeight: 600, color: C.textMuted }}>{time}</div>
-                              )}
-                            </div>
-
-                            {/* Away */}
-                            <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: awayWin ? 700 : 400,
-                              color: isCompleted ? (awayWin ? C.text : C.textMuted) : C.text,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {shortName(m.away?.name || '')}
-                            </div>
+                            {/* Venue */}
+                            {m.venue ? (
+                              <div style={{ fontSize: 9, color: C.textMuted, padding: '0 8px 7px 8px',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {m.venue}
+                              </div>
+                            ) : null}
                           </div>
                         </a>
                       )
