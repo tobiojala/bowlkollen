@@ -318,7 +318,7 @@ export default function Home() {
     const awayWin  = hasScore && m.away_score! > m.home_score!
     return (
       <a href={'/matches/' + m.id}
-        style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, padding: '10px 8px',
+        style={{ display: 'grid', gridTemplateColumns: '1fr 68px 1fr', gap: 8, padding: '10px 8px',
           textDecoration: 'none', borderRadius: 8, alignItems: 'center',
           borderLeft: '3px solid ' + dc, margin: '2px 8px', WebkitTapHighlightColor: 'transparent' } as any}
         onMouseEnter={e => (e.currentTarget.style.background = C.card)}
@@ -327,7 +327,7 @@ export default function Home() {
         <div style={{ fontSize: 14, fontWeight: homeWin ? 700 : 400, color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {shortName(m.home?.name || '')}
         </div>
-        <div style={{ textAlign: 'center', minWidth: 64 }}>
+        <div style={{ textAlign: 'center', width: 68 }}>
           {hasScore ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
@@ -393,7 +393,7 @@ export default function Home() {
                 {shortName(m.home?.name || '')}
               </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', width: 88 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
                   color: homeWin ? C.accent : C.text }}>{m.home_score}</span>
@@ -452,7 +452,7 @@ export default function Home() {
               </div>
               <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', width: 96 }}>
               {cd ? (
                 <>
                   <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent,
