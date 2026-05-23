@@ -298,11 +298,10 @@ export default function TeamPage({ params }: Props) {
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.accent, color: '#1a1400', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                   Till lagets sida →
                 </a>
-                <button
-                  onClick={() => { setTab('h2h'); setTimeout(() => document.getElementById('team-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50) }}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: C.accent, border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                <a href={id ? `/compare/teams/${id}` : '#'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: C.accent, border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                   Jämför →
-                </button>
+                </a>
               </div>
 
               <FollowButton teamId={id || ''} type='team' isDark={theme === 'dark'} />
