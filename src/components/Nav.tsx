@@ -27,10 +27,12 @@ function getConfig(pathname: string): NavConfig {
   if (pathname === '/oljeprofiler')         return { logo: false, title: 'Oljeprofiler', backHref: '/mer' }
   if (pathname === '/sllm')      return { logo: false, title: 'SLLM 2026',     backHref: null }
   if (pathname === '/login')     return { logo: false, title: 'Logga in',      backHref: null }
-  if (pathname.startsWith('/players/'))  return { logo: false, title: 'Spelarprofil', backHref: '/players' }
-  if (pathname.startsWith('/teams/'))    return { logo: false, title: 'Lag',          backHref: '/teams' }
-  if (pathname.startsWith('/matches/'))  return { logo: false, title: 'Match',        backHref: '/schema' }
-  if (pathname.startsWith('/club/'))     return { logo: false, title: 'Klubb',        backHref: '/teams' }
+  if (pathname.startsWith('/players/'))       return { logo: false, title: 'Spelarprofil',  backHref: '/players' }
+  if (pathname.startsWith('/teams/'))         return { logo: false, title: 'Lag',            backHref: '/teams' }
+  if (pathname.startsWith('/matches/'))       return { logo: false, title: 'Match',          backHref: '/schema' }
+  if (pathname.startsWith('/club/'))          return { logo: false, title: 'Klubb',          backHref: '/teams' }
+  if (pathname.startsWith('/compare/teams/')) return { logo: false, title: 'Lagsjämförelse', backHref: null }
+  if (pathname.startsWith('/compare/'))       return { logo: false, title: 'Jämförelse',     backHref: '/players' }
   return { logo: true, title: null, backHref: null }
 }
 

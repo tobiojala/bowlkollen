@@ -618,7 +618,7 @@ export default function TeamPage({ params }: Props) {
 
                     {/* Jämför link */}
                     <a
-                      href={'/teams/' + opp.oppId}
+                      href={`/compare/teams/${id}/${opp.oppId}`}
                       onClick={e => e.stopPropagation()}
                       style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 8, padding: '5px 10px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' } as React.CSSProperties}
                     >
