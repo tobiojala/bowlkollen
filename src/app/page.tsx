@@ -120,11 +120,11 @@ const MOCK_HONOR: HonorEntry[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function divColor(d: string) {
-  if (d.includes('SM') || d.includes('slutspel')) return '#f5c200'
-  if (d.includes('Damer')) return '#d94a90'
-  if (d.includes('Elitserien')) return '#4a90d9'
-  if (d.includes('Allsvenskan')) return '#5ba85a'
-  return '#8a7a5a'
+  if (d.includes('SM') || d.includes('slutspel')) return 'hsl(44, 50%, 52%)'
+  if (d.includes('Damer'))      return 'hsl(320, 30%, 58%)'
+  if (d.includes('Elitserien')) return 'hsl(210, 35%, 55%)'
+  if (d.includes('Allsvenskan'))return 'hsl(130, 22%, 50%)'
+  return 'hsl(35, 12%, 52%)'
 }
 
 function shortDiv(d: string) {
