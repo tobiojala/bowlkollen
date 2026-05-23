@@ -226,15 +226,21 @@ export default function Home() {
     )
   }
 
-  const SectionHeader = ({ label, isLive = false, count }: { label: string; isLive?: boolean; count?: number }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 6px', borderBottom: '1px solid ' + C.border }}>
-      <div style={{ width: 8, height: 8, borderRadius: isLive ? '50%' : 2, background: isLive ? '#e05555' : C.accent, flexShrink: 0 }} />
-      <span style={{ fontSize: 10, fontWeight: 800, color: isLive ? '#e05555' : C.textMuted, letterSpacing: 1.5 }}>{label}</span>
-      {count !== undefined && count > 0 && (
-        <span style={{ fontSize: 9, color: C.textMuted, fontWeight: 500 }}>· {count} matcher</span>
-      )}
-    </div>
-  )
+  const DAY_COLORS = ['#b06070', '#6080b8', '#8868b0', '#4a9e96', '#b07840', '#a85888', '#9e8840']
+  const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
+
+  const SectionHeader = ({ label, isLive = false, count, date }: { label: string; isLive?: boolean; count?: number; date?: string }) => {
+    const dotColor = isLive ? '#e05555' : date ? dayDotColor(date) : C.accent
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 6px', borderBottom: '1px solid ' + C.border }}>
+        <div style={{ width: 8, height: 8, borderRadius: isLive ? '50%' : 2, background: dotColor, flexShrink: 0 }} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: isLive ? '#e05555' : C.textMuted, letterSpacing: 1.5 }}>{label}</span>
+        {count !== undefined && count > 0 && (
+          <span style={{ fontSize: 9, color: C.textMuted, fontWeight: 500 }}>· {count} matcher</span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -306,7 +312,7 @@ export default function Home() {
           const hidden = all.length - LIMIT
           return (
             <div key={date}>
-              <SectionHeader label={dateLabel(date)} count={all.length} />
+              <SectionHeader label={dateLabel(date)} count={all.length} date={date} />
               {visible.map(m => <MatchRow key={m.id} m={m} />)}
               {hidden > 0 && (
                 <button onClick={() => toggleDate(date)}
