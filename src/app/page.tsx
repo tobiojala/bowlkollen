@@ -317,42 +317,50 @@ export default function Home() {
     const homeWin  = hasScore && m.home_score! > m.away_score!
     const awayWin  = hasScore && m.away_score! > m.home_score!
     return (
+      // Separate the color bar so it doesn't shift the grid's symmetry
       <a href={'/matches/' + m.id}
-        style={{ display: 'grid', gridTemplateColumns: '1fr 68px 1fr', gap: 8, padding: '10px 8px',
-          textDecoration: 'none', borderRadius: 8, alignItems: 'center',
-          borderLeft: '3px solid ' + dc, margin: '2px 8px', WebkitTapHighlightColor: 'transparent' } as any}
+        style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none',
+          borderRadius: 8, margin: '2px 8px', overflow: 'hidden',
+          WebkitTapHighlightColor: 'transparent' } as any}
         onMouseEnter={e => (e.currentTarget.style.background = C.card)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
-        <div style={{ fontSize: 14, fontWeight: homeWin ? 700 : 400, color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {shortName(m.home?.name || '')}
-        </div>
-        <div style={{ textAlign: 'center', width: 68 }}>
-          {hasScore ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <span style={{ fontSize: 16, fontWeight: 900, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
-                <span style={{ fontSize: 16, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
-              </div>
-              <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
-            </>
-          ) : (() => {
-            const cd      = countdown(m.date, now)
-            const timeStr = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-            return (
+        <div style={{ width: 3, flexShrink: 0, background: dc }} />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '10px 8px', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: homeWin ? 700 : 400,
+            color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text,
+            textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {shortName(m.home?.name || '')}
+          </div>
+          <div style={{ flexShrink: 0, width: 68, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {hasScore ? (
               <>
-                {cd
-                  ? <div style={{ fontSize: 13, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                  : <div style={{ fontSize: 11, color: C.textMuted }}>{timeStr || 'vs'}</div>
-                }
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
+                  <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
+                </div>
                 <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
               </>
-            )
-          })()}
-        </div>
-        <div style={{ fontSize: 14, fontWeight: awayWin ? 700 : 400, color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {shortName(m.away?.name || '')}
+            ) : (() => {
+              const cd      = countdown(m.date, now)
+              const timeStr = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+              return (
+                <>
+                  {cd
+                    ? <div style={{ fontSize: 13, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                    : <div style={{ fontSize: 11, color: C.textMuted }}>{timeStr || 'vs'}</div>
+                  }
+                  <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
+                </>
+              )
+            })()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: awayWin ? 700 : 400,
+            color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {shortName(m.away?.name || '')}
+          </div>
         </div>
       </a>
     )
@@ -386,14 +394,13 @@ export default function Home() {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 88px 1fr', gap: 10, alignItems: 'center' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {shortName(m.home?.name || '')}
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'right',
+              fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {shortName(m.home?.name || '')}
             </div>
-            <div style={{ textAlign: 'center', width: 88 }}>
+            <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
                   color: homeWin ? C.accent : C.text }}>{m.home_score}</span>
@@ -402,11 +409,10 @@ export default function Home() {
                   color: awayWin ? C.accent : C.text }}>{m.away_score}</span>
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {shortName(m.away?.name || '')}
-              </div>
+            <div style={{ flex: 1, minWidth: 0,
+              fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {shortName(m.away?.name || '')}
             </div>
           </div>
 
@@ -444,31 +450,31 @@ export default function Home() {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 96px 1fr', gap: 10, alignItems: 'center' }}>
-            <div style={{ textAlign: 'right' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {shortName(m.home?.name || '')}
               </div>
               <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
             </div>
-            <div style={{ textAlign: 'center', width: 96 }}>
+            <div style={{ flexShrink: 0, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               {cd ? (
                 <>
                   <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent,
-                    fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5 }}>
+                    fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, textAlign: 'center' }}>
                     {dateLabel(dateStr)} · {time}
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textMuted }}>{time || 'vs'}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>{dateLabel(dateStr)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{time || 'vs'}</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textAlign: 'center' }}>{dateLabel(dateStr)}</div>
                 </>
               )}
             </div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {shortName(m.away?.name || '')}
