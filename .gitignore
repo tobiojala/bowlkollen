@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 VISION.md
+ONBOARDING.md
 *.pem
 
 # debug
