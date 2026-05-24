@@ -121,8 +121,8 @@ const MOCK_RECENT: Match[] = [
 ]
 
 const MOCK_HONOR: HonorEntry[] = [
-  { playerName: 'Jesper Svensson', score: 300, matchId: 'demo-r-1', seriesTotal: 778 },
-  { playerName: 'Martin Larsen',   score: 289, matchId: 'demo-r-2', seriesTotal: 712 },
+  { playerName: 'Jesper Svensson', score: 300, matchId: 'demo-r-1', seriesTotal: 1064 },
+  { playerName: 'Martin Larsen',   score: 289, matchId: 'demo-r-2', seriesTotal: 990 },
   { playerName: 'Marcus Lindgren', score: 279, matchId: 'demo-r-1' },
   { playerName: 'Sara Holmberg',   score: 256, matchId: 'demo-r-2' },
   { playerName: 'Jonas Persson',   score: 245, matchId: 'demo-r-3' },
@@ -700,7 +700,7 @@ export default function Home() {
             <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 10, padding: '12px 16px 16px' } as any}>
               {honor.map((e, i) => {
                 const isPerfect    = e.score === 300
-                const isHighSeries = !isPerfect && (e.seriesTotal ?? 0) >= 700
+                const isHighSeries = !isPerfect && (e.seriesTotal ?? 0) >= 950
                 const isElite      = !isPerfect && !isHighSeries && e.score >= 250
                 const isGold       = !isPerfect && !isHighSeries && e.score >= 220 && e.score < 250
                 const isGood       = !isPerfect && !isHighSeries && e.score >= 200 && e.score < 220
@@ -739,7 +739,7 @@ export default function Home() {
                   </a>
                 )
 
-                // ── 700+ series: Muted diamond ───────────────────────────────
+                // ── 950+ series (4 games): Muted diamond ────────────────────
                 if (isHighSeries) return (
                   <a key={i} href={'/matches/' + e.matchId} style={{
                     flexShrink: 0, textDecoration: 'none', borderRadius: 13,
