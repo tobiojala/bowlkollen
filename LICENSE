@@ -1,0 +1,41 @@
+Copyright (c) 2026 Tobias Ek-Ojala. All rights reserved.
+
+PROPRIETARY SOFTWARE — ALL RIGHTS RESERVED
+
+This software, including all source code, design files, user interface layouts,
+interaction patterns, graphics, and associated assets (collectively, the
+"Software"), is the exclusive property of Tobias Ek-Ojala and is protected by
+Swedish and international copyright law (Lag 1960:729 om upphovsrätt till
+litterära och konstnärliga verk, and the EU Software Directive 2009/24/EC).
+
+NO LICENCE IS GRANTED
+
+No part of this Software may be reproduced, copied, modified, merged, published,
+distributed, sublicensed, sold, or otherwise used — in whole or in part — without
+the prior written permission of the copyright owner.
+
+DESIGN PROTECTION
+
+The visual design of the Bowlkollen application, including but not limited to its
+layout, colour scheme, typography, animation style, and navigation structure,
+constitutes an original artistic work and is protected as such under applicable
+copyright and design law.
+
+THIRD-PARTY COMPONENTS
+
+This application makes use of open-source libraries (including Next.js, React,
+Framer Motion, Supabase client libraries, and Lucide icons) which are licensed
+separately under their respective open-source licences (MIT, Apache 2.0). The use
+of these libraries does not affect the proprietary status of the Bowlkollen
+application as a whole.
+
+DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE.
+
+CONTACT
+
+For licensing enquiries or permission requests:
+tobias.bergmark@gmail.com

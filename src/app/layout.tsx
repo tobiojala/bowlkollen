@@ -2,6 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import BottomNav from '@/components/BottomNav'
+import Footer from '@/components/Footer'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthRedirect from '@/components/AuthRedirect'
 import './globals.css'
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Nav />
         <div style={{ paddingTop: 56, paddingBottom: 68 }}>
           {children}
+          <Footer />
         </div>
         <BottomNav />
         </ThemeProvider>

@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /intern/
+Disallow: /club/
+Disallow: /sllm/
+Allow: /
+
+Sitemap: https://bowlkollen.se/sitemap.xml
