@@ -1,103 +1,32 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Star } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Tavling = {
-  id: string
-  name: string
-  subtitle: string
-  date: string
-  venue: string
+  id: string; name: string; subtitle: string
+  date: string; venue: string
   status: 'pagaende' | 'kommande' | 'avslutad'
-  image?: string
-  href: string
-  buttonLabel: string
+  href: string; buttonLabel: string
   officialHref?: string
-  extraButtons?: { label: string; href: string; color?: string }[]
+  extraButtons?: { label: string; href: string }[]
 }
 
 const TAVLINGAR: Tavling[] = [
   {
-    id: 'sm-slutspel-2026',
-    name: 'SM-slutspel 2026',
+    id: 'sm-slutspel-2026', name: 'SM-slutspel 2026',
     subtitle: 'Semifinaler och final i Elitserien Herrar och Damer',
-    date: '15-17 maj 2026',
-    venue: 'Lucky Bowl, Helsingborg',
-    status: 'pagaende',
-    href: '/schema',
-    buttonLabel: 'Se matcher',
+    date: '15–17 maj 2026', venue: 'Lucky Bowl, Helsingborg',
+    status: 'pagaende', href: '/schema', buttonLabel: 'Se matcher',
   },
   {
-    id: 'sllm-2026',
-    name: 'Storm Lucky Larsen Masters 2026',
-    subtitle: 'Internationell PBA Tour-tävling — Sveriges största öppna turnering',
-    date: '22-30 aug 2026',
-    venue: 'Lucky Bowl, Helsingborg',
-    status: 'kommande',
-    image: 'https://www.luckylarsen.se/wp-content/uploads/2026/02/SLLM26-WEB-HEADER-1440-x-600-px-4.png',
-    href: '/sllm',
-    officialHref: 'https://www.luckylarsen.se',
-    buttonLabel: 'Mer info',
-    extraButtons: [
-      { label: 'Anmal dig', href: 'https://sbe.bowlres.se/sllm26' },
-      { label: 'Livestream', href: 'https://www.youtube.com/@stormluckylarsenmasters', color: '#e05555' },
-    ],
-  },
-  {
-    id: 'aikt-2026',
-    name: 'MOTIV AIK International Tournament 2026',
-    subtitle: 'Internationell öppen tävling i Stockholm — no urethane rule',
-    date: 'Jan 2026',
-    venue: 'Bowlorama, Stockholm',
-    status: 'avslutad',
-    href: 'https://aikt.aikbowling.se',
-    officialHref: 'https://aikt.aikbowling.se',
-    buttonLabel: 'Officiell sida',
-    extraButtons: [
-      { label: 'Resultat', href: 'https://aikt.aikbowling.se/allresults.php' },
-      { label: 'Livestream', href: 'https://www.youtube.com/@bowloramatv', color: '#e05555' },
-    ],
-  },
-  {
-    id: 'syt-2026',
-    name: 'PBA jr. Swedish Youth Tour 2026',
-    subtitle: 'Ungdomstour i tre deltävlingar — U16, U21 killar och tjejer',
-    date: '2025/2026',
-    venue: 'Olympia, Nassjo, Gullmarsplan',
-    status: 'pagaende',
-    href: 'https://syt.bowlres.se',
-    officialHref: 'https://syt.bowlres.se',
-    buttonLabel: 'Se tävlingen',
-    extraButtons: [
-      { label: 'Resultat', href: 'https://syt.bowlres.se/allresults.php' },
-      { label: 'Anmal dig', href: 'https://syt.bowlres.se/register.php' },
-    ],
-  },
-  {
-    id: 'battle-of-smaland-2026',
-    name: 'The Battle of Småland 2026',
-    subtitle: 'Sveriges största och billigaste sommartävling — prissumma 53 000 kr',
-    date: 'Sommar 2026',
-    venue: 'RC Bowl, Jönköping',
-    status: 'kommande',
-    href: 'https://rc-bowl.bowlres.se',
-    officialHref: 'https://rc-bowl.bowlres.se',
-    buttonLabel: 'Se tävlingen',
-    extraButtons: [
-      { label: 'Anmal dig', href: 'https://rc-bowl.bowlres.se/register.php' },
-      { label: 'Livestream', href: 'https://www.youtube.com/@RcBowllive', color: '#e05555' },
-    ],
-  },
-  {
-    id: 'gp-2026',
-    name: 'Challenger Grand Prix 2025/2026',
-    subtitle: 'Individuell ungdomstour i Stockholm — 6 deltävlingar och tourfinal',
-    date: 'Final: 16-17 maj 2026',
-    venue: 'Sollentuna',
-    status: 'pagaende',
-    href: 'https://gp.stbf.se',
+    id: 'gp-final-2026', name: 'Challenger Grand Prix — Final',
+    subtitle: 'Tourfinal i Stockholm — 6 deltävlingar bakom sig',
+    date: '16–17 maj 2026', venue: 'Sollentuna',
+    status: 'pagaende', href: 'https://gp.stbf.se',
     officialHref: 'https://gp.stbf.se',
     buttonLabel: 'Se tävlingen',
     extraButtons: [
@@ -106,115 +35,307 @@ const TAVLINGAR: Tavling[] = [
     ],
   },
   {
-    id: 'aikl-2026',
-    name: 'MOTIV AIK Ladies 2026',
+    id: 'syt-2026', name: 'PBA jr. Swedish Youth Tour 2026',
+    subtitle: 'Ungdomstour — U16, U21 killar och tjejer',
+    date: '2025/2026', venue: 'Olympia, Nässjö, Gullmarsplan',
+    status: 'pagaende', href: 'https://syt.bowlres.se',
+    officialHref: 'https://syt.bowlres.se',
+    buttonLabel: 'Se tävlingen',
+    extraButtons: [
+      { label: 'Resultat', href: 'https://syt.bowlres.se/allresults.php' },
+      { label: 'Anmäl dig', href: 'https://syt.bowlres.se/register.php' },
+    ],
+  },
+  {
+    id: 'sllm-2026', name: 'Storm Lucky Larsen Masters 2026',
+    subtitle: 'Internationell PBA Tour-tävling — Sveriges största öppna turnering',
+    date: '22–30 aug 2026', venue: 'Lucky Bowl, Helsingborg',
+    status: 'kommande', href: '/sllm',
+    officialHref: 'https://www.luckylarsen.se',
+    buttonLabel: 'Mer info',
+    extraButtons: [
+      { label: 'Anmäl dig', href: 'https://sbe.bowlres.se/sllm26' },
+      { label: 'Livestream', href: 'https://www.youtube.com/@stormluckylarsenmasters' },
+    ],
+  },
+  {
+    id: 'battle-of-smaland-2026', name: 'The Battle of Småland 2026',
+    subtitle: 'Sveriges största sommartävling — prissumma 53 000 kr',
+    date: 'Sommar 2026', venue: 'RC Bowl, Jönköping',
+    status: 'kommande', href: 'https://rc-bowl.bowlres.se',
+    officialHref: 'https://rc-bowl.bowlres.se',
+    buttonLabel: 'Se tävlingen',
+    extraButtons: [
+      { label: 'Anmäl dig', href: 'https://rc-bowl.bowlres.se/register.php' },
+      { label: 'Livestream', href: 'https://www.youtube.com/@RcBowllive' },
+    ],
+  },
+  {
+    id: 'aikl-2026', name: 'MOTIV AIK Ladies 2026',
     subtitle: 'Öppen damtävling i Stockholm',
-    date: '2026',
-    venue: 'Bowlorama, Stockholm',
-    status: 'kommande',
-    href: 'https://aikl.aikbowling.se',
-    officialHref: 'https://aikl.aikbowling.se',
-    buttonLabel: 'Officiell sida',
+    date: '2026', venue: 'Bowlorama, Stockholm',
+    status: 'kommande', href: 'https://aikl.aikbowling.se',
+    officialHref: 'https://aikl.aikbowling.se', buttonLabel: 'Officiell sida',
   },
   {
-    id: 'aikj-2026',
-    name: 'MOTIV AIK Junior 2026',
+    id: 'aikj-2026', name: 'MOTIV AIK Junior 2026',
     subtitle: 'Öppen juniortävling i Stockholm',
-    date: '2026',
-    venue: 'Bowlorama, Stockholm',
-    status: 'kommande',
-    href: 'https://aikj.aikbowling.se',
-    officialHref: 'https://aikj.aikbowling.se',
-    buttonLabel: 'Officiell sida',
+    date: '2026', venue: 'Bowlorama, Stockholm',
+    status: 'kommande', href: 'https://aikj.aikbowling.se',
+    officialHref: 'https://aikj.aikbowling.se', buttonLabel: 'Officiell sida',
   },
   {
-    id: 'qak-2026',
-    name: 'Queens and Kings 2026',
+    id: 'qak-2026', name: 'Queens and Kings 2026',
     subtitle: 'Öppen tävling',
-    date: '2026',
-    venue: 'Sverige',
-    status: 'kommande',
-    href: 'https://qak.bowlres.se',
-    officialHref: 'https://qak.bowlres.se',
-    buttonLabel: 'Officiell sida',
+    date: '2026', venue: 'Sverige',
+    status: 'kommande', href: 'https://qak.bowlres.se',
+    officialHref: 'https://qak.bowlres.se', buttonLabel: 'Officiell sida',
   },
   {
-    id: 'aikmix-2026',
-    name: 'AIK-mixen 2026',
+    id: 'aikmix-2026', name: 'AIK-mixen 2026',
     subtitle: 'Öppen mixedtävling i Stockholm',
-    date: '2026',
-    venue: 'Bowlorama, Stockholm',
-    status: 'kommande',
-    href: 'https://aikmix.aikbowling.se',
-    officialHref: 'https://aikmix.aikbowling.se',
+    date: '2026', venue: 'Bowlorama, Stockholm',
+    status: 'kommande', href: 'https://aikmix.aikbowling.se',
+    officialHref: 'https://aikmix.aikbowling.se', buttonLabel: 'Officiell sida',
+  },
+  {
+    id: 'aikt-2026', name: 'MOTIV AIK International Tournament 2026',
+    subtitle: 'Internationell öppen tävling i Stockholm — no urethane rule',
+    date: 'Jan 2026', venue: 'Bowlorama, Stockholm',
+    status: 'avslutad', href: 'https://aikt.aikbowling.se',
+    officialHref: 'https://aikt.aikbowling.se',
     buttonLabel: 'Officiell sida',
+    extraButtons: [
+      { label: 'Resultat', href: 'https://aikt.aikbowling.se/allresults.php' },
+      { label: 'Livestream', href: 'https://www.youtube.com/@bowloramatv' },
+    ],
   },
 ]
 
-const sections = [
-  { key: 'pagaende', label: 'Pagaende', dot: '#e05555' },
-  { key: 'kommande', label: 'Kommande', dot: '#f5c200' },
-  { key: 'avslutad', label: 'Avslutade', dot: undefined },
-]
+type Filter = 'alla' | 'pagaende' | 'kommande' | 'avslutad'
+const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
 
 export default function TavlingarPage() {
   const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const C      = theme === 'dark' ? dark : light
+  const isDark = theme === 'dark'
 
-  const filtered = activeSection ? TAVLINGAR.filter(t => t.status === activeSection) : TAVLINGAR
+  const [filter, setFilter]       = useState<Filter>('alla')
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tav_favorites')
+      if (saved) setFavorites(new Set(JSON.parse(saved)))
+    } catch {}
+  }, [])
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      try { localStorage.setItem('tav_favorites', JSON.stringify([...next])) } catch {}
+      return next
+    })
+  }
+
+  const pagaendeCount = TAVLINGAR.filter(t => t.status === 'pagaende').length
+  const kommande      = TAVLINGAR.filter(t => t.status === 'kommande').length
+
+  const filtered = TAVLINGAR.filter(t =>
+    filter === 'alla' ? t.status !== 'avslutad'
+    : t.status === filter
+  )
+  const favList = TAVLINGAR.filter(t => favorites.has(t.id))
+
+  const TavCard = ({ t, showFavSection }: { t: Tavling; showFavSection?: boolean }) => {
+    const isLive    = t.status === 'pagaende'
+    const isDone    = t.status === 'avslutad'
+    const isFav     = favorites.has(t.id)
+    const accentBar = isLive
+      ? 'linear-gradient(90deg,#e05555,rgba(224,85,85,0.15))'
+      : isDone
+      ? `linear-gradient(90deg,${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'},transparent)`
+      : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))'
+    const cardBg = isLive
+      ? (isDark ? 'rgba(224,85,85,0.07)' : 'rgba(224,85,85,0.04)')
+      : isDone
+      ? 'transparent'
+      : (isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.03)')
+    const cardBorder = isLive
+      ? 'rgba(224,85,85,0.25)'
+      : isDone
+      ? (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')
+      : (isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)')
+    const dc = isLive ? '#e05555' : isDone ? C.textMuted : C.accent
+
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: isDone ? 0.6 : 1, y: 0 }}
+        transition={SPRING}
+        style={{ margin: '6px 12px', borderRadius: 16, overflow: 'hidden',
+          background: cardBg, border: `1px solid ${cardBorder}` }}>
+        <div style={{ height: 2, background: accentBar }} />
+        <div style={{ padding: '12px 14px' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                {isLive && (
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e05555',
+                    boxShadow: '0 0 5px #e05555', flexShrink: 0 }} />
+                )}
+                <span style={{ fontSize: 9, fontWeight: 800, color: dc, letterSpacing: 1 }}>
+                  {isLive ? 'PÅGÅENDE' : isDone ? 'AVSLUTAD' : 'KOMMANDE'}
+                </span>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.25, marginBottom: 4 }}>
+                {t.name}
+              </div>
+              <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.4, marginBottom: 6 }}>
+                {t.subtitle}
+              </div>
+              <div style={{ fontSize: 10, color: C.textMuted }}>
+                {t.date} · {t.venue}
+              </div>
+            </div>
+
+            {/* Favorite star */}
+            <button
+              onClick={() => toggleFavorite(t.id)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                flexShrink: 0, WebkitTapHighlightColor: 'transparent' } as any}>
+              <Star
+                size={18}
+                strokeWidth={1.8}
+                fill={isFav ? '#f5c200' : 'none'}
+                color={isFav ? '#f5c200' : C.textMuted}
+              />
+            </button>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
+            <a href={t.href}
+              style={{ fontSize: 11, fontWeight: 700, color: isDone ? C.textMuted : '#1a1400',
+                background: isDone ? 'transparent' : C.accent,
+                border: isDone ? '1px solid ' + C.border : 'none',
+                borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+              {t.buttonLabel}
+            </a>
+            {t.officialHref && t.officialHref !== t.href && (
+              <a href={t.officialHref} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
+                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+                Officiell sida ↗
+              </a>
+            )}
+            {t.extraButtons?.map(b => (
+              <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
+                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+                {b.label} ↗
+              </a>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Sticky header */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border }}>
-        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px' } as any}>
-          {(['alla', 'pagaende', 'kommande', 'avslutad'] as const).map(f => (
-            <button key={f} onClick={() => setActiveSection(f === 'alla' ? null : f)}
-              style={{ background: activeSection === f || (f === 'alla' && !activeSection) ? C.accent : 'transparent', border: '1px solid ' + (activeSection === f || (f === 'alla' && !activeSection) ? C.accent : C.border), borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 700, color: activeSection === f || (f === 'alla' && !activeSection) ? '#1a1400' : C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}
-            >
-              {f === 'alla' ? 'Alla' : f === 'pagaende' ? 'Pagaende' : f === 'kommande' ? 'Kommande' : 'Avslutade'}
-            </button>
-          ))}
+      {/* Stats row */}
+      <div style={{ padding: '14px 16px 10px', display: 'flex', gap: 16 }}>
+        <span style={{ fontSize: 11, color: C.textMuted }}>
+          <span style={{ fontWeight: 800, color: '#e05555' }}>{pagaendeCount}</span> pågående
+        </span>
+        <span style={{ fontSize: 11, color: C.textMuted }}>
+          <span style={{ fontWeight: 800, color: C.accent }}>{kommande}</span> kommande
+        </span>
+      </div>
+
+      {/* Sticky filter row */}
+      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30,
+        borderBottom: '1px solid ' + C.border }}>
+        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex',
+          gap: 6, padding: '7px 12px' } as any}>
+          {([
+            { key: 'alla',     label: 'Alla' },
+            { key: 'pagaende', label: 'Pågående' },
+            { key: 'kommande', label: 'Kommande' },
+            { key: 'avslutad', label: 'Avslutade' },
+          ] as const).map(f => {
+            const isActive = filter === f.key
+            return (
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                style={{ background: isActive ? C.accent : 'transparent',
+                  border: '1px solid ' + (isActive ? C.accent : C.border),
+                  borderRadius: 20, padding: '4px 14px', fontSize: 11, fontWeight: 700,
+                  color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  WebkitTapHighlightColor: 'transparent' } as any}>
+                {f.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        {filtered.map(t => (
-          <div key={t.id} style={{ borderBottom: '1px solid ' + C.border, padding: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t.name}</div>
-                  <span style={{ fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '2px 8px',
-                    background: t.status === 'pagaende' ? '#e05555' + '22' : t.status === 'kommande' ? C.accent + '22' : C.border,
-                    color: t.status === 'pagaende' ? '#e05555' : t.status === 'kommande' ? C.accent : C.textMuted
-                  }}>
-                    {t.status === 'pagaende' ? '● PAGAENDE' : t.status === 'kommande' ? 'KOMMANDE' : 'AVSLUTAD'}
-                  </span>
-                </div>
-                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{t.subtitle}</div>
-                <div style={{ fontSize: 11, color: C.textMuted }}>📅 {t.date} · 📍 {t.venue}</div>
+      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
+
+        {/* Favorites section */}
+        <AnimatePresence>
+          {favList.length > 0 && filter === 'alla' && (
+            <motion.div
+              key="favorites"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={SPRING}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8,
+                padding: '16px 16px 4px', borderBottom: '1px solid ' + C.border }}>
+                <Star size={12} fill="#f5c200" color="#f5c200" />
+                <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+                  MINA FAVORITER
+                </span>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' as const }}>
-              <a href={t.href} style={{ fontSize: 12, fontWeight: 700, color: '#1a1400', background: C.accent, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
-                {t.buttonLabel}
-              </a>
-              {t.officialHref && (
-                <a href={t.officialHref} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
-                  Officiell sida ↗
-                </a>
-              )}
-              {t.extraButtons?.map(b => (
-                <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, background: 'transparent', border: '1px solid ' + C.border, borderRadius: 8, padding: '7px 14px', textDecoration: 'none' }}>
-                  {b.label} ↗
-                </a>
-              ))}
-            </div>
-          </div>
-        ))}
+              {favList.map(t => <TavCard key={t.id} t={t} showFavSection />)}
+              <div style={{ height: 1, background: C.border, margin: '8px 0' }} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Section header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8,
+          padding: '14px 16px 4px' }}>
+          <div style={{ width: 5, height: 5, borderRadius: 1, transform: 'rotate(45deg)',
+            background: '#f5c200', flexShrink: 0 }} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+            {filter === 'alla' ? 'ALLA TÄVLINGAR' : filter === 'pagaende' ? 'PÅGÅENDE' : filter === 'kommande' ? 'KOMMANDE' : 'AVSLUTADE'}
+          </span>
+        </div>
+
+        {/* Cards */}
+        <AnimatePresence mode="wait">
+          <motion.div key={filter}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={SPRING}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: '48px 24px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
+                Inga tävlingar i den här kategorin
+              </div>
+            ) : (
+              filtered.map(t => <TavCard key={t.id} t={t} />)
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </main>
   )

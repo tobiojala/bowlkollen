@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, ChevronLeft, Search, X } from 'lucide-react'
+import { Sun, Moon, ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
@@ -20,9 +20,10 @@ function getConfig(pathname: string): NavConfig {
   if (pathname === '/teams')     return { logo: false, title: 'Lag',           backHref: null }
   if (pathname === '/players')   return { logo: false, title: 'Spelare',       backHref: null }
   if (pathname === '/profile')   return { logo: false, title: 'Min profil',    backHref: null }
+  if (pathname === '/tavlingar')  return { logo: false, title: 'Tävlingar',     backHref: null }
   if (pathname === '/mer')        return { logo: false, title: 'Utforska',      backHref: '/' }
-  if (pathname === '/hallar')    return { logo: false, title: 'Bowlinghallar',  backHref: '/mer' }
-  if (pathname === '/klotshopar') return { logo: false, title: 'Klotshopar',   backHref: '/mer' }
+  if (pathname === '/hallar')    return { logo: false, title: 'Bowlinghallar',  backHref: '/hallar' }
+  if (pathname === '/klotshopar') return { logo: false, title: 'Klotshopar',   backHref: '/klotshopar' }
   if (pathname.startsWith('/hallar/'))      return { logo: false, title: 'Bowlinghall',  backHref: '/hallar' }
   if (pathname === '/oljeprofiler')         return { logo: false, title: 'Oljeprofiler', backHref: '/mer' }
   if (pathname === '/sllm')      return { logo: false, title: 'SLLM 2026',     backHref: null }
@@ -47,6 +48,7 @@ export default function Nav() {
   const isDark = theme === 'dark'
 
   const [searching, setSearching] = useState(false)
+  const [menuOpen, setMenuOpen]   = useState(false)
   const [query, setQuery] = useState('')
   const [players, setPlayers] = useState<PlayerResult[]>([])
   const [teams, setTeams] = useState<TeamResult[]>([])
@@ -75,8 +77,8 @@ export default function Nav() {
     else { setQuery(''); setPlayers([]); setTeams([]) }
   }, [searching])
 
-  // Close search on route change
-  useEffect(() => { setSearching(false) }, [pathname])
+  // Close overlays on route change
+  useEffect(() => { setSearching(false); setMenuOpen(false) }, [pathname])
 
   // Debounced search across players + teams
   useEffect(() => {
@@ -251,8 +253,65 @@ export default function Nav() {
               Logga in
             </a>
           ))}
+
+          {!searching && (
+            <button onClick={() => setMenuOpen(o => !o)} style={{
+              width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              background: menuOpen ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)') : iconBg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
+            }}>
+              <Menu size={15} color={mutedColor} />
+            </button>
+          )}
         </div>
       </header>
+
+      {/* Burger menu dropdown */}
+      {menuOpen && !searching && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 38, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)' }}
+            onClick={() => setMenuOpen(false)} />
+          <div style={{
+            position: 'fixed', top: 56, right: 0, zIndex: 39, width: 240,
+            background: isDark ? '#172030' : '#ffffff',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            borderTop: 'none', borderRadius: '0 0 0 16px',
+            overflow: 'hidden', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.1)',
+          }}>
+            <div style={{ padding: '10px 16px 6px', fontSize: 9, fontWeight: 800, color: mutedColor, letterSpacing: 1.5 }}>
+              UTFORSKA
+            </div>
+            {[
+              { href: '/hallar',      icon: MapPin,      label: 'Bowlinghallar', sub: '174 hallar i Sverige' },
+              { href: '/klotshopar',  icon: ShoppingBag, label: 'Klotshopar',    sub: '16 pro shops' },
+              { href: '/oljeprofiler',icon: Droplets,    label: 'Oljeprofiler',  sub: 'Säsong 2025/2026' },
+            ].map(({ href, icon: Icon, label, sub }) => (
+              <a key={href} href={href}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
+                  textDecoration: 'none', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}
+                onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.18)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={16} color="#f5c200" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: textColor }}>{label}</div>
+                  <div style={{ fontSize: 10, color: mutedColor, marginTop: 1 }}>{sub}</div>
+                </div>
+              </a>
+            ))}
+            <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: '10px 16px' }}>
+              <a href="/mer" style={{ fontSize: 12, fontWeight: 600, color: mutedColor, textDecoration: 'none' }}>
+                Visa mer →
+              </a>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Search results dropdown */}
       {searching && (
