@@ -13,7 +13,10 @@ type Tavling = {
   href: string; buttonLabel: string
   officialHref?: string
   extraButtons?: { label: string; href: string }[]
+  banner?: string
 }
+
+const GREEN = '#4caf7d'
 
 const TAVLINGAR: Tavling[] = [
   {
@@ -53,6 +56,7 @@ const TAVLINGAR: Tavling[] = [
     status: 'kommande', href: '/sllm',
     officialHref: 'https://www.luckylarsen.se',
     buttonLabel: 'Mer info',
+    banner: 'https://www.luckylarsen.se/wp-content/uploads/2026/02/SLLM26-WEB-HEADER-1440-x-600-px-4.png',
     extraButtons: [
       { label: 'Anmäl dig', href: 'https://sbe.bowlres.se/sllm26' },
       { label: 'Livestream', href: 'https://www.youtube.com/@stormluckylarsenmasters' },
@@ -149,26 +153,29 @@ export default function TavlingarPage() {
   )
   const favList = TAVLINGAR.filter(t => favorites.has(t.id))
 
-  const TavCard = ({ t, showFavSection }: { t: Tavling; showFavSection?: boolean }) => {
-    const isLive    = t.status === 'pagaende'
-    const isDone    = t.status === 'avslutad'
-    const isFav     = favorites.has(t.id)
-    const accentBar = isLive
-      ? 'linear-gradient(90deg,#e05555,rgba(224,85,85,0.15))'
+  const TavCard = ({ t }: { t: Tavling }) => {
+    const isPagaende = t.status === 'pagaende'
+    const isDone     = t.status === 'avslutad'
+    const isFav      = favorites.has(t.id)
+    const hasBanner  = !!t.banner
+
+    const dc          = isPagaende ? GREEN : isDone ? C.textMuted : C.accent
+    const accentBar   = isPagaende
+      ? `linear-gradient(90deg,${GREEN},rgba(76,175,125,0.15))`
       : isDone
       ? `linear-gradient(90deg,${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'},transparent)`
       : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))'
-    const cardBg = isLive
-      ? (isDark ? 'rgba(224,85,85,0.07)' : 'rgba(224,85,85,0.04)')
-      : isDone
-      ? 'transparent'
+    const cardBg      = isPagaende
+      ? (isDark ? 'rgba(76,175,125,0.07)' : 'rgba(76,175,125,0.04)')
+      : isDone ? 'transparent'
       : (isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.03)')
-    const cardBorder = isLive
-      ? 'rgba(224,85,85,0.25)'
+    const cardBorder  = isPagaende
+      ? 'rgba(76,175,125,0.25)'
       : isDone
       ? (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')
       : (isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)')
-    const dc = isLive ? '#e05555' : isDone ? C.textMuted : C.accent
+
+    const statusLabel = isPagaende ? 'PÅGÅENDE' : isDone ? 'AVSLUTAD' : 'KOMMANDE'
 
     return (
       <motion.div
@@ -177,50 +184,90 @@ export default function TavlingarPage() {
         animate={{ opacity: isDone ? 0.6 : 1, y: 0 }}
         transition={SPRING}
         style={{ margin: '6px 12px', borderRadius: 16, overflow: 'hidden',
-          background: cardBg, border: `1px solid ${cardBorder}` }}>
-        <div style={{ height: 2, background: accentBar }} />
-        <div style={{ padding: '12px 14px' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                {isLive && (
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e05555',
-                    boxShadow: '0 0 5px #e05555', flexShrink: 0 }} />
-                )}
-                <span style={{ fontSize: 9, fontWeight: 800, color: dc, letterSpacing: 1 }}>
-                  {isLive ? 'PÅGÅENDE' : isDone ? 'AVSLUTAD' : 'KOMMANDE'}
-                </span>
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.25, marginBottom: 4 }}>
-                {t.name}
-              </div>
-              <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.4, marginBottom: 6 }}>
-                {t.subtitle}
-              </div>
-              <div style={{ fontSize: 10, color: C.textMuted }}>
-                {t.date} · {t.venue}
-              </div>
-            </div>
+          background: hasBanner ? 'transparent' : cardBg,
+          border: `1px solid ${cardBorder}` }}>
 
-            {/* Favorite star */}
-            <button
-              onClick={() => toggleFavorite(t.id)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
-                flexShrink: 0, WebkitTapHighlightColor: 'transparent' } as any}>
-              <Star
-                size={18}
-                strokeWidth={1.8}
+        {/* ── Banner image header (special tävlingar only) ── */}
+        {hasBanner ? (
+          <div style={{ position: 'relative', height: 136, overflow: 'hidden' }}>
+            <img src={t.banner} alt={t.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover',
+                objectPosition: 'center 30%', display: 'block' }} />
+            <div style={{ position: 'absolute', inset: 0,
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.75) 100%)' }} />
+            {/* Status pill */}
+            <div style={{ position: 'absolute', top: 10, left: 12,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              background: 'rgba(245,194,0,0.2)', border: '1px solid rgba(245,194,0,0.4)',
+              borderRadius: 20, padding: '3px 10px' }}>
+              <span style={{ fontSize: 9, color: '#f5c200' }}>◆</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#f5c200', letterSpacing: 1.2 }}>
+                {statusLabel}
+              </span>
+            </div>
+            {/* Star on image */}
+            <button onClick={() => toggleFavorite(t.id)}
+              style={{ position: 'absolute', top: 6, right: 10,
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                WebkitTapHighlightColor: 'transparent' } as any}>
+              <Star size={18} strokeWidth={1.8}
                 fill={isFav ? '#f5c200' : 'none'}
-                color={isFav ? '#f5c200' : C.textMuted}
-              />
+                color={isFav ? '#f5c200' : 'rgba(255,255,255,0.7)'} />
             </button>
+            {/* Name + date overlay */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 14px' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.25 }}>{t.name}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>{t.date} · {t.venue}</div>
+            </div>
           </div>
+        ) : (
+          <div style={{ height: 2, background: accentBar }} />
+        )}
+
+        <div style={{ padding: '12px 14px', background: hasBanner ? cardBg : 'transparent' }}>
+          {/* Header (non-banner cards only) */}
+          {!hasBanner && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  {isPagaende && (
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN,
+                      boxShadow: `0 0 5px ${GREEN}`, flexShrink: 0 }} />
+                  )}
+                  <span style={{ fontSize: 9, fontWeight: 800, color: dc, letterSpacing: 1 }}>
+                    {statusLabel}
+                  </span>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.25, marginBottom: 4 }}>
+                  {t.name}
+                </div>
+                <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.4, marginBottom: 6 }}>
+                  {t.subtitle}
+                </div>
+                <div style={{ fontSize: 10, color: C.textMuted }}>{t.date} · {t.venue}</div>
+              </div>
+              <button onClick={() => toggleFavorite(t.id)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                  flexShrink: 0, WebkitTapHighlightColor: 'transparent' } as any}>
+                <Star size={18} strokeWidth={1.8}
+                  fill={isFav ? '#f5c200' : 'none'}
+                  color={isFav ? '#f5c200' : C.textMuted} />
+              </button>
+            </div>
+          )}
+
+          {/* Subtitle for banner cards */}
+          {hasBanner && (
+            <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.4, marginBottom: 10 }}>
+              {t.subtitle}
+            </div>
+          )}
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
             <a href={t.href}
-              style={{ fontSize: 11, fontWeight: 700, color: isDone ? C.textMuted : '#1a1400',
+              style={{ fontSize: 11, fontWeight: 700,
+                color: isDone ? C.textMuted : '#1a1400',
                 background: isDone ? 'transparent' : C.accent,
                 border: isDone ? '1px solid ' + C.border : 'none',
                 borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
@@ -229,14 +276,16 @@ export default function TavlingarPage() {
             {t.officialHref && t.officialHref !== t.href && (
               <a href={t.officialHref} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+                  border: '1px solid ' + C.border, borderRadius: 8,
+                  padding: '6px 14px', textDecoration: 'none' }}>
                 Officiell sida ↗
               </a>
             )}
             {t.extraButtons?.map(b => (
               <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+                  border: '1px solid ' + C.border, borderRadius: 8,
+                  padding: '6px 14px', textDecoration: 'none' }}>
                 {b.label} ↗
               </a>
             ))}
@@ -252,7 +301,7 @@ export default function TavlingarPage() {
       {/* Stats row */}
       <div style={{ padding: '14px 16px 10px', display: 'flex', gap: 16 }}>
         <span style={{ fontSize: 11, color: C.textMuted }}>
-          <span style={{ fontWeight: 800, color: '#e05555' }}>{pagaendeCount}</span> pågående
+          <span style={{ fontWeight: 800, color: GREEN }}>{pagaendeCount}</span> pågående
         </span>
         <span style={{ fontSize: 11, color: C.textMuted }}>
           <span style={{ fontWeight: 800, color: C.accent }}>{kommande}</span> kommande
@@ -304,7 +353,7 @@ export default function TavlingarPage() {
                   MINA FAVORITER
                 </span>
               </div>
-              {favList.map(t => <TavCard key={t.id} t={t} showFavSection />)}
+              {favList.map(t => <TavCard key={t.id} t={t} />)}
               <div style={{ height: 1, background: C.border, margin: '8px 0' }} />
             </motion.div>
           )}
