@@ -234,16 +234,16 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
       {/* ─── Mode toggle pill ─── */}
       {hasLive && hasUp && (
         <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
-          {([['live', '● LIVE', liveItems.length], ['upcoming', 'KOMMANDE', upcomingItems.length]] as const).map(([m, label, count]) => {
+          {([['live', 'PÅGÅENDE', liveItems.length], ['upcoming', 'KOMMANDE', upcomingItems.length]] as const).map(([m, label, count]) => {
             const isAct = mode === m
-            const clr   = m === 'live' ? '#e05555' : '#f5c200'
+            const clr   = m === 'live' ? '#4caf7d' : '#f5c200'
             return (
               <button key={m} onClick={() => switchMode(m)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
                   background: isAct
-                    ? (isDark ? `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.1)`)
+                    ? (isDark ? `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.1)`)
                     : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
                   outline: `1px solid ${isAct ? clr + '66' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
                   WebkitTapHighlightColor: 'transparent',
@@ -254,7 +254,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                 </span>
                 <span style={{ fontSize: 9, fontWeight: 700,
                   color: isAct ? clr : C.textMuted,
-                  background: isAct ? `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
+                  background: isAct ? `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
                   borderRadius: 8, padding: '1px 6px' }}>
                   {count}
                 </span>
@@ -325,7 +325,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           )}
                         </div>
                       ) : (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>NÄSTA MATCH</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#f5c200', letterSpacing: 1.5 }}>KOMMANDE</span>
                       )}
                       <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
                         background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
@@ -347,9 +347,9 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                       <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {hasScore ? (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: homeWin ? C.accent : C.text }}>{m.home_score}</span>
+                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
                             <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
-                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: awayWin ? C.accent : C.text }}>{m.away_score}</span>
+                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
                           </div>
                         ) : cd ? (
                           <>
@@ -383,10 +383,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                                 borderRadius: 8, padding: '5px 10px', textDecoration: 'none',
                                 display: 'flex', alignItems: 'center', gap: 5,
                                 WebkitTapHighlightColor: 'transparent' } as any}>
-                              <motion.div
-                                animate={{ opacity: [1, 0.25, 1] }}
-                                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: idx * 0.18 }}
-                                style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color, flexShrink: 0 }} />
+                              <span style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color, flexShrink: 0, display: 'inline-block' }} />
                               {ss.label}
                             </a>
                           )
