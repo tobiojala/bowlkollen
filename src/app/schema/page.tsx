@@ -156,6 +156,9 @@ function getDivColor(d: string): string {
   if (getTier(d) === 2)                                   return 'hsl(130, 22%, 50%)'
   return 'hsl(35, 12%, 52%)'
 }
+function divColorAlpha(d: string, alpha: number): string {
+  return getDivColor(d).replace('hsl(', 'hsla(').replace(')', `, ${alpha})`)
+}
 
 function matchTime(d: string) {
   return new Date(d).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
@@ -262,6 +265,12 @@ export default function SchedulePage() {
   const divisions     = [...new Set(activeMatches.map(m => m.division))]
     .sort((a, b) => getTier(a) - getTier(b))
   const dayTavlingar  = activeDate && contentFilter !== 'liga' ? (TAV_MAP.get(activeDate) ?? []) : []
+
+  const ligaCountByDate = new Map<string, number>()
+  matches.forEach(m => {
+    const key = m.date.slice(0, 10)
+    ligaCountByDate.set(key, (ligaCountByDate.get(key) ?? 0) + 1)
+  })
 
   const countOnDate = (dateKey: string, f: typeof filter) => {
     const ms = matches.filter(m => m.date.slice(0, 10) === dateKey)
@@ -405,15 +414,23 @@ export default function SchedulePage() {
                   color: isActive ? C.accent : C.text }}>
                   {d.getDate()} {months[d.getMonth()]}
                 </span>
-                {/* Content-type dots */}
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center', minHeight: 8, marginTop: 2 }}>
-                  {hasLiga && contentFilter !== 'tavlingar' && (
-                    <div style={{ width: 4, height: 4, borderRadius: '50%',
-                      background: isActive ? C.accent : 'hsl(210,35%,58%)' }} />
-                  )}
+                {/* Content indicators */}
+                <div style={{ display: 'flex', gap: 3, alignItems: 'center', minHeight: 14, marginTop: 2 }}>
+                  {hasLiga && contentFilter !== 'tavlingar' && (() => {
+                    const count = ligaCountByDate.get(dateKey) ?? 0
+                    return (
+                      <div style={{ fontSize: 8, fontWeight: 800, lineHeight: '13px',
+                        minWidth: 14, textAlign: 'center', padding: '0 3px', borderRadius: 3,
+                        color: isActive ? '#1a1400' : isDark ? 'hsl(210,50%,75%)' : 'hsl(210,40%,35%)',
+                        background: isActive ? C.accent : isDark ? 'hsl(210,30%,22%)' : 'hsl(210,40%,88%)' }}>
+                        {count}
+                      </div>
+                    )
+                  })()}
                   {hasTav && contentFilter !== 'liga' && (
-                    <div style={{ width: 4, height: 4, borderRadius: 1, transform: 'rotate(45deg)',
-                      background: isActive ? C.accent : '#f5c200' }} />
+                    <div style={{ width: 5, height: 5, borderRadius: 1, transform: 'rotate(45deg)',
+                      background: isActive ? C.accent : '#f5c200',
+                      boxShadow: isActive ? 'none' : '0 0 3px rgba(245,194,0,0.4)' }} />
                   )}
                 </div>
               </button>
@@ -512,18 +529,42 @@ export default function SchedulePage() {
               const round      = divMatches[0]?.round
               return (
                 <div key={div}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '14px 16px 6px', borderBottom: '1px solid ' + C.border }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: dc, flexShrink: 0 }} />
-                    <div style={{ fontSize: 10, fontWeight: 800, color: dc, letterSpacing: 1.5, flex: 1 }}>
-                      {div.toUpperCase()}
-                    </div>
-                    {round != null && (
-                      <div style={{ fontSize: 9, fontWeight: 600, color: C.textMuted, letterSpacing: 0.3 }}>
-                        Omgång {round}
+                  {getTier(div) === 1 ? (
+                    <div style={{
+                      background: `linear-gradient(90deg, ${divColorAlpha(div, isDark ? 0.14 : 0.08)} 0%, transparent 75%)`,
+                      borderBottom: '1px solid ' + C.border,
+                      borderLeft: `4px solid ${dc}`,
+                      padding: '14px 14px 10px',
+                      marginTop: 4,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 900, color: dc, letterSpacing: 1.5 }}>
+                          {div.toUpperCase()}
+                        </span>
+                        {round != null && (
+                          <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted }}>
+                            Omgång {round}
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      <div style={{ fontSize: 10, color: C.textMuted, marginTop: 3 }}>
+                        {divMatches.length} {divMatches.length === 1 ? 'match' : 'matcher'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '14px 16px 6px', borderBottom: '1px solid ' + C.border }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: dc, flexShrink: 0 }} />
+                      <div style={{ fontSize: 10, fontWeight: 800, color: dc, letterSpacing: 1.5, flex: 1 }}>
+                        {div.toUpperCase()}
+                      </div>
+                      {round != null && (
+                        <div style={{ fontSize: 9, fontWeight: 600, color: C.textMuted, letterSpacing: 0.3 }}>
+                          Omgång {round}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {divMatches.map(m => {
                     const isCompleted = m.home_score !== null
@@ -543,9 +584,7 @@ export default function SchedulePage() {
                     const rowPadding    = tier === 1 ? '13px 8px' : tier === 3 ? '7px 8px' : '10px 8px'
                     const borderWidth   = tier === 1 ? 4 : tier === 3 ? 2 : 3
                     const rowMargin     = tier === 1 ? '3px 6px' : tier === 3 ? '1px 10px' : '2px 8px'
-                    const rowBg         = tier === 1 && isDark
-                      ? `rgba(${dc.includes('320') ? '180,120,160' : dc.includes('44') ? '180,150,60' : '90,130,180'},0.05)`
-                      : 'transparent'
+                    const rowBg         = tier === 1 ? divColorAlpha(m.division, isDark ? 0.06 : 0.03) : 'transparent'
 
                     return (
                       <a key={m.id} href={'/matches/' + m.id}
@@ -647,52 +686,9 @@ export default function SchedulePage() {
                 KOMMANDE TÄVLINGAR
               </span>
             </div>
-            {(showAllFuzzy ? FUZZY_TAV : FUZZY_TAV.slice(0, 2)).map(t => {
-              const isLive = t.status === 'pagaende'
-              const dc     = isLive ? '#e05555' : C.accent
-              return (
-                <div key={t.id} style={{ display: 'flex', alignItems: 'stretch',
-                  borderBottom: '1px solid ' + C.border }}>
-                  <div style={{ width: 3, flexShrink: 0, background: isLive ? '#e05555' : isDark ? 'rgba(245,194,0,0.4)' : 'rgba(245,194,0,0.5)' }} />
-                  <div style={{ flex: 1, minWidth: 0, padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%',
-                        background: '#e05555', boxShadow: '0 0 4px #e05555' }} />}
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text, flex: 1, minWidth: 0,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: dc, flexShrink: 0 }}>
-                        {isLive ? 'PÅGÅENDE' : 'KOMMANDE'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 2 }}>{t.subtitle}</div>
-                    <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 10 }}>
-                      {t.dateLabel} · {t.venue}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-                      <a href={t.href}
-                        style={{ fontSize: 11, fontWeight: 700, color: '#1a1400', background: C.accent,
-                          borderRadius: 8, padding: '5px 12px', textDecoration: 'none' }}>
-                        {t.buttonLabel}
-                      </a>
-                      {t.officialHref && t.officialHref !== t.href && (
-                        <a href={t.officialHref} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                            border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 12px', textDecoration: 'none' }}>
-                          Officiell sida ↗
-                        </a>
-                      )}
-                      {t.extraButtons?.map(b => (
-                        <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                            border: '1px solid ' + C.border, borderRadius: 8, padding: '5px 12px', textDecoration: 'none' }}>
-                          {b.label} ↗
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {(showAllFuzzy ? FUZZY_TAV : FUZZY_TAV.slice(0, 2)).map(t => (
+              <TavCard key={t.id} t={t} />
+            ))}
             {!showAllFuzzy && FUZZY_TAV.length > 2 && (
               <button onClick={() => setShowAllFuzzy(true)}
                 style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%',
