@@ -289,9 +289,11 @@ export default function SchedulePage() {
   )
 
   // ── Tävling card ─────────────────────────────────────────────────────────────
+  const GREEN = '#4caf7d'
+
   const TavCard = ({ t }: { t: Tavling }) => {
     const isLive  = t.status === 'pagaende'
-    const dc      = isLive ? '#e05555' : t.status === 'kommande' ? C.accent : C.textMuted
+    const dc      = isLive ? GREEN : t.status === 'kommande' ? C.accent : C.textMuted
 
     // Multi-day: compute "Dag X av Y"
     let dayInfo: string | null = null
@@ -310,18 +312,18 @@ export default function SchedulePage() {
     return (
       <div style={{ margin: '8px 8px 4px', borderRadius: 14, overflow: 'hidden',
         background: isDark
-          ? isLive ? 'rgba(224,85,85,0.07)' : 'rgba(245,194,0,0.05)'
-          : isLive ? 'rgba(224,85,85,0.04)' : 'rgba(245,194,0,0.03)',
-        border: `1px solid ${isLive ? 'rgba(224,85,85,0.25)' : isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'}` }}>
+          ? isLive ? 'rgba(76,175,125,0.07)' : 'rgba(245,194,0,0.05)'
+          : isLive ? 'rgba(76,175,125,0.04)' : 'rgba(245,194,0,0.03)',
+        border: `1px solid ${isLive ? 'rgba(76,175,125,0.25)' : isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'}` }}>
         <div style={{ height: 2, background: isLive
-          ? 'linear-gradient(90deg,#e05555,rgba(224,85,85,0.2))'
+          ? `linear-gradient(90deg,${GREEN},rgba(76,175,125,0.2))`
           : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))' }} />
         <div style={{ padding: '12px 14px' }}>
           {/* Header row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              {isLive && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e05555',
-                boxShadow: '0 0 5px #e05555' }} />}
+              {isLive && <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN,
+                boxShadow: `0 0 5px ${GREEN}` }} />}
               <span style={{ fontSize: 9, fontWeight: 800, color: dc, letterSpacing: 1 }}>
                 {isLive ? 'PÅGÅENDE' : t.status === 'kommande' ? 'KOMMANDE' : 'AVSLUTAD'}
               </span>
