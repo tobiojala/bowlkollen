@@ -599,47 +599,33 @@ export default function Home() {
 
   // ── Sub-components (defined inside render to access C, isDark, now) ──────────
 
-  const SectionHeader = ({ label, isLive = false, count, date }: { label: string; isLive?: boolean; count?: number; date?: string }) => {
-    const dotColor = isLive ? '#e05555' : date ? dayDotColor(date) : C.accent
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 6px', borderBottom: '1px solid ' + C.border }}>
-        <div style={{ width: 8, height: 8, borderRadius: isLive ? '50%' : 2, background: dotColor, flexShrink: 0 }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: isLive ? '#e05555' : C.textMuted, letterSpacing: 1.5 }}>{label}</span>
-        {count !== undefined && count > 0 && (
-          <span style={{ fontSize: 9, color: C.textMuted, fontWeight: 500 }}>· {count} matcher</span>
-        )}
-      </div>
-    )
-  }
-
   const MatchRow = ({ m }: { m: Match }) => {
     const dc = divColor(m.division)
     const hasScore = m.home_score !== null
     const homeWin  = hasScore && m.home_score! > m.away_score!
     const awayWin  = hasScore && m.away_score! > m.home_score!
     return (
-      // Separate the color bar so it doesn't shift the grid's symmetry
       <a href={'/matches/' + m.id}
         style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none',
-          borderRadius: 8, margin: '2px 8px', overflow: 'hidden',
+          borderRadius: 0, margin: 0, overflow: 'hidden',
           WebkitTapHighlightColor: 'transparent' } as any}
         onMouseEnter={e => (e.currentTarget.style.background = C.card)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
-        <div style={{ width: 3, flexShrink: 0, background: dc }} />
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '10px 8px', gap: 8 }}>
-          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: homeWin ? 700 : 400,
+        <div style={{ width: 4, flexShrink: 0, background: dc }} />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '13px 12px', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: homeWin ? 700 : 400,
             color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text,
             textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {shortName(m.home?.name || '')}
           </div>
-          <div style={{ flexShrink: 0, width: 68, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ flexShrink: 0, width: 72, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {hasScore ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 16, fontWeight: 900, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
+                  <span style={{ fontSize: 17, fontWeight: 900, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
                   <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
-                  <span style={{ fontSize: 16, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
+                  <span style={{ fontSize: 17, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
                 </div>
                 <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
               </>
@@ -649,15 +635,15 @@ export default function Home() {
               return (
                 <>
                   {cd
-                    ? <div style={{ fontSize: 13, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                    : <div style={{ fontSize: 11, color: C.textMuted }}>{timeStr || 'vs'}</div>
+                    ? <div style={{ fontSize: 14, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                    : <div style={{ fontSize: 12, color: C.textMuted }}>{timeStr || 'vs'}</div>
                   }
                   <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
                 </>
               )
             })()}
           </div>
-          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: awayWin ? 700 : 400,
+          <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: awayWin ? 700 : 400,
             color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {shortName(m.away?.name || '')}
@@ -746,32 +732,55 @@ export default function Home() {
         )}
 
         {/* ── Recent results ───────────────────────────────────────────────────── */}
-        {recentDates.map(date => {
-          const all        = recentByDate[date]
-          const isExpanded = expandedDates.has(date)
-          const visible    = isExpanded ? all : all.slice(0, LIMIT)
-          const hidden     = all.length - LIMIT
-          return (
-            <div key={date}>
-              <SectionHeader label={dateLabel(date)} count={all.length} date={date} />
-              {visible.map(m => <MatchRow key={m.id} m={m} />)}
-              {hidden > 0 && (
-                <button onClick={() => toggleDate(date)}
-                  style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none',
-                    borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                    color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                    WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
-                  {isExpanded ? <>&#8593; Visa färre</> : <>{`Visa alla ${all.length} matcher`} &#8595;</>}
-                </button>
-              )}
+        {recentDates.length > 0 && (
+          <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
+              SENASTE RESULTAT
             </div>
-          )
-        })}
+            {recentDates.map(date => {
+              const all        = recentByDate[date]
+              const isExpanded = expandedDates.has(date)
+              const visible    = isExpanded ? all : all.slice(0, LIMIT)
+              const hidden     = all.length - LIMIT
+              return (
+                <div key={date} style={{ marginBottom: 12, borderRadius: 14,
+                  border: '1px solid ' + C.border, overflow: 'hidden' }}>
+                  {/* Card header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+                    borderBottom: '1px solid ' + C.border,
+                    background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dayDotColor(date), flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{dateLabel(date)}</span>
+                    <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 2 }}>· {all.length} matcher</span>
+                  </div>
+                  {/* Rows */}
+                  {visible.map((m, i) => (
+                    <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
+                      <MatchRow m={m} />
+                    </div>
+                  ))}
+                  {/* Expand */}
+                  {hidden > 0 && (
+                    <button onClick={() => toggleDate(date)}
+                      style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none',
+                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                        color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                        WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
+                      {isExpanded ? '↑ Visa färre' : `Visa alla ${all.length} matcher ↓`}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* ── Remaining upcoming ───────────────────────────────────────────────── */}
         {upcomingDates.length > 0 && (
-          <div>
-            <SectionHeader label="KOMMANDE" count={remainingUp.length} />
+          <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
+              KOMMANDE MATCHER
+            </div>
             {upcomingDates.map(date => {
               const all        = upcomingByDate[date]
               const key        = 'up-' + date
@@ -779,18 +788,30 @@ export default function Home() {
               const visible    = isExpanded ? all : all.slice(0, LIMIT)
               const hidden     = all.length - LIMIT
               return (
-                <div key={date}>
-                  <div style={{ padding: '10px 16px 2px', fontSize: 11, fontWeight: 600, color: C.textMuted }}>
-                    {dateLabel(date)}
+                <div key={date} style={{ marginBottom: 12, borderRadius: 14,
+                  border: '1px solid ' + C.border, overflow: 'hidden' }}>
+                  {/* Card header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+                    borderBottom: '1px solid ' + C.border,
+                    background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: 2, background: dayDotColor(date), flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{dateLabel(date)}</span>
+                    <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 2 }}>· {all.length} matcher</span>
                   </div>
-                  {visible.map(m => <MatchRow key={m.id} m={m} />)}
+                  {/* Rows */}
+                  {visible.map((m, i) => (
+                    <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
+                      <MatchRow m={m} />
+                    </div>
+                  ))}
+                  {/* Expand */}
                   {hidden > 0 && (
                     <button onClick={() => toggleDate(key)}
-                      style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none',
-                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                      style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none',
+                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 11, fontWeight: 600,
                         color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                         WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
-                      {isExpanded ? <>&#8593; Visa färre</> : <>{`Visa alla ${all.length} matcher`} &#8595;</>}
+                      {isExpanded ? '↑ Visa färre' : `Visa alla ${all.length} matcher ↓`}
                     </button>
                   )}
                 </div>
