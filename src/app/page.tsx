@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -181,47 +182,235 @@ function group(ms: Match[]) {
 const DAY_COLORS = ['#b06070', '#6080b8', '#8868b0', '#4a9e96', '#b07840', '#a85888', '#9e8840']
 const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
 
-// ── Carousel ─────────────────────────────────────────────────────────────────
+// ── HeroStrip types & component ───────────────────────────────────────────────
 // Must live outside Home so React doesn't remount it on every second tick
 
-function Carousel({ accent, isDark, children }: {
-  accent: string; isDark: boolean; children: React.ReactNode[]
+type StripMatch = { kind: 'match'; match: Match }
+type StripTav   = {
+  kind: 'tavling'; id: string; name: string; sub: string
+  dateLabel: string; venue: string; href: string; isPagaende: boolean
+}
+type StripItem = StripMatch | StripTav
+
+const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
+
+function HeroStrip({ items, mode, C, isDark, now }: {
+  items: StripItem[]; mode: 'live' | 'upcoming'
+  C: typeof dark; isDark: boolean; now: number
 }) {
   const [activeIdx, setActiveIdx] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  const onScroll = () => {
-    const el = scrollRef.current
-    if (!el || !el.firstElementChild) return
-    const step = (el.firstElementChild as HTMLElement).offsetWidth + 12
-    setActiveIdx(Math.min(Math.round(el.scrollLeft / step), children.length - 1))
-  }
-
-  if (children.length <= 1) return (
-    <div style={{ padding: '0 16px' }}>{children[0]}</div>
-  )
+  const safeIdx = Math.min(activeIdx, Math.max(0, items.length - 1))
+  const item = items[safeIdx]
+  if (!item) return null
 
   return (
-    <div>
-      <div ref={scrollRef} onScroll={onScroll}
-        style={{ display: 'flex', overflowX: 'auto', scrollbarWidth: 'none',
-          scrollSnapType: 'x mandatory', gap: 12, padding: '0 16px 4px' } as React.CSSProperties}>
-        {children.map((child, i) => (
-          <div key={i} style={{ flex: '0 0 calc(100% - 56px)', maxWidth: 440, scrollSnapAlign: 'start' }}>
-            {child}
-          </div>
-        ))}
+    <div style={{ paddingBottom: 4 }}>
+
+      {/* ─── Hero card ─── */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={safeIdx}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+          >
+            {item.kind === 'match' ? (() => {
+              const m        = item.match
+              const isLive   = mode === 'live'
+              const dc       = divColor(m.division)
+              const hasScore = m.home_score !== null
+              const homeWin  = hasScore && m.home_score! > m.away_score!
+              const awayWin  = hasScore && m.away_score! > m.home_score!
+              const cd       = !hasScore ? countdown(m.date, now) : null
+              const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+              const dateStr  = m.date.slice(0, 10)
+              const topClr   = isLive ? '#e05555' : '#f5c200'
+              const bgFrom   = isLive
+                ? (isDark ? 'rgba(224,85,85,0.13)' : 'rgba(224,85,85,0.07)')
+                : (isDark ? 'rgba(245,194,0,0.08)'  : 'rgba(245,194,0,0.06)')
+              const edgeClr  = isLive
+                ? 'rgba(224,85,85,0.3)'
+                : (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)')
+              return (
+                <a href={'/matches/' + m.id} style={{
+                  display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
+                  background: isDark
+                    ? `linear-gradient(145deg,${bgFrom} 0%,rgba(11,21,40,0.98) 100%)`
+                    : `linear-gradient(145deg,${bgFrom} 0%,rgba(248,248,252,1) 100%)`,
+                  border: `1px solid ${edgeClr}`,
+                  WebkitTapHighlightColor: 'transparent',
+                } as any}>
+                  <div style={{ height: 3, background: `linear-gradient(90deg,${topClr},${topClr}40)` }} />
+                  <div style={{ padding: '14px 16px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                      {isLive ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555', boxShadow: '0 0 6px #e05555' }} />
+                          <span style={{ fontSize: 10, fontWeight: 800, color: '#e05555', letterSpacing: 1.5 }}>LIVE</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>NÄSTA MATCH</span>
+                      )}
+                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
+                        background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                        padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>
+                        {shortDiv(m.division)}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text }}>
+                          {shortName(m.home?.name || '')}
+                        </div>
+                        {!hasScore && <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>}
+                      </div>
+
+                      <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {hasScore ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: homeWin ? C.accent : C.text }}>{m.home_score}</span>
+                            <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
+                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: awayWin ? C.accent : C.text }}>{m.away_score}</span>
+                          </div>
+                        ) : cd ? (
+                          <>
+                            <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
+                            <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, textAlign: 'center' }}>{time}</div>
+                          </>
+                        ) : (
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{time || 'vs'}</div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text }}>
+                          {shortName(m.away?.name || '')}
+                        </div>
+                        {!hasScore && <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>}
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
+                      color: isLive ? 'rgba(224,85,85,0.65)' : C.textMuted }}>
+                      {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
+                    </div>
+                  </div>
+                </a>
+              )
+            })() : (
+              // ─── Tävling hero — always gold ───
+              <a href={item.href} style={{
+                display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
+                background: isDark
+                  ? 'linear-gradient(145deg,rgba(245,194,0,0.1) 0%,rgba(11,21,40,0.98) 100%)'
+                  : 'linear-gradient(145deg,rgba(245,194,0,0.07) 0%,rgba(248,248,252,1) 100%)',
+                border: `1px solid ${isDark ? 'rgba(245,194,0,0.25)' : 'rgba(245,194,0,0.32)'}`,
+                WebkitTapHighlightColor: 'transparent',
+              } as any}>
+                <div style={{ height: 3, background: 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.2))' }} />
+                <div style={{ padding: '14px 16px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+                    <span style={{ fontSize: 14, color: '#f5c200', lineHeight: 1 }}>◆</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+                      {item.isPagaende ? 'TÄVLING PÅGÅR' : 'KOMMANDE TÄVLING'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: C.text, lineHeight: 1.2, marginBottom: 6 }}>{item.name}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 4 }}>{item.sub}</div>
+                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 16 }}>{item.dateLabel} · {item.venue}</div>
+                  <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: '#1a1400',
+                    background: '#f5c200', borderRadius: 8, padding: '6px 16px' }}>
+                    {item.isPagaende ? 'Se tävlingen →' : 'Mer info →'}
+                  </div>
+                </div>
+              </a>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, paddingTop: 8 }}>
-        {children.map((_, i) => (
-          <div key={i} style={{
-            height: 3, borderRadius: 2, flexShrink: 0,
-            width: i === activeIdx ? 18 : 4,
-            background: i === activeIdx ? accent : (isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)'),
-            transition: 'width 0.22s ease',
-          }} />
-        ))}
-      </div>
+
+      {/* ─── Compact strip ─── */}
+      {items.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '10px 16px 6px' } as any}>
+          {items.map((it, i) => {
+            const isAct = i === safeIdx
+            if (it.kind === 'match') {
+              const m        = it.match
+              const dc       = divColor(m.division)
+              const hasScore = m.home_score !== null
+              const homeWin  = hasScore && m.home_score! > m.away_score!
+              const awayWin  = hasScore && m.away_score! > m.home_score!
+              const isLiveM  = m.status === 'live'
+              const cd       = !hasScore ? countdown(m.date, now) : null
+              const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+              return (
+                <button key={m.id} onClick={() => setActiveIdx(i)}
+                  style={{
+                    flexShrink: 0, width: 82, padding: '8px 6px',
+                    borderRadius: 12, cursor: 'pointer',
+                    border: `1px solid ${isAct
+                      ? (isLiveM ? 'rgba(224,85,85,0.55)' : 'rgba(245,194,0,0.55)')
+                      : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)')}`,
+                    background: isAct
+                      ? (isLiveM
+                        ? (isDark ? 'rgba(224,85,85,0.14)' : 'rgba(224,85,85,0.08)')
+                        : (isDark ? 'rgba(245,194,0,0.14)'  : 'rgba(245,194,0,0.08)'))
+                      : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
+                  } as any}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: isLiveM ? '#e05555' : dc }} />
+                  <div style={{ fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: 0.2,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 72, marginTop: 2 }}>
+                    {shortDiv(m.division)}
+                  </div>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, color: homeWin ? C.text : C.textMuted,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 70 }}>
+                    {shortName(m.home?.name || '')}
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 800, fontVariantNumeric: 'tabular-nums',
+                    color: isLiveM ? '#e05555' : C.accent }}>
+                    {hasScore ? `${m.home_score}–${m.away_score}` : (cd || time || 'vs')}
+                  </div>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, color: awayWin ? C.text : C.textMuted,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 70 }}>
+                    {shortName(m.away?.name || '')}
+                  </div>
+                </button>
+              )
+            }
+            // Tävling strip card — always gold
+            return (
+              <button key={it.id} onClick={() => setActiveIdx(i)}
+                style={{
+                  flexShrink: 0, width: 82, padding: '8px 6px',
+                  borderRadius: 12, cursor: 'pointer',
+                  border: `1px solid ${isAct ? 'rgba(245,194,0,0.55)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)')}`,
+                  background: isAct
+                    ? (isDark ? 'rgba(245,194,0,0.14)' : 'rgba(245,194,0,0.08)')
+                    : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
+                } as any}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: '#f5c200' }} />
+                <span style={{ fontSize: 15, color: '#f5c200', lineHeight: 1 }}>◆</span>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#f5c200', textAlign: 'center',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 70 }}>
+                  {it.name}
+                </div>
+                <div style={{ fontSize: 8, color: C.textMuted }}>{it.dateLabel}</div>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -344,7 +533,21 @@ export default function Home() {
   const filteredLive     = filterByTab(live)
   const filteredRecent   = filterByTab(recent)
   const filteredUpcoming = filterByTab(upcoming)
-  const remainingUp      = filteredUpcoming.slice(3)  // first 3 go into carousel
+
+  const UP_IN_STRIP = 3
+  const liveItems: StripItem[] = [
+    ...filteredLive.map(m => ({ kind: 'match' as const, match: m })),
+    ...(DEMO ? [{ kind: 'tavling' as const, id: 'tav-gp-live', name: 'GP Final 2026',
+      sub: 'Tourfinal – 6 deltävlingar bakom sig', dateLabel: '16–17 maj',
+      venue: 'Sollentuna', href: '/tavlingar', isPagaende: true }] : []),
+  ]
+  const upcomingItems: StripItem[] = [
+    ...filteredUpcoming.slice(0, UP_IN_STRIP).map(m => ({ kind: 'match' as const, match: m })),
+    ...(DEMO ? [{ kind: 'tavling' as const, id: 'tav-gp', name: 'GP Final 2026',
+      sub: 'Tourfinal – 6 deltävlingar bakom sig', dateLabel: '16–17 maj',
+      venue: 'Sollentuna', href: '/tavlingar', isPagaende: false }] : []),
+  ]
+  const remainingUp = filteredUpcoming.slice(UP_IN_STRIP)
 
   const recentByDate   = group(filteredRecent)
   const recentDates    = Object.keys(recentByDate).sort((a, b) => b.localeCompare(a))
@@ -422,161 +625,6 @@ export default function Home() {
     )
   }
 
-  const LiveBanner = ({ m }: { m: Match }) => {
-    const dc      = divColor(m.division)
-    const homeWin = m.home_score! > m.away_score!
-    const awayWin = m.away_score! > m.home_score!
-    return (
-      <a href={'/matches/' + m.id} style={{
-        display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
-        background: isDark
-          ? 'linear-gradient(145deg, rgba(224,85,85,0.13) 0%, rgba(11,21,40,0.98) 100%)'
-          : 'linear-gradient(145deg, rgba(224,85,85,0.07) 0%, rgba(248,248,252,1) 100%)',
-        border: '1px solid rgba(224,85,85,0.3)',
-        WebkitTapHighlightColor: 'transparent',
-      } as any}>
-        <div style={{ height: 3, background: 'linear-gradient(90deg, #e05555 0%, rgba(224,85,85,0.25) 100%)' }} />
-        <div style={{ padding: '14px 16px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555',
-                boxShadow: '0 0 6px #e05555' }} />
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#e05555', letterSpacing: 1.5 }}>LIVE</span>
-            </div>
-            <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
-              background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-              padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>
-              {shortDiv(m.division)}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'right',
-              fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {shortName(m.home?.name || '')}
-            </div>
-            <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
-                  color: homeWin ? C.accent : C.text }}>{m.home_score}</span>
-                <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
-                <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
-                  color: awayWin ? C.accent : C.text }}>{m.away_score}</span>
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0,
-              fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {shortName(m.away?.name || '')}
-            </div>
-          </div>
-
-          <div style={{ marginTop: 14, textAlign: 'center', fontSize: 10, fontWeight: 600,
-            color: 'rgba(224,85,85,0.65)', letterSpacing: 0.3 }}>
-            Tryck för detaljer →
-          </div>
-        </div>
-      </a>
-    )
-  }
-
-  const FeaturedMatchCard = ({ m, featured = true }: { m: Match; featured?: boolean }) => {
-    const dc      = divColor(m.division)
-    const cd      = countdown(m.date, now)
-    const dateStr = m.date.slice(0, 10)
-    const time    = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-    return (
-      <a href={'/matches/' + m.id} style={{
-        display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
-        background: isDark
-          ? 'linear-gradient(145deg, rgba(245,194,0,0.08) 0%, rgba(11,21,40,0.98) 100%)'
-          : 'linear-gradient(145deg, rgba(245,194,0,0.06) 0%, rgba(248,248,252,1) 100%)',
-        border: `1px solid ${isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)'}`,
-        WebkitTapHighlightColor: 'transparent',
-      } as any}>
-        <div style={{ height: 3, background: 'linear-gradient(90deg, #f5c200 0%, rgba(245,194,0,0.2) 100%)' }} />
-        <div style={{ padding: '14px 16px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>{featured ? 'NÄSTA MATCH' : 'KOMMANDE'}</span>
-            <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
-              background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-              padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>
-              {shortDiv(m.division)}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {shortName(m.home?.name || '')}
-              </div>
-              <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
-            </div>
-            <div style={{ flexShrink: 0, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {cd ? (
-                <>
-                  <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent,
-                    fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, textAlign: 'center' }}>
-                    {dateLabel(dateStr)} · {time}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{time || 'vs'}</div>
-                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textAlign: 'center' }}>{dateLabel(dateStr)}</div>
-                </>
-              )}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {shortName(m.away?.name || '')}
-              </div>
-              <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
-            </div>
-          </div>
-        </div>
-      </a>
-    )
-  }
-
-  const TavCarouselCard = ({ name, sub, date, venue, href, isLive }: {
-    name: string; sub: string; date: string; venue: string; href: string; isLive: boolean
-  }) => (
-    <a href={href} style={{ display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
-      background: isLive
-        ? (isDark ? 'rgba(224,85,85,0.09)' : 'rgba(224,85,85,0.05)')
-        : (isDark ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.04)'),
-      border: `1px solid ${isLive ? 'rgba(224,85,85,0.28)' : (isDark ? 'rgba(245,194,0,0.22)' : 'rgba(245,194,0,0.3)')}`,
-      WebkitTapHighlightColor: 'transparent' } as any}>
-      <div style={{ height: 3, background: isLive
-        ? 'linear-gradient(90deg,#e05555,rgba(224,85,85,0.15))'
-        : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))' }} />
-      <div style={{ padding: '14px 16px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-          {isLive && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555',
-            boxShadow: '0 0 6px #e05555' }} />}
-          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5,
-            color: isLive ? '#e05555' : C.textMuted }}>
-            {isLive ? 'TÄVLING PÅGÅR' : 'KOMMANDE TÄVLING'}
-          </span>
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.2, marginBottom: 6 }}>{name}</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 4 }}>{sub}</div>
-        <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 16 }}>{date} · {venue}</div>
-        <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 700,
-          color: isLive ? '#fff' : '#1a1400',
-          background: isLive ? '#e05555' : C.accent,
-          borderRadius: 8, padding: '6px 16px' }}>
-          {isLive ? 'Se tävlingen →' : 'Mer info →'}
-        </div>
-      </div>
-    </a>
-  )
-
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -607,40 +655,15 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Live carousel ────────────────────────────────────────────────────── */}
-        {filteredLive.length > 0 && (
-          <div style={{ paddingTop: 12, paddingBottom: 4 }}>
-            <Carousel accent={C.accent} isDark={isDark}>
-              {filteredLive.map(m => <LiveBanner key={m.id} m={m} />)}
-            </Carousel>
-          </div>
+        {/* ── Live hero strip ───────────────────────────────────────────────────── */}
+        {liveItems.length > 0 && (
+          <HeroStrip items={liveItems} mode="live" C={C} isDark={isDark} now={now} />
         )}
 
-        {/* ── Upcoming carousel ────────────────────────────────────────────────── */}
-        {filteredUpcoming.length > 0 && (() => {
-          // Mix first 3 matches + 1 tävling card (in DEMO; in prod comes from real data)
-          const matchSlice = filteredUpcoming.slice(0, 3)
-          const tavCard = DEMO ? (
-            <TavCarouselCard
-              name="GP Final 2026" sub="Tourfinal — 6 deltävlingar bakom sig"
-              date="16–17 maj" venue="Sollentuna"
-              href="https://gp.stbf.se" isLive={true}
-            />
-          ) : null
-
-          const cards: React.ReactNode[] = matchSlice.map((m, i) => (
-            <FeaturedMatchCard key={m.id} m={m} featured={i === 0} />
-          ))
-          if (tavCard) cards.splice(1, 0, tavCard)  // inject tävling after first match
-
-          return (
-            <div style={{ paddingTop: filteredLive.length > 0 ? 8 : 12, paddingBottom: 4 }}>
-              <Carousel accent={C.accent} isDark={isDark}>
-                {cards}
-              </Carousel>
-            </div>
-          )
-        })()}
+        {/* ── Upcoming hero strip ───────────────────────────────────────────────── */}
+        {upcomingItems.length > 0 && (
+          <HeroStrip items={upcomingItems} mode="upcoming" C={C} isDark={isDark} now={now} />
+        )}
 
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
         {honor.length > 0 && (
