@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -32,6 +32,18 @@ const MOCK_LIVE: Match[] = [
     division: 'Elitserien Herrar', home_score: 5, away_score: 3,
     home: { id: 'demo-t1', name: 'IK Hakarpspojkarna' },
     away: { id: 'demo-t2', name: 'Mariestads BK' },
+  },
+  {
+    id: 'demo-live-2', date: new Date().toISOString(), status: 'live',
+    division: 'Elitserien Damer', home_score: 3, away_score: 3,
+    home: { id: 'demo-t5', name: 'Örebro BK' },
+    away: { id: 'demo-t6', name: 'Malmö BK' },
+  },
+  {
+    id: 'demo-live-3', date: new Date().toISOString(), status: 'live',
+    division: 'Allsvenskan Herrar', home_score: 2, away_score: 4,
+    home: { id: 'demo-t3', name: 'Göteborgs BK' },
+    away: { id: 'demo-t4', name: 'Linköpings BK' },
   },
 ]
 
@@ -169,6 +181,51 @@ function group(ms: Match[]) {
 const DAY_COLORS = ['#b06070', '#6080b8', '#8868b0', '#4a9e96', '#b07840', '#a85888', '#9e8840']
 const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
 
+// ── Carousel ─────────────────────────────────────────────────────────────────
+// Must live outside Home so React doesn't remount it on every second tick
+
+function Carousel({ accent, isDark, children }: {
+  accent: string; isDark: boolean; children: React.ReactNode[]
+}) {
+  const [activeIdx, setActiveIdx] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const onScroll = () => {
+    const el = scrollRef.current
+    if (!el || !el.firstElementChild) return
+    const step = (el.firstElementChild as HTMLElement).offsetWidth + 12
+    setActiveIdx(Math.min(Math.round(el.scrollLeft / step), children.length - 1))
+  }
+
+  if (children.length <= 1) return (
+    <div style={{ padding: '0 16px' }}>{children[0]}</div>
+  )
+
+  return (
+    <div>
+      <div ref={scrollRef} onScroll={onScroll}
+        style={{ display: 'flex', overflowX: 'auto', scrollbarWidth: 'none',
+          scrollSnapType: 'x mandatory', gap: 12, padding: '0 16px 4px' } as React.CSSProperties}>
+        {children.map((child, i) => (
+          <div key={i} style={{ flex: '0 0 calc(100% - 56px)', maxWidth: 440, scrollSnapAlign: 'start' }}>
+            {child}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, paddingTop: 8 }}>
+        {children.map((_, i) => (
+          <div key={i} style={{
+            height: 3, borderRadius: 2, flexShrink: 0,
+            width: i === activeIdx ? 18 : 4,
+            background: i === activeIdx ? accent : (isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)'),
+            transition: 'width 0.22s ease',
+          }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const { theme } = useTheme()
@@ -287,14 +344,13 @@ export default function Home() {
   const filteredLive     = filterByTab(live)
   const filteredRecent   = filterByTab(recent)
   const filteredUpcoming = filterByTab(upcoming)
-  const nextUp           = filteredUpcoming[0] ?? null
-  const remainingUp      = nextUp ? filteredUpcoming.slice(1) : filteredUpcoming
+  const remainingUp      = filteredUpcoming.slice(3)  // first 3 go into carousel
 
   const recentByDate   = group(filteredRecent)
   const recentDates    = Object.keys(recentByDate).sort((a, b) => b.localeCompare(a))
   const upcomingByDate = group(remainingUp)
   const upcomingDates  = Object.keys(upcomingByDate).sort()
-  const isEmpty        = filteredLive.length === 0 && filteredRecent.length === 0 && filteredUpcoming.length === 0
+  const isEmpty = filteredLive.length === 0 && filteredRecent.length === 0 && filteredUpcoming.length === 0
 
   // ── Sub-components (defined inside render to access C, isDark, now) ──────────
 
@@ -425,7 +481,7 @@ export default function Home() {
     )
   }
 
-  const FeaturedMatchCard = ({ m }: { m: Match }) => {
+  const FeaturedMatchCard = ({ m, featured = true }: { m: Match; featured?: boolean }) => {
     const dc      = divColor(m.division)
     const cd      = countdown(m.date, now)
     const dateStr = m.date.slice(0, 10)
@@ -442,7 +498,7 @@ export default function Home() {
         <div style={{ height: 3, background: 'linear-gradient(90deg, #f5c200 0%, rgba(245,194,0,0.2) 100%)' }} />
         <div style={{ padding: '14px 16px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>NÄSTA MATCH</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>{featured ? 'NÄSTA MATCH' : 'KOMMANDE'}</span>
             <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
               background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
               padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>
@@ -487,6 +543,40 @@ export default function Home() {
     )
   }
 
+  const TavCarouselCard = ({ name, sub, date, venue, href, isLive }: {
+    name: string; sub: string; date: string; venue: string; href: string; isLive: boolean
+  }) => (
+    <a href={href} style={{ display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
+      background: isLive
+        ? (isDark ? 'rgba(224,85,85,0.09)' : 'rgba(224,85,85,0.05)')
+        : (isDark ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.04)'),
+      border: `1px solid ${isLive ? 'rgba(224,85,85,0.28)' : (isDark ? 'rgba(245,194,0,0.22)' : 'rgba(245,194,0,0.3)')}`,
+      WebkitTapHighlightColor: 'transparent' } as any}>
+      <div style={{ height: 3, background: isLive
+        ? 'linear-gradient(90deg,#e05555,rgba(224,85,85,0.15))'
+        : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))' }} />
+      <div style={{ padding: '14px 16px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+          {isLive && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555',
+            boxShadow: '0 0 6px #e05555' }} />}
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5,
+            color: isLive ? '#e05555' : C.textMuted }}>
+            {isLive ? 'TÄVLING PÅGÅR' : 'KOMMANDE TÄVLING'}
+          </span>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.2, marginBottom: 6 }}>{name}</div>
+        <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 4 }}>{sub}</div>
+        <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 16 }}>{date} · {venue}</div>
+        <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 700,
+          color: isLive ? '#fff' : '#1a1400',
+          background: isLive ? '#e05555' : C.accent,
+          borderRadius: 8, padding: '6px 16px' }}>
+          {isLive ? 'Se tävlingen →' : 'Mer info →'}
+        </div>
+      </div>
+    </a>
+  )
+
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -517,19 +607,40 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Live banners ─────────────────────────────────────────────────────── */}
+        {/* ── Live carousel ────────────────────────────────────────────────────── */}
         {filteredLive.length > 0 && (
-          <div style={{ padding: '12px 16px 4px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredLive.map(m => <LiveBanner key={m.id} m={m} />)}
+          <div style={{ paddingTop: 12, paddingBottom: 4 }}>
+            <Carousel accent={C.accent} isDark={isDark}>
+              {filteredLive.map(m => <LiveBanner key={m.id} m={m} />)}
+            </Carousel>
           </div>
         )}
 
-        {/* ── Featured next match ──────────────────────────────────────────────── */}
-        {nextUp && (
-          <div style={{ padding: filteredLive.length > 0 ? '8px 16px 4px' : '12px 16px 4px' }}>
-            <FeaturedMatchCard m={nextUp} />
-          </div>
-        )}
+        {/* ── Upcoming carousel ────────────────────────────────────────────────── */}
+        {filteredUpcoming.length > 0 && (() => {
+          // Mix first 3 matches + 1 tävling card (in DEMO; in prod comes from real data)
+          const matchSlice = filteredUpcoming.slice(0, 3)
+          const tavCard = DEMO ? (
+            <TavCarouselCard
+              name="GP Final 2026" sub="Tourfinal — 6 deltävlingar bakom sig"
+              date="16–17 maj" venue="Sollentuna"
+              href="https://gp.stbf.se" isLive={true}
+            />
+          ) : null
+
+          const cards: React.ReactNode[] = matchSlice.map((m, i) => (
+            <FeaturedMatchCard key={m.id} m={m} featured={i === 0} />
+          ))
+          if (tavCard) cards.splice(1, 0, tavCard)  // inject tävling after first match
+
+          return (
+            <div style={{ paddingTop: filteredLive.length > 0 ? 8 : 12, paddingBottom: 4 }}>
+              <Carousel accent={C.accent} isDark={isDark}>
+                {cards}
+              </Carousel>
+            </div>
+          )
+        })()}
 
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
         {honor.length > 0 && (
