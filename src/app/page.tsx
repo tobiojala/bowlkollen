@@ -194,23 +194,65 @@ type StripItem = StripMatch | StripTav
 
 const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
 
-function HeroStrip({ items, mode, C, isDark, now }: {
-  items: StripItem[]; mode: 'live' | 'upcoming'
+function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
+  liveItems: StripItem[]; upcomingItems: StripItem[]
   C: typeof dark; isDark: boolean; now: number
 }) {
+  const hasLive = liveItems.length > 0
+  const hasUp   = upcomingItems.length > 0
+  const [mode, setMode]       = useState<'live' | 'upcoming'>(hasLive ? 'live' : 'upcoming')
   const [activeIdx, setActiveIdx] = useState(0)
+
+  const items   = mode === 'live' ? liveItems : upcomingItems
   const safeIdx = Math.min(activeIdx, Math.max(0, items.length - 1))
-  const item = items[safeIdx]
+  const item    = items[safeIdx]
+
+  const switchMode = (m: 'live' | 'upcoming') => { setMode(m); setActiveIdx(0) }
+
   if (!item) return null
 
   return (
     <div style={{ paddingBottom: 4 }}>
 
+      {/* ─── Mode toggle pill ─── */}
+      {hasLive && hasUp && (
+        <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
+          {([['live', '● LIVE', liveItems.length], ['upcoming', 'KOMMANDE', upcomingItems.length]] as const).map(([m, label, count]) => {
+            const isAct = mode === m
+            const clr   = m === 'live' ? '#e05555' : '#f5c200'
+            return (
+              <button key={m} onClick={() => switchMode(m)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
+                  background: isAct
+                    ? (isDark ? `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.1)`)
+                    : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+                  outline: `1px solid ${isAct ? clr + '66' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
+                  WebkitTapHighlightColor: 'transparent',
+                } as any}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2,
+                  color: isAct ? clr : C.textMuted }}>
+                  {label}
+                </span>
+                <span style={{ fontSize: 9, fontWeight: 700,
+                  color: isAct ? clr : C.textMuted,
+                  background: isAct ? `rgba(${m === 'live' ? '224,85,85' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
+                  borderRadius: 8, padding: '1px 6px' }}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+
       {/* ─── Hero card ─── */}
       <div style={{ padding: '12px 16px 0' }}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={safeIdx}
+            key={`${mode}-${safeIdx}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -655,14 +697,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Live hero strip ───────────────────────────────────────────────────── */}
-        {liveItems.length > 0 && (
-          <HeroStrip items={liveItems} mode="live" C={C} isDark={isDark} now={now} />
-        )}
-
-        {/* ── Upcoming hero strip ───────────────────────────────────────────────── */}
-        {upcomingItems.length > 0 && (
-          <HeroStrip items={upcomingItems} mode="upcoming" C={C} isDark={isDark} now={now} />
+        {/* ── Hero strip ───────────────────────────────────────────────────────── */}
+        {(liveItems.length > 0 || upcomingItems.length > 0) && (
+          <HeroStrip liveItems={liveItems} upcomingItems={upcomingItems} C={C} isDark={isDark} now={now} />
         )}
 
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
