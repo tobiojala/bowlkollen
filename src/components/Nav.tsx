@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets } from 'lucide-react'
+import { Sun, Moon, ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
@@ -150,7 +150,7 @@ export default function Nav() {
         transition: 'border-color 0.2s, background 0.2s',
         zIndex: 40,
         display: 'grid',
-        gridTemplateColumns: '1fr auto 1fr',
+        gridTemplateColumns: 'auto 1fr auto',
         alignItems: 'center',
         padding: '0 12px',
       }}>
@@ -178,7 +178,7 @@ export default function Nav() {
         </div>
 
         {/* Center — search input or page title */}
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', overflow: 'hidden', minWidth: 0, padding: '0 8px' }}>
           {searching ? (
             <input
               ref={inputRef}
@@ -186,13 +186,13 @@ export default function Nav() {
               onChange={e => setQuery(e.target.value)}
               placeholder="Sök spelare..."
               style={{
-                width: 180, background: 'transparent', border: 'none', outline: 'none',
+                width: '100%', background: 'transparent', border: 'none', outline: 'none',
                 fontSize: 15, fontWeight: 500, color: textColor,
                 textAlign: 'center',
               }}
             />
           ) : cfg.title ? (
-            <span style={{ fontSize: 15, fontWeight: 700, color: textColor, letterSpacing: -0.2 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: textColor, letterSpacing: -0.2, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {cfg.title}
             </span>
           ) : null}
@@ -200,27 +200,14 @@ export default function Nav() {
 
         {/* Right */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-          {!searching && cfg.logo && (
-            <a href="/sllm" style={{
-              fontSize: 10, fontWeight: 700, color: '#f5c200',
-              background: 'rgba(245,194,0,0.1)', border: '1px solid rgba(245,194,0,0.25)',
-              borderRadius: 20, padding: '3px 9px', textDecoration: 'none', letterSpacing: 0.3,
-            }}>
-              SLLM
-            </a>
-          )}
-
-          {/* Search pill */}
+          {/* Search */}
           {!searching && (
             <button onClick={() => setSearching(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: iconBg,
-              border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-              borderRadius: 20, padding: '5px 10px',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
             }}>
-              <Search size={13} color={mutedColor} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: mutedColor }}>Sök</span>
+              <Search size={16} color={mutedColor} />
             </button>
           )}
 
@@ -246,12 +233,12 @@ export default function Nav() {
             </a>
           ) : (
             <a href="/login" style={{
-              fontSize: 12, fontWeight: 600, color: mutedColor,
-              background: iconBg,
-              border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-              borderRadius: 20, padding: '6px 12px', textDecoration: 'none',
+              width: 32, height: 32, borderRadius: '50%',
+              background: iconBg, border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              textDecoration: 'none', flexShrink: 0,
             }}>
-              Logga in
+              <User size={16} color={mutedColor} />
             </a>
           ))}
 
