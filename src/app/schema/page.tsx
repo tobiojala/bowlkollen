@@ -376,17 +376,6 @@ export default function SchedulePage() {
         {/* Unified date strip */}
         <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', alignItems: 'stretch' } as any}>
 
-          {/* Historik toggle */}
-          <button onClick={() => setShowPast(p => !p)}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              padding: '6px 10px', border: 'none', background: 'transparent', flexShrink: 0, cursor: 'pointer',
-              borderRight: '1px solid ' + C.border, borderBottom: '2px solid transparent',
-              WebkitTapHighlightColor: 'transparent' } as any}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
-              {showPast ? '✕' : '← Historik'}
-            </span>
-          </button>
-
           {visibleDates.map(dateKey => {
             const d        = new Date(dateKey + 'T12:00:00')
             const isActive = dateKey === activeDate
@@ -438,8 +427,24 @@ export default function SchedulePage() {
           })}
         </div>
 
-        {/* Content-type filter pills — always shown */}
-        <div style={{ display: 'flex', gap: 6, padding: '8px 16px 6px', borderTop: '1px solid ' + C.border }}>
+        {/* Combined controls row: Historik · content type · division pills */}
+        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex',
+          alignItems: 'center', gap: 6, padding: '7px 12px 7px 12px',
+          borderTop: '1px solid ' + C.border } as any}>
+
+          {/* Historik toggle */}
+          <button onClick={() => setShowPast(p => !p)}
+            style={{ border: '1px solid ' + C.border, background: showPast ? C.card : 'transparent',
+              borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 700,
+              color: C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              WebkitTapHighlightColor: 'transparent' } as any}>
+            {showPast ? '✕ Historik' : '← Historik'}
+          </button>
+
+          {/* Separator */}
+          <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
+
+          {/* Content type pills */}
           {([
             { key: 'all',       label: 'Allt' },
             { key: 'liga',      label: 'Liga' },
@@ -450,7 +455,7 @@ export default function SchedulePage() {
               <button key={f.key} onClick={() => setContentFilter(f.key)}
                 style={{ background: isActive ? C.accent : 'transparent',
                   border: '1px solid ' + (isActive ? C.accent : C.border),
-                  borderRadius: 20, padding: '4px 14px', fontSize: 11, fontWeight: 700,
+                  borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700,
                   color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
                   whiteSpace: 'nowrap', flexShrink: 0,
                   WebkitTapHighlightColor: 'transparent' } as any}>
@@ -458,34 +463,35 @@ export default function SchedulePage() {
               </button>
             )
           })}
-        </div>
 
-        {/* Division filter pills — shown only when liga content is visible and there are matches */}
-        {contentFilter !== 'tavlingar' && dayLigaMatches.length > 0 && (
-          <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '2px 16px 8px' } as any}>
-            {([
-              { key: 'all',         label: 'Alla' },
-              { key: 'elite',       label: 'Elitserien' },
-              { key: 'allsvenskan', label: 'Allsvenskan' },
-              { key: 'div1',        label: 'Division 1' },
-            ] as const).map(f => {
-              const isActive = filter === f.key
-              const count    = activeDate ? countOnDate(activeDate, f.key) : 0
-              if (f.key !== 'all' && count === 0) return null
-              return (
-                <button key={f.key} onClick={() => setFilter(f.key)}
-                  style={{ background: isActive ? C.accent : 'transparent',
-                    border: '1px solid ' + (isActive ? C.accent : C.border),
-                    borderRadius: 20, padding: '5px 12px', fontSize: 11, fontWeight: 700,
-                    color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
-                    whiteSpace: 'nowrap', flexShrink: 0,
-                    WebkitTapHighlightColor: 'transparent' } as any}>
-                  {f.label}{count > 0 ? ` · ${count}` : ''}
-                </button>
-              )
-            })}
-          </div>
-        )}
+          {/* Division pills — only when liga content is visible and there are matches */}
+          {contentFilter !== 'tavlingar' && dayLigaMatches.length > 0 && (
+            <>
+              <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
+              {([
+                { key: 'all',         label: 'Alla' },
+                { key: 'elite',       label: 'Elitserien' },
+                { key: 'allsvenskan', label: 'Allsvenskan' },
+                { key: 'div1',        label: 'Division 1' },
+              ] as const).map(f => {
+                const isActive = filter === f.key
+                const count    = activeDate ? countOnDate(activeDate, f.key) : 0
+                if (f.key !== 'all' && count === 0) return null
+                return (
+                  <button key={f.key} onClick={() => setFilter(f.key)}
+                    style={{ background: isActive ? C.accent : 'transparent',
+                      border: '1px solid ' + (isActive ? C.accent : C.border),
+                      borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700,
+                      color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                      WebkitTapHighlightColor: 'transparent' } as any}>
+                    {f.label}{count > 0 ? ` · ${count}` : ''}
+                  </button>
+                )
+              })}
+            </>
+          )}
+        </div>
       </div>
 
       {/* ── Day content — animates on date change ─────────────────────────────── */}
