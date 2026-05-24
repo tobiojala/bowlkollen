@@ -12,6 +12,7 @@ type Match = {
   id: string; date: string; status: string; division: string
   home_score: number | null; away_score: number | null
   home: { id: string; name: string }; away: { id: string; name: string }
+  streams?: { url: string }[]
 }
 type HonorEntry = { playerName: string; score: number; matchId: string; seriesTotal?: number }
 
@@ -33,12 +34,17 @@ const MOCK_LIVE: Match[] = [
     division: 'Elitserien Herrar', home_score: 5, away_score: 3,
     home: { id: 'demo-t1', name: 'IK Hakarpspojkarna' },
     away: { id: 'demo-t2', name: 'Mariestads BK' },
+    streams: [{ url: 'https://www.youtube.com/watch?v=demoLive1' }],
   },
   {
     id: 'demo-live-2', date: new Date().toISOString(), status: 'live',
     division: 'Elitserien Damer', home_score: 3, away_score: 3,
     home: { id: 'demo-t5', name: 'Örebro BK' },
     away: { id: 'demo-t6', name: 'Malmö BK' },
+    streams: [
+      { url: 'https://www.svtplay.se/demo' },
+      { url: 'https://www.svenskbowling.tv/demo' },
+    ],
   },
   {
     id: 'demo-live-3', date: new Date().toISOString(), status: 'live',
@@ -182,6 +188,17 @@ function group(ms: Match[]) {
 const DAY_COLORS = ['#b06070', '#6080b8', '#8868b0', '#4a9e96', '#b07840', '#a85888', '#9e8840']
 const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
 
+function streamStyle(url: string): { label: string; color: string; bg: string; border: string } {
+  const u = url.toLowerCase()
+  if (u.includes('youtube') || u.includes('youtu.be'))
+    return { label: '▶ YouTube', color: '#ff4040', bg: 'rgba(255,60,60,0.12)', border: 'rgba(255,60,60,0.3)' }
+  if (u.includes('svtplay') || u.includes('svt.se'))
+    return { label: '▶ SVT Play', color: '#5ab0e8', bg: 'rgba(90,176,232,0.12)', border: 'rgba(90,176,232,0.3)' }
+  if (u.includes('svenskbowling') || u.includes('sb.tv'))
+    return { label: '▶ Svensk Bowling TV', color: '#f5c200', bg: 'rgba(245,194,0,0.12)', border: 'rgba(245,194,0,0.3)' }
+  return { label: '▶ Livestream', color: '#e05555', bg: 'rgba(224,85,85,0.12)', border: 'rgba(224,85,85,0.3)' }
+}
+
 // ── HeroStrip types & component ───────────────────────────────────────────────
 // Must live outside Home so React doesn't remount it on every second tick
 
@@ -268,12 +285,15 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const cd       = !hasScore ? countdown(m.date, now) : null
               const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               const dateStr  = m.date.slice(0, 10)
-              const topClr   = isLive ? '#e05555' : '#f5c200'
-              const bgFrom   = isLive
-                ? (isDark ? 'rgba(224,85,85,0.13)' : 'rgba(224,85,85,0.07)')
-                : (isDark ? 'rgba(245,194,0,0.08)'  : 'rgba(245,194,0,0.06)')
-              const edgeClr  = isLive
-                ? 'rgba(224,85,85,0.3)'
+              const GREEN_M   = '#4caf7d'
+              const streams   = isLive ? (m.streams ?? []) : []
+              const isStream  = streams.length > 0
+              const topClr    = isLive ? GREEN_M : '#f5c200'
+              const bgFrom    = isLive
+                ? (isDark ? 'rgba(76,175,125,0.1)' : 'rgba(76,175,125,0.06)')
+                : (isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.06)')
+              const edgeClr   = isLive
+                ? 'rgba(76,175,125,0.3)'
                 : (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)')
               return (
                 <a href={'/matches/' + m.id} style={{
@@ -288,9 +308,21 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                   <div style={{ padding: '14px 16px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                       {isLive ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555', boxShadow: '0 0 6px #e05555' }} />
-                          <span style={{ fontSize: 10, fontWeight: 800, color: '#e05555', letterSpacing: 1.5 }}>LIVE</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN_M, boxShadow: `0 0 6px ${GREEN_M}` }} />
+                            <span style={{ fontSize: 10, fontWeight: 800, color: GREEN_M, letterSpacing: 1.5 }}>PÅGÅENDE</span>
+                          </div>
+                          {isStream && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <motion.div
+                                animate={{ opacity: [1, 0.2, 1], boxShadow: ['0 0 3px #e05555', '0 0 9px #e05555', '0 0 3px #e05555'] }}
+                                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                                style={{ width: 6, height: 6, borderRadius: '50%', background: '#e05555' }}
+                              />
+                              <span style={{ fontSize: 9, fontWeight: 800, color: '#e05555', letterSpacing: 1.2 }}>LIVE</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>NÄSTA MATCH</span>
@@ -339,10 +371,33 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
-                      color: isLive ? 'rgba(224,85,85,0.65)' : C.textMuted }}>
-                      {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
-                    </div>
+                    {isStream ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 14 }}>
+                        {streams.map((s, idx) => {
+                          const ss = streamStyle(s.url)
+                          return (
+                            <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              style={{ fontSize: 10, fontWeight: 700, color: ss.color,
+                                background: ss.bg, border: `1px solid ${ss.border}`,
+                                borderRadius: 8, padding: '5px 10px', textDecoration: 'none',
+                                display: 'flex', alignItems: 'center', gap: 5,
+                                WebkitTapHighlightColor: 'transparent' } as any}>
+                              <motion.div
+                                animate={{ opacity: [1, 0.25, 1] }}
+                                transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: idx * 0.18 }}
+                                style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color, flexShrink: 0 }} />
+                              {ss.label}
+                            </a>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
+                        color: isLive ? `rgba(76,175,125,0.6)` : C.textMuted }}>
+                        {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
+                      </div>
+                    )}
                   </div>
                 </a>
               )
@@ -389,36 +444,47 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const hasScore = m.home_score !== null
               const homeWin  = hasScore && m.home_score! > m.away_score!
               const awayWin  = hasScore && m.away_score! > m.home_score!
-              const isLiveM  = m.status === 'live'
-              const cd       = !hasScore ? countdown(m.date, now) : null
-              const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+              const isLiveM   = m.status === 'live'
+              const isStreamM = isLiveM && (m.streams?.length ?? 0) > 0
+              const GREEN_S   = '#4caf7d'
+              const cd        = !hasScore ? countdown(m.date, now) : null
+              const time      = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               return (
                 <button key={m.id} onClick={() => setActiveIdx(i)}
                   style={{
                     flexShrink: 0, width: 82, padding: '8px 6px',
                     borderRadius: 12, cursor: 'pointer',
                     border: `1px solid ${isAct
-                      ? (isLiveM ? 'rgba(224,85,85,0.55)' : 'rgba(245,194,0,0.55)')
+                      ? (isLiveM ? 'rgba(76,175,125,0.55)' : 'rgba(245,194,0,0.55)')
                       : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)')}`,
                     background: isAct
                       ? (isLiveM
-                        ? (isDark ? 'rgba(224,85,85,0.14)' : 'rgba(224,85,85,0.08)')
+                        ? (isDark ? 'rgba(76,175,125,0.14)' : 'rgba(76,175,125,0.08)')
                         : (isDark ? 'rgba(245,194,0,0.14)'  : 'rgba(245,194,0,0.08)'))
                       : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
                   } as any}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: isLiveM ? '#e05555' : dc }} />
-                  <div style={{ fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: 0.2,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 72, marginTop: 2 }}>
-                    {shortDiv(m.division)}
-                  </div>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: isLiveM ? GREEN_S : dc }} />
+                  {isStreamM ? (
+                    <motion.div
+                      animate={{ opacity: [1, 0.25, 1] }}
+                      transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                      style={{ fontSize: 8, fontWeight: 800, color: '#e05555', letterSpacing: 0.5, marginTop: 2 }}>
+                      ● LIVE
+                    </motion.div>
+                  ) : (
+                    <div style={{ fontSize: 8.5, fontWeight: 700, color: isLiveM ? GREEN_S : dc, letterSpacing: 0.2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 72, marginTop: 2 }}>
+                      {shortDiv(m.division)}
+                    </div>
+                  )}
                   <div style={{ fontSize: 9.5, fontWeight: 600, color: homeWin ? C.text : C.textMuted,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 70 }}>
                     {shortName(m.home?.name || '')}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 800, fontVariantNumeric: 'tabular-nums',
-                    color: isLiveM ? '#e05555' : C.accent }}>
+                    color: isLiveM ? GREEN_S : C.accent }}>
                     {hasScore ? `${m.home_score}–${m.away_score}` : (cd || time || 'vs')}
                   </div>
                   <div style={{ fontSize: 9.5, fontWeight: 600, color: awayWin ? C.text : C.textMuted,
