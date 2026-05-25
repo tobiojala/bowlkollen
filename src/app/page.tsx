@@ -1225,7 +1225,7 @@ export default function Home() {
                       ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
                       : 'transparent',
                     WebkitTapHighlightColor: 'transparent' } as any}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: zoneClr !== 'transparent' ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: row.rank <= 6 ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
                   <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
                     {shortName(row.teamName)}
