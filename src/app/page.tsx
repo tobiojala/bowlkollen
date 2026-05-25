@@ -1033,16 +1033,16 @@ export default function Home() {
                       background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
                       border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
                       {m.venue && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1, minWidth: 0 }}>
-                          <span style={{ fontSize: 10, flexShrink: 0 }}>📍</span>
-                          <span style={{ fontSize: 10, color: C.text, fontWeight: 600,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.venue}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 7, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 2 }}>HALL</div>
+                          <div style={{ fontSize: 10, color: C.text, fontWeight: 600,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.venue}</div>
                         </div>
                       )}
                       {m.oilProfile && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                          <span style={{ fontSize: 10 }}>🛢</span>
-                          <span style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{m.oilProfile}</span>
+                        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                          <div style={{ fontSize: 7, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 2 }}>OLJEPROFIL</div>
+                          <div style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{m.oilProfile}</div>
                         </div>
                       )}
                     </div>
