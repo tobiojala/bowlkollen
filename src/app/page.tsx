@@ -461,7 +461,6 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
                   } as any}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: isLiveM ? GREEN_S : dc }} />
                   {isStreamM ? (
                     <motion.div
                       animate={{ opacity: [1, 0.25, 1] }}
@@ -503,7 +502,6 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
                   WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
                 } as any}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: '#f5c200' }} />
                 <span style={{ fontSize: 15, color: '#f5c200', lineHeight: 1 }}>◆</span>
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#f5c200', textAlign: 'center',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 70 }}>
