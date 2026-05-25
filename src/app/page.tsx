@@ -969,26 +969,31 @@ export default function Home() {
                         {isMyHome ? 'MITT LAG' : 'Hemma'}
                       </div>
                       {homeForm.length > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 3, marginTop: 5 }}>
-                          {homeForm.map((r, i) => (
-                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
-                          ))}
-                        </div>
+                        <>
+                          <div style={{ fontSize: 7, color: C.textMuted, fontWeight: 600, letterSpacing: 0.8, marginTop: 6, textAlign: 'right' }}>FORM</div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 3, marginTop: 3 }}>
+                            {homeForm.map((r, i) => (
+                              <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
 
                     {/* Countdown */}
-                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 80 }}>
+                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 88 }}>
                       {cd ? (
                         <>
-                          <div style={{ fontSize: 26, fontWeight: 900, color: C.accent,
+                          <div style={{ fontSize: 28, fontWeight: 900, color: C.accent,
                             fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{cd}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5 }}>{time}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
+                            {dateLabel(dStr)}<br />{time}
+                          </div>
                         </>
                       ) : (
                         <>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: C.textMuted }}>{time}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)}</div>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{time}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4 }}>{dateLabel(dStr)}</div>
                         </>
                       )}
                     </div>
@@ -1003,16 +1008,19 @@ export default function Home() {
                         {!isMyHome ? 'MITT LAG' : 'Borta'}
                       </div>
                       {awayForm.length > 0 && (
-                        <div style={{ display: 'flex', gap: 3, marginTop: 5 }}>
-                          {awayForm.map((r, i) => (
-                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
-                          ))}
-                        </div>
+                        <>
+                          <div style={{ fontSize: 7, color: C.textMuted, fontWeight: 600, letterSpacing: 0.8, marginTop: 6 }}>FORM</div>
+                          <div style={{ display: 'flex', gap: 3, marginTop: 3 }}>
+                            {awayForm.map((r, i) => (
+                              <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
 
-                  {/* Stream pills */}
+                  {/* Stream pills or KOMMANDE indicator */}
                   {streams.length > 0 ? (
                     <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 14 }}>
                       {streams.map((s, idx) => {
@@ -1032,9 +1040,9 @@ export default function Home() {
                       })}
                     </div>
                   ) : (
-                    <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600,
-                      letterSpacing: 0.3, color: C.textMuted }}>
-                      {dateLabel(dStr)} · {time}
+                    <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#5a82b4', opacity: 0.7 }} />
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2 }}>KOMMANDE</span>
                     </div>
                   )}
                 </div>
