@@ -376,11 +376,16 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           </div>
                         ) : cd ? (
                           <>
-                            <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
-                            <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, textAlign: 'center' }}>{time}</div>
+                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
+                            <div style={{ fontSize: 9, color: C.textMuted, marginTop: 6, textAlign: 'center', lineHeight: 1.5 }}>
+                              {dateLabel(dateStr)}<br />{time}
+                            </div>
                           </>
                         ) : (
-                          <div style={{ fontSize: 14, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{time || 'vs'}</div>
+                          <>
+                            <div style={{ fontSize: 18, fontWeight: 800, color: C.text, textAlign: 'center' }}>{time || 'vs'}</div>
+                            <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, textAlign: 'center' }}>{dateLabel(dateStr)}</div>
+                          </>
                         )}
                       </div>
 
@@ -413,9 +418,15 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                         })}
                       </div>
                     ) : (
-                      <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
-                        color: isLive ? `rgba(245,194,0,0.6)` : C.textMuted }}>
-                        {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
+                      <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                        {isLive ? (
+                          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.3, color: `rgba(245,194,0,0.6)` }}>Tryck för detaljer →</span>
+                        ) : (
+                          <>
+                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#5a82b4', opacity: 0.7 }} />
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2 }}>KOMMANDE</span>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
