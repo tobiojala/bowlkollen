@@ -134,7 +134,6 @@ const MOCK_HONOR: HonorEntry[] = [
   { playerName: 'Jonas Persson',   score: 245, matchId: 'demo-r-3' },
   { playerName: 'Anna Karlsson',   score: 234, matchId: 'demo-r-4' },
   { playerName: 'Erik Svensson',   score: 224, matchId: 'demo-r-5' },
-  { playerName: 'Lena Bergström',  score: 218, matchId: 'demo-r-6' },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -597,7 +596,7 @@ export default function Home() {
           if (!player) return
           const games: number[] = r.games || []
           const best = games.length > 0 ? Math.max(...games) : 0
-          if (best >= 200) {
+          if (best >= 220) {
             const key = `${r.player_id}_${r.match_id}`
             if (!seen.has(key)) { seen.add(key); entries.push({ playerName: player.name, score: best, matchId: r.match_id }) }
           }
@@ -765,8 +764,7 @@ export default function Home() {
                 const isPerfect    = e.score === 300
                 const isHighSeries = !isPerfect && (e.seriesTotal ?? 0) >= 950
                 const isElite      = !isPerfect && !isHighSeries && e.score >= 250
-                const isGold       = !isPerfect && !isHighSeries && e.score >= 220 && e.score < 250
-                const isGood       = !isPerfect && !isHighSeries && e.score >= 200 && e.score < 220
+                // isGold: 220–249 (threshold raised, no lower tier)
 
                 const nameParts = e.playerName.split(' ')
                 const firstName = nameParts[0]
@@ -798,11 +796,11 @@ export default function Home() {
                       color: 'rgba(215,222,240,0.85)', maxWidth: 84,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                     <div style={{ fontSize: 10, color: 'rgba(140,155,185,0.7)', maxWidth: 84,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                   </a>
                 )
 
-                // ── 950+ series (4 games): Muted diamond ────────────────────
+                // ── 950+ series: Series Diamond ──────────────────────────────
                 if (isHighSeries) return (
                   <a key={i} href={'/matches/' + e.matchId} style={{
                     flexShrink: 0, textDecoration: 'none', borderRadius: 13,
@@ -819,40 +817,47 @@ export default function Home() {
                     <div style={{
                       fontSize: 36, fontWeight: 900, lineHeight: 1, color: '#d8dff0',
                       textShadow: '0 0 8px rgba(205,218,255,0.55), 0 0 22px rgba(175,198,255,0.2)',
-                    }}>{e.score}</div>
+                    }}>{e.seriesTotal}</div>
                     <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 0.5, marginTop: 3,
-                      color: 'rgba(130,150,195,0.65)' }}>{e.seriesTotal} serie</div>
+                      color: 'rgba(130,150,195,0.65)' }}>{e.score} bäst</div>
                     <div style={{ fontSize: 11, fontWeight: 700, marginTop: 6,
                       color: 'rgba(195,208,235,0.8)', maxWidth: 80,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                     <div style={{ fontSize: 10, color: 'rgba(115,132,170,0.7)', maxWidth: 80,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                   </a>
                 )
 
-                // ── Standard tiers ───────────────────────────────────────────
-                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#5a82b4' : C.textMuted
-                const scoreGlow  = isElite ? '0 0 10px rgba(0,240,255,0.4), 0 0 24px rgba(0,240,255,0.2)' : 'none'
-                const cardBorder = isElite ? 'rgba(245,194,0,0.45)'
-                                 : isGold  ? 'rgba(245,194,0,0.25)'
-                                 : isGood  ? 'rgba(91,130,180,0.28)'
-                                 : isDark  ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
-                const nameParts2 = e.playerName.split(' ')
-                const firstName2 = nameParts2[0]
-                const lastName2  = nameParts2.slice(1).join(' ')
+                // ── Elite (250+) and Gold (220–249) ────────────────────────────
+                const scoreColor = isElite ? '#ffffff' : '#f5c200'
+                const scoreGlow  = isElite ? '0 0 8px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.18)' : 'none'
+                const cardBorder = isElite
+                  ? 'rgba(245,194,0,0.4)'
+                  : isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)'
+                const cardBg     = isElite
+                  ? (isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.04)')
+                  : (isDark ? 'rgba(255,255,255,0.03)' : '#ffffff')
                 return (
                   <a key={i} href={'/matches/' + e.matchId}
                     style={{ flexShrink: 0, textDecoration: 'none',
-                      background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
+                      background: cardBg,
                       border: `1px solid ${cardBorder}`, borderRadius: 12,
-                      padding: '12px 14px', textAlign: 'center', minWidth: 82,
-                      boxShadow: isElite ? '0 0 18px rgba(245,194,0,0.10)' : 'none' }}>
-                    <div style={{ fontSize: isElite ? 32 : isGold ? 29 : 26, fontWeight: 900,
-                      color: scoreColor, lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 7,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName2}</div>
+                      padding: '12px 14px', textAlign: 'center', minWidth: 84,
+                      boxShadow: isElite ? '0 0 20px rgba(245,194,0,0.08)' : 'none' }}>
+                    {isElite && (
+                      <div style={{
+                        fontSize: 7, fontWeight: 800, letterSpacing: 1.5, marginBottom: 7,
+                        background: 'linear-gradient(90deg, #c8a830, #f5c200 50%, #c8a830)',
+                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                      }}>★ ELITE</div>
+                    )}
+                    <div style={{ fontSize: isElite ? 32 : 28, fontWeight: 900,
+                      color: scoreColor, lineHeight: 1, textShadow: scoreGlow,
+                      marginTop: isElite ? 0 : 4 }}>{e.score}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 8,
+                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                     <div style={{ fontSize: 10, color: C.textMuted,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName2 || ' '}</div>
+                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                   </a>
                 )
               })}
