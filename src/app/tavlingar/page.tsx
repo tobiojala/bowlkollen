@@ -16,7 +16,7 @@ type Tavling = {
   banner?: string
 }
 
-const GREEN = '#38a088'
+const GREEN = '#c49040'
 
 const TAVLINGAR: Tavling[] = [
   {
@@ -161,16 +161,16 @@ export default function TavlingarPage() {
 
     const dc          = isPagaende ? GREEN : isDone ? C.textMuted : C.accent
     const accentBar   = isPagaende
-      ? `linear-gradient(90deg,${GREEN},rgba(56,160,136,0.15))`
+      ? `linear-gradient(90deg,${GREEN},rgba(196,144,64,0.15))`
       : isDone
       ? `linear-gradient(90deg,${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'},transparent)`
       : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))'
     const cardBg      = isPagaende
-      ? (isDark ? 'rgba(56,160,136,0.07)' : 'rgba(56,160,136,0.04)')
+      ? (isDark ? 'rgba(196,144,64,0.07)' : 'rgba(196,144,64,0.04)')
       : isDone ? 'transparent'
       : (isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.03)')
     const cardBorder  = isPagaende
-      ? 'rgba(56,160,136,0.25)'
+      ? 'rgba(196,144,64,0.25)'
       : isDone
       ? (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')
       : (isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)')
