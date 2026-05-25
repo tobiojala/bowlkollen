@@ -949,6 +949,22 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── SLLM promo ───────────────────────────────────────────────────────── */}
+        <a href="/sllm" style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          margin: '16px 16px 0', padding: '14px 16px',
+          borderRadius: 14, textDecoration: 'none',
+          background: isDark ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.08)',
+          border: '1px solid rgba(245,194,0,0.22)',
+        } as any}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: '#f5c200', letterSpacing: 1.4, marginBottom: 4 }}>KOMMANDE TURNERING</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: C.text, lineHeight: 1.2 }}>Storm Lucky Larsen Masters</div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>22–30 aug · Lucky Bowl, Helsingborg</div>
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', flexShrink: 0 }}>Mer info →</div>
+        </a>
+
         {/* ── Login CTA for logged-out users ───────────────────────────────────── */}
         {!session && !DEMO && !isEmpty && (
           <div style={{ margin: '20px 16px 0', borderRadius: 14,
