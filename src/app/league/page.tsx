@@ -386,12 +386,12 @@ export default function LeaguePage() {
                       </div>
                     </div>
                     <div style={{ fontSize: 12, color: C.textMuted, textAlign: 'center' }}>{s.played}</div>
-                    <div style={{ fontSize: 12, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                      <span style={{ fontWeight: 700, color: teal }}>{s.wins}</span>
-                      <span style={{ color: C.textMuted }}>{'-'}</span>
-                      <span style={{ color: C.textMuted }}>{s.draws}</span>
-                      <span style={{ color: C.textMuted }}>{'-'}</span>
-                      <span style={{ color: C.red }}>{s.losses}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>
+                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', fontWeight: 700, color: teal }}>{s.wins}</span>
+                      <span style={{ color: C.textMuted, fontSize: 10 }}>-</span>
+                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', color: C.textMuted }}>{s.draws}</span>
+                      <span style={{ color: C.textMuted, fontSize: 10 }}>-</span>
+                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', color: C.red }}>{s.losses}</span>
                     </div>
                     <div style={{ fontSize: 11, fontWeight: 600, color: dc, textAlign: 'center' }}>{dl}</div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: C.text, textAlign: 'center' }}>{s.points}</div>
