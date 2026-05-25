@@ -774,7 +774,7 @@ export default function Home() {
                 if (isPerfect) return (
                   <a key={i} href={'/matches/' + e.matchId} style={{
                     flexShrink: 0, textDecoration: 'none', borderRadius: 14,
-                    padding: '12px 14px', textAlign: 'center', minWidth: 90,
+                    padding: '12px 14px', textAlign: 'center', minWidth: 96,
                     background: '#000000',
                     border: '1px solid rgba(255,255,255,0.18)',
                     boxShadow: 'inset 0 0 28px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.6)',
@@ -787,7 +787,7 @@ export default function Home() {
                       }}>◆ PERFECT</div>
                     </div>
                     <div style={{
-                      fontSize: 42, fontWeight: 900, lineHeight: 1, color: '#ffffff',
+                      fontSize: 48, fontWeight: 900, lineHeight: 1, color: '#ffffff',
                       textShadow: '0 0 2px #fff, 0 0 10px rgba(255,255,255,0.75), 0 0 28px rgba(255,255,255,0.25)',
                     }}>300</div>
                     {e.seriesTotal && (
@@ -840,29 +840,43 @@ export default function Home() {
                   : isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)'
                 const cardBg     = isElite
                   ? (isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.04)')
-                  : (isDark ? 'rgba(255,255,255,0.03)' : '#ffffff')
+                  : (isDark
+                    ? 'linear-gradient(135deg, rgba(245,194,0,0.07) 0%, rgba(28,40,64,0.6) 55%, rgba(245,194,0,0.03) 100%)'
+                    : 'linear-gradient(135deg, rgba(245,194,0,0.09) 0%, rgba(255,255,255,1) 55%, rgba(245,194,0,0.05) 100%)')
                 return (
                   <a key={i} href={'/matches/' + e.matchId}
                     style={{ flexShrink: 0, textDecoration: 'none',
                       background: cardBg,
                       border: `1px solid ${cardBorder}`, borderRadius: 12,
-                      padding: '12px 14px', textAlign: 'center', minWidth: 84,
-                      boxShadow: isElite ? '0 0 20px rgba(245,194,0,0.08)' : 'none' }}>
-                    <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
-                      {isElite && (
-                        <div style={{
-                          fontSize: 7, fontWeight: 800, letterSpacing: 1.5,
-                          background: 'linear-gradient(90deg, #c8a830, #f5c200 50%, #c8a830)',
-                          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                        }}>★ ELITE</div>
+                      padding: 0, textAlign: 'center', minWidth: 84, overflow: 'hidden',
+                      boxShadow: isElite ? '0 0 20px rgba(245,194,0,0.08)' : 'none' } as any}>
+                    {/* Gold top bar — only on 220–249 tier */}
+                    {!isElite && (
+                      <div style={{ height: 2.5, background: 'linear-gradient(90deg, #f5c200, rgba(245,194,0,0.12))' }} />
+                    )}
+                    <div style={{ padding: isElite ? '12px 14px' : '10px 14px 12px' }}>
+                      <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
+                        {isElite && (
+                          <div style={{
+                            fontSize: 7, fontWeight: 800, letterSpacing: 1.5,
+                            background: 'linear-gradient(90deg, #c8a830, #f5c200 50%, #c8a830)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                          }}>★ ELITE</div>
+                        )}
+                      </div>
+                      {isElite ? (
+                        <div style={{ fontSize: 32, fontWeight: 900, color: '#ffffff',
+                          lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
+                      ) : (
+                        <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1,
+                          background: 'linear-gradient(160deg, #b8900a 0%, #f5c200 38%, #fff8c0 56%, #f5c200 72%, #b8900a 100%)',
+                          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } as any}>{e.score}</div>
                       )}
+                      <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 8,
+                        maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
+                      <div style={{ fontSize: 10, color: C.textMuted,
+                        maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                     </div>
-                    <div style={{ fontSize: isElite ? 32 : 28, fontWeight: 900,
-                      color: scoreColor, lineHeight: 1, textShadow: scoreGlow }}>{e.score}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 8,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
-                    <div style={{ fontSize: 10, color: C.textMuted,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
                   </a>
                 )
               })}
