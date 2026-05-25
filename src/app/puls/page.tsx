@@ -6,7 +6,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
 
-// ── Types (mirrored from page.tsx) ────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 type Match = {
   id: string; date: string; status: string; division: string
   home_score: number | null; away_score: number | null
@@ -17,7 +17,7 @@ type Match = {
   highSeries?: { playerName: string; score: number; team: 'home' | 'away' }[]
 }
 
-// ── DEMO data (same as home page, centralize later when real API exists) ──────
+// ── DEMO data ─────────────────────────────────────────────────────────────────
 const DEMO = true
 
 const MOCK_LIVE: Match[] = [
@@ -119,25 +119,32 @@ function streamStyle(url: string) {
   return { label: '▶ Livestream', color: '#e05555', bg: 'rgba(224,85,85,0.12)', border: 'rgba(224,85,85,0.3)' }
 }
 
-// ── Gauge SVG component ───────────────────────────────────────────────────────
+// ── Gauge SVG — viewBox sized to fit LUGNT/HETT labels without clipping ───────
 function PulsGauge({ score, needleClr, isDark }: { score: number; needleClr: string; isDark: boolean }) {
-  const cx = 80, cy = 80, r = 66, sw = 13
+  // cx=100 centers in 200-wide viewBox; labels sit at x≈28 and x≈172, comfortably within bounds
+  const cx = 100, cy = 80, r = 66, sw = 13
   const arcLen = Math.PI * r
   const dashOffset = arcLen * (1 - score)
   const z65a = Math.PI * (1 - 0.65)
   const z65x = cx + r * Math.cos(z65a), z65y = cy - r * Math.sin(z65a)
-  const needleLen = 50
+  const needleLen = 52
   const needleDeg = -(score * 180)
+  const trackClr = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  const tickClr  = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.15)'
+  const lblClr   = isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.22)'
+  const bgClr    = isDark ? '#10161e' : '#f5f2ec'
 
   return (
-    <svg viewBox="0 0 160 88" style={{ width: '100%', display: 'block' }}>
+    <svg viewBox="0 0 200 90" style={{ width: '100%', display: 'block' }}>
+      {/* Track */}
       <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
-        fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}
-        strokeWidth={sw} strokeLinecap="butt" />
+        fill="none" stroke={trackClr} strokeWidth={sw} strokeLinecap="butt" />
+      {/* Zone tints */}
       <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${z65x} ${z65y}`}
-        fill="none" stroke="rgba(56,160,136,0.18)" strokeWidth={sw} strokeLinecap="butt" />
+        fill="none" stroke="rgba(56,160,136,0.16)" strokeWidth={sw} strokeLinecap="butt" />
       <path d={`M ${z65x} ${z65y} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
-        fill="none" stroke="rgba(245,194,0,0.18)" strokeWidth={sw} strokeLinecap="butt" />
+        fill="none" stroke="rgba(245,194,0,0.16)" strokeWidth={sw} strokeLinecap="butt" />
+      {/* Animated fill */}
       <motion.path
         d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
         fill="none" stroke={needleClr} strokeWidth={sw} strokeLinecap="round"
@@ -147,15 +154,16 @@ function PulsGauge({ score, needleClr, isDark }: { score: number; needleClr: str
         transition={{ duration: 1.2, ease: 'easeOut' }}
         style={score > 0.85 ? { filter: `drop-shadow(0 0 6px ${needleClr})` } : {}}
       />
+      {/* Tick marks */}
       {[0.25, 0.5, 0.75].map(t => {
         const ta = Math.PI * (1 - t)
-        const x1 = cx + (r - sw/2 - 2) * Math.cos(ta)
-        const y1 = cy - (r - sw/2 - 2) * Math.sin(ta)
-        const x2 = cx + (r + sw/2 + 2) * Math.cos(ta)
-        const y2 = cy - (r + sw/2 + 2) * Math.sin(ta)
-        return <line key={t} x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'} strokeWidth={1.5} />
+        const x1 = cx + (r - sw / 2 - 2) * Math.cos(ta)
+        const y1 = cy - (r - sw / 2 - 2) * Math.sin(ta)
+        const x2 = cx + (r + sw / 2 + 2) * Math.cos(ta)
+        const y2 = cy - (r + sw / 2 + 2) * Math.sin(ta)
+        return <line key={t} x1={x1} y1={y1} x2={x2} y2={y2} stroke={tickClr} strokeWidth={1.5} />
       })}
+      {/* Needle */}
       <motion.g
         initial={{ rotate: 0 }}
         animate={{ rotate: needleDeg }}
@@ -165,43 +173,47 @@ function PulsGauge({ score, needleClr, isDark }: { score: number; needleClr: str
           stroke={needleClr} strokeWidth={2.5} strokeLinecap="round" />
       </motion.g>
       <circle cx={cx} cy={cy} r={6} fill={needleClr} />
-      <circle cx={cx} cy={cy} r={3} fill={isDark ? '#10161e' : '#f5f2ec'} />
-      {/* Zone labels */}
-      <text x={cx - r - 4} y={cy + 3} textAnchor="end"
-        fill={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'}
-        fontSize={9} fontFamily="system-ui,sans-serif" fontWeight={700}>LUGNT</text>
-      <text x={cx + r + 4} y={cy + 3} textAnchor="start"
-        fill={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'}
-        fontSize={9} fontFamily="system-ui,sans-serif" fontWeight={700}>HETT</text>
+      <circle cx={cx} cy={cy} r={3} fill={bgClr} />
+      {/* Zone labels — positioned outside arc, inside viewBox */}
+      <text x={cx - r - 6} y={cy + 4} textAnchor="end"
+        fill={lblClr} fontSize={9} fontFamily="system-ui,sans-serif" fontWeight={700}>LUGNT</text>
+      <text x={cx + r + 6} y={cy + 4} textAnchor="start"
+        fill={lblClr} fontSize={9} fontFamily="system-ui,sans-serif" fontWeight={700}>HETT</text>
     </svg>
   )
 }
 
 // ── Game-by-game bar strip ────────────────────────────────────────────────────
-function GameStrip({ games, average, label, align, C }: {
-  games: number[]; average: number; label: string; align: 'left' | 'right'
-  C: typeof dark
+// Baseline 185 = solid club-league bowling; bars turn teal above, muted below, gold at 250+
+const BASELINE = 185
+
+function GameStrip({ games, label, align, isCurrentGame, C }: {
+  games: number[]; label: string; align: 'left' | 'right'
+  isCurrentGame?: boolean; C: typeof dark
 }) {
-  const maxScore = 300
-  const barH = 32
+  const barH = 36
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ fontSize: 8, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8,
-        marginBottom: 4, textAlign: align }}>{label}</div>
-      <div style={{ display: 'flex', gap: 3, justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
-        alignItems: 'flex-end', height: barH }}>
+        marginBottom: 5, textAlign: align,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ display: 'flex', gap: 4, justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
+        alignItems: 'flex-end' }}>
         {games.map((g, i) => {
-          const h = 4 + ((g - 100) / (maxScore - 100)) * (barH - 4)
-          const clr = g >= 250 ? '#f5c200' : g >= average ? '#38a088' : C.textMuted
-          const isLast = i === games.length - 1
+          const barPx = Math.max(4, ((g - 100) / (300 - 100)) * barH)
+          const isGold  = g >= 250
+          const isGood  = g >= BASELINE
+          const clr = isGold ? '#f5c200' : isGood ? '#38a088' : C.textMuted
+          const isLatest = i === games.length - 1 && isCurrentGame !== false
           return (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              {isLast && g >= 250 && (
-                <div style={{ fontSize: 7, fontWeight: 800, color: '#f5c200', letterSpacing: 0 }}>★</div>
+              {isGold && (
+                <div style={{ fontSize: 7, fontWeight: 900, color: '#f5c200', lineHeight: 1 }}>★</div>
               )}
-              <div style={{ width: 14, height: h, borderRadius: 3, background: clr,
-                opacity: isLast ? 1 : 0.65 }} />
-              <div style={{ fontSize: 8, color: clr, fontWeight: isLast ? 800 : 600,
+              <div style={{ width: 16, height: barPx, borderRadius: 3, background: clr,
+                opacity: isLatest ? 1 : 0.6,
+                boxShadow: isGold ? '0 0 6px rgba(245,194,0,0.5)' : undefined }} />
+              <div style={{ fontSize: 8, color: clr, fontWeight: isLatest ? 800 : 600,
                 fontVariantNumeric: 'tabular-nums' }}>{g}</div>
             </div>
           )
@@ -211,7 +223,7 @@ function GameStrip({ games, average, label, align, C }: {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function PulsPage() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -229,35 +241,39 @@ export default function PulsPage() {
   }, [])
 
   useEffect(() => {
-    if (DEMO) {
-      setMatches(MOCK_LIVE)
-      setLoading(false)
-      return
-    }
-    // Real data fetch goes here
+    if (DEMO) { setMatches(MOCK_LIVE); setLoading(false); return }
+    // real fetch here
   }, [])
 
   const sorted = [...matches].sort((a, b) => tensionScore(b) - tensionScore(a))
-
   const skelClr = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
+
+  const styles = `
+    @keyframes skel-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+    @keyframes live-blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    .skel-wrap>*{animation:skel-pulse 1.6s ease-in-out infinite}
+    .live-dot{animation:live-blink 1.2s ease-in-out infinite}
+  `
 
   if (loading) {
     return (
       <main style={{ background: C.bg, minHeight: '100vh', paddingBottom: 80 }}>
-        <style>{`@keyframes skel-pulse{0%,100%{opacity:.45}50%{opacity:1}}.skel-wrap>*{animation:skel-pulse 1.6s ease-in-out infinite}`}</style>
-        <div className="skel-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16 }}>
-          {[1, 2, 3].map(i => (
+        <style>{styles}</style>
+        <div className="skel-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 16, paddingTop: 20 }}>
+          {[0, 1, 2].map(i => (
             <div key={i} style={{ borderRadius: 16, overflow: 'hidden',
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
               background: C.card }}>
               <div style={{ height: 3, background: skelClr }} />
               <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1, height: 10, borderRadius: 5, background: skelClr }} />
-                  <div style={{ width: 60, height: 10, borderRadius: 5, background: skelClr }} />
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: skelClr }} />
+                  <div style={{ flex: 1 }} />
+                  <div style={{ width: 60, height: 20, borderRadius: 4, background: skelClr }} />
                 </div>
-                <div style={{ height: 88, borderRadius: 8, background: skelClr }} />
-                <div style={{ height: 10, width: '60%', borderRadius: 5, background: skelClr, alignSelf: 'center' }} />
+                <div style={{ height: 90, borderRadius: 8, background: skelClr }} />
+                <div style={{ height: 10, width: '55%', borderRadius: 5, background: skelClr, alignSelf: 'center' }} />
+                <div style={{ height: 36, borderRadius: 8, background: skelClr }} />
               </div>
             </div>
           ))}
@@ -269,10 +285,9 @@ export default function PulsPage() {
   if (sorted.length === 0) {
     return (
       <main style={{ background: C.bg, minHeight: '100vh', paddingBottom: 80,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5 }}>
-          INGA LIVE-MATCHER JUST NU
-        </div>
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <style>{styles}</style>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted, letterSpacing: 0.5 }}>INGA LIVE-MATCHER JUST NU</div>
         <div style={{ fontSize: 11, color: C.textMuted }}>Kom tillbaka på matchdag</div>
       </main>
     )
@@ -280,38 +295,35 @@ export default function PulsPage() {
 
   return (
     <main style={{ background: C.bg, minHeight: '100vh', paddingBottom: 80 }}>
+      <style>{styles}</style>
 
-      {/* Page header */}
-      <div style={{ padding: '20px 16px 4px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      {/* Header */}
+      <div style={{ padding: '20px 16px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: -0.5 }}>
-          Matchpulsen
+          MATCHPULSEN
         </h1>
         <span style={{ fontSize: 10, fontWeight: 700, color: '#e05555',
           background: 'rgba(224,85,85,0.12)', border: '1px solid rgba(224,85,85,0.3)',
-          padding: '2px 8px', borderRadius: 20, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#e05555',
-            display: 'inline-block', animation: 'skel-pulse 1s ease-in-out infinite' }} />
+          padding: '3px 9px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="live-dot" style={{ width: 5, height: 5, borderRadius: '50%',
+            background: '#e05555', display: 'inline-block', flexShrink: 0 }} />
           {sorted.length} LIVE
         </span>
       </div>
-      <div style={{ fontSize: 11, color: C.textMuted, padding: '0 16px 16px' }}>
-        Rankad efter spänning · uppdateras live
+      <div style={{ fontSize: 11, color: C.textMuted, padding: '4px 16px 16px' }}>
+        Rankad efter spänning
       </div>
 
-      {/* Match cards */}
+      {/* Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 16px 16px' }}>
         {sorted.map((m, rank) => {
-          const score = tensionScore(m)
+          const score      = tensionScore(m)
           const h = m.home_score!, a = m.away_score!
-          const isTied = h === a
+          const isTied     = h === a
           const isFollowed = followedIds.has(m.home.id) || followedIds.has(m.away.id)
-          const needleClr = tensionColor(score, C.textMuted)
-          const insight = tensionInsight(m)
-          const streams = m.streams ?? []
-          const avgGame = m.individualGames
-            ? [...m.individualGames.home, ...m.individualGames.away].reduce((s, v) => s + v, 0) /
-              (m.individualGames.home.length + m.individualGames.away.length)
-            : 180
+          const needleClr  = rank === 0 ? '#f5c200' : tensionColor(score, C.textMuted)
+          const insight    = tensionInsight(m)
+          const streams    = m.streams ?? []
 
           const borderClr = isFollowed
             ? 'rgba(245,194,0,0.5)'
@@ -320,36 +332,35 @@ export default function PulsPage() {
               : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
 
           return (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 12 }}
+            <motion.div key={m.id}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: rank * 0.06, duration: 0.3 }}
+              transition={{ delay: rank * 0.07, duration: 0.28 }}
               style={{ borderRadius: 16, overflow: 'hidden',
                 border: `1px solid ${borderClr}`,
                 boxShadow: isFollowed
                   ? '0 0 0 3px rgba(245,194,0,0.12), 0 0 28px rgba(245,194,0,0.1)'
                   : rank === 0
-                    ? (isDark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.1)')
+                    ? (isDark ? '0 4px 28px rgba(0,0,0,0.45)' : '0 4px 20px rgba(0,0,0,0.1)')
                     : undefined,
                 background: isTied
                   ? (isDark ? 'linear-gradient(145deg,rgba(245,194,0,0.08) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(245,194,0,0.04) 0%,rgba(248,248,252,1) 100%)')
-                  : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.02) 0%,rgba(248,248,252,1) 100%)') }}>
+                  : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.015) 0%,rgba(248,248,252,1) 100%)') }}>
 
-              {/* Top accent bar */}
+              {/* Accent bar — thicker for #1 */}
               <div style={{ height: rank === 0 ? 4 : 3,
-                background: `linear-gradient(90deg,${needleClr},${needleClr}30)` }} />
+                background: `linear-gradient(90deg,${needleClr},${needleClr}20)` }} />
 
               <div style={{ padding: '14px 16px 16px' }}>
 
                 {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                  {/* Rank badge */}
-                  <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                    background: rank === 0 ? needleClr : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                  {/* Rank badge — #1 always gold */}
+                  <div style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0,
+                    background: rank === 0 ? '#f5c200' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 10, fontWeight: 900,
-                      color: rank === 0 ? (isDark ? '#10161e' : '#ffffff') : C.textMuted }}>
+                    <span style={{ fontSize: 11, fontWeight: 900,
+                      color: rank === 0 ? '#10161e' : C.textMuted }}>
                       {rank + 1}
                     </span>
                   </div>
@@ -361,15 +372,13 @@ export default function PulsPage() {
                   <span style={{ flex: 1 }} />
                   <span style={{ fontSize: 9, fontWeight: 700, color: divColor(m.division),
                     background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                    padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>{shortDiv(m.division)}</span>
+                    padding: '3px 9px', borderRadius: 4, letterSpacing: 0.3 }}>{shortDiv(m.division)}</span>
                 </div>
 
                 {/* Teams + gauge */}
                 <a href={'/matches/' + m.id}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none',
                     WebkitTapHighlightColor: 'transparent' } as any}>
-
-                  {/* Home side */}
                   <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
                     <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 3, letterSpacing: 0.5 }}>HEMMA</div>
                     <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
@@ -381,12 +390,10 @@ export default function PulsPage() {
                     </div>
                   </div>
 
-                  {/* Gauge */}
                   <div style={{ flexShrink: 0, width: 160 }}>
                     <PulsGauge score={score} needleClr={needleClr} isDark={isDark} />
                   </div>
 
-                  {/* Away side */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 3, letterSpacing: 0.5 }}>BORTA</div>
                     <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
@@ -399,7 +406,7 @@ export default function PulsPage() {
                   </div>
                 </a>
 
-                {/* Context insight */}
+                {/* Insight */}
                 {insight && (
                   <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, fontWeight: 700,
                     color: needleClr, letterSpacing: 0.4 }}>
@@ -407,58 +414,71 @@ export default function PulsPage() {
                   </div>
                 )}
 
-                {/* Game-by-game bars */}
-                {m.individualGames && (
-                  <div style={{ marginTop: 14, display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                    <GameStrip
-                      games={m.individualGames.home}
-                      average={avgGame}
-                      label={shortName(m.home.name)}
-                      align="right"
-                      C={C}
-                    />
-                    <div style={{ flexShrink: 0, width: 1, alignSelf: 'stretch',
-                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
-                    <GameStrip
-                      games={m.individualGames.away}
-                      average={avgGame}
-                      label={shortName(m.away.name)}
-                      align="left"
-                      C={C}
-                    />
+                {/* High series — above game bars, more exciting */}
+                {m.highSeries && m.highSeries.length > 0 && (
+                  <div style={{ marginTop: 12,
+                    paddingTop: 12, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    <div style={{ fontSize: 8, fontWeight: 800, color: C.textMuted,
+                      letterSpacing: 1.3, marginBottom: 7 }}>HÖGA SPEL</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                      {m.highSeries.map((hs, i) => (
+                        <div key={i} style={{ fontSize: 10, fontWeight: 700,
+                          color: hs.score >= 250 ? '#f5c200' : '#38a088',
+                          background: hs.score >= 250 ? 'rgba(245,194,0,0.1)' : 'rgba(56,160,136,0.1)',
+                          border: `1px solid ${hs.score >= 250 ? 'rgba(245,194,0,0.28)' : 'rgba(56,160,136,0.28)'}`,
+                          borderRadius: 6, padding: '5px 10px',
+                          display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{hs.score}</span>
+                          <span style={{ color: C.textMuted }}>·</span>
+                          <span>{hs.playerName}</span>
+                          <span style={{ fontSize: 8, color: C.textMuted }}>
+                            {hs.team === 'home' ? shortName(m.home.name) : shortName(m.away.name)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* High series ticker */}
-                {m.highSeries && m.highSeries.length > 0 && (
-                  <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-                    {m.highSeries.map((hs, i) => (
-                      <div key={i} style={{ fontSize: 10, fontWeight: 700,
-                        color: hs.score >= 250 ? '#f5c200' : '#38a088',
-                        background: hs.score >= 250 ? 'rgba(245,194,0,0.1)' : 'rgba(56,160,136,0.1)',
-                        border: `1px solid ${hs.score >= 250 ? 'rgba(245,194,0,0.3)' : 'rgba(56,160,136,0.3)'}`,
-                        borderRadius: 6, padding: '4px 9px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ fontWeight: 900 }}>{hs.score}</span>
-                        <span style={{ opacity: 0.7 }}>·</span>
-                        <span>{hs.playerName}</span>
-                        <span style={{ fontSize: 8, opacity: 0.6 }}>
-                          {hs.team === 'home' ? shortName(m.home.name) : shortName(m.away.name)}
-                        </span>
-                      </div>
-                    ))}
+                {/* Game-by-game bars */}
+                {m.individualGames && (
+                  <div style={{ marginTop: 12,
+                    paddingTop: 12, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    <div style={{ fontSize: 8, fontWeight: 800, color: C.textMuted,
+                      letterSpacing: 1.3, marginBottom: 7 }}>SPELPOÄNG</div>
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
+                      <GameStrip
+                        games={m.individualGames.home}
+                        label={shortName(m.home.name)}
+                        align="right"
+                        isCurrentGame={true}
+                        C={C}
+                      />
+                      <div style={{ flexShrink: 0, width: 1, alignSelf: 'stretch',
+                        background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
+                      <GameStrip
+                        games={m.individualGames.away}
+                        label={shortName(m.away.name)}
+                        align="left"
+                        isCurrentGame={true}
+                        C={C}
+                      />
+                    </div>
                   </div>
                 )}
 
                 {/* Stream pills */}
                 {streams.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 12 }}>
+                  <div style={{ marginTop: 12,
+                    paddingTop: 12, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                    display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                     {streams.map((s, idx) => {
                       const ss = streamStyle(s.url)
                       return (
                         <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
                           style={{ fontSize: 10, fontWeight: 700, color: ss.color,
                             background: ss.bg, border: `1px solid ${ss.border}`,
-                            borderRadius: 8, padding: '5px 12px', textDecoration: 'none',
+                            borderRadius: 8, padding: '6px 12px', textDecoration: 'none',
                             display: 'flex', alignItems: 'center', gap: 5,
                             WebkitTapHighlightColor: 'transparent' } as any}>
                           <span style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color,

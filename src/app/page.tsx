@@ -1281,7 +1281,7 @@ export default function Home() {
                   {sorted.length > 1 && (
                     <div style={{ marginTop: 12, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`, paddingTop: 10 }}>
                       <div style={{ fontSize: 8, fontWeight: 800, color: C.textMuted, letterSpacing: 1.4, marginBottom: 6 }}>
-                        ALLA LIVE · {sorted.length} MATCHER
+                        ALLA LIVE
                       </div>
                       {sorted.slice(1).map((m, idx) => {
                         const ms = tensionScore(m)
@@ -1317,7 +1317,9 @@ export default function Home() {
                   )}
 
                   {/* Link to full /puls page */}
-                  <div style={{ marginTop: 12, textAlign: 'center' }}>
+                  <div style={{ marginTop: 12, paddingTop: 12,
+                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+                    textAlign: 'center' }}>
                     <a href="/puls" style={{ fontSize: 9, fontWeight: 800, color: needleClr,
                       textDecoration: 'none', letterSpacing: 1.0 }}>
                       SE MATCHPULSEN →
