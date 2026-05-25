@@ -789,19 +789,40 @@ export default function Home() {
 
         {/* ── Din nästa match (top card) ────────────────────────────────────────── */}
         {myNextMatch && !nextMatchHidden && (() => {
-          const m    = myNextMatch
-          const cd   = countdown(m.date, now)
-          const time = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-          const dStr = m.date.slice(0, 10)
+          const m         = myNextMatch
+          const cd        = countdown(m.date, now)
+          const time      = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+          const dStr      = m.date.slice(0, 10)
+          const streams   = m.streams ?? []
+          const isMyHome  = DEMO ? true : followedIds.has((m.home as any)?.id)
+          type FormResult = 'W' | 'L' | 'D'
+          const MOCK_FORM: Record<string, FormResult[]> = {
+            'demo-t3': ['W', 'W', 'D', 'W', 'L'],
+            'demo-t4': ['L', 'D', 'W', 'L', 'W'],
+          }
+          const homeForm: FormResult[] = DEMO ? (MOCK_FORM[m.home.id] ?? []) : []
+          const awayForm: FormResult[] = DEMO ? (MOCK_FORM[m.away.id] ?? []) : []
+          const formColor = (r: FormResult) => r === 'W' ? '#5a82b4' : r === 'L' ? '#e05555' : C.textMuted
+
           return (
             <div style={{ padding: '12px 16px 0' }}>
-              <div style={{ borderRadius: 14, overflow: 'hidden',
-                border: `1px solid ${isDark ? 'rgba(91,130,180,0.3)' : 'rgba(91,130,180,0.35)'}`,
-                background: isDark ? 'rgba(91,130,180,0.08)' : 'rgba(91,130,180,0.06)' }}>
-                <div style={{ height: 2.5, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))' }} />
-                <div style={{ padding: '11px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+              <div style={{ borderRadius: 16, overflow: 'hidden',
+                border: `1px solid ${isDark ? 'rgba(91,130,180,0.32)' : 'rgba(91,130,180,0.38)'}`,
+                background: isDark
+                  ? 'linear-gradient(145deg, rgba(91,130,180,0.13) 0%, rgba(11,21,40,0.98) 100%)'
+                  : 'linear-gradient(145deg, rgba(91,130,180,0.08) 0%, rgba(248,248,252,1) 100%)',
+              }}>
+                <div style={{ height: 3, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))' }} />
+                <div style={{ padding: '12px 14px 14px' }}>
+
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
                     <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.4, flex: 1 }}>DIN NÄSTA MATCH</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: divColor(m.division),
+                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                      padding: '2px 7px', borderRadius: 4, letterSpacing: 0.3, marginRight: 8 }}>
+                      {shortDiv(m.division)}
+                    </span>
                     <button onClick={toggleNextMatch}
                       style={{ padding: '3px 9px', borderRadius: 8, border: 'none', cursor: 'pointer',
                         background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
@@ -810,38 +831,95 @@ export default function Home() {
                       dölj ↓
                     </button>
                   </div>
+
+                  {/* Teams + countdown */}
                   <a href={'/matches/' + m.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none',
-                      WebkitTapHighlightColor: 'transparent' } as any}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 8,
+                      textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
+
+                    {/* Home */}
                     <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                      {isMyHome && (
+                        <div style={{ fontSize: 8, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2, marginBottom: 3 }}>MITT LAG</div>
+                      )}
+                      <div style={{ fontSize: 15, fontWeight: 800, color: C.text,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {shortName(m.home?.name || '')}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Hemma</div>
+                      {homeForm.length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 3, marginTop: 5 }}>
+                          {homeForm.map((r, i) => (
+                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4 }}>Hemma</div>
                     </div>
-                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 72 }}>
-                      {cd
-                        ? <div style={{ fontSize: 20, fontWeight: 900, color: '#5a82b4', fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                        : <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted }}>{time}</div>
-                      }
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)} · {time}</div>
+
+                    {/* Countdown */}
+                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 80 }}>
+                      {cd ? (
+                        <div style={{ fontSize: 26, fontWeight: 900, color: '#5a82b4',
+                          fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{cd}</div>
+                      ) : (
+                        <div style={{ fontSize: 16, fontWeight: 700, color: C.textMuted }}>{time}</div>
+                      )}
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, lineHeight: 1.6 }}>
+                        {dateLabel(dStr)}<br />{time}
+                      </div>
                     </div>
+
+                    {/* Away */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                      {!isMyHome && (
+                        <div style={{ fontSize: 8, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2, marginBottom: 3 }}>MITT LAG</div>
+                      )}
+                      <div style={{ fontSize: 15, fontWeight: 800, color: C.text,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {shortName(m.away?.name || '')}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Borta</div>
+                      {awayForm.length > 0 && (
+                        <div style={{ display: 'flex', gap: 3, marginTop: 5 }}>
+                          {awayForm.map((r, i) => (
+                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: formColor(r) }} />
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4 }}>Borta</div>
                     </div>
                   </a>
+
+                  {/* Stream pills */}
+                  {streams.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 14 }}>
+                      {streams.map((s, idx) => {
+                        const ss = streamStyle(s.url)
+                        return (
+                          <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
+                            style={{ fontSize: 10, fontWeight: 700, color: ss.color,
+                              background: ss.bg, border: `1px solid ${ss.border}`,
+                              borderRadius: 8, padding: '5px 10px', textDecoration: 'none',
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              WebkitTapHighlightColor: 'transparent' } as any}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color, flexShrink: 0, display: 'inline-block' }} />
+                            {ss.label}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600,
+                      letterSpacing: 0.3, color: 'rgba(91,130,180,0.5)' }}>
+                      Tryck för detaljer →
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )
         })()}
 
-        {/* ── Hero strip ───────────────────────────────────────────────────────── */}
+                {/* ── Hero strip ───────────────────────────────────────────────────────── */}
         {(liveItems.length > 0 || upcomingItems.length > 0) && (
           <HeroStrip liveItems={liveItems} upcomingItems={upcomingItems} C={C} isDark={isDark} now={now} />
         )}
