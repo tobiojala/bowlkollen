@@ -1203,21 +1203,21 @@ export default function Home() {
             ))}
           </div>
           <div style={{ borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 30px',
+            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
               padding: '5px 12px', borderBottom: '1px solid ' + C.border,
               background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-              {(['#', 'Lag', 'M', 'P'] as const).map((h, i) => (
+              {(['#', 'Lag', 'M', 'MP'] as const).map((h, i) => (
                 <span key={h} style={{ fontSize: 9, color: C.textMuted, fontWeight: 700,
-                  textAlign: i >= 2 ? 'right' as const : 'left' as const }}>{h}</span>
+                  textAlign: i >= 2 ? 'center' as const : 'left' as const }}>{h}</span>
               ))}
             </div>
             {tableRows.slice(0, 5).map((row, i) => {
-              const zoneClr = row.rank <= 2 ? '#f5c200' : row.rank <= 6 ? '#5a82b4'
+              const zoneClr = row.rank <= 2 ? '#f5c200' : row.rank <= 6 ? '#38a088'
                 : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)')
               const isMyTeam = followedIds.has(row.teamId)
               return (
                 <a key={row.teamId} href={'/teams/' + row.teamId}
-                  style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 30px',
+                  style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
                     padding: '9px 0', alignItems: 'center', textDecoration: 'none',
                     borderTop: i > 0 ? '1px solid ' + C.border : 'none',
                     borderLeft: '3px solid ' + zoneClr,
@@ -1225,13 +1225,13 @@ export default function Home() {
                       ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
                       : 'transparent',
                     WebkitTapHighlightColor: 'transparent' } as any}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{row.rank}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: zoneClr !== 'transparent' ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
                   <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
                     {shortName(row.teamName)}
                   </span>
-                  <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'right' }}>{row.played}</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'right', paddingRight: 12,
+                  <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{row.played}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'center',
                     color: row.rank <= 2 ? '#f5c200' : C.text }}>{row.points}</span>
                 </a>
               )
