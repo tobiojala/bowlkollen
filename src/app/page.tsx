@@ -1081,7 +1081,7 @@ export default function Home() {
         )}
 
 
-        {/* ── Spänningsbarometer ───────────────────────────────────────────────── */}
+        {/* ── Matchmätaren (speedometer) ──────────────────────────────────────── */}
         {filteredLive.length > 0 && (() => {
           const ts = (m: Match): number => {
             if (m.home_score === null) return 0
@@ -1095,69 +1095,129 @@ export default function Home() {
           const score = ts(hot)
           const h = hot.home_score!, a = hot.away_score!
           const isTied = h === a
-          const barClr = score > 0.88 ? '#f5c200' : score > 0.65 ? '#38a088' : C.textMuted
+          const needleClr = score > 0.88 ? '#f5c200' : score > 0.65 ? '#38a088' : C.textMuted
           const streams = hot.streams ?? []
+
+          // SVG gauge geometry
+          const cx = 110, cy = 112, r = 82, sw = 15
+          const arcLen = Math.PI * r
+          const dashOffset = arcLen * (1 - score)
+          // Zone boundary at 65%
+          const z65a = Math.PI * (1 - 0.65)
+          const z65x = cx + r * Math.cos(z65a), z65y = cy - r * Math.sin(z65a)
+          // Needle endpoint (animated via rotate on g)
+          const needleLen = 60
+          const needleDeg = -(score * 180)
+          const textClr = isDark ? '#ffffff' : '#1a2535'
+          const mutedFill = isDark ? '#6b7a99' : '#6b7a8d'
+
           return (
             <div style={{ padding: '16px 16px 0' }}>
               <a href={'/matches/' + hot.id} style={{ display: 'block', borderRadius: 16,
                 overflow: 'hidden', textDecoration: 'none',
                 border: `1px solid ${isTied ? 'rgba(245,194,0,0.35)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                 background: isTied
-                  ? (isDark ? 'linear-gradient(145deg,rgba(245,194,0,0.09) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(245,194,0,0.05) 0%,rgba(248,248,252,1) 100%)')
+                  ? (isDark ? 'linear-gradient(145deg,rgba(245,194,0,0.08) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(245,194,0,0.04) 0%,rgba(248,248,252,1) 100%)')
                   : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.02) 0%,rgba(248,248,252,1) 100%)'),
                 WebkitTapHighlightColor: 'transparent' } as any}>
-                <div style={{ height: 3, background: `linear-gradient(90deg,${barClr},${barClr}30)` }} />
+                <div style={{ height: 3, background: `linear-gradient(90deg,${needleClr},${needleClr}30)` }} />
                 <div style={{ padding: '12px 16px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: barClr, letterSpacing: 1.4, flex: 1 }}>SPÄNNINGSBAROMETER</span>
+
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: needleClr, letterSpacing: 1.4, flex: 1 }}>HETASTE MATCHEN</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: divColor(hot.division),
                       background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
                       padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>{shortDiv(hot.division)}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        color: h > a ? C.text : isTied ? C.text : C.textMuted }}>{shortName(hot.home?.name || '')}</div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
-                    </div>
-                    <div style={{ flexShrink: 0, width: 88, textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
-                          color: h >= a ? C.accent : C.textMuted,
-                          ...(isTied ? { textShadow: '0 0 18px rgba(245,194,0,0.5)' } : {}) }}>{h}</span>
-                        <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
-                        <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
-                          color: a >= h ? C.accent : C.textMuted,
-                          ...(isTied ? { textShadow: '0 0 18px rgba(245,194,0,0.5)' } : {}) }}>{a}</span>
-                      </div>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        color: a > h ? C.text : isTied ? C.text : C.textMuted }}>{shortName(hot.away?.name || '')}</div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
-                    </div>
+
+                  {/* Team names flanking the gauge */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, maxWidth: '44%',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      color: h > a ? C.text : isTied ? C.text : C.textMuted }}>
+                      {shortName(hot.home?.name || '')}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 700, maxWidth: '44%', textAlign: 'right',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      color: a > h ? C.text : isTied ? C.text : C.textMuted }}>
+                      {shortName(hot.away?.name || '')}
+                    </span>
                   </div>
-                  <div style={{ marginTop: 14 }}>
-                    <div style={{ height: 4, borderRadius: 99,
-                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.round(score * 100)}%` }}
-                        transition={{ duration: 0.9, ease: 'easeOut' }}
-                        style={{ height: '100%', borderRadius: 99, background: barClr,
-                          ...(isTied ? { boxShadow: `0 0 8px ${barClr}` } : {}) }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-                      <span style={{ fontSize: 8, color: C.textMuted }}>Låg spänning</span>
-                      <span style={{ fontSize: 8, fontWeight: 800, color: barClr }}>{Math.round(score * 100)}%</span>
-                      <span style={{ fontSize: 8, color: C.textMuted }}>Maximal</span>
-                    </div>
-                  </div>
+
+                  {/* SVG Speedometer gauge */}
+                  <svg viewBox="0 0 220 128" style={{ width: '100%', display: 'block', overflow: 'visible' }}>
+
+                    {/* Gray background track */}
+                    <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
+                      fill="none"
+                      stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}
+                      strokeWidth={sw} strokeLinecap="butt" />
+
+                    {/* Zone tint: teal 0–65% */}
+                    <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${z65x} ${z65y}`}
+                      fill="none" stroke="rgba(56,160,136,0.18)" strokeWidth={sw} strokeLinecap="butt" />
+
+                    {/* Zone tint: gold 65–100% */}
+                    <path d={`M ${z65x} ${z65y} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
+                      fill="none" stroke="rgba(245,194,0,0.18)" strokeWidth={sw} strokeLinecap="butt" />
+
+                    {/* Animated fill arc using dashoffset */}
+                    <motion.path
+                      d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
+                      fill="none"
+                      stroke={needleClr}
+                      strokeWidth={sw}
+                      strokeLinecap="round"
+                      strokeDasharray={arcLen}
+                      initial={{ strokeDashoffset: arcLen }}
+                      animate={{ strokeDashoffset: dashOffset }}
+                      transition={{ duration: 1.0, ease: 'easeOut' }}
+                      style={isTied ? { filter: `drop-shadow(0 0 5px ${needleClr})` } : {}}
+                    />
+
+                    {/* Tick marks at 0 25 50 75 100% */}
+                    {[0, 0.25, 0.5, 0.75, 1].map(t => {
+                      const ta = Math.PI * (1 - t)
+                      const x1 = cx + (r - sw/2 - 2) * Math.cos(ta)
+                      const y1 = cy - (r - sw/2 - 2) * Math.sin(ta)
+                      const x2 = cx + (r + sw/2 + 2) * Math.cos(ta)
+                      const y2 = cy - (r + sw/2 + 2) * Math.sin(ta)
+                      return <line key={t} x1={x1} y1={y1} x2={x2} y2={y2}
+                        stroke={isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.18)'} strokeWidth={1.5} />
+                    })}
+
+                    {/* Animated needle */}
+                    <motion.g
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: needleDeg }}
+                      transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1] }}
+                      style={{ transformOrigin: `${cx}px ${cy}px` }}>
+                      <line x1={cx} y1={cy} x2={cx - needleLen} y2={cy}
+                        stroke={needleClr} strokeWidth={2.5} strokeLinecap="round" />
+                    </motion.g>
+
+                    {/* Pivot dot */}
+                    <circle cx={cx} cy={cy} r={5} fill={needleClr} />
+                    <circle cx={cx} cy={cy} r={2.5} fill={isDark ? '#10161e' : '#f5f2ec'} />
+
+                    {/* Score inside gauge */}
+                    <text x={cx} y={cy - 18} textAnchor="middle"
+                      fill={isTied ? '#f5c200' : textClr}
+                      fontSize={26} fontWeight={900} fontFamily="system-ui,sans-serif">
+                      {h}–{a}
+                    </text>
+
+                    {/* Labels */}
+                    <text x={cx - r - 3} y={cy + 16} textAnchor="end"
+                      fill={mutedFill} fontSize={8} fontFamily="system-ui,sans-serif">Lugnt</text>
+                    <text x={cx + r + 3} y={cy + 16} textAnchor="start"
+                      fill={mutedFill} fontSize={8} fontFamily="system-ui,sans-serif">Hett</text>
+                  </svg>
+
+                  {/* Stream pills */}
                   {streams.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 12 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 4 }}>
                       {streams.map((s, idx) => {
                         const ss = streamStyle(s.url)
                         return (
