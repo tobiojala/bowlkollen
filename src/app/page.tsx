@@ -13,6 +13,7 @@ type Match = {
   home_score: number | null; away_score: number | null
   home: { id: string; name: string }; away: { id: string; name: string }
   streams?: { url: string }[]
+  venue?: string; oilProfile?: string
 }
 type HonorEntry = { playerName: string; score: number; matchId: string; seriesTotal?: number }
 type TableRow  = { rank: number; teamId: string; teamName: string; played: number; won: number; drawn: number; lost: number; points: number }
@@ -61,6 +62,7 @@ const MOCK_UPCOMING: Match[] = [
     home_score: null, away_score: null,
     home: { id: 'demo-t3', name: 'Göteborgs BK' },
     away: { id: 'demo-t4', name: 'Linköpings BK' },
+    venue: 'Göteborg Bowlinghall', oilProfile: 'PBA Shark',
   },
   {
     id: 'demo-up-2', date: _in7h, status: 'upcoming', division: 'Allsvenskan Damer',
@@ -417,18 +419,11 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           )
                         })}
                       </div>
-                    ) : (
-                      <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                        {isLive ? (
-                          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.3, color: `rgba(245,194,0,0.6)` }}>Tryck för detaljer →</span>
-                        ) : (
-                          <>
-                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#5a82b4', opacity: 0.7 }} />
-                            <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2 }}>KOMMANDE</span>
-                          </>
-                        )}
+                    ) : isLive ? (
+                      <div style={{ marginTop: 14, textAlign: 'center' }}>
+                        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.3, color: `rgba(245,194,0,0.6)` }}>Tryck för detaljer →</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </a>
               )
@@ -997,8 +992,8 @@ export default function Home() {
                         <>
                           <div style={{ fontSize: 28, fontWeight: 900, color: C.accent,
                             fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{cd}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
-                            {dateLabel(dStr)}<br />{time}
+                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 6 }}>
+                            {dateLabel(dStr)} · {time}
                           </div>
                         </>
                       ) : (
@@ -1030,6 +1025,28 @@ export default function Home() {
                       )}
                     </div>
                   </div>
+
+                  {/* Venue + oil profile */}
+                  {(m.venue || m.oilProfile) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14,
+                      padding: '8px 10px', borderRadius: 8,
+                      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
+                      {m.venue && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 10, flexShrink: 0 }}>📍</span>
+                          <span style={{ fontSize: 10, color: C.text, fontWeight: 600,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.venue}</span>
+                        </div>
+                      )}
+                      {m.oilProfile && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                          <span style={{ fontSize: 10 }}>🛢</span>
+                          <span style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{m.oilProfile}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Stream pills or KOMMANDE indicator */}
                   {streams.length > 0 ? (
