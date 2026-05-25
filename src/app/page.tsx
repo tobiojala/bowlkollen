@@ -1136,12 +1136,16 @@ export default function Home() {
 
                     {/* Home */}
                     <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                      <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2, letterSpacing: 0.5 }}>HEMMA</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+                        color: h > a ? C.text : isTied ? C.text : C.textMuted }}>
+                        {h}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.25, marginTop: 4,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         color: h > a ? C.text : isTied ? C.text : C.textMuted }}>
                         {shortName(hot.home?.name || '')}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
                     </div>
 
                     {/* Mini gauge */}
@@ -1183,22 +1187,21 @@ export default function Home() {
                         </motion.g>
                         <circle cx={cx} cy={cy} r={4} fill={needleClr} />
                         <circle cx={cx} cy={cy} r={2} fill={isDark ? '#10161e' : '#f5f2ec'} />
-                        <text x={cx} y={cy - 14} textAnchor="middle"
-                          fill={isTied ? '#f5c200' : textClr}
-                          fontSize={17} fontWeight={900} fontFamily="system-ui,sans-serif">
-                          {h}–{a}
-                        </text>
                       </svg>
                     </div>
 
                     {/* Away */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                      <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2, letterSpacing: 0.5 }}>BORTA</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+                        color: a > h ? C.text : isTied ? C.text : C.textMuted }}>
+                        {a}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.25, marginTop: 4,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         color: a > h ? C.text : isTied ? C.text : C.textMuted }}>
                         {shortName(hot.away?.name || '')}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
                     </div>
                   </div>
 
