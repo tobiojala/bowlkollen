@@ -558,6 +558,15 @@ export default function Home() {
   const [now, setNow] = useState(Date.now())
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
   const [tableDiv, setTableDiv] = useState<'Elitserien Herrar' | 'Elitserien Damer'>('Elitserien Herrar')
+  const [nextMatchHidden, setNextMatchHidden] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('nextMatchHidden') === '1'
+  })
+  const toggleNextMatch = () => setNextMatchHidden(prev => {
+    const next = !prev
+    if (typeof window !== 'undefined') localStorage.setItem('nextMatchHidden', next ? '1' : '0')
+    return next
+  })
 
   const toggleDate = (key: string) =>
     setExpandedDates(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s })
@@ -777,6 +786,60 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        {/* ── Din nästa match (top card) ────────────────────────────────────────── */}
+        {myNextMatch && !nextMatchHidden && (() => {
+          const m    = myNextMatch
+          const cd   = countdown(m.date, now)
+          const time = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+          const dStr = m.date.slice(0, 10)
+          return (
+            <div style={{ padding: '12px 16px 0' }}>
+              <div style={{ borderRadius: 14, overflow: 'hidden',
+                border: `1px solid ${isDark ? 'rgba(91,130,180,0.3)' : 'rgba(91,130,180,0.35)'}`,
+                background: isDark ? 'rgba(91,130,180,0.08)' : 'rgba(91,130,180,0.06)' }}>
+                <div style={{ height: 2.5, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))' }} />
+                <div style={{ padding: '11px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.4, flex: 1 }}>DIN NÄSTA MATCH</span>
+                    <button onClick={toggleNextMatch}
+                      style={{ padding: '3px 9px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+                        fontSize: 9, fontWeight: 700, color: C.textMuted,
+                        WebkitTapHighlightColor: 'transparent' } as any}>
+                      dölj ↓
+                    </button>
+                  </div>
+                  <a href={'/matches/' + m.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none',
+                      WebkitTapHighlightColor: 'transparent' } as any}>
+                    <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {shortName(m.home?.name || '')}
+                      </div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Hemma</div>
+                    </div>
+                    <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 72 }}>
+                      {cd
+                        ? <div style={{ fontSize: 20, fontWeight: 900, color: '#5a82b4', fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                        : <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted }}>{time}</div>
+                      }
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)} · {time}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {shortName(m.away?.name || '')}
+                      </div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Borta</div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── Hero strip ───────────────────────────────────────────────────────── */}
         {(liveItems.length > 0 || upcomingItems.length > 0) && (
@@ -1065,48 +1128,35 @@ export default function Home() {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', flexShrink: 0 }}>Mer info →</div>
         </a>
 
-        {/* ── Din nästa match (logged-in) / Login CTA (logged-out) ─────────────── */}
-        {myNextMatch ? (() => {
-          const m      = myNextMatch
-          const cd     = countdown(m.date, now)
-          const time   = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-          const dStr   = m.date.slice(0, 10)
-          return (
-            <a href={'/matches/' + m.id} style={{
-              display: 'block', margin: '16px 16px 0', borderRadius: 14, textDecoration: 'none',
-              border: `1px solid ${isDark ? 'rgba(91,130,180,0.3)' : 'rgba(91,130,180,0.35)'}`,
-              background: isDark ? 'rgba(91,130,180,0.08)' : 'rgba(91,130,180,0.06)',
-              WebkitTapHighlightColor: 'transparent' } as any}>
-              <div style={{ height: 2.5, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))', borderRadius: '14px 14px 0 0' }} />
-              <div style={{ padding: '12px 14px' }}>
-                <div style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.4, marginBottom: 10 }}>DIN NÄSTA MATCH</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {shortName(m.home?.name || '')}
-                    </div>
-                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Hemma</div>
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 72 }}>
-                    {cd
-                      ? <div style={{ fontSize: 20, fontWeight: 900, color: '#5a82b4', fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                      : <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted }}>{time}</div>
-                    }
-                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)} · {time}</div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {shortName(m.away?.name || '')}
-                    </div>
-                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Borta</div>
-                  </div>
-                </div>
-              </div>
+        {/* ── Din nästa match compact strip (when hidden) / Login CTA ──────────── */}
+        {myNextMatch && nextMatchHidden && (
+          <div style={{ margin: '16px 16px 0', display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 12,
+            border: `1px solid ${isDark ? 'rgba(91,130,180,0.22)' : 'rgba(91,130,180,0.28)'}`,
+            background: isDark ? 'rgba(91,130,180,0.06)' : 'rgba(91,130,180,0.05)' }}>
+            <button onClick={toggleNextMatch}
+              style={{ flexShrink: 0, width: 26, height: 26, borderRadius: '50%', border: 'none',
+                cursor: 'pointer', background: isDark ? 'rgba(91,130,180,0.22)' : 'rgba(91,130,180,0.14)',
+                color: '#5a82b4', fontSize: 13, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                WebkitTapHighlightColor: 'transparent' } as any}>↑</button>
+            <a href={'/matches/' + myNextMatch.id}
+              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8,
+                textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.1, flexShrink: 0 }}>DIN MATCH</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.text,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {shortName(myNextMatch.home?.name || '')} – {shortName(myNextMatch.away?.name || '')}
+              </span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 800, color: '#5a82b4',
+                fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                {countdown(myNextMatch.date, now)
+                  || new Date(myNextMatch.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+              </span>
             </a>
-          )
-        })() : (!session && !DEMO && !isEmpty && (
+          </div>
+        )}
+        {!session && !DEMO && !isEmpty && (
           <div style={{ margin: '20px 16px 0', borderRadius: 14,
             border: '1px solid ' + C.border,
             background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
@@ -1121,7 +1171,7 @@ export default function Home() {
               Logga in →
             </a>
           </div>
-        ))}
+        )}
 
         {/* ── Empty state ──────────────────────────────────────────────────────── */}
         {isEmpty && (
