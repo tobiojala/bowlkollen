@@ -364,7 +364,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text }}>
                           {shortName(m.home?.name || '')}
                         </div>
-                        {!hasScore && <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>}
+                        <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
                       </div>
 
                       <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -390,7 +390,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text }}>
                           {shortName(m.away?.name || '')}
                         </div>
-                        {!hasScore && <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>}
+                        <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
                       </div>
                     </div>
 
