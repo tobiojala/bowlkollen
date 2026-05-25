@@ -1203,13 +1203,17 @@ export default function Home() {
             ))}
           </div>
           <div style={{ borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
-              padding: '5px 12px', borderBottom: '1px solid ' + C.border,
+            <div style={{ display: 'flex', alignItems: 'center',
+              borderBottom: '1px solid ' + C.border,
               background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-              {(['#', 'Lag', 'M', 'MP'] as const).map((h, i) => (
-                <span key={h} style={{ fontSize: 9, color: C.textMuted, fontWeight: 700,
-                  textAlign: i >= 2 ? 'center' as const : 'left' as const }}>{h}</span>
-              ))}
+              <div style={{ width: 3, flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
+                padding: '5px 12px' }}>
+                {(['#', 'Lag', 'M', 'MP'] as const).map((h, i) => (
+                  <span key={h} style={{ fontSize: 9, color: C.textMuted, fontWeight: 700,
+                    textAlign: i >= 2 ? 'center' as const : 'left' as const }}>{h}</span>
+                ))}
+              </div>
             </div>
             {tableRows.slice(0, 5).map((row, i) => {
               const zoneClr = row.rank <= 2 ? '#f5c200' : row.rank <= 6 ? '#38a088'
@@ -1217,22 +1221,28 @@ export default function Home() {
               const isMyTeam = followedIds.has(row.teamId)
               return (
                 <a key={row.teamId} href={'/teams/' + row.teamId}
-                  style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
-                    padding: '9px 0', alignItems: 'center', textDecoration: 'none',
+                  style={{ display: 'flex', alignItems: 'center', textDecoration: 'none',
                     borderTop: i > 0 ? '1px solid ' + C.border : 'none',
-                    borderLeft: '3px solid ' + zoneClr,
                     background: isMyTeam
                       ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
                       : 'transparent',
-                    WebkitTapHighlightColor: 'transparent' } as any}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: row.rank <= 6 ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
-                  <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
-                    {shortName(row.teamName)}
-                  </span>
-                  <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{row.played}</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'center',
-                    color: row.rank <= 2 ? '#f5c200' : C.text }}>{row.points}</span>
+                    WebkitTapHighlightColor: 'transparent' } as any}
+                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                  onMouseLeave={e => (e.currentTarget.style.background = isMyTeam
+                    ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
+                    : 'transparent')}>
+                  <div style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', background: zoneClr }} />
+                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
+                    padding: '9px 12px', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: row.rank <= 6 ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
+                    <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
+                      {shortName(row.teamName)}
+                    </span>
+                    <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{row.played}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'center',
+                      color: row.rank <= 2 ? '#f5c200' : C.text }}>{row.points}</span>
+                  </div>
                 </a>
               )
             })}
