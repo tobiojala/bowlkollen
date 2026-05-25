@@ -29,7 +29,7 @@ function getZones(division: string, total: number): Zone[] {
   switch (division) {
     case 'Elitserien Herrar': return [
       { maxRank: 2,       color: '#f5c200', label: 'SM-slutspel' },
-      { maxRank: 6,       color: '#4caf7d', label: 'Slutspelskval (playoff)' },
+      { maxRank: 6,       color: '#38a088', label: 'Slutspelskval (playoff)' },
       { maxRank: 8,       color: 'transparent', label: '' },
       { maxRank: 9,       color: '#e8a030', label: 'Kval till Elitserien' },
       { maxRank: 10,      color: '#666',    label: 'Nedflyttning' },
@@ -62,14 +62,14 @@ function getZones(division: string, total: number): Zone[] {
     default:
       if (division.startsWith('Div 1') || division.startsWith('Division 1')) return [
         { maxRank: 1,         color: '#f5c200', label: 'Uppflyttning' },
-        { maxRank: 2,         color: '#4caf7d', label: 'Kval till Allsvenskan' },
+        { maxRank: 2,         color: '#38a088', label: 'Kval till Allsvenskan' },
         { maxRank: total - 3, color: 'transparent', label: '' },
         { maxRank: total - 2, color: '#e8a030', label: 'Kval Division 1' },
         { maxRank: total,     color: '#666',    label: 'Nedflyttning' },
       ]
       if (division.startsWith('Div 2') || division.startsWith('Division 2')) return [
         { maxRank: 1,         color: '#f5c200', label: 'Uppflyttning' },
-        { maxRank: 2,         color: '#4caf7d', label: 'Kval till Division 1' },
+        { maxRank: 2,         color: '#38a088', label: 'Kval till Division 1' },
         { maxRank: total - 3, color: 'transparent', label: '' },
         { maxRank: total - 2, color: '#e8a030', label: 'Kval Division 2' },
         { maxRank: total,     color: '#666',    label: 'Nedflyttning' },

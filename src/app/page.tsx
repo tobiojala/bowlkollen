@@ -236,14 +236,14 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
         <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
           {([['live', 'PÅGÅENDE', liveItems.length], ['upcoming', 'KOMMANDE', upcomingItems.length]] as const).map(([m, label, count]) => {
             const isAct = mode === m
-            const clr   = m === 'live' ? '#4caf7d' : '#f5c200'
+            const clr   = m === 'live' ? '#38a088' : '#f5c200'
             return (
               <button key={m} onClick={() => switchMode(m)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
                   background: isAct
-                    ? (isDark ? `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.1)`)
+                    ? (isDark ? `rgba(${m === 'live' ? '56,160,136' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '56,160,136' : '245,194,0'},0.1)`)
                     : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
                   outline: `1px solid ${isAct ? clr + '66' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
                   WebkitTapHighlightColor: 'transparent',
@@ -254,7 +254,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                 </span>
                 <span style={{ fontSize: 9, fontWeight: 700,
                   color: isAct ? clr : C.textMuted,
-                  background: isAct ? `rgba(${m === 'live' ? '76,175,125' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
+                  background: isAct ? `rgba(${m === 'live' ? '56,160,136' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
                   borderRadius: 8, padding: '1px 6px' }}>
                   {count}
                 </span>
@@ -285,15 +285,15 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const cd       = !hasScore ? countdown(m.date, now) : null
               const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               const dateStr  = m.date.slice(0, 10)
-              const GREEN_M   = '#4caf7d'
+              const GREEN_M   = '#38a088'
               const streams   = isLive ? (m.streams ?? []) : []
               const isStream  = streams.length > 0
               const topClr    = isLive ? GREEN_M : '#f5c200'
               const bgFrom    = isLive
-                ? (isDark ? 'rgba(76,175,125,0.1)' : 'rgba(76,175,125,0.06)')
+                ? (isDark ? 'rgba(56,160,136,0.1)' : 'rgba(56,160,136,0.06)')
                 : (isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.06)')
               const edgeClr   = isLive
-                ? 'rgba(76,175,125,0.3)'
+                ? 'rgba(56,160,136,0.3)'
                 : (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)')
               return (
                 <a href={'/matches/' + m.id} style={{
@@ -391,7 +391,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                       </div>
                     ) : (
                       <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
-                        color: isLive ? `rgba(76,175,125,0.6)` : C.textMuted }}>
+                        color: isLive ? `rgba(56,160,136,0.6)` : C.textMuted }}>
                         {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
                       </div>
                     )}
@@ -443,7 +443,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const awayWin  = hasScore && m.away_score! > m.home_score!
               const isLiveM   = m.status === 'live'
               const isStreamM = isLiveM && (m.streams?.length ?? 0) > 0
-              const GREEN_S   = '#4caf7d'
+              const GREEN_S   = '#38a088'
               const cd        = !hasScore ? countdown(m.date, now) : null
               const time      = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               return (
@@ -452,11 +452,11 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                     flexShrink: 0, width: 82, padding: '8px 6px',
                     borderRadius: 12, cursor: 'pointer',
                     border: `1px solid ${isAct
-                      ? (isLiveM ? 'rgba(76,175,125,0.55)' : 'rgba(245,194,0,0.55)')
+                      ? (isLiveM ? 'rgba(56,160,136,0.55)' : 'rgba(245,194,0,0.55)')
                       : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)')}`,
                     background: isAct
                       ? (isLiveM
-                        ? (isDark ? 'rgba(76,175,125,0.14)' : 'rgba(76,175,125,0.08)')
+                        ? (isDark ? 'rgba(56,160,136,0.14)' : 'rgba(56,160,136,0.08)')
                         : (isDark ? 'rgba(245,194,0,0.14)'  : 'rgba(245,194,0,0.08)'))
                       : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
@@ -831,11 +831,11 @@ export default function Home() {
                 )
 
                 // ── Standard tiers ───────────────────────────────────────────
-                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#4caf7d' : C.textMuted
+                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#38a088' : C.textMuted
                 const scoreGlow  = isElite ? '0 0 10px rgba(0,240,255,0.4), 0 0 24px rgba(0,240,255,0.2)' : 'none'
                 const cardBorder = isElite ? 'rgba(245,194,0,0.45)'
                                  : isGold  ? 'rgba(245,194,0,0.25)'
-                                 : isGood  ? 'rgba(76,175,125,0.28)'
+                                 : isGood  ? 'rgba(56,160,136,0.28)'
                                  : isDark  ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
                 const nameParts2 = e.playerName.split(' ')
                 const firstName2 = nameParts2[0]

@@ -38,7 +38,7 @@ function ScoreChip({ score, C }: { score: number; C: any }) {
       fontSize: isElite ? 28 : isGold ? 25 : isGood ? 23 : 21,
       fontWeight: isElite ? 900 : isGold ? 800 : isGood ? 700 : 500,
       lineHeight: 1,
-      color: isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#4caf7d' : C.text,
+      color: isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#38a088' : C.text,
       textShadow: isElite
         ? '0 0 10px rgba(0,240,255,0.3), 0 0 24px rgba(0,240,255,0.15)'
         : 'none',

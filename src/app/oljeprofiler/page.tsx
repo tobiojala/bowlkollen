@@ -24,7 +24,7 @@ type Profile = {
 const CATEGORIES: { key: string; label: string; color: string; bg: string }[] = [
   { key: 'elite',        label: 'Elitserien',   color: '#f5c200', bg: 'rgba(245,194,0,0.10)' },
   { key: 'elite_damer',  label: 'Elit Damer',   color: '#d94a90', bg: 'rgba(217,74,144,0.10)' },
-  { key: 'bredare',      label: 'Bredare',       color: '#4caf7d', bg: 'rgba(76,175,125,0.10)' },
+  { key: 'bredare',      label: 'Bredare',       color: '#38a088', bg: 'rgba(56,160,136,0.10)' },
   { key: 'sammandrag',   label: 'Sammandrag',    color: '#4a90d9', bg: 'rgba(74,144,217,0.10)' },
   { key: 'kval',         label: 'Kval',          color: '#e09030', bg: 'rgba(224,144,48,0.10)' },
   { key: 'sm',           label: 'SM',            color: '#c07fff', bg: 'rgba(192,127,255,0.10)' },

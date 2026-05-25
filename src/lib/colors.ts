@@ -6,7 +6,7 @@ export const dark = {
   accent:   '#f5c200',
   text:     '#ffffff',
   textMuted:'#6b7a99',
-  green:    '#4caf7d',
+  green:    '#38a088',
   red:      '#e05555',
 }
 
@@ -18,7 +18,7 @@ export const light = {
   accent:   '#f5c200',
   text:     '#1a2535',
   textMuted:'#6b7a8d',
-  green:    '#1a9e6b',
+  green:    '#1a8870',
   red:      '#d63b3b',
 }
 

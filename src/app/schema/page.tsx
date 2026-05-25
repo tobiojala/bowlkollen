@@ -289,7 +289,7 @@ export default function SchedulePage() {
   )
 
   // ── Tävling card ─────────────────────────────────────────────────────────────
-  const GREEN = '#4caf7d'
+  const GREEN = '#38a088'
 
   const TavCard = ({ t }: { t: Tavling }) => {
     const isLive  = t.status === 'pagaende'
@@ -312,11 +312,11 @@ export default function SchedulePage() {
     return (
       <div style={{ margin: '8px 8px 4px', borderRadius: 14, overflow: 'hidden',
         background: isDark
-          ? isLive ? 'rgba(76,175,125,0.07)' : 'rgba(245,194,0,0.05)'
-          : isLive ? 'rgba(76,175,125,0.04)' : 'rgba(245,194,0,0.03)',
-        border: `1px solid ${isLive ? 'rgba(76,175,125,0.25)' : isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'}` }}>
+          ? isLive ? 'rgba(56,160,136,0.07)' : 'rgba(245,194,0,0.05)'
+          : isLive ? 'rgba(56,160,136,0.04)' : 'rgba(245,194,0,0.03)',
+        border: `1px solid ${isLive ? 'rgba(56,160,136,0.25)' : isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'}` }}>
         <div style={{ height: 2, background: isLive
-          ? `linear-gradient(90deg,${GREEN},rgba(76,175,125,0.2))`
+          ? `linear-gradient(90deg,${GREEN},rgba(56,160,136,0.2))`
           : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))' }} />
         <div style={{ padding: '12px 14px' }}>
           {/* Header row */}

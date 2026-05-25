@@ -66,7 +66,7 @@ export default function SeasonTimeline({ teamId }: Props) {
   }
 
   const resultBg = (result: string) => {
-    if (result === 'win') return theme === 'dark' ? 'rgba(76,175,125,0.15)' : 'rgba(46,125,82,0.1)'
+    if (result === 'win') return theme === 'dark' ? 'rgba(56,160,136,0.15)' : 'rgba(30,136,112,0.1)'
     if (result === 'loss') return theme === 'dark' ? 'rgba(224,85,85,0.15)' : 'rgba(192,57,43,0.1)'
     if (result === 'draw') return theme === 'dark' ? 'rgba(107,122,153,0.15)' : 'rgba(107,122,141,0.1)'
     return C.card
