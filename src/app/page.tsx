@@ -1028,23 +1028,8 @@ export default function Home() {
 
                   {/* Venue + oil profile */}
                   {(m.venue || m.oilProfile) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14,
-                      padding: '8px 10px', borderRadius: 8,
-                      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
-                      {m.venue && (
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 7, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 2 }}>HALL</div>
-                          <div style={{ fontSize: 10, color: C.text, fontWeight: 600,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.venue}</div>
-                        </div>
-                      )}
-                      {m.oilProfile && (
-                        <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                          <div style={{ fontSize: 7, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 2 }}>OLJEPROFIL</div>
-                          <div style={{ fontSize: 10, color: C.textMuted, fontWeight: 600 }}>{m.oilProfile}</div>
-                        </div>
-                      )}
+                    <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, color: C.textMuted }}>
+                      {[m.venue, m.oilProfile].filter(Boolean).join(' · ')}
                     </div>
                   )}
 
