@@ -14,6 +14,9 @@ type Match = {
   home: { id: string; name: string }; away: { id: string; name: string }
   streams?: { url: string }[]
   venue?: string; oilProfile?: string
+  gameNumber?: number; totalGames?: number
+  individualGames?: { home: number[]; away: number[] }
+  highSeries?: { playerName: string; score: number; team: 'home' | 'away' }[]
 }
 type HonorEntry = { playerName: string; score: number; matchId: string; seriesTotal?: number }
 type TableRow  = { rank: number; teamId: string; teamName: string; played: number; won: number; drawn: number; lost: number; points: number }
@@ -33,19 +36,28 @@ const _in22h = new Date(_now + 22 * 3600000).toISOString()
 const MOCK_LIVE: Match[] = [
   {
     id: 'demo-live-1', date: new Date().toISOString(), status: 'live',
-    division: 'Elitserien Herrar', home_score: 5, away_score: 3,
+    division: 'Elitserien Herrar', home_score: 5, away_score: 4,
     home: { id: 'demo-t1', name: 'IK Hakarpspojkarna' },
     away: { id: 'demo-t2', name: 'Mariestads BK' },
     streams: [{ url: 'https://www.youtube.com/watch?v=demoLive1' }],
+    gameNumber: 3, totalGames: 4,
+    individualGames: { home: [234, 198, 267], away: [212, 245, 221] },
+    highSeries: [{ playerName: 'Jesper Svensson', score: 267, team: 'home' }],
   },
   {
     id: 'demo-live-2', date: new Date().toISOString(), status: 'live',
-    division: 'Elitserien Damer', home_score: 3, away_score: 3,
+    division: 'Elitserien Damer', home_score: 4, away_score: 4,
     home: { id: 'demo-t5', name: 'Örebro BK' },
     away: { id: 'demo-t6', name: 'Malmö BK' },
     streams: [
       { url: 'https://www.svtplay.se/demo' },
       { url: 'https://www.svenskbowling.tv/demo' },
+    ],
+    gameNumber: 4, totalGames: 4,
+    individualGames: { home: [178, 223, 201, 256], away: [212, 198, 234, 214] },
+    highSeries: [
+      { playerName: 'Sara Holmberg', score: 256, team: 'home' },
+      { playerName: 'Anna Karlsson', score: 234, team: 'away' },
     ],
   },
   {
@@ -53,6 +65,9 @@ const MOCK_LIVE: Match[] = [
     division: 'Allsvenskan Herrar', home_score: 2, away_score: 4,
     home: { id: 'demo-t3', name: 'Göteborgs BK' },
     away: { id: 'demo-t4', name: 'Linköpings BK' },
+    gameNumber: 2, totalGames: 4,
+    individualGames: { home: [156, 178], away: [201, 234] },
+    highSeries: [{ playerName: 'Marcus Lindgren', score: 234, team: 'away' }],
   },
 ]
 
@@ -212,6 +227,40 @@ function group(ms: Match[]) {
 
 const DAY_COLORS = ['#7a7898', '#4e72a0', '#5a82b4', '#3d9490', '#b88830', '#a06840', '#7060a8']
 const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
+
+function tensionScore(m: Match): number {
+  if (m.home_score === null) return 0
+  const h = m.home_score, a = m.away_score!
+  const diff = Math.abs(h - a)
+  const total = h + a
+  if (total === 0) return 0
+  const closeness = 1 - diff / Math.max(total, 1)
+  const progress = Math.min((m.gameNumber ?? 1) / (m.totalGames ?? 4), 1)
+  return closeness * (0.6 + 0.4 * progress)
+}
+
+function tensionInsight(m: Match): string {
+  if (m.home_score === null) return ''
+  const h = m.home_score, a = m.away_score!
+  const diff = Math.abs(h - a)
+  const gn = m.gameNumber ?? 1
+  const tg = m.totalGames ?? 4
+  const remaining = tg - gn
+  const isTied = h === a
+  if (isTied && remaining <= 0) return 'Oavgjort · Slutspelet avgör'
+  if (isTied && remaining === 1) return 'Kvitterat · Avgörande spelet'
+  if (isTied) return `Kvitterat · Spel ${gn} av ${tg}`
+  if (remaining <= 0) return `${diff} poäng isär · Slutspelet`
+  if (remaining === 1 && diff <= 2) return `${diff} poäng · Avgörande spelet!`
+  if (remaining === 1) return `${diff} poäng · Sista spelet`
+  return `${diff} poäng isär · Spel ${gn} av ${tg}`
+}
+
+function tensionColor(score: number, muted: string): string {
+  if (score > 0.85) return '#f5c200'
+  if (score > 0.6) return '#38a088'
+  return muted
+}
 
 function streamStyle(url: string): { label: string; color: string; bg: string; border: string } {
   const u = url.toLowerCase()
@@ -1081,66 +1130,63 @@ export default function Home() {
         )}
 
 
-        {/* ── Matchmätaren (speedometer) ──────────────────────────────────────── */}
+        {/* ── MATCHPULSEN ──────────────────────────────────────────────────────── */}
         {filteredLive.length > 0 && (() => {
-          const ts = (m: Match): number => {
-            if (m.home_score === null) return 0
-            const h = m.home_score, a = m.away_score!
-            const diff = Math.abs(h - a)
-            const total = h + a
-            if (total === 0) return 0
-            return (1 - diff / Math.max(total, 1)) * 0.6 + Math.min(total / 8, 1) * 0.4
-          }
-          const hot = [...filteredLive].sort((a, b) => ts(b) - ts(a))[0]
-          const score = ts(hot)
+          const sorted = [...filteredLive].sort((a, b) => tensionScore(b) - tensionScore(a))
+          const hot = sorted[0]
+          const score = tensionScore(hot)
           const h = hot.home_score!, a = hot.away_score!
           const isTied = h === a
-          const needleClr = score > 0.88 ? '#f5c200' : score > 0.65 ? '#38a088' : C.textMuted
+          const isFollowed = followedIds.has(hot.home.id) || followedIds.has(hot.away.id)
+          const needleClr = tensionColor(score, C.textMuted)
           const streams = hot.streams ?? []
+          const insight = tensionInsight(hot)
 
           // SVG gauge geometry
           const cx = 50, cy = 60, r = 44, sw = 9
           const arcLen = Math.PI * r
           const dashOffset = arcLen * (1 - score)
-          // Zone boundary at 65%
           const z65a = Math.PI * (1 - 0.65)
           const z65x = cx + r * Math.cos(z65a), z65y = cy - r * Math.sin(z65a)
-          // Needle endpoint (animated via rotate on g)
           const needleLen = 32
           const needleDeg = -(score * 180)
-          const textClr = isDark ? '#ffffff' : '#1a2535'
-          const mutedFill = isDark ? '#6b7a99' : '#6b7a8d'
+
+          const borderClr = isFollowed
+            ? 'rgba(245,194,0,0.5)'
+            : isTied ? 'rgba(245,194,0,0.35)'
+            : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
 
           return (
             <div style={{ padding: '16px 16px 0' }}>
-              <a href={'/matches/' + hot.id} style={{ display: 'block', borderRadius: 16,
-                overflow: 'hidden', textDecoration: 'none',
-                border: `1px solid ${isTied ? 'rgba(245,194,0,0.35)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+              <div style={{ borderRadius: 16, overflow: 'hidden', textDecoration: 'none',
+                border: `1px solid ${borderClr}`,
+                boxShadow: isFollowed ? '0 0 0 3px rgba(245,194,0,0.12), 0 0 28px rgba(245,194,0,0.1)' : undefined,
                 background: isTied
                   ? (isDark ? 'linear-gradient(145deg,rgba(245,194,0,0.08) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(245,194,0,0.04) 0%,rgba(248,248,252,1) 100%)')
-                  : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.02) 0%,rgba(248,248,252,1) 100%)'),
-                WebkitTapHighlightColor: 'transparent' } as any}>
+                  : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.02) 0%,rgba(248,248,252,1) 100%)') }}>
                 <div style={{ height: 3, background: `linear-gradient(90deg,${needleClr},${needleClr}30)` }} />
-                <div style={{ padding: '12px 16px 14px' }}>
+                <div style={{ padding: '12px 16px 16px' }}>
 
                   {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: needleClr, letterSpacing: 1.4, flex: 1 }}>HETASTE MATCHEN</span>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, gap: 6 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: needleClr, letterSpacing: 1.4, flex: 1 }}>MATCHPULSEN</span>
+                    {isFollowed && (
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#f5c200',
+                        background: 'rgba(245,194,0,0.12)', border: '1px solid rgba(245,194,0,0.3)',
+                        padding: '2px 7px', borderRadius: 4, letterSpacing: 0.3 }}>DITT LAG</span>
+                    )}
                     <span style={{ fontSize: 9, fontWeight: 700, color: divColor(hot.division),
                       background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
                       padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>{shortDiv(hot.division)}</span>
                   </div>
 
-                  {/* Teams + mini gauge — same 3-col layout as hero card */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-
+                  {/* 3-col: home | gauge | away */}
+                  <a href={'/matches/' + hot.id} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
                     {/* Home */}
                     <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
                       <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2, letterSpacing: 0.5 }}>HEMMA</div>
                       <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
-                        color: h > a ? C.text : isTied ? C.text : C.textMuted }}>
-                        {h}
-                      </div>
+                        color: h > a ? C.text : isTied ? C.text : C.textMuted }}>{h}</div>
                       <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.25, marginTop: 4,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         color: h > a ? C.text : isTied ? C.text : C.textMuted }}>
@@ -1148,12 +1194,11 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Mini gauge */}
+                    {/* Gauge */}
                     <div style={{ flexShrink: 0, width: 100 }}>
                       <svg viewBox="0 0 100 66" style={{ width: '100%', display: 'block' }}>
                         <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`}
-                          fill="none"
-                          stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}
+                          fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}
                           strokeWidth={sw} strokeLinecap="butt" />
                         <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${z65x} ${z65y}`}
                           fill="none" stroke="rgba(56,160,136,0.2)" strokeWidth={sw} strokeLinecap="butt" />
@@ -1194,20 +1239,26 @@ export default function Home() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2, letterSpacing: 0.5 }}>BORTA</div>
                       <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
-                        color: a > h ? C.text : isTied ? C.text : C.textMuted }}>
-                        {a}
-                      </div>
+                        color: a > h ? C.text : isTied ? C.text : C.textMuted }}>{a}</div>
                       <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.25, marginTop: 4,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         color: a > h ? C.text : isTied ? C.text : C.textMuted }}>
                         {shortName(hot.away?.name || '')}
                       </div>
                     </div>
-                  </div>
+                  </a>
+
+                  {/* Context insight */}
+                  {insight && (
+                    <div style={{ textAlign: 'center', marginTop: 8, fontSize: 10, fontWeight: 700,
+                      color: needleClr, letterSpacing: 0.4 }}>
+                      {insight}
+                    </div>
+                  )}
 
                   {/* Stream pills */}
                   {streams.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 4 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 10 }}>
                       {streams.map((s, idx) => {
                         const ss = streamStyle(s.url)
                         return (
@@ -1225,8 +1276,55 @@ export default function Home() {
                       })}
                     </div>
                   )}
+
+                  {/* Heat list — other live matches */}
+                  {sorted.length > 1 && (
+                    <div style={{ marginTop: 12, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`, paddingTop: 10 }}>
+                      <div style={{ fontSize: 8, fontWeight: 800, color: C.textMuted, letterSpacing: 1.4, marginBottom: 6 }}>
+                        ALLA LIVE · {sorted.length} MATCHER
+                      </div>
+                      {sorted.slice(1).map((m, idx) => {
+                        const ms = tensionScore(m)
+                        const dotClr = tensionColor(ms, C.textMuted)
+                        const mh = m.home_score!, ma = m.away_score!
+                        const isLast = idx === sorted.length - 2
+                        return (
+                          <a key={m.id} href={'/matches/' + m.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8,
+                              padding: '7px 0', textDecoration: 'none',
+                              borderBottom: isLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                              WebkitTapHighlightColor: 'transparent' } as any}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotClr, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.text,
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {shortName(m.home.name)} – {shortName(m.away.name)}
+                              </div>
+                              <div style={{ fontSize: 9, color: C.textMuted, marginTop: 1 }}>{shortDiv(m.division)}</div>
+                            </div>
+                            <div style={{ fontSize: 15, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+                              color: mh === ma ? '#f5c200' : C.text, flexShrink: 0 }}>
+                              {mh}–{ma}
+                            </div>
+                            <div style={{ width: 28, height: 3, borderRadius: 2, flexShrink: 0,
+                              background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${ms * 100}%`, background: dotClr, borderRadius: 2 }} />
+                            </div>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Link to full /puls page */}
+                  <div style={{ marginTop: 12, textAlign: 'center' }}>
+                    <a href="/puls" style={{ fontSize: 9, fontWeight: 800, color: needleClr,
+                      textDecoration: 'none', letterSpacing: 1.0 }}>
+                      SE MATCHPULSEN →
+                    </a>
+                  </div>
                 </div>
-              </a>
+              </div>
             </div>
           )
         })()}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calendar, BarChart2, Users, Trophy } from 'lucide-react'
+import { Home, Calendar, BarChart2, Users, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 
@@ -11,7 +11,7 @@ const TABS = [
   { label: 'Schema', icon: Calendar,  href: '/schema' },
   { label: 'Tabell', icon: BarChart2, href: '/league' },
   { label: 'Lag',    icon: Users,     href: '/teams' },
-  { label: 'Tävlingar', icon: Trophy, href: '/tavlingar' },
+  { label: 'Puls', icon: Activity, href: '/puls' },
 ]
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
