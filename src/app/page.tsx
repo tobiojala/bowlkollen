@@ -929,24 +929,25 @@ export default function Home() {
 
           return (
             <div style={{ padding: '12px 16px 0' }}>
-              <div style={{ borderRadius: 16, overflow: 'hidden',
+              <a href={'/matches/' + m.id} style={{ display: 'block', borderRadius: 16, overflow: 'hidden', textDecoration: 'none',
                 border: `1px solid ${isDark ? 'rgba(91,130,180,0.32)' : 'rgba(91,130,180,0.38)'}`,
                 background: isDark
                   ? 'linear-gradient(145deg, rgba(91,130,180,0.13) 0%, rgba(11,21,40,0.98) 100%)'
                   : 'linear-gradient(145deg, rgba(91,130,180,0.08) 0%, rgba(248,248,252,1) 100%)',
-              }}>
+                WebkitTapHighlightColor: 'transparent',
+              } as any}>
                 <div style={{ height: 3, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))' }} />
-                <div style={{ padding: '12px 14px 14px' }}>
+                <div style={{ padding: '14px 16px 16px' }}>
 
                   {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
                     <span style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.4, flex: 1 }}>DIN NÄSTA MATCH</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: divColor(m.division),
                       background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                      padding: '2px 7px', borderRadius: 4, letterSpacing: 0.3, marginRight: 8 }}>
+                      padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3, marginRight: 8 }}>
                       {shortDiv(m.division)}
                     </span>
-                    <button onClick={toggleNextMatch}
+                    <button onClick={e => { e.preventDefault(); e.stopPropagation(); toggleNextMatch() }}
                       style={{ padding: '3px 9px', borderRadius: 8, border: 'none', cursor: 'pointer',
                         background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
                         fontSize: 9, fontWeight: 700, color: C.textMuted,
@@ -956,18 +957,16 @@ export default function Home() {
                   </div>
 
                   {/* Teams + countdown */}
-                  <a href={'/matches/' + m.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8,
-                      textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
                     {/* Home */}
                     <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                      {isMyHome && (
-                        <div style={{ fontSize: 8, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2, marginBottom: 3 }}>MITT LAG</div>
-                      )}
-                      <div style={{ fontSize: 15, fontWeight: 800, color: C.text,
+                      <div style={{ fontSize: 16, fontWeight: 800, color: C.text,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {shortName(m.home?.name || '')}
+                      </div>
+                      <div style={{ fontSize: 9, color: isMyHome ? '#5a82b4' : C.textMuted, fontWeight: isMyHome ? 700 : 400, marginTop: 3 }}>
+                        {isMyHome ? 'MITT LAG' : 'Hemma'}
                       </div>
                       {homeForm.length > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 3, marginTop: 5 }}>
@@ -976,30 +975,32 @@ export default function Home() {
                           ))}
                         </div>
                       )}
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4 }}>Hemma</div>
                     </div>
 
                     {/* Countdown */}
                     <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 80 }}>
                       {cd ? (
-                        <div style={{ fontSize: 26, fontWeight: 900, color: '#5a82b4',
-                          fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{cd}</div>
+                        <>
+                          <div style={{ fontSize: 26, fontWeight: 900, color: C.accent,
+                            fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{cd}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5 }}>{time}</div>
+                        </>
                       ) : (
-                        <div style={{ fontSize: 16, fontWeight: 700, color: C.textMuted }}>{time}</div>
+                        <>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: C.textMuted }}>{time}</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)}</div>
+                        </>
                       )}
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 5, lineHeight: 1.6 }}>
-                        {dateLabel(dStr)}<br />{time}
-                      </div>
                     </div>
 
                     {/* Away */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      {!isMyHome && (
-                        <div style={{ fontSize: 8, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.2, marginBottom: 3 }}>MITT LAG</div>
-                      )}
-                      <div style={{ fontSize: 15, fontWeight: 800, color: C.text,
+                      <div style={{ fontSize: 16, fontWeight: 800, color: C.text,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {shortName(m.away?.name || '')}
+                      </div>
+                      <div style={{ fontSize: 9, color: !isMyHome ? '#5a82b4' : C.textMuted, fontWeight: !isMyHome ? 700 : 400, marginTop: 3 }}>
+                        {!isMyHome ? 'MITT LAG' : 'Borta'}
                       </div>
                       {awayForm.length > 0 && (
                         <div style={{ display: 'flex', gap: 3, marginTop: 5 }}>
@@ -1008,9 +1009,8 @@ export default function Home() {
                           ))}
                         </div>
                       )}
-                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4 }}>Borta</div>
                     </div>
-                  </a>
+                  </div>
 
                   {/* Stream pills */}
                   {streams.length > 0 ? (
@@ -1019,6 +1019,7 @@ export default function Home() {
                         const ss = streamStyle(s.url)
                         return (
                           <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
                             style={{ fontSize: 10, fontWeight: 700, color: ss.color,
                               background: ss.bg, border: `1px solid ${ss.border}`,
                               borderRadius: 8, padding: '5px 10px', textDecoration: 'none',
@@ -1032,12 +1033,12 @@ export default function Home() {
                     </div>
                   ) : (
                     <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600,
-                      letterSpacing: 0.3, color: 'rgba(91,130,180,0.5)' }}>
-                      Tryck för detaljer →
+                      letterSpacing: 0.3, color: C.textMuted }}>
+                      {dateLabel(dStr)} · {time}
                     </div>
                   )}
                 </div>
-              </div>
+              </a>
             </div>
           )
         })()}
