@@ -15,6 +15,7 @@ type Match = {
   streams?: { url: string }[]
 }
 type HonorEntry = { playerName: string; score: number; matchId: string; seriesTotal?: number }
+type TableRow  = { rank: number; teamId: string; teamName: string; played: number; won: number; drawn: number; lost: number; points: number }
 
 // ── DEMO (set to false to use real Supabase data) ─────────────────────────────
 const DEMO = true
@@ -135,6 +136,29 @@ const MOCK_HONOR: HonorEntry[] = [
   { playerName: 'Anna Karlsson',   score: 234, matchId: 'demo-r-4' },
   { playerName: 'Erik Svensson',   score: 224, matchId: 'demo-r-5' },
 ]
+
+const MOCK_TABLES: Record<string, TableRow[]> = {
+  'Elitserien Herrar': [
+    { rank: 1, teamId: 'demo-t1',  teamName: 'IK Hakarpspojkarna', played: 14, won: 11, drawn: 1, lost: 2,  points: 34 },
+    { rank: 2, teamId: 'demo-t2',  teamName: 'Mariestads BK',       played: 14, won: 10, drawn: 1, lost: 3,  points: 31 },
+    { rank: 3, teamId: 'demo-t3',  teamName: 'Göteborgs BK',        played: 14, won: 8,  drawn: 2, lost: 4,  points: 26 },
+    { rank: 4, teamId: 'demo-t4',  teamName: 'Linköpings BK',       played: 14, won: 7,  drawn: 1, lost: 6,  points: 22 },
+    { rank: 5, teamId: 'demo-t11', teamName: 'Örebro BK',           played: 14, won: 5,  drawn: 3, lost: 6,  points: 18 },
+    { rank: 6, teamId: 'demo-t12', teamName: 'Lidköpings BSK',      played: 14, won: 4,  drawn: 2, lost: 8,  points: 14 },
+    { rank: 7, teamId: 'demo-t13', teamName: 'Enköpings BS',        played: 14, won: 2,  drawn: 2, lost: 10, points: 8  },
+    { rank: 8, teamId: 'demo-t14', teamName: 'Halmstad BK',         played: 14, won: 1,  drawn: 2, lost: 11, points: 5  },
+  ],
+  'Elitserien Damer': [
+    { rank: 1, teamId: 'demo-t5',  teamName: 'Örebro BK',           played: 12, won: 9,  drawn: 2, lost: 1,  points: 29 },
+    { rank: 2, teamId: 'demo-t6',  teamName: 'Malmö BK',            played: 12, won: 8,  drawn: 1, lost: 3,  points: 25 },
+    { rank: 3, teamId: 'demo-t7',  teamName: 'Jönköpings BK',       played: 12, won: 7,  drawn: 2, lost: 3,  points: 23 },
+    { rank: 4, teamId: 'demo-t8',  teamName: 'Borås BK',            played: 12, won: 5,  drawn: 1, lost: 6,  points: 16 },
+    { rank: 5, teamId: 'demo-t9',  teamName: 'Halmstad BK',         played: 12, won: 4,  drawn: 2, lost: 6,  points: 14 },
+    { rank: 6, teamId: 'demo-t10', teamName: 'Helsingborg BK',      played: 12, won: 3,  drawn: 1, lost: 8,  points: 10 },
+    { rank: 7, teamId: 'demo-t15', teamName: 'Sollentuna BK',       played: 12, won: 2,  drawn: 1, lost: 9,  points: 7  },
+    { rank: 8, teamId: 'demo-t16', teamName: 'Uppsala BK',          played: 12, won: 1,  drawn: 0, lost: 11, points: 3  },
+  ],
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function divColor(d: string) {
@@ -533,6 +557,7 @@ export default function Home() {
   const [session, setSession] = useState<any>(null)
   const [now, setNow] = useState(Date.now())
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
+  const [tableDiv, setTableDiv] = useState<'Elitserien Herrar' | 'Elitserien Damer'>('Elitserien Herrar')
 
   const toggleDate = (key: string) =>
     setExpandedDates(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s })
@@ -656,6 +681,16 @@ export default function Home() {
   const upcomingByDate = group(remainingUp)
   const upcomingDates  = Object.keys(upcomingByDate).sort()
   const isEmpty = filteredLive.length === 0 && filteredRecent.length === 0 && filteredUpcoming.length === 0
+
+  const tableRows: TableRow[] = DEMO ? (MOCK_TABLES[tableDiv] ?? []) : []
+  const myNextMatch: Match | null = DEMO
+    ? (filteredUpcoming[0] ?? null)
+    : (session && followedIds.size > 0
+        ? upcoming.find(m => {
+            const hId = (m.home as any)?.id; const aId = (m.away as any)?.id
+            return (hId && followedIds.has(hId)) || (aId && followedIds.has(aId))
+          }) ?? null
+        : null)
 
   // ── Sub-components (defined inside render to access C, isDark, now) ──────────
 
@@ -866,6 +901,65 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── Mini ligatabell ─────────────────────────────────────────── */}
+        <div style={{ padding: '16px 16px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, flex: 1 }}>LIGATABELL</span>
+            {(['Elitserien Herrar', 'Elitserien Damer'] as const).map(div => (
+              <button key={div} onClick={() => setTableDiv(div)}
+                style={{ fontSize: 9, fontWeight: 700, padding: '4px 10px', borderRadius: 8, marginLeft: 6,
+                  cursor: 'pointer', border: 'none',
+                  background: tableDiv === div ? '#f5c200' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                  color: tableDiv === div ? '#1a1400' : C.textMuted,
+                  WebkitTapHighlightColor: 'transparent' } as any}>
+                {div === 'Elitserien Herrar' ? 'Elit H' : 'Elit D'}
+              </button>
+            ))}
+          </div>
+          <div style={{ borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 30px',
+              padding: '5px 12px', borderBottom: '1px solid ' + C.border,
+              background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+              {(['#', 'Lag', 'M', 'P'] as const).map((h, i) => (
+                <span key={h} style={{ fontSize: 9, color: C.textMuted, fontWeight: 700,
+                  textAlign: i >= 2 ? 'right' as const : 'left' as const }}>{h}</span>
+              ))}
+            </div>
+            {tableRows.slice(0, 5).map((row, i) => {
+              const zoneClr = row.rank <= 2 ? '#f5c200' : row.rank <= 6 ? '#5a82b4'
+                : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)')
+              const isMyTeam = followedIds.has(row.teamId)
+              return (
+                <a key={row.teamId} href={'/teams/' + row.teamId}
+                  style={{ display: 'grid', gridTemplateColumns: '28px 1fr 26px 30px',
+                    padding: '9px 0', alignItems: 'center', textDecoration: 'none',
+                    borderTop: i > 0 ? '1px solid ' + C.border : 'none',
+                    borderLeft: '3px solid ' + zoneClr,
+                    background: isMyTeam
+                      ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
+                      : 'transparent',
+                    WebkitTapHighlightColor: 'transparent' } as any}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textAlign: 'center' }}>{row.rank}</span>
+                  <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
+                    {shortName(row.teamName)}
+                  </span>
+                  <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'right' }}>{row.played}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'right', paddingRight: 12,
+                    color: row.rank <= 2 ? '#f5c200' : C.text }}>{row.points}</span>
+                </a>
+              )
+            })}
+            <a href="/league" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '9px 12px', fontSize: 11, fontWeight: 600, color: C.textMuted,
+              textDecoration: 'none', borderTop: '1px solid ' + C.border,
+              background: isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)',
+              WebkitTapHighlightColor: 'transparent' } as any}>
+              Visa hela tabellen →
+            </a>
+          </div>
+        </div>
+
         {/* ── Recent results ───────────────────────────────────────────────────── */}
         {recentDates.length > 0 && (
           <div style={{ padding: '16px 16px 0' }}>
@@ -971,8 +1065,48 @@ export default function Home() {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', flexShrink: 0 }}>Mer info →</div>
         </a>
 
-        {/* ── Login CTA for logged-out users ───────────────────────────────────── */}
-        {!session && !DEMO && !isEmpty && (
+        {/* ── Din nästa match (logged-in) / Login CTA (logged-out) ─────────────── */}
+        {myNextMatch ? (() => {
+          const m      = myNextMatch
+          const cd     = countdown(m.date, now)
+          const time   = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+          const dStr   = m.date.slice(0, 10)
+          return (
+            <a href={'/matches/' + m.id} style={{
+              display: 'block', margin: '16px 16px 0', borderRadius: 14, textDecoration: 'none',
+              border: `1px solid ${isDark ? 'rgba(91,130,180,0.3)' : 'rgba(91,130,180,0.35)'}`,
+              background: isDark ? 'rgba(91,130,180,0.08)' : 'rgba(91,130,180,0.06)',
+              WebkitTapHighlightColor: 'transparent' } as any}>
+              <div style={{ height: 2.5, background: 'linear-gradient(90deg, #5a82b4, rgba(91,130,180,0.15))', borderRadius: '14px 14px 0 0' }} />
+              <div style={{ padding: '12px 14px' }}>
+                <div style={{ fontSize: 9, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.4, marginBottom: 10 }}>DIN NÄSTA MATCH</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {shortName(m.home?.name || '')}
+                    </div>
+                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Hemma</div>
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 72 }}>
+                    {cd
+                      ? <div style={{ fontSize: 20, fontWeight: 900, color: '#5a82b4', fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                      : <div style={{ fontSize: 13, fontWeight: 700, color: C.textMuted }}>{time}</div>
+                    }
+                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>{dateLabel(dStr)} · {time}</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {shortName(m.away?.name || '')}
+                    </div>
+                    <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>Borta</div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          )
+        })() : (!session && !DEMO && !isEmpty && (
           <div style={{ margin: '20px 16px 0', borderRadius: 14,
             border: '1px solid ' + C.border,
             background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
@@ -987,7 +1121,7 @@ export default function Home() {
               Logga in →
             </a>
           </div>
-        )}
+        ))}
 
         {/* ── Empty state ──────────────────────────────────────────────────────── */}
         {isEmpty && (
