@@ -224,6 +224,15 @@ function streamStyle(url: string): { label: string; color: string; bg: string; b
   return { label: '▶ Livestream', color: '#e05555', bg: 'rgba(224,85,85,0.12)', border: 'rgba(224,85,85,0.3)' }
 }
 
+
+const MOCK_MY_PLAYER = {
+  name: 'Marcus Lindgren',
+  team: 'Göteborgs BK',
+  division: 'Allsvenskan Herrar',
+  average: 194,
+  lastScores: [178, 189, 234, 201, 212],
+  teamRank: 6,
+}
 // ── HeroStrip types & component ───────────────────────────────────────────────
 // Must live outside Home so React doesn't remount it on every second tick
 
@@ -830,6 +839,8 @@ export default function Home() {
           }) ?? null
         : null)
 
+  const myPlayer = DEMO ? MOCK_MY_PLAYER : null
+
   // ── Sub-components (defined inside render to access C, isDark, now) ──────────
 
   const MatchRow = ({ m }: { m: Match }) => {
@@ -1069,6 +1080,107 @@ export default function Home() {
           <HeroStrip liveItems={liveItems} upcomingItems={upcomingItems} C={C} isDark={isDark} now={now} />
         )}
 
+
+        {/* ── Spänningsbarometer ───────────────────────────────────────────────── */}
+        {filteredLive.length > 0 && (() => {
+          const ts = (m: Match): number => {
+            if (m.home_score === null) return 0
+            const h = m.home_score, a = m.away_score!
+            const diff = Math.abs(h - a)
+            const total = h + a
+            if (total === 0) return 0
+            return (1 - diff / Math.max(total, 1)) * 0.6 + Math.min(total / 8, 1) * 0.4
+          }
+          const hot = [...filteredLive].sort((a, b) => ts(b) - ts(a))[0]
+          const score = ts(hot)
+          const h = hot.home_score!, a = hot.away_score!
+          const isTied = h === a
+          const barClr = score > 0.88 ? '#f5c200' : score > 0.65 ? '#38a088' : C.textMuted
+          const streams = hot.streams ?? []
+          return (
+            <div style={{ padding: '16px 16px 0' }}>
+              <a href={'/matches/' + hot.id} style={{ display: 'block', borderRadius: 16,
+                overflow: 'hidden', textDecoration: 'none',
+                border: `1px solid ${isTied ? 'rgba(245,194,0,0.35)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                background: isTied
+                  ? (isDark ? 'linear-gradient(145deg,rgba(245,194,0,0.09) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(245,194,0,0.05) 0%,rgba(248,248,252,1) 100%)')
+                  : (isDark ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)' : 'linear-gradient(145deg,rgba(0,0,0,0.02) 0%,rgba(248,248,252,1) 100%)'),
+                WebkitTapHighlightColor: 'transparent' } as any}>
+                <div style={{ height: 3, background: `linear-gradient(90deg,${barClr},${barClr}30)` }} />
+                <div style={{ padding: '12px 16px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: barClr, letterSpacing: 1.4, flex: 1 }}>SPÄNNINGSBAROMETER</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: divColor(hot.division),
+                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                      padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>{shortDiv(hot.division)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        color: h > a ? C.text : isTied ? C.text : C.textMuted }}>{shortName(hot.home?.name || '')}</div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
+                    </div>
+                    <div style={{ flexShrink: 0, width: 88, textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
+                          color: h >= a ? C.accent : C.textMuted,
+                          ...(isTied ? { textShadow: '0 0 18px rgba(245,194,0,0.5)' } : {}) }}>{h}</span>
+                        <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
+                        <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1,
+                          color: a >= h ? C.accent : C.textMuted,
+                          ...(isTied ? { textShadow: '0 0 18px rgba(245,194,0,0.5)' } : {}) }}>{a}</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        color: a > h ? C.text : isTied ? C.text : C.textMuted }}>{shortName(hot.away?.name || '')}</div>
+                      <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ height: 4, borderRadius: 99,
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.round(score * 100)}%` }}
+                        transition={{ duration: 0.9, ease: 'easeOut' }}
+                        style={{ height: '100%', borderRadius: 99, background: barClr,
+                          ...(isTied ? { boxShadow: `0 0 8px ${barClr}` } : {}) }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+                      <span style={{ fontSize: 8, color: C.textMuted }}>Låg spänning</span>
+                      <span style={{ fontSize: 8, fontWeight: 800, color: barClr }}>{Math.round(score * 100)}%</span>
+                      <span style={{ fontSize: 8, color: C.textMuted }}>Maximal</span>
+                    </div>
+                  </div>
+                  {streams.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 12 }}>
+                      {streams.map((s, idx) => {
+                        const ss = streamStyle(s.url)
+                        return (
+                          <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            style={{ fontSize: 10, fontWeight: 700, color: ss.color,
+                              background: ss.bg, border: `1px solid ${ss.border}`,
+                              borderRadius: 8, padding: '5px 10px', textDecoration: 'none',
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              WebkitTapHighlightColor: 'transparent' } as any}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: ss.color, flexShrink: 0, display: 'inline-block' }} />
+                            {ss.label}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            </div>
+          )
+        })()}
+
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
         {honor.length > 0 && (
           <div style={{ marginTop: 16 }}>
@@ -1183,6 +1295,62 @@ export default function Home() {
                   </a>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Personlig profil ─────────────────────────────────────────────── */}
+        {myPlayer && (
+          <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ borderRadius: 16, overflow: 'hidden',
+              border: `1px solid ${isDark ? 'rgba(56,160,136,0.28)' : 'rgba(56,160,136,0.32)'}`,
+              background: isDark
+                ? 'linear-gradient(145deg, rgba(56,160,136,0.1) 0%, rgba(11,21,40,0.98) 100%)'
+                : 'linear-gradient(145deg, rgba(56,160,136,0.06) 0%, rgba(248,248,252,1) 100%)' }}>
+              <div style={{ height: 3, background: 'linear-gradient(90deg, #38a088, rgba(56,160,136,0.15))' }} />
+              <div style={{ padding: '14px 16px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: '#38a088', letterSpacing: 1.4, flex: 1 }}>MIN PROFIL</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted,
+                    background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                    padding: '3px 8px', borderRadius: 4, letterSpacing: 0.3 }}>Säsong 2026</span>
+                </div>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>{myPlayer.name}</div>
+                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 3 }}>
+                    {myPlayer.team} · {shortDiv(myPlayer.division)}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 4 }}>SNITT</div>
+                    <div style={{ fontSize: 44, fontWeight: 900, lineHeight: 1, color: '#38a088',
+                      fontVariantNumeric: 'tabular-nums' }}>{myPlayer.average}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 0.8, marginBottom: 8 }}>SENASTE 5</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}>
+                      {myPlayer.lastScores.map((score, i) => {
+                        const pct = (score - 150) / (300 - 150)
+                        const barH = Math.round(4 + pct * 36)
+                        const isHigh = score >= 220
+                        const isAbove = score >= myPlayer.average
+                        const barClr = isHigh ? '#f5c200' : isAbove ? '#38a088' : C.textMuted
+                        return (
+                          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <div style={{ width: 28, display: 'flex', alignItems: 'flex-end', height: 40 }}>
+                              <div style={{ width: '100%', height: barH, borderRadius: 4, background: barClr,
+                                opacity: i === myPlayer.lastScores.length - 1 ? 1 : 0.7 }} />
+                            </div>
+                            <span style={{ fontSize: 9, color: barClr, fontWeight: isHigh ? 800 : 500,
+                              fontVariantNumeric: 'tabular-nums' }}>{score}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
