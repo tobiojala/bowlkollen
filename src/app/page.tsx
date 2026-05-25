@@ -185,7 +185,7 @@ function group(ms: Match[]) {
   return byDate
 }
 
-const DAY_COLORS = ['#b06070', '#6080b8', '#8868b0', '#4a9e96', '#b07840', '#a85888', '#9e8840']
+const DAY_COLORS = ['#7a7898', '#4e72a0', '#5a82b4', '#3d9490', '#b88830', '#a06840', '#7060a8']
 const dayDotColor = (dateStr: string) => DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
 
 function streamStyle(url: string): { label: string; color: string; bg: string; border: string } {
