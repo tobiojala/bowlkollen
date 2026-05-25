@@ -663,7 +663,7 @@ export default function Home() {
   // ── Sub-components (defined inside render to access C, isDark, now) ──────────
 
   const MatchRow = ({ m }: { m: Match }) => {
-    const dc = divColor(m.division)
+    const dayColor = dayDotColor(m.date.slice(0, 10))
     const hasScore = m.home_score !== null
     const homeWin  = hasScore && m.home_score! > m.away_score!
     const awayWin  = hasScore && m.away_score! > m.home_score!
@@ -675,7 +675,7 @@ export default function Home() {
         onMouseEnter={e => (e.currentTarget.style.background = C.card)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
-        <div style={{ width: 4, flexShrink: 0, background: dc }} />
+        <div style={{ width: 3, flexShrink: 0, background: dayColor, opacity: 0.7 }} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '13px 12px', gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: homeWin ? 700 : 400,
             color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text,
@@ -690,7 +690,7 @@ export default function Home() {
                   <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
                   <span style={{ fontSize: 17, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
                 </div>
-                <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
+                <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
               </>
             ) : (() => {
               const cd      = countdown(m.date, now)
@@ -701,7 +701,7 @@ export default function Home() {
                     ? <div style={{ fontSize: 14, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
                     : <div style={{ fontSize: 12, color: C.textMuted }}>{timeStr || 'vs'}</div>
                   }
-                  <div style={{ fontSize: 9, color: dc, fontWeight: 700, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
+                  <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
                 </>
               )
             })()}
