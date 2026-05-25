@@ -90,7 +90,7 @@ export default function TeamTableWidget({ teamId, division }: Props) {
   // Zone
   const getZone = (i: number) => {
     if (i < 2) return { label: 'SM-slutspel', color: '#f5c200' }
-    if (total <= 8 ? i < 4 : i < 6) return { label: 'Play-off', color: '#c49040' }
+    if (total <= 8 ? i < 4 : i < 6) return { label: 'Play-off', color: '#5a82b4' }
     if (i === total - 2) return { label: 'Kvalar', color: '#e05555' }
     if (i === total - 1) return { label: 'Nedflyttning', color: '#666666' }
     return null

@@ -163,7 +163,7 @@ export default function PlayerPage({ params }: Props) {
   const recentAvg = recentGames.length > 0 ? recentGames.reduce((a: number, b: number) => a + b, 0) / recentGames.length : 0
   const olderAvg = olderGames.length > 0 ? olderGames.reduce((a: number, b: number) => a + b, 0) / olderGames.length : 0
   const formTrend = recentGames.length === 0 ? '—' : olderGames.length === 0 ? '→' : recentAvg > olderAvg + 5 ? '↑' : recentAvg < olderAvg - 5 ? '↓' : '→'
-  const trendColor = formTrend === '↑' ? '#c49040' : formTrend === '↓' ? '#e05555' : C.textMuted
+  const trendColor = formTrend === '↑' ? '#5a82b4' : formTrend === '↓' ? '#e05555' : C.textMuted
 
   const field = (label: string, key: keyof Player, placeholder: string, type = 'text') => (
     <div style={{ marginBottom: 14 }}>
@@ -283,7 +283,7 @@ export default function PlayerPage({ params }: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 20, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)' }}>
               {[
                 { label: 'SNITT', value: avgScore ?? '—', color: '#f5c200' },
-                { label: 'BÄSTA', value: bestSeries ?? '—', color: '#c49040' },
+                { label: 'BÄSTA', value: bestSeries ?? '—', color: '#5a82b4' },
                 { label: 'FORM', value: formTrend, color: trendColor },
               ].map((s, i) => (
                 <div key={s.label} style={{ padding: '16px 8px', textAlign: 'center', background: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.10)' : 'none' }}>
@@ -509,7 +509,7 @@ export default function PlayerPage({ params }: Props) {
                             <span style={{
                               fontSize: g >= 250 ? 18 : g >= 200 ? 16 : 14,
                               fontWeight: g >= 250 ? 900 : g >= 200 ? 700 : 400,
-                              color: g >= 250 ? '#ffffff' : g >= 200 ? '#c49040' : C.textMuted,
+                              color: g >= 250 ? '#ffffff' : g >= 200 ? '#5a82b4' : C.textMuted,
                               textShadow: g >= 250 ? '0 0 8px rgba(0,240,255,0.5), 0 0 20px rgba(0,240,255,0.2)' : 'none',
                             }}>{g}</span>
                             {i < games.length - 1 && <span style={{ color: C.border, fontSize: 13, userSelect: 'none' }}>|</span>}
@@ -518,7 +518,7 @@ export default function PlayerPage({ params }: Props) {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: total >= 800 ? '#c49040' : C.accent }}>{total}</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: total >= 800 ? '#5a82b4' : C.accent }}>{total}</div>
                       <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2, letterSpacing: 0.5 }}>TOTALT</div>
                     </div>
                   </a>

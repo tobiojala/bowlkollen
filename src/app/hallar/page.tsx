@@ -239,8 +239,8 @@ export default function HallarPage() {
                       <span style={{
                         fontSize: 11, fontWeight: 600,
                         padding: '3px 8px', borderRadius: 10,
-                        background: 'rgba(196,144,64,0.13)',
-                        color: '#c49040',
+                        background: 'rgba(91,130,180,0.13)',
+                        color: '#5a82b4',
                       }}>
                         Online-bokning
                       </span>

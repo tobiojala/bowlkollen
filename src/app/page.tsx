@@ -236,14 +236,14 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
         <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
           {([['live', 'PÅGÅENDE', liveItems.length], ['upcoming', 'KOMMANDE', upcomingItems.length]] as const).map(([m, label, count]) => {
             const isAct = mode === m
-            const clr   = m === 'live' ? '#c49040' : '#f5c200'
+            const clr   = m === 'live' ? '#f5c200' : '#5a82b4'
             return (
               <button key={m} onClick={() => switchMode(m)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px', borderRadius: 20, cursor: 'pointer', border: 'none',
                   background: isAct
-                    ? (isDark ? `rgba(${m === 'live' ? '196,144,64' : '245,194,0'},0.15)` : `rgba(${m === 'live' ? '196,144,64' : '245,194,0'},0.1)`)
+                    ? (isDark ? `rgba(${m === 'live' ? '245,194,0' : '91,130,180'},0.15)` : `rgba(${m === 'live' ? '245,194,0' : '91,130,180'},0.1)`)
                     : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
                   outline: `1px solid ${isAct ? clr + '66' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
                   WebkitTapHighlightColor: 'transparent',
@@ -254,7 +254,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                 </span>
                 <span style={{ fontSize: 9, fontWeight: 700,
                   color: isAct ? clr : C.textMuted,
-                  background: isAct ? `rgba(${m === 'live' ? '196,144,64' : '245,194,0'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
+                  background: isAct ? `rgba(${m === 'live' ? '245,194,0' : '91,130,180'},0.18)` : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'),
                   borderRadius: 8, padding: '1px 6px' }}>
                   {count}
                 </span>
@@ -285,16 +285,16 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const cd       = !hasScore ? countdown(m.date, now) : null
               const time     = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               const dateStr  = m.date.slice(0, 10)
-              const GREEN_M   = '#c49040'
+              const GREEN_M   = '#f5c200'
               const streams   = isLive ? (m.streams ?? []) : []
               const isStream  = streams.length > 0
-              const topClr    = isLive ? GREEN_M : '#f5c200'
+              const topClr    = isLive ? GREEN_M : '#5a82b4'
               const bgFrom    = isLive
-                ? (isDark ? 'rgba(196,144,64,0.1)' : 'rgba(196,144,64,0.06)')
-                : (isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.06)')
+                ? (isDark ? 'rgba(245,194,0,0.1)' : 'rgba(245,194,0,0.06)')
+                : (isDark ? 'rgba(91,130,180,0.1)' : 'rgba(91,130,180,0.06)')
               const edgeClr   = isLive
-                ? 'rgba(196,144,64,0.3)'
-                : (isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.28)')
+                ? (isDark ? 'rgba(245,194,0,0.3)' : 'rgba(245,194,0,0.35)')
+                : (isDark ? 'rgba(91,130,180,0.25)' : 'rgba(91,130,180,0.3)')
               return (
                 <a href={'/matches/' + m.id} style={{
                   display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
@@ -325,7 +325,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                           )}
                         </div>
                       ) : (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#f5c200', letterSpacing: 1.5 }}>KOMMANDE</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#5a82b4', letterSpacing: 1.5 }}>KOMMANDE</span>
                       )}
                       <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: dc,
                         background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
@@ -391,7 +391,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                       </div>
                     ) : (
                       <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
-                        color: isLive ? `rgba(196,144,64,0.6)` : C.textMuted }}>
+                        color: isLive ? `rgba(245,194,0,0.6)` : C.textMuted }}>
                         {isLive ? 'Tryck för detaljer →' : `${dateLabel(dateStr)} · ${time}`}
                       </div>
                     )}
@@ -443,7 +443,7 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
               const awayWin  = hasScore && m.away_score! > m.home_score!
               const isLiveM   = m.status === 'live'
               const isStreamM = isLiveM && (m.streams?.length ?? 0) > 0
-              const GREEN_S   = '#c49040'
+              const GREEN_S   = '#f5c200'
               const cd        = !hasScore ? countdown(m.date, now) : null
               const time      = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
               return (
@@ -452,12 +452,12 @@ function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: {
                     flexShrink: 0, width: 82, padding: '8px 6px',
                     borderRadius: 12, cursor: 'pointer',
                     border: `1px solid ${isAct
-                      ? (isLiveM ? 'rgba(196,144,64,0.55)' : 'rgba(245,194,0,0.55)')
+                      ? (isLiveM ? 'rgba(245,194,0,0.55)' : 'rgba(91,130,180,0.55)')
                       : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)')}`,
                     background: isAct
                       ? (isLiveM
-                        ? (isDark ? 'rgba(196,144,64,0.14)' : 'rgba(196,144,64,0.08)')
-                        : (isDark ? 'rgba(245,194,0,0.14)'  : 'rgba(245,194,0,0.08)'))
+                        ? (isDark ? 'rgba(245,194,0,0.14)' : 'rgba(245,194,0,0.08)')
+                        : (isDark ? 'rgba(91,130,180,0.14)' : 'rgba(91,130,180,0.08)'))
                       : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     WebkitTapHighlightColor: 'transparent', overflow: 'hidden', position: 'relative',
@@ -831,11 +831,11 @@ export default function Home() {
                 )
 
                 // ── Standard tiers ───────────────────────────────────────────
-                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#c49040' : C.textMuted
+                const scoreColor = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#5a82b4' : C.textMuted
                 const scoreGlow  = isElite ? '0 0 10px rgba(0,240,255,0.4), 0 0 24px rgba(0,240,255,0.2)' : 'none'
                 const cardBorder = isElite ? 'rgba(245,194,0,0.45)'
                                  : isGold  ? 'rgba(245,194,0,0.25)'
-                                 : isGood  ? 'rgba(196,144,64,0.28)'
+                                 : isGood  ? 'rgba(91,130,180,0.28)'
                                  : isDark  ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
                 const nameParts2 = e.playerName.split(' ')
                 const firstName2 = nameParts2[0]

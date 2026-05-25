@@ -194,9 +194,9 @@ export default function HallPage({ params }: { params: Promise<{ id: string }> }
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 14px', borderRadius: 12, textDecoration: 'none',
-                  background: 'rgba(196,144,64,0.13)',
-                  border: '1px solid rgba(196,144,64,0.30)',
-                  fontSize: 13, fontWeight: 700, color: '#c49040',
+                  background: 'rgba(91,130,180,0.13)',
+                  border: '1px solid rgba(91,130,180,0.30)',
+                  fontSize: 13, fontWeight: 700, color: '#5a82b4',
                   display: 'flex', alignItems: 'center', gap: 5,
                 }}
               >
