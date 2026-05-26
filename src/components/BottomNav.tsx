@@ -49,16 +49,16 @@ export default function BottomNav() {
   )
   const current = activeIdx === -1 ? 0 : activeIdx
 
-  // Glass shell colors
+  // Real glass — minimal blur, transparency does the work, specular rim is the effect
   const glassBg = isDark
-    ? 'rgba(10,18,35,0.62)'
-    : 'rgba(255,255,255,0.52)'
+    ? 'rgba(5,15,40,0.18)'
+    : 'rgba(255,255,255,0.14)'
   const glassBorder = isDark
-    ? 'rgba(255,255,255,0.13)'
-    : 'rgba(0,0,0,0.07)'
+    ? 'rgba(255,255,255,0.22)'
+    : 'rgba(255,255,255,0.75)'
   const glassShadow = isDark
-    ? '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.14)'
-    : '0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.70)'
+    ? 'inset 0 1.5px 0 rgba(255,255,255,0.28), inset 0 -0.5px 0 rgba(0,0,0,0.20), 0 12px 40px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.18)'
+    : 'inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07)'
 
   return (
     <motion.div
@@ -72,8 +72,8 @@ export default function BottomNav() {
         zIndex: 50,
         borderRadius: 28,
         background: glassBg,
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        backdropFilter: 'blur(2px) saturate(220%) brightness(1.06)',
+        WebkitBackdropFilter: 'blur(2px) saturate(220%) brightness(1.06)',
         border: `0.5px solid ${glassBorder}`,
         boxShadow: glassShadow,
         height: 62,
@@ -118,12 +118,12 @@ export default function BottomNav() {
                     inset: '3px 4px',
                     borderRadius: 18,
                     background: isDark
-                      ? 'rgba(245,194,0,0.12)'
-                      : 'rgba(245,194,0,0.10)',
-                    border: '0.5px solid rgba(245,194,0,0.28)',
+                      ? 'rgba(255,255,255,0.07)'
+                      : 'rgba(255,255,255,0.45)',
+                    border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.80)'}`,
                     boxShadow: isDark
-                      ? '0 0 20px rgba(245,194,0,0.20), 0 0 40px rgba(245,194,0,0.08), inset 0 1px 0 rgba(255,255,255,0.18)'
-                      : '0 0 14px rgba(245,194,0,0.16), inset 0 1px 0 rgba(255,255,255,0.60)',
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -0.5px 0 rgba(0,0,0,0.15), 0 0 16px rgba(245,194,0,0.14)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 -0.5px 0 rgba(0,0,0,0.05), 0 0 12px rgba(245,194,0,0.12)',
                   }}
                 />
               )}
