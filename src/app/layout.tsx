@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <AuthRedirect />
           <Nav />
-        <div style={{ paddingTop: 56, paddingBottom: 68 }}>
+        <div style={{ paddingTop: 56, paddingBottom: 92 }}>
           {children}
           <Footer />
         </div>

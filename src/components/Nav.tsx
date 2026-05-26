@@ -122,11 +122,20 @@ export default function Nav() {
   const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 
   const navBg = isDark
-    ? (scrolled ? 'rgba(8,14,24,0.97)' : 'rgba(8,14,24,0.95)')
-    : (scrolled ? 'rgba(245,242,236,0.97)' : 'rgba(245,242,236,0.95)')
-  const borderBottom = `0.5px solid ${scrolled || searching ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)') : 'transparent'}`
+    ? 'rgba(8,14,26,0.65)'
+    : 'rgba(252,250,246,0.65)'
+  const borderBottom = isDark
+    ? '0.5px solid rgba(255,255,255,0.09)'
+    : '0.5px solid rgba(0,0,0,0.07)'
+  const navShadow = scrolled || searching
+    ? isDark
+      ? '0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.25)'
+      : '0 1px 0 rgba(255,255,255,0.80), 0 4px 20px rgba(0,0,0,0.08)'
+    : isDark
+      ? 'inset 0 -0.5px 0 rgba(255,255,255,0.06)'
+      : 'inset 0 -0.5px 0 rgba(255,255,255,0.60)'
   const mutedColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'
-  const iconBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const iconBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.055)'
   const textColor = isDark ? '#ffffff' : '#1a2535'
 
   return (
@@ -144,10 +153,11 @@ export default function Nav() {
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
         background: navBg,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backdropFilter: 'blur(32px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(32px) saturate(160%)',
         borderBottom,
-        transition: 'border-color 0.2s, background 0.2s',
+        boxShadow: navShadow,
+        transition: 'box-shadow 0.25s',
         zIndex: 40,
         display: 'grid',
         gridTemplateColumns: 'auto 1fr auto',
@@ -261,11 +271,16 @@ export default function Nav() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 38, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)' }}
             onClick={() => setMenuOpen(false)} />
           <div style={{
-            position: 'fixed', top: 56, right: 0, zIndex: 39, width: 240,
-            background: isDark ? '#172030' : '#ffffff',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-            borderTop: 'none', borderRadius: '0 0 0 16px',
-            overflow: 'hidden', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.1)',
+            position: 'fixed', top: 60, right: 12, zIndex: 39, width: 236,
+            background: isDark ? 'rgba(10,18,35,0.78)' : 'rgba(255,255,255,0.78)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)'}`,
+            borderRadius: 20,
+            overflow: 'hidden',
+            boxShadow: isDark
+              ? '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10)'
+              : '0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.80)',
           }}>
             <div style={{ padding: '10px 16px 6px', fontSize: 9, fontWeight: 800, color: mutedColor, letterSpacing: 1.5 }}>
               UTFORSKA
@@ -308,8 +323,11 @@ export default function Nav() {
             onClick={() => setSearching(false)} />
           <div style={{
             position: 'fixed', top: 56, left: 0, right: 0, zIndex: 39,
-            background: isDark ? '#172030' : '#ffffff',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            background: isDark ? 'rgba(8,14,26,0.92)' : 'rgba(252,250,246,0.94)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.07)'}`,
+            boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.35)' : '0 8px 24px rgba(0,0,0,0.10)',
             maxHeight: '60vh', overflowY: 'auto',
           }}>
             {!query.trim() && (

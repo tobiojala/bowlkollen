@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calendar, BarChart2, Users, Activity } from 'lucide-react'
+import { Home, Calendar, Trophy, Users, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 
 const TABS = [
-  { label: 'Hem',    icon: Home,     href: '/' },
-  { label: 'Schema', icon: Calendar,  href: '/schema' },
-  { label: 'Tabell', icon: BarChart2, href: '/league' },
-  { label: 'Lag',    icon: Users,     href: '/teams' },
-  { label: 'Puls', icon: Activity, href: '/puls' },
+  { label: 'Hem',       icon: Home,     href: '/' },
+  { label: 'Schema',    icon: Calendar, href: '/schema' },
+  { label: 'Tävlingar', icon: Trophy,   href: '/tavlingar' },
+  { label: 'Lag',       icon: Users,    href: '/teams' },
+  { label: 'Puls',      icon: Activity, href: '/puls' },
 ]
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -49,23 +49,39 @@ export default function BottomNav() {
   )
   const current = activeIdx === -1 ? 0 : activeIdx
 
+  // Glass shell colors
+  const glassBg = isDark
+    ? 'rgba(10,18,35,0.62)'
+    : 'rgba(255,255,255,0.52)'
+  const glassBorder = isDark
+    ? 'rgba(255,255,255,0.13)'
+    : 'rgba(0,0,0,0.07)'
+  const glassShadow = isDark
+    ? '0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.14)'
+    : '0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.70)'
+
   return (
-    <motion.nav
-      animate={{ y: visible ? 0 : 80 }}
+    <motion.div
+      animate={{ y: visible ? 0 : 110 }}
       transition={SPRING}
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
       style={{
-        height: 68,
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        background: isDark ? '#0B1528' : 'rgba(255,255,255,0.97)',
-        borderTop: isDark
-          ? '0.5px solid rgba(255,255,255,0.07)'
-          : '0.5px solid rgba(0,0,0,0.09)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        position: 'fixed',
+        left: 14,
+        right: 14,
+        bottom: `calc(env(safe-area-inset-bottom) + 10px)`,
+        zIndex: 50,
+        borderRadius: 28,
+        background: glassBg,
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: `0.5px solid ${glassBorder}`,
+        boxShadow: glassShadow,
+        height: 62,
+        display: 'flex',
+        alignItems: 'center',
       }}
     >
-      <div className="flex items-center justify-around w-full px-1 pb-1.5">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '100%', padding: '0 4px' }}>
         {TABS.map((tab, i) => {
           const isActive = i === current
           const Icon = tab.icon
@@ -74,67 +90,77 @@ export default function BottomNav() {
             <motion.button
               key={tab.href}
               onClick={() => router.push(tab.href)}
-              whileTap={{ scale: 0.88 }}
+              whileTap={{ scale: 0.86 }}
               transition={SPRING}
-              className="relative flex flex-col items-center justify-center gap-[5px] cursor-pointer border-0 bg-transparent select-none"
               style={{
-                width: 64,
-                height: 52,
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                width: 62,
+                height: 50,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',
+                flexShrink: 0,
               }}
             >
-              {/* ─── Liquid capsule — morphs & slides between tabs ─── */}
+              {/* ── Frosted active capsule ── */}
               {isActive && (
                 <motion.div
-                  layoutId="activeTabBackground"
+                  layoutId="activeTabPill"
                   transition={SPRING}
-                  className="absolute rounded-[16px]"
                   style={{
+                    position: 'absolute',
                     inset: '3px 4px',
+                    borderRadius: 18,
                     background: isDark
-                      ? 'rgba(245,194,0,0.11)'
-                      : 'rgba(245,194,0,0.09)',
-                    border: '1px solid rgba(245,194,0,0.22)',
-                    // Gold aura glow
+                      ? 'rgba(245,194,0,0.12)'
+                      : 'rgba(245,194,0,0.10)',
+                    border: '0.5px solid rgba(245,194,0,0.28)',
                     boxShadow: isDark
-                      ? '0 0 18px rgba(245,194,0,0.22), 0 0 36px rgba(245,194,0,0.08), inset 0 1px 0 rgba(245,194,0,0.18)'
-                      : '0 0 14px rgba(245,194,0,0.18)',
+                      ? '0 0 20px rgba(245,194,0,0.20), 0 0 40px rgba(245,194,0,0.08), inset 0 1px 0 rgba(255,255,255,0.18)'
+                      : '0 0 14px rgba(245,194,0,0.16), inset 0 1px 0 rgba(255,255,255,0.60)',
                   }}
                 />
               )}
 
-              {/* ─── Icon — spring scale pop ─── */}
+              {/* ── Icon ── */}
               <motion.div
-                animate={{
-                  scale: isActive ? 1.1 : 1,
-                  y: isActive ? -1 : 0,
-                }}
+                animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
                 transition={SPRING}
-                className="relative z-10 flex items-center justify-center"
+                style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Icon
-                  size={22}
-                  strokeWidth={isActive ? 2.2 : 1.7}
+                  size={21}
+                  strokeWidth={isActive ? 2.2 : 1.6}
                   color={isActive
                     ? '#f5c200'
                     : isDark
-                      ? 'rgba(160,175,200,0.5)'
-                      : 'rgba(0,0,0,0.35)'}
+                      ? 'rgba(160,175,200,0.48)'
+                      : 'rgba(0,0,0,0.32)'}
                 />
               </motion.div>
 
-              {/* ─── Label ─── */}
+              {/* ── Label ── */}
               <motion.span
                 animate={{
                   color: isActive
                     ? '#f5c200'
-                    : isDark
-                      ? 'rgba(160,175,200,0.45)'
-                      : 'rgba(0,0,0,0.38)',
+                    : isDark ? 'rgba(160,175,200,0.42)' : 'rgba(0,0,0,0.36)',
                 }}
-                transition={{ duration: 0.14 }}
-                className="relative z-10 font-bold leading-none"
-                style={{ fontSize: 9, letterSpacing: '0.3px' }}
+                transition={{ duration: 0.13 }}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.3px',
+                  lineHeight: 1,
+                }}
               >
                 {tab.label}
               </motion.span>
@@ -142,6 +168,6 @@ export default function BottomNav() {
           )
         })}
       </div>
-    </motion.nav>
+    </motion.div>
   )
 }

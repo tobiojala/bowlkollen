@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+*.pdf
 VISION.md
 ONBOARDING.md
 *.pem
