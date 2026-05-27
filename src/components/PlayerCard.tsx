@@ -1,6 +1,9 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react'
+import dynamic from 'next/dynamic'
+
+const RemotionPlayer = dynamic(() => import('./RemotionPlayerEmbed'), { ssr: false })
 
 type Props = {
   name: string
@@ -397,6 +400,7 @@ export default function PlayerCard({
   const [shimmerKey, setShimmerKey] = useState(0)
   const [downloading, setDownloading] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [videoOpen, setVideoOpen] = useState(false)
 
   const cardRef  = useRef<HTMLDivElement>(null)
   const frontRef = useRef<HTMLDivElement>(null)
@@ -464,7 +468,10 @@ export default function PlayerCard({
     const canvas = await getCardCanvas('front')
     if (!canvas) return
     const dataUrl = canvas.toDataURL('image/png')
-    if (platform === 'download') {
+    if (platform === 'video') {
+      setVideoOpen(v => !v)
+      return
+    } else if (platform === 'download') {
       const a = document.createElement('a'); a.download = name.replace(/\s/g, '_') + '_card.png'; a.href = dataUrl; a.click()
     } else if (platform === 'facebook') {
       window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank')
@@ -554,8 +561,9 @@ export default function PlayerCard({
           {shareOpen && (
             <div style={{ background: isDark ? '#172030' : '#fff', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 14, overflow: 'hidden' }}>
               {[
-                { platform: 'instagram', label: 'Instagram', emoji: '📸', hint: 'Laddar ner för Stories/Post' },
-                { platform: 'tiktok',    label: 'TikTok',    emoji: '🎵', hint: 'Laddar ner för TikTok' },
+                { platform: 'video',     label: 'Animerat kort (1080×1080)', emoji: '🎬', hint: 'Förhandsgranska & exportera' },
+                { platform: 'instagram', label: 'Instagram', emoji: '📸', hint: 'Laddar ner PNG för Stories/Post' },
+                { platform: 'tiktok',    label: 'TikTok',    emoji: '🎵', hint: 'Laddar ner PNG för TikTok' },
                 { platform: 'facebook',  label: 'Facebook',  emoji: '👥', hint: 'Öppnar Facebook' },
                 { platform: 'x',         label: 'X / Twitter', emoji: '𝕏', hint: 'Öppnar X' },
                 { platform: 'download',  label: 'Ladda ner PNG', emoji: '⬇', hint: 'Framsida som PNG' },
@@ -574,6 +582,27 @@ export default function PlayerCard({
               ))}
             </div>
           )}
+
+          {/* Animated video preview */}
+          {videoOpen && (
+            <RemotionPlayer
+              name={name}
+              teamName={teamName}
+              avg={avg}
+              bestSeries={bestSeries}
+              over200={over200}
+              rating={rating}
+              tierLabel={tier.label}
+              tierAccent={tier.accent}
+              tierGlow={tier.glowColor}
+              tierBg={tier.bg}
+              tierRarity={tier.rarity}
+              avatarUrl={avatarUrl}
+              isDark={isDark}
+              playerName={name}
+            />
+          )}
+
           <button onClick={downloadCard} disabled={downloading}
             style={{ width: '100%', padding: '13px', background: 'transparent', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 12, fontSize: 13, fontWeight: 600, color: muted, cursor: 'pointer', opacity: downloading ? 0.7 : 1 }}>
             {downloading ? 'Laddar ner...' : '⬇ Ladda ner framsida + baksida'}
