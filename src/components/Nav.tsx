@@ -44,6 +44,7 @@ type TeamResult   = { kind: 'team';   id: string; name: string; club: string; ci
 export default function Nav() {
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
+  const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { theme, toggle } = useTheme()
   const isDark = theme === 'dark'
@@ -65,6 +66,13 @@ export default function Nav() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!user) { setClaimedPlayerId(null); return }
+    const supabase = createClient()
+    supabase.from('player_claims').select('player_id').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => setClaimedPlayerId(data?.player_id || null))
+  }, [user])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4)
@@ -228,7 +236,7 @@ export default function Nav() {
           )}
 
           {!searching && (user ? (
-            <a href="/profile" style={{ textDecoration: 'none', flexShrink: 0 }}>
+            <a href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'} style={{ textDecoration: 'none', flexShrink: 0 }}>
               {avatar ? (
                 <img src={avatar} alt={name} style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(245,194,0,0.35)', objectFit: 'cover', display: 'block' }} />
               ) : (
