@@ -60,27 +60,27 @@ export default function BottomNav() {
         zIndex: 50,
         height: 64,
         borderRadius: 32,
-        // Single-element glass — backdrop-filter works correctly, no SVG filter conflicts
-        backdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
-        WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        // iOS-style liquid glass: low blur, nearly clear, specular rim does the work
+        backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+        WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
         background: isDark
-          ? 'rgba(8,16,44,0.55)'
-          : 'rgba(230,238,255,0.68)',
-        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.36)' : 'rgba(255,255,255,0.90)'}`,
+          ? 'rgba(255,255,255,0.06)'
+          : 'rgba(255,255,255,0.28)',
+        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.80)'}`,
         boxShadow: isDark
           ? [
-              'inset 0 1.5px 0 rgba(255,255,255,0.42)',       // top specular rim
-              'inset 0 -0.5px 0 rgba(0,0,0,0.32)',            // bottom inner shadow
-              'inset 3px 0 6px rgba(130,180,255,0.10)',        // left chromatic (blue tint)
-              'inset -3px 0 6px rgba(255,150,80,0.07)',        // right chromatic (amber tint)
-              '0 20px 60px rgba(0,0,0,0.55)',
-              '0 4px 16px rgba(0,0,0,0.35)',
+              'inset 0 1px 0 rgba(255,255,255,0.55)',
+              'inset 0 -0.5px 0 rgba(255,255,255,0.08)',
+              'inset 1px 0 0 rgba(255,255,255,0.10)',
+              'inset -1px 0 0 rgba(255,255,255,0.10)',
+              '0 8px 32px rgba(0,0,0,0.45)',
+              '0 2px 8px rgba(0,0,0,0.28)',
             ].join(', ')
           : [
-              'inset 0 1.5px 0 rgba(255,255,255,1.0)',
-              'inset 0 -0.5px 0 rgba(0,0,0,0.07)',
-              '0 20px 60px rgba(0,0,0,0.14)',
-              '0 4px 12px rgba(0,0,0,0.09)',
+              'inset 0 1px 0 rgba(255,255,255,0.90)',
+              'inset 0 -0.5px 0 rgba(0,0,0,0.06)',
+              '0 8px 32px rgba(0,0,0,0.12)',
+              '0 2px 8px rgba(0,0,0,0.07)',
             ].join(', '),
       }}
     >

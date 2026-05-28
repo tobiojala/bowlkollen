@@ -130,23 +130,21 @@ export default function Nav() {
   const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 
   const navBg = isDark
-    ? 'rgba(6,12,36,0.60)'
-    : 'rgba(235,242,255,0.76)'
+    ? 'rgba(255,255,255,0.06)'
+    : 'rgba(255,255,255,0.30)'
   const borderBottom = isDark
-    ? '0.5px solid rgba(255,255,255,0.32)'
-    : '0.5px solid rgba(255,255,255,0.90)'
+    ? '0.5px solid rgba(255,255,255,0.22)'
+    : '0.5px solid rgba(255,255,255,0.75)'
   const navShadow = isDark
     ? [
-        'inset 0 1px 0 rgba(255,255,255,0.30)',
-        'inset 0 -0.5px 0 rgba(0,0,0,0.32)',
-        'inset 2px 0 4px rgba(140,190,255,0.06)',
-        'inset -2px 0 4px rgba(255,140,90,0.05)',
-        '0 6px 32px rgba(0,0,0,0.45)',
+        'inset 0 1px 0 rgba(255,255,255,0.50)',
+        'inset 0 -0.5px 0 rgba(255,255,255,0.06)',
+        '0 4px 24px rgba(0,0,0,0.40)',
       ].join(', ')
     : [
-        'inset 0 1px 0 rgba(255,255,255,1.0)',
-        'inset 0 -0.5px 0 rgba(0,0,0,0.07)',
-        '0 6px 24px rgba(0,0,0,0.11)',
+        'inset 0 1px 0 rgba(255,255,255,0.90)',
+        'inset 0 -0.5px 0 rgba(0,0,0,0.05)',
+        '0 4px 20px rgba(0,0,0,0.09)',
       ].join(', ')
   const mutedColor = isDark ? 'rgba(255,255,255,0.82)' : 'rgba(20,30,55,0.60)'
   const iconBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.055)'
@@ -167,8 +165,8 @@ export default function Nav() {
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
         background: navBg,
-        backdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
-        WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+        WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
         borderBottom,
         boxShadow: navShadow,
         transition: 'box-shadow 0.25s',
@@ -286,9 +284,9 @@ export default function Nav() {
             onClick={() => setMenuOpen(false)} />
           <div style={{
             position: 'fixed', top: 60, right: 12, zIndex: 39, width: 236,
-            background: isDark ? 'rgba(8,15,42,0.72)' : 'rgba(255,255,255,0.80)',
-            backdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
-            WebkitBackdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
+            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
+            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
             border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.85)'}`,
             borderRadius: 20,
             overflow: 'hidden',
@@ -337,9 +335,9 @@ export default function Nav() {
             onClick={() => setSearching(false)} />
           <div style={{
             position: 'fixed', top: 56, left: 0, right: 0, zIndex: 39,
-            background: isDark ? 'rgba(8,15,42,0.72)' : 'rgba(255,255,255,0.80)',
-            backdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
-            WebkitBackdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
+            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
+            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
             borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.70)'}`,
             boxShadow: isDark
               ? 'inset 0 -1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.30)'
