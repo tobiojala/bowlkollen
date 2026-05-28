@@ -157,12 +157,21 @@ export default function Nav() {
       {/* SVG lens distortion filter for top nav edge warp */}
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
-          <filter id="bk-nav-lens" x="-20%" y="-60%" width="140%" height="220%" colorInterpolationFilters="sRGB">
-            <feMorphology operator="erode" radius="1" in="SourceAlpha" result="interior" />
-            <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="4" result="noise" />
-            <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="55" xChannelSelector="R" yChannelSelector="G" result="pass1" />
-            <feDisplacementMap in="pass1" in2="edgeNoise" scale="40" xChannelSelector="G" yChannelSelector="R" />
+          <filter id="bk-nav-lens" x="-20%" y="-80%" width="140%" height="260%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="38" result="blur" />
+            <feOffset in="blur" dx="-22" result="blurL" />
+            <feOffset in="blur" dx="22"  result="blurR" />
+            <feComposite in="blurR" in2="blurL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xGrad" />
+            <feOffset in="blur" dy="-22" result="blurU" />
+            <feOffset in="blur" dy="22"  result="blurD" />
+            <feComposite in="blurD" in2="blurU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yGrad" />
+            <feColorMatrix in="xGrad" type="matrix"
+              values="1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 0.5   0 0 0 0 1" result="xOnly" />
+            <feColorMatrix in="yGrad" type="matrix"
+              values="0 0 0 0 0.5   1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 1" result="yOnly" />
+            <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="dispMap" />
+            <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="-90"
+              xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
       </svg>

@@ -54,17 +54,37 @@ export default function BottomNav() {
       {/* SVG lens distortion filter — edge-only displacement, center stays sharp */}
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
-          <filter id="bk-lens" x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
-            {/* Wide edge band */}
-            <feMorphology operator="erode" radius="1" in="SourceAlpha" result="interior" />
-            {/* Turbulence (sharper + more chaotic than fractalNoise) */}
-            <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="9" result="noise" />
-            {/* Edge-only noise */}
-            <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            {/* First displacement pass */}
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="55" xChannelSelector="R" yChannelSelector="G" result="pass1" />
-            {/* Second displacement pass on the already-warped result — exponential effect */}
-            <feDisplacementMap in="pass1" in2="edgeNoise" scale="40" xChannelSelector="G" yChannelSelector="R" />
+          {/*
+            True radial lens distortion — no turbulence noise.
+            Computes ∂B/∂x and ∂B/∂y of the Gaussian-blurred shape,
+            encodes them into R and G channels, applies as displacement.
+            Result: smooth barrel distortion that spreads outward from center,
+            like looking through the curved rim of a thick glass lens.
+          */}
+          <filter id="bk-lens" x="-55%" y="-80%" width="210%" height="260%" colorInterpolationFilters="sRGB">
+            {/* Smooth gradient: bright at pill center, falls to 0 at edges */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="38" result="blur" />
+
+            {/* X gradient: (blurRight - blurLeft) / 2 + 0.5 → encodes horizontal direction */}
+            <feOffset in="blur" dx="-22" result="blurL" />
+            <feOffset in="blur" dx="22"  result="blurR" />
+            <feComposite in="blurR" in2="blurL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xGrad" />
+
+            {/* Y gradient: (blurDown - blurUp) / 2 + 0.5 → encodes vertical direction */}
+            <feOffset in="blur" dy="-22" result="blurU" />
+            <feOffset in="blur" dy="22"  result="blurD" />
+            <feComposite in="blurD" in2="blurU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yGrad" />
+
+            {/* Pack X into R channel, Y into G channel of displacement map */}
+            <feColorMatrix in="xGrad" type="matrix"
+              values="1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 0.5   0 0 0 0 1" result="xOnly" />
+            <feColorMatrix in="yGrad" type="matrix"
+              values="0 0 0 0 0.5   1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 1" result="yOnly" />
+            <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="dispMap" />
+
+            {/* Apply: negative scale = barrel (edges spread outward like a real lens rim) */}
+            <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="-90"
+              xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
       </svg>
