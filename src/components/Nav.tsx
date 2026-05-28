@@ -130,15 +130,25 @@ export default function Nav() {
   const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 
   const navBg = isDark
-    ? 'rgba(8,15,42,0.62)'
-    : 'rgba(255,255,255,0.72)'
+    ? 'rgba(6,12,36,0.60)'
+    : 'rgba(235,242,255,0.76)'
   const borderBottom = isDark
-    ? '0.5px solid rgba(255,255,255,0.28)'
-    : '0.5px solid rgba(255,255,255,0.85)'
+    ? '0.5px solid rgba(255,255,255,0.32)'
+    : '0.5px solid rgba(255,255,255,0.90)'
   const navShadow = isDark
-    ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -0.5px 0 rgba(0,0,0,0.30), 0 4px 32px rgba(0,0,0,0.40)'
-    : 'inset 0 1px 0 rgba(255,255,255,1.0), inset 0 -0.5px 0 rgba(0,0,0,0.07), 0 4px 24px rgba(0,0,0,0.10)'
-  const mutedColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'
+    ? [
+        'inset 0 1px 0 rgba(255,255,255,0.30)',
+        'inset 0 -0.5px 0 rgba(0,0,0,0.32)',
+        'inset 2px 0 4px rgba(140,190,255,0.06)',
+        'inset -2px 0 4px rgba(255,140,90,0.05)',
+        '0 6px 32px rgba(0,0,0,0.45)',
+      ].join(', ')
+    : [
+        'inset 0 1px 0 rgba(255,255,255,1.0)',
+        'inset 0 -0.5px 0 rgba(0,0,0,0.07)',
+        '0 6px 24px rgba(0,0,0,0.11)',
+      ].join(', ')
+  const mutedColor = isDark ? 'rgba(255,255,255,0.82)' : 'rgba(20,30,55,0.60)'
   const iconBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.055)'
   const textColor = isDark ? '#ffffff' : '#1a2535'
 
