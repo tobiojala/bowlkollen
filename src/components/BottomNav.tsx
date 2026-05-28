@@ -50,186 +50,125 @@ export default function BottomNav() {
   const current = activeIdx === -1 ? 0 : activeIdx
 
   return (
-    <>
-      {/* SVG lens distortion filter — edge-only displacement, center stays sharp */}
-      <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
-        <defs>
-          {/*
-            True radial lens distortion — no turbulence noise.
-            Computes ∂B/∂x and ∂B/∂y of the Gaussian-blurred shape,
-            encodes them into R and G channels, applies as displacement.
-            Result: smooth barrel distortion that spreads outward from center,
-            like looking through the curved rim of a thick glass lens.
-          */}
-          <filter id="bk-lens" x="-55%" y="-80%" width="210%" height="260%" colorInterpolationFilters="sRGB">
-            {/* Smooth gradient: bright at pill center, falls to 0 at edges */}
-            <feGaussianBlur in="SourceAlpha" stdDeviation="38" result="blur" />
+    <motion.div
+      animate={{ y: visible ? 0 : 110 }}
+      transition={SPRING}
+      style={{
+        position: 'fixed',
+        left: 32, right: 32,
+        bottom: `calc(env(safe-area-inset-bottom) + 12px)`,
+        zIndex: 50,
+        height: 64,
+        borderRadius: 32,
+        // Single-element glass — backdrop-filter works correctly, no SVG filter conflicts
+        backdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        background: isDark
+          ? 'rgba(8,16,44,0.55)'
+          : 'rgba(230,238,255,0.68)',
+        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.36)' : 'rgba(255,255,255,0.90)'}`,
+        boxShadow: isDark
+          ? [
+              'inset 0 1.5px 0 rgba(255,255,255,0.42)',       // top specular rim
+              'inset 0 -0.5px 0 rgba(0,0,0,0.32)',            // bottom inner shadow
+              'inset 3px 0 6px rgba(130,180,255,0.10)',        // left chromatic (blue tint)
+              'inset -3px 0 6px rgba(255,150,80,0.07)',        // right chromatic (amber tint)
+              '0 20px 60px rgba(0,0,0,0.55)',
+              '0 4px 16px rgba(0,0,0,0.35)',
+            ].join(', ')
+          : [
+              'inset 0 1.5px 0 rgba(255,255,255,1.0)',
+              'inset 0 -0.5px 0 rgba(0,0,0,0.07)',
+              '0 20px 60px rgba(0,0,0,0.14)',
+              '0 4px 12px rgba(0,0,0,0.09)',
+            ].join(', '),
+      }}
+    >
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+        width: '100%', height: '100%', padding: '0 4px',
+      }}>
+        {TABS.map((tab, i) => {
+          const isActive = i === current
+          const Icon = tab.icon
 
-            {/* X gradient: (blurRight - blurLeft) / 2 + 0.5 → encodes horizontal direction */}
-            <feOffset in="blur" dx="-22" result="blurL" />
-            <feOffset in="blur" dx="22"  result="blurR" />
-            <feComposite in="blurR" in2="blurL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xGrad" />
-
-            {/* Y gradient: (blurDown - blurUp) / 2 + 0.5 → encodes vertical direction */}
-            <feOffset in="blur" dy="-22" result="blurU" />
-            <feOffset in="blur" dy="22"  result="blurD" />
-            <feComposite in="blurD" in2="blurU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yGrad" />
-
-            {/* Pack X into R channel, Y into G channel of displacement map */}
-            <feColorMatrix in="xGrad" type="matrix"
-              values="1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 0.5   0 0 0 0 1" result="xOnly" />
-            <feColorMatrix in="yGrad" type="matrix"
-              values="0 0 0 0 0.5   1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 1" result="yOnly" />
-            <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="dispMap" />
-
-            {/* Apply: negative scale = barrel (edges spread outward like a real lens rim) */}
-            <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="-90"
-              xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-
-      <motion.div
-        animate={{ y: visible ? 0 : 110 }}
-        transition={SPRING}
-        style={{
-          position: 'fixed',
-          left: 32, right: 32,
-          bottom: `calc(env(safe-area-inset-bottom) + 12px)`,
-          zIndex: 50,
-          height: 64,
-          borderRadius: 32,
-        }}
-      >
-        {/* ── Glass background layer: gets lens filter + backdrop-filter ── */}
-        <div style={{
-          position: 'absolute', inset: 0, borderRadius: 32, overflow: 'hidden',
-          filter: 'url(#bk-lens)',
-        }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            backdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
-            WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
-            background: isDark
-              ? 'rgba(6,12,36,0.52)'
-              : 'rgba(235,242,255,0.70)',
-          }} />
-        </div>
-
-        {/* ── Glass edge / specular rim (no filter — stays crisp) ── */}
-        <div style={{
-          position: 'absolute', inset: 0, borderRadius: 32, pointerEvents: 'none',
-          border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.92)'}`,
-          boxShadow: isDark
-            ? [
-                'inset 0 1.5px 0 rgba(255,255,255,0.45)',        // top specular rim
-                'inset 0 -0.5px 0 rgba(0,0,0,0.35)',             // bottom inner shadow
-                'inset 2.5px 0 5px rgba(140,190,255,0.08)',      // left chromatic (blue)
-                'inset -2.5px 0 5px rgba(255,140,90,0.06)',      // right chromatic (amber)
-                '0 22px 60px rgba(0,0,0,0.60)',                   // main drop shadow
-                '0 4px 16px rgba(0,0,0,0.38)',                    // close shadow
-              ].join(', ')
-            : [
-                'inset 0 1.5px 0 rgba(255,255,255,1.0)',
-                'inset 0 -0.5px 0 rgba(0,0,0,0.07)',
-                '0 22px 60px rgba(0,0,0,0.15)',
-                '0 4px 12px rgba(0,0,0,0.09)',
-              ].join(', '),
-        }} />
-
-        {/* ── Tabs content layer: z-index above glass, no distortion ── */}
-        <div style={{
-          position: 'relative', zIndex: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-          width: '100%', height: '100%', padding: '0 4px',
-        }}>
-          {TABS.map((tab, i) => {
-            const isActive = i === current
-            const Icon = tab.icon
-
-            return (
-              <motion.button
-                key={tab.href}
-                onClick={() => router.push(tab.href)}
-                whileTap={{ scale: 0.86 }}
-                transition={SPRING}
-                style={{
-                  position: 'relative',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  gap: 4, width: 56, height: 54,
-                  background: 'transparent', border: 'none',
-                  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                  flexShrink: 0,
-                }}
-              >
-                {/* ── Gold active capsule — honor roll style ── */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTabPill"
-                    transition={SPRING}
-                    style={{
-                      position: 'absolute', inset: '4px 3px', borderRadius: 18,
-                      background: isDark
-                        ? 'linear-gradient(160deg, rgba(255,210,40,0.22) 0%, rgba(245,164,0,0.14) 100%)'
-                        : 'linear-gradient(160deg, rgba(255,230,80,0.40) 0%, rgba(245,180,0,0.22) 100%)',
-                      border: '1px solid rgba(245,194,0,0.50)',
-                      boxShadow: isDark
-                        ? [
-                            'inset 0 1.5px 0 rgba(255,235,80,0.65)',   // gold specular rim
-                            'inset 0 -0.5px 0 rgba(160,100,0,0.30)',   // bottom inner shadow
-                            '0 0 28px rgba(245,194,0,0.40)',            // outer gold glow
-                            '0 0 8px rgba(245,194,0,0.25)',             // tight glow
-                          ].join(', ')
-                        : [
-                            'inset 0 1.5px 0 rgba(255,245,120,0.90)',
-                            'inset 0 -0.5px 0 rgba(160,100,0,0.14)',
-                            '0 0 24px rgba(245,194,0,0.35)',
-                            '0 0 8px rgba(245,194,0,0.20)',
-                          ].join(', '),
-                    }}
-                  />
-                )}
-
-                {/* ── Icon ── */}
+          return (
+            <motion.button
+              key={tab.href}
+              onClick={() => router.push(tab.href)}
+              whileTap={{ scale: 0.86 }}
+              transition={SPRING}
+              style={{
+                position: 'relative',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 4, width: 56, height: 54,
+                background: 'transparent', border: 'none',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                flexShrink: 0,
+              }}
+            >
+              {/* Gold active capsule */}
+              {isActive && (
                 <motion.div
-                  animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
+                  layoutId="activeTabPill"
                   transition={SPRING}
                   style={{
-                    position: 'relative', zIndex: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    position: 'absolute', inset: '4px 3px', borderRadius: 18,
+                    background: isDark
+                      ? 'linear-gradient(160deg, rgba(255,210,40,0.22) 0%, rgba(245,164,0,0.14) 100%)'
+                      : 'linear-gradient(160deg, rgba(255,230,80,0.40) 0%, rgba(245,180,0,0.22) 100%)',
+                    border: '1px solid rgba(245,194,0,0.50)',
+                    boxShadow: isDark
+                      ? [
+                          'inset 0 1.5px 0 rgba(255,235,80,0.65)',
+                          'inset 0 -0.5px 0 rgba(160,100,0,0.30)',
+                          '0 0 28px rgba(245,194,0,0.40)',
+                          '0 0 8px rgba(245,194,0,0.25)',
+                        ].join(', ')
+                      : [
+                          'inset 0 1.5px 0 rgba(255,245,120,0.90)',
+                          'inset 0 -0.5px 0 rgba(160,100,0,0.14)',
+                          '0 0 24px rgba(245,194,0,0.35)',
+                          '0 0 8px rgba(245,194,0,0.20)',
+                        ].join(', '),
                   }}
-                >
-                  <Icon
-                    size={24}
-                    strokeWidth={isActive ? 2.2 : 1.6}
-                    color={isActive
-                      ? '#f5c200'
-                      : isDark ? 'rgba(255,255,255,0.82)' : 'rgba(20,30,55,0.62)'}
-                  />
-                </motion.div>
+                />
+              )}
 
-                {/* ── Label ── */}
-                <motion.span
-                  animate={{
-                    color: isActive
-                      ? '#f5c200'
-                      : isDark ? 'rgba(255,255,255,0.75)' : 'rgba(20,30,55,0.58)',
-                  }}
-                  transition={{ duration: 0.13 }}
-                  style={{
-                    position: 'relative', zIndex: 1,
-                    fontSize: 10, fontWeight: 800,
-                    letterSpacing: '0.3px', lineHeight: 1,
-                  }}
-                >
-                  {tab.label}
-                </motion.span>
-              </motion.button>
-            )
-          })}
-        </div>
-      </motion.div>
-    </>
+              <motion.div
+                animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
+                transition={SPRING}
+                style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Icon
+                  size={24}
+                  strokeWidth={isActive ? 2.2 : 1.6}
+                  color={isActive
+                    ? '#f5c200'
+                    : isDark ? 'rgba(255,255,255,0.82)' : 'rgba(20,30,55,0.62)'}
+                />
+              </motion.div>
+
+              <motion.span
+                animate={{
+                  color: isActive
+                    ? '#f5c200'
+                    : isDark ? 'rgba(255,255,255,0.75)' : 'rgba(20,30,55,0.58)',
+                }}
+                transition={{ duration: 0.13 }}
+                style={{
+                  position: 'relative', zIndex: 1,
+                  fontSize: 10, fontWeight: 800,
+                  letterSpacing: '0.3px', lineHeight: 1,
+                }}
+              >
+                {tab.label}
+              </motion.span>
+            </motion.button>
+          )
+        })}
+      </div>
+    </motion.div>
   )
 }

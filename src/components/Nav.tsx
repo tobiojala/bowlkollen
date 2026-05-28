@@ -154,28 +154,6 @@ export default function Nav() {
 
   return (
     <>
-      {/* SVG lens distortion filter for top nav edge warp */}
-      <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
-        <defs>
-          <filter id="bk-nav-lens" x="-20%" y="-80%" width="140%" height="260%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="38" result="blur" />
-            <feOffset in="blur" dx="-22" result="blurL" />
-            <feOffset in="blur" dx="22"  result="blurR" />
-            <feComposite in="blurR" in2="blurL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xGrad" />
-            <feOffset in="blur" dy="-22" result="blurU" />
-            <feOffset in="blur" dy="22"  result="blurD" />
-            <feComposite in="blurD" in2="blurU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yGrad" />
-            <feColorMatrix in="xGrad" type="matrix"
-              values="1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 0.5   0 0 0 0 1" result="xOnly" />
-            <feColorMatrix in="yGrad" type="matrix"
-              values="0 0 0 0 0.5   1 0 0 0 0   0 0 0 0 0.5   0 0 0 0 1" result="yOnly" />
-            <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="dispMap" />
-            <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="-90"
-              xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-
       {/* Global gold glow below nav */}
       <div style={{
         position: 'fixed', top: 56, left: 0, right: 0, height: 90,
@@ -188,33 +166,21 @@ export default function Nav() {
 
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
+        background: navBg,
+        backdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        WebkitBackdropFilter: 'blur(40px) saturate(200%) brightness(1.15)',
+        borderBottom,
+        boxShadow: navShadow,
+        transition: 'box-shadow 0.25s',
         zIndex: 40,
         display: 'grid',
         gridTemplateColumns: 'auto 1fr auto',
         alignItems: 'center',
         padding: '0 12px',
       }}>
-        {/* Glass background layer with lens distortion */}
-        <div style={{
-          position: 'absolute', inset: 0, filter: 'url(#bk-nav-lens)',
-        }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: navBg,
-            backdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
-            WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
-          }} />
-        </div>
-        {/* Border / specular rim — stays crisp, no filter */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          borderBottom,
-          boxShadow: navShadow,
-          transition: 'box-shadow 0.25s',
-        }} />
 
         {/* Left */}
-        <div style={{ display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           {searching ? (
             <button onClick={() => setSearching(false)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', WebkitTapHighlightColor: 'transparent' }}>
               <X size={20} color={mutedColor} />
@@ -236,7 +202,7 @@ export default function Nav() {
         </div>
 
         {/* Center — search input or page title */}
-        <div style={{ textAlign: 'center', overflow: 'hidden', minWidth: 0, padding: '0 8px', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', overflow: 'hidden', minWidth: 0, padding: '0 8px' }}>
           {searching ? (
             <input
               ref={inputRef}
@@ -257,7 +223,7 @@ export default function Nav() {
         </div>
 
         {/* Right */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
           {/* Search */}
           {!searching && (
             <button onClick={() => setSearching(true)} style={{
