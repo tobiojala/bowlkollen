@@ -51,14 +51,14 @@ export default function BottomNav() {
 
   // Real glass — minimal blur, transparency does the work, specular rim is the effect
   const glassBg = isDark
-    ? 'rgba(5,15,40,0.18)'
-    : 'rgba(255,255,255,0.14)'
+    ? 'rgba(8,15,42,0.72)'
+    : 'rgba(255,255,255,0.78)'
   const glassBorder = isDark
-    ? 'rgba(255,255,255,0.22)'
-    : 'rgba(255,255,255,0.75)'
+    ? 'rgba(255,255,255,0.32)'
+    : 'rgba(255,255,255,0.90)'
   const glassShadow = isDark
-    ? 'inset 0 1.5px 0 rgba(255,255,255,0.28), inset 0 -0.5px 0 rgba(0,0,0,0.20), 0 12px 40px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.18)'
-    : 'inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07)'
+    ? 'inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -0.5px 0 rgba(0,0,0,0.30), 0 16px 48px rgba(0,0,0,0.50), 0 2px 12px rgba(0,0,0,0.30)'
+    : 'inset 0 1.5px 0 rgba(255,255,255,1.0), inset 0 -0.5px 0 rgba(0,0,0,0.07), 0 16px 48px rgba(0,0,0,0.14), 0 2px 12px rgba(0,0,0,0.08)'
 
   return (
     <motion.div
@@ -72,11 +72,11 @@ export default function BottomNav() {
         zIndex: 50,
         borderRadius: 28,
         background: glassBg,
-        backdropFilter: 'blur(2px) saturate(220%) brightness(1.06)',
-        WebkitBackdropFilter: 'blur(2px) saturate(220%) brightness(1.06)',
+        backdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
+        WebkitBackdropFilter: 'blur(18px) saturate(180%) brightness(1.10)',
         border: `0.5px solid ${glassBorder}`,
         boxShadow: glassShadow,
-        height: 62,
+        height: 72,
         display: 'flex',
         alignItems: 'center',
       }}
@@ -100,7 +100,7 @@ export default function BottomNav() {
                 justifyContent: 'center',
                 gap: 5,
                 width: 62,
-                height: 50,
+                height: 60,
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
@@ -115,15 +115,15 @@ export default function BottomNav() {
                   transition={SPRING}
                   style={{
                     position: 'absolute',
-                    inset: '3px 4px',
+                    inset: '4px 3px',
                     borderRadius: 18,
                     background: isDark
-                      ? 'rgba(255,255,255,0.07)'
-                      : 'rgba(255,255,255,0.45)',
-                    border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.80)'}`,
+                      ? 'rgba(255,255,255,0.13)'
+                      : 'rgba(255,255,255,0.72)',
+                    border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.92)'}`,
                     boxShadow: isDark
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -0.5px 0 rgba(0,0,0,0.15), 0 0 16px rgba(245,194,0,0.14)'
-                      : 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 -0.5px 0 rgba(0,0,0,0.05), 0 0 12px rgba(245,194,0,0.12)',
+                      ? 'inset 0 1.5px 0 rgba(255,255,255,0.38), inset 0 -0.5px 0 rgba(0,0,0,0.20), 0 0 20px rgba(245,194,0,0.22)'
+                      : 'inset 0 1.5px 0 rgba(255,255,255,1.0), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 0 16px rgba(245,194,0,0.18)',
                   }}
                 />
               )}
