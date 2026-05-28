@@ -56,10 +56,10 @@ export default function BottomNav() {
         <defs>
           <filter id="bk-lens" x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
             {/* Erode source alpha to get pure interior — we'll subtract this to get edge-only zone */}
-            <feMorphology operator="erode" radius="10" in="SourceAlpha" result="interior" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.018 0.044" numOctaves="3" seed="9" result="noise" />
+            <feMorphology operator="erode" radius="8" in="SourceAlpha" result="interior" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.016 0.038" numOctaves="4" seed="9" result="noise" />
             <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="22" xChannelSelector="R" yChannelSelector="G" />
+            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="42" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
       </svg>
@@ -69,16 +69,16 @@ export default function BottomNav() {
         transition={SPRING}
         style={{
           position: 'fixed',
-          left: 14, right: 14,
-          bottom: `calc(env(safe-area-inset-bottom) + 10px)`,
+          left: 32, right: 32,
+          bottom: `calc(env(safe-area-inset-bottom) + 12px)`,
           zIndex: 50,
-          height: 72,
-          borderRadius: 28,
+          height: 64,
+          borderRadius: 32,
         }}
       >
         {/* ── Glass background layer: gets lens filter + backdrop-filter ── */}
         <div style={{
-          position: 'absolute', inset: 0, borderRadius: 28, overflow: 'hidden',
+          position: 'absolute', inset: 0, borderRadius: 32, overflow: 'hidden',
           filter: 'url(#bk-lens)',
         }}>
           <div style={{
@@ -93,7 +93,7 @@ export default function BottomNav() {
 
         {/* ── Glass edge / specular rim (no filter — stays crisp) ── */}
         <div style={{
-          position: 'absolute', inset: 0, borderRadius: 28, pointerEvents: 'none',
+          position: 'absolute', inset: 0, borderRadius: 32, pointerEvents: 'none',
           border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.92)'}`,
           boxShadow: isDark
             ? [
@@ -132,7 +132,7 @@ export default function BottomNav() {
                   position: 'relative',
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',
-                  gap: 5, width: 62, height: 60,
+                  gap: 4, width: 56, height: 54,
                   background: 'transparent', border: 'none',
                   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
                   flexShrink: 0,
@@ -176,7 +176,7 @@ export default function BottomNav() {
                   }}
                 >
                   <Icon
-                    size={21}
+                    size={24}
                     strokeWidth={isActive ? 2.2 : 1.6}
                     color={isActive
                       ? '#f5c200'
@@ -194,7 +194,7 @@ export default function BottomNav() {
                   transition={{ duration: 0.13 }}
                   style={{
                     position: 'relative', zIndex: 1,
-                    fontSize: 9, fontWeight: 700,
+                    fontSize: 10, fontWeight: 800,
                     letterSpacing: '0.3px', lineHeight: 1,
                   }}
                 >
