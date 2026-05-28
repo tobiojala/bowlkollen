@@ -170,7 +170,7 @@ export default function Nav() {
         alignItems: 'center',
         padding: '0 12px',
       }}>
-        {/* Glass layer: backdrop-filter + lens warp on same element, no parent/child conflict */}
+        {/* Glass + lens warp — reuses same filter id as bottom pill */}
         <div style={{
           position: 'absolute', inset: 0, overflow: 'hidden',
           backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',

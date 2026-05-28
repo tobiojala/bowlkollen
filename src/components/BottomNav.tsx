@@ -71,25 +71,30 @@ export default function BottomNav() {
             right at the border and falls off fast. Large feOffset (22) and scale (-160)
             create extreme stretch on all four axes simultaneously.
           */}
-          <filter id="bk-pill-lens" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="grad" />
-            <feColorMatrix in="grad" type="matrix"
-              values="6 0 0 0 -0.9  0 6 0 0 -0.9  0 0 6 0 -0.9  0 0 0 1 0" result="steep" />
-            {/* Horizontal derivative → X displacement channel */}
-            <feOffset in="steep" dx="-22" result="sL" />
-            <feOffset in="steep" dx="22"  result="sR" />
+          {/*
+            No feColorMatrix — saturation was making the interior non-neutral,
+            causing a net rightward shift. Raw Gaussian gradient is symmetric:
+            center = 0.5 exactly, maximum warp concentrated at pill border.
+            Symmetric filter region prevents centering drift.
+          */}
+          <filter id="bk-pill-lens" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="grad" />
+            {/* X: horizontal derivative — right of center > 0.5, left < 0.5 */}
+            <feOffset in="grad" dx="-24" result="sL" />
+            <feOffset in="grad" dx="24"  result="sR" />
             <feComposite in="sR" in2="sL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xG" />
-            {/* Vertical derivative → Y displacement channel */}
-            <feOffset in="steep" dy="-22" result="sU" />
-            <feOffset in="steep" dy="22"  result="sD" />
+            {/* Y: vertical derivative — below center > 0.5, above < 0.5 */}
+            <feOffset in="grad" dy="-24" result="sU" />
+            <feOffset in="grad" dy="24"  result="sD" />
             <feComposite in="sD" in2="sU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yG" />
-            {/* Pack X→R, Y→G */}
+            {/* Pack X→R channel, Y→G channel */}
             <feColorMatrix in="xG" type="matrix"
               values="1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 1" result="xOnly" />
             <feColorMatrix in="yG" type="matrix"
               values="0 0 0 0 0.5  1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 1" result="yOnly" />
             <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="disp" />
-            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-160"
+            {/* Negative scale = barrel: all four edges stretch outward */}
+            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-180"
               xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
@@ -108,10 +113,9 @@ export default function BottomNav() {
         }}
       >
         {/*
-          Glass layer: backdrop-filter + lens filter on the SAME element.
-          overflow:hidden clips to the rounded pill shape BEFORE the filter
-          runs — no rectangular clipping artifacts. The displacement warps
-          the content visible through the glass, stretching it near the edges.
+          Single element: backdrop-filter + SVG lens filter together.
+          Chrome/Firefox: both apply — glass + edge warp.
+          Safari/mobile: Safari drops the SVG filter silently, shows clean glass only.
         */}
         <div style={{
           position: 'absolute', inset: 0,
