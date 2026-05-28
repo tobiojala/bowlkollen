@@ -54,12 +54,17 @@ export default function BottomNav() {
       {/* SVG lens distortion filter — edge-only displacement, center stays sharp */}
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
-          <filter id="bk-lens" x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
-            {/* Erode source alpha to get pure interior — we'll subtract this to get edge-only zone */}
-            <feMorphology operator="erode" radius="8" in="SourceAlpha" result="interior" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.016 0.038" numOctaves="4" seed="9" result="noise" />
+          <filter id="bk-lens" x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
+            {/* Wide edge band */}
+            <feMorphology operator="erode" radius="5" in="SourceAlpha" result="interior" />
+            {/* Turbulence (sharper + more chaotic than fractalNoise) */}
+            <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="9" result="noise" />
+            {/* Edge-only noise */}
             <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="42" xChannelSelector="R" yChannelSelector="G" />
+            {/* First displacement pass */}
+            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="55" xChannelSelector="R" yChannelSelector="G" result="pass1" />
+            {/* Second displacement pass on the already-warped result — exponential effect */}
+            <feDisplacementMap in="pass1" in2="edgeNoise" scale="40" xChannelSelector="G" yChannelSelector="R" />
           </filter>
         </defs>
       </svg>

@@ -157,12 +157,12 @@ export default function Nav() {
       {/* SVG lens distortion filter for top nav edge warp */}
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
-          <filter id="bk-nav-lens" x="-10%" y="-50%" width="120%" height="200%" colorInterpolationFilters="sRGB">
-            {/* Edge band: only bottom edge of the nav bar gets distortion */}
-            <feMorphology operator="erode" radius="8" in="SourceAlpha" result="interior" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.020 0.050" numOctaves="3" seed="4" result="noise" />
+          <filter id="bk-nav-lens" x="-20%" y="-60%" width="140%" height="220%" colorInterpolationFilters="sRGB">
+            <feMorphology operator="erode" radius="5" in="SourceAlpha" result="interior" />
+            <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="4" result="noise" />
             <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="20" xChannelSelector="R" yChannelSelector="G" />
+            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="55" xChannelSelector="R" yChannelSelector="G" result="pass1" />
+            <feDisplacementMap in="pass1" in2="edgeNoise" scale="40" xChannelSelector="G" yChannelSelector="R" />
           </filter>
         </defs>
       </svg>
