@@ -61,8 +61,8 @@ export default function BottomNav() {
         height: 64,
         borderRadius: 32,
         // iOS-style liquid glass: low blur, nearly clear, specular rim does the work
-        backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-        WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+        backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
+        WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
         background: isDark
           ? 'rgba(255,255,255,0.06)'
           : 'rgba(255,255,255,0.28)',

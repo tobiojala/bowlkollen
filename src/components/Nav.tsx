@@ -165,8 +165,8 @@ export default function Nav() {
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
         background: navBg,
-        backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-        WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
+        backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
+        WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
         borderBottom,
         boxShadow: navShadow,
         transition: 'box-shadow 0.25s',
