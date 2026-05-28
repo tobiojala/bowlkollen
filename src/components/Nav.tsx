@@ -164,21 +164,28 @@ export default function Nav() {
 
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
-        background: navBg,
-        backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-        WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-        borderBottom,
-        boxShadow: navShadow,
-        transition: 'box-shadow 0.25s',
         zIndex: 40,
         display: 'grid',
         gridTemplateColumns: 'auto 1fr auto',
         alignItems: 'center',
         padding: '0 12px',
       }}>
+        {/* Glass layer: backdrop-filter + lens warp on same element, no parent/child conflict */}
+        <div style={{
+          position: 'absolute', inset: 0, overflow: 'hidden',
+          backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
+          WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
+          background: navBg,
+          filter: 'url(#bk-pill-lens)',
+        }} />
+        {/* Specular rim — sibling, no filter */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          borderBottom, boxShadow: navShadow, transition: 'box-shadow 0.25s',
+        }} />
 
         {/* Left */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
           {searching ? (
             <button onClick={() => setSearching(false)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', WebkitTapHighlightColor: 'transparent' }}>
               <X size={20} color={mutedColor} />
@@ -200,7 +207,7 @@ export default function Nav() {
         </div>
 
         {/* Center — search input or page title */}
-        <div style={{ textAlign: 'center', overflow: 'hidden', minWidth: 0, padding: '0 8px' }}>
+        <div style={{ textAlign: 'center', overflow: 'hidden', minWidth: 0, padding: '0 8px', position: 'relative', zIndex: 1 }}>
           {searching ? (
             <input
               ref={inputRef}
@@ -221,7 +228,7 @@ export default function Nav() {
         </div>
 
         {/* Right */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, position: 'relative', zIndex: 1 }}>
           {/* Search */}
           {!searching && (
             <button onClick={() => setSearching(true)} style={{
