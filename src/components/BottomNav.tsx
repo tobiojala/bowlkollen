@@ -56,7 +56,7 @@ export default function BottomNav() {
         <defs>
           <filter id="bk-lens" x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
             {/* Wide edge band */}
-            <feMorphology operator="erode" radius="5" in="SourceAlpha" result="interior" />
+            <feMorphology operator="erode" radius="1" in="SourceAlpha" result="interior" />
             {/* Turbulence (sharper + more chaotic than fractalNoise) */}
             <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="9" result="noise" />
             {/* Edge-only noise */}

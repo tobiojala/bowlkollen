@@ -158,7 +158,7 @@ export default function Nav() {
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
           <filter id="bk-nav-lens" x="-20%" y="-60%" width="140%" height="220%" colorInterpolationFilters="sRGB">
-            <feMorphology operator="erode" radius="5" in="SourceAlpha" result="interior" />
+            <feMorphology operator="erode" radius="1" in="SourceAlpha" result="interior" />
             <feTurbulence type="turbulence" baseFrequency="0.012 0.028" numOctaves="5" seed="4" result="noise" />
             <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
             <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="55" xChannelSelector="R" yChannelSelector="G" result="pass1" />
