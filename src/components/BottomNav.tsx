@@ -56,13 +56,10 @@ export default function BottomNav() {
         <defs>
           <filter id="bk-lens" x="-25%" y="-25%" width="150%" height="150%" colorInterpolationFilters="sRGB">
             {/* Erode source alpha to get pure interior — we'll subtract this to get edge-only zone */}
-            <feMorphology operator="erode" radius="14" in="SourceAlpha" result="interior" />
-            {/* Noise for displacement */}
-            <feTurbulence type="fractalNoise" baseFrequency="0.022 0.055" numOctaves="2" seed="9" result="noise" />
-            {/* Keep noise only in the edge band (SourceAlpha minus interior) */}
+            <feMorphology operator="erode" radius="10" in="SourceAlpha" result="interior" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.018 0.044" numOctaves="3" seed="9" result="noise" />
             <feComposite in="noise" in2="interior" operator="out" result="edgeNoise" />
-            {/* Apply displacement using edge-only noise */}
-            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="9" xChannelSelector="R" yChannelSelector="G" />
+            <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="22" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
       </svg>
@@ -86,8 +83,8 @@ export default function BottomNav() {
         }}>
           <div style={{
             position: 'absolute', inset: 0,
-            backdropFilter: 'blur(32px) saturate(200%) brightness(1.14)',
-            WebkitBackdropFilter: 'blur(32px) saturate(200%) brightness(1.14)',
+            backdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
+            WebkitBackdropFilter: 'blur(48px) saturate(220%) brightness(1.18)',
             background: isDark
               ? 'rgba(6,12,36,0.52)'
               : 'rgba(235,242,255,0.70)',
