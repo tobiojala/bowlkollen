@@ -65,28 +65,31 @@ export default function BottomNav() {
       */}
       <svg style={{ position: 'fixed', width: 0, height: 0, top: 0, left: 0 }} aria-hidden="true">
         <defs>
-          <filter id="bk-pill-lens" x="-30%" y="-55%" width="160%" height="210%" colorInterpolationFilters="sRGB">
-            {/* Smooth radial gradient from pill centroid outward */}
-            <feGaussianBlur in="SourceAlpha" stdDeviation="28" result="grad" />
-            {/* Steepen the gradient so edge falloff is sharper */}
+          {/*
+            Symmetric filter region — equal on all sides so the pill stays centred.
+            Low stdDeviation (16) keeps the gradient steep → distortion bites hard
+            right at the border and falls off fast. Large feOffset (22) and scale (-160)
+            create extreme stretch on all four axes simultaneously.
+          */}
+          <filter id="bk-pill-lens" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="grad" />
             <feColorMatrix in="grad" type="matrix"
-              values="4 0 0 0 -0.6  0 4 0 0 -0.6  0 0 4 0 -0.6  0 0 0 1 0" result="steep" />
-            {/* X gradient: horizontal derivative of the gradient field */}
-            <feOffset in="steep" dx="-16" result="sL" />
-            <feOffset in="steep" dx="16"  result="sR" />
+              values="6 0 0 0 -0.9  0 6 0 0 -0.9  0 0 6 0 -0.9  0 0 0 1 0" result="steep" />
+            {/* Horizontal derivative → X displacement channel */}
+            <feOffset in="steep" dx="-22" result="sL" />
+            <feOffset in="steep" dx="22"  result="sR" />
             <feComposite in="sR" in2="sL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xG" />
-            {/* Y gradient: vertical derivative */}
-            <feOffset in="steep" dy="-16" result="sU" />
-            <feOffset in="steep" dy="16"  result="sD" />
+            {/* Vertical derivative → Y displacement channel */}
+            <feOffset in="steep" dy="-22" result="sU" />
+            <feOffset in="steep" dy="22"  result="sD" />
             <feComposite in="sD" in2="sU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yG" />
-            {/* Pack X→R, Y→G, everything else neutral 0.5 */}
+            {/* Pack X→R, Y→G */}
             <feColorMatrix in="xG" type="matrix"
               values="1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 1" result="xOnly" />
             <feColorMatrix in="yG" type="matrix"
               values="0 0 0 0 0.5  1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 1" result="yOnly" />
             <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="disp" />
-            {/* Barrel distortion: negative scale pushes edges outward */}
-            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-80"
+            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-160"
               xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
