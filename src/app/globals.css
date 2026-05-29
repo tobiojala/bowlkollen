@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* ── Responsive nav spacing ──────────────────────────────────────────────── */
+/* Desktop: pills float over content, no top padding needed                   */
+/* Mobile:  pills occupy ~56px — push content below them                      */
+.main-content { padding-top: 0; }
+@media (max-width: 767px) { .main-content { padding-top: 64px; } }
+
+/* Page title visible on mobile only (desktop has room beside the pills) */
+.mobile-page-title { display: none; }
+@media (max-width: 767px) { .mobile-page-title { display: block; } }
+
 /* ── Trading card effects ─────────────────────────────────────────────────── */
 @keyframes shimmerSweep {
   0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
