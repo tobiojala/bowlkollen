@@ -128,9 +128,9 @@ export default function Nav() {
 
   return (
     <>
-      {/* Subtle gold glow below nav */}
+      {/* Subtle gold glow — starts at top so no bare background shows behind pills */}
       <div style={{
-        position: 'fixed', top: 56, left: 0, right: 0, height: 80,
+        position: 'fixed', top: 0, left: 0, right: 0, height: 136,
         background: isDark
           ? 'linear-gradient(180deg, rgba(245,194,0,0.07) 0%, transparent 100%)'
           : 'linear-gradient(180deg, rgba(245,194,0,0.04) 0%, transparent 100%)',
