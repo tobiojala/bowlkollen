@@ -143,7 +143,6 @@ export default function BottomNav() {
           backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
           WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
           background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.28)',
-          filter: 'url(#bk-pill-lens)',
         }} />
 
         {/* Specular rim + border — sibling, no filter, stays crisp */}
