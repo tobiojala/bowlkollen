@@ -79,13 +79,24 @@ export default function BottomNav() {
           */}
           <filter id="bk-pill-lens" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
             <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="grad" />
+            {/*
+              Gamma < 1 amplifies LOW values (edge zone) aggressively,
+              COMPRESSES HIGH values (pill interior/center).
+              At center (grad≈0.9): slope≈0.38 → errors suppressed 62%.
+              At edge (grad≈0.09): output≈0.37 → steep gradient → strong distortion.
+              No centering drift because interior values are compressed, not amplified.
+            */}
+            <feComponentTransfer in="grad" result="steep">
+              <feFuncR type="gamma" exponent="0.35" amplitude="1" offset="0"/>
+              <feFuncG type="gamma" exponent="0.35" amplitude="1" offset="0"/>
+            </feComponentTransfer>
             {/* X: horizontal derivative — right of center > 0.5, left < 0.5 */}
-            <feOffset in="grad" dx="-24" result="sL" />
-            <feOffset in="grad" dx="24"  result="sR" />
+            <feOffset in="steep" dx="-24" result="sL" />
+            <feOffset in="steep" dx="24"  result="sR" />
             <feComposite in="sR" in2="sL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xG" />
             {/* Y: vertical derivative — below center > 0.5, above < 0.5 */}
-            <feOffset in="grad" dy="-24" result="sU" />
-            <feOffset in="grad" dy="24"  result="sD" />
+            <feOffset in="steep" dy="-24" result="sU" />
+            <feOffset in="steep" dy="24"  result="sD" />
             <feComposite in="sD" in2="sU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yG" />
             {/* Pack X→R channel, Y→G channel */}
             <feColorMatrix in="xG" type="matrix"
