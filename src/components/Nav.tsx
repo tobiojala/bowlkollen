@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Sun, Moon, ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
+import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
@@ -31,7 +31,7 @@ export default function Nav() {
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
   const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null)
-  const { theme, toggle } = useTheme()
+  const { theme } = useTheme()
   const isDark = theme === 'dark'
 
   const [searching, setSearching] = useState(false)
@@ -240,10 +240,6 @@ export default function Nav() {
 
             <button onClick={() => setSearching(true)} style={iconBtn}>
               <Search size={16} color={mutedColor} />
-            </button>
-
-            <button onClick={toggle} style={iconBtn}>
-              {isDark ? <Sun size={15} color={mutedColor} /> : <Moon size={15} color={mutedColor} />}
             </button>
 
             {user ? (
