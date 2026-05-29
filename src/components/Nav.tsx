@@ -170,13 +170,12 @@ export default function Nav() {
         alignItems: 'center',
         padding: '0 12px',
       }}>
-        {/* Glass + lens warp — reuses same filter id as bottom pill */}
+        {/* Glass layer — clean backdrop blur, no lens warp (full-width bar shape distorts wrong) */}
         <div style={{
           position: 'absolute', inset: 0, overflow: 'hidden',
           backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
           WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
           background: navBg,
-          filter: 'url(#bk-pill-lens)',
         }} />
         {/* Specular rim — sibling, no filter */}
         <div style={{

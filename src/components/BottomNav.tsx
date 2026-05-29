@@ -78,35 +78,44 @@ export default function BottomNav() {
             Symmetric filter region prevents centering drift.
           */}
           <filter id="bk-pill-lens" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="grad" />
             {/*
-              Gamma < 1 amplifies LOW values (edge zone) aggressively,
-              COMPRESSES HIGH values (pill interior/center).
-              At center (grad≈0.9): slope≈0.38 → errors suppressed 62%.
-              At edge (grad≈0.09): output≈0.37 → steep gradient → strong distortion.
-              No centering drift because interior values are compressed, not amplified.
+              Chrome stores SourceAlpha as R=G=B=0, A=blurred_alpha.
+              Explicitly copy A→RGBA so the derivative math runs on the R channel
+              consistently across all browsers.
+            */}
+            <feColorMatrix in="SourceGraphic" type="matrix"
+              values="0 0 0 1 0  0 0 0 1 0  0 0 0 1 0  0 0 0 1 0" result="alphaMask" />
+            <feGaussianBlur in="alphaMask" stdDeviation="18" result="grad" />
+            {/*
+              Gamma < 1 amplifies edge zone (low values), compresses interior.
+              Center errors stay near zero; edge derivatives get strong signal.
             */}
             <feComponentTransfer in="grad" result="steep">
               <feFuncR type="gamma" exponent="0.35" amplitude="1" offset="0"/>
               <feFuncG type="gamma" exponent="0.35" amplitude="1" offset="0"/>
             </feComponentTransfer>
-            {/* X: horizontal derivative — right of center > 0.5, left < 0.5 */}
+            {/* X: horizontal derivative */}
             <feOffset in="steep" dx="-24" result="sL" />
             <feOffset in="steep" dx="24"  result="sR" />
             <feComposite in="sR" in2="sL" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="xG" />
-            {/* Y: vertical derivative — below center > 0.5, above < 0.5 */}
+            {/* Y: vertical derivative */}
             <feOffset in="steep" dy="-24" result="sU" />
             <feOffset in="steep" dy="24"  result="sD" />
             <feComposite in="sD" in2="sU" operator="arithmetic" k1="0" k2="0.5" k3="-0.5" k4="0.5" result="yG" />
-            {/* Pack X→R channel, Y→G channel */}
+            {/* Pack X→R, Y→G */}
             <feColorMatrix in="xG" type="matrix"
               values="1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 1" result="xOnly" />
             <feColorMatrix in="yG" type="matrix"
               values="0 0 0 0 0.5  1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 1" result="yOnly" />
             <feComposite in="xOnly" in2="yOnly" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="disp" />
-            {/* Negative scale = barrel: all four edges stretch outward */}
-            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-180"
-              xChannelSelector="R" yChannelSelector="G" />
+            {/*
+              Apply lens warp, then clip displaced output back to the original pill
+              alpha. Without this clip, displaced interior pixels bleed outside the
+              pill bounds ("mirror / blocks outside" artifact).
+            */}
+            <feDisplacementMap in="SourceGraphic" in2="disp" scale="-130"
+              xChannelSelector="R" yChannelSelector="G" result="displaced" />
+            <feComposite in="displaced" in2="alphaMask" operator="in" />
           </filter>
         </defs>
       </svg>
