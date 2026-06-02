@@ -60,6 +60,8 @@ export default function TeamPage({ params }: Props) {
   const [savingTeam, setSavingTeam] = useState(false)
   const [teamEdit, setTeamEdit] = useState<any>({})
   const [playerStats, setPlayerStats] = useState<Record<string, { avg: number; matches: number; high: number }>>({})
+  const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null)
+  const [logoFailed, setLogoFailed] = useState(false)
   const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
   const submitPost = async () => {
@@ -130,6 +132,11 @@ export default function TeamPage({ params }: Props) {
       if (t) {
         setTeam(t as Team)
         setTeamEdit(t)
+        // Fetch the club's BITS logo by matching club name
+        if ((t as any).club) {
+          supabase.from('bits_clubs').select('logo_url').eq('name', (t as any).club).limit(1)
+            .then(({ data }) => { if (data?.[0]?.logo_url) setClubLogoUrl(data[0].logo_url) })
+        }
         if ((t as any).club_slug) {
           supabase.from('teams').select('id, name, club_slug, team_path')
             .eq('club_slug', (t as any).club_slug)
@@ -310,8 +317,17 @@ export default function TeamPage({ params }: Props) {
             ← Alla lag
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 68, height: 68, borderRadius: 16, background: tclo, border: '2.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: tc, flexShrink: 0 }}>
-              {ini}
+            <div style={{
+              width: 68, height: 68, borderRadius: 16, flexShrink: 0, overflow: 'hidden',
+              background: clubLogoUrl && !logoFailed ? (theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#fff') : tclo,
+              border: clubLogoUrl && !logoFailed ? (theme === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)') : '2.5px solid ' + tc,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18, fontWeight: 900, color: tc,
+            }}>
+              {clubLogoUrl && !logoFailed
+                ? <img src={clubLogoUrl} alt={team.name} onError={() => setLogoFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+                : ini
+              }
             </div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 4 }}>{shortName(team.name)}</div>
