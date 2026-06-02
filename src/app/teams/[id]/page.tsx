@@ -50,6 +50,7 @@ export default function TeamPage({ params }: Props) {
   const [postingType, setPostingType] = useState<'news' | 'lineup'>('news')
   const [submittingPost, setSubmittingPost] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad' | 'community' | 'h2h'>('results')
   const [expandedOpp, setExpandedOpp] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -58,7 +59,7 @@ export default function TeamPage({ params }: Props) {
   const [editingTeam, setEditingTeam] = useState(false)
   const [savingTeam, setSavingTeam] = useState(false)
   const [teamEdit, setTeamEdit] = useState<any>({})
-  const [playerStats, setPlayerStats] = useState<Record<string, { avg: number; matches: number }>>({})
+  const [playerStats, setPlayerStats] = useState<Record<string, { avg: number; matches: number; high: number }>>({})
   const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
   const submitPost = async () => {
@@ -165,11 +166,12 @@ export default function TeamPage({ params }: Props) {
             grouped[r.player_id].push(...(r.games || []).filter((g: number) => g > 0))
             mCount[r.player_id] = (mCount[r.player_id] || 0) + 1
           })
-          const statsMap: Record<string, { avg: number; matches: number }> = {}
+          const statsMap: Record<string, { avg: number; matches: number; high: number }> = {}
           Object.entries(grouped).forEach(([pid, games]) => {
             statsMap[pid] = {
               avg: games.length > 0 ? Math.round(games.reduce((a, b) => a + b, 0) / games.length) : 0,
               matches: mCount[pid] || 0,
+              high: games.length > 0 ? Math.max(...games) : 0,
             }
           })
           setPlayerStats(statsMap)
@@ -186,12 +188,62 @@ export default function TeamPage({ params }: Props) {
       if (postsData) setPosts(postsData)
 
       setLoading(false)
-    })
+    }).catch(() => { setError(true); setLoading(false) })
   }, [id])
 
-  if (loading) return (
-    <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ color: C.textMuted }}>Laddar...</div>
+  if (loading) {
+    const sk = C.bg === '#10161e' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
+    const S = ({ w = '100%', h = 12, r = 6 }: { w?: string | number; h?: number; r?: number }) => (
+      <div style={{ width: w, height: h, borderRadius: r, background: sk, flexShrink: 0 }} />
+    )
+    return (
+      <main style={{ minHeight: '100vh', background: C.bg, fontFamily: 'system-ui, sans-serif' }}>
+        <style>{`@keyframes sk-pulse{0%,100%{opacity:.4}50%{opacity:.9}}.sk-team>*{animation:sk-pulse 1.6s ease-in-out infinite}`}</style>
+        <div className="sk-team" style={{ maxWidth: 600, margin: '0 auto' }}>
+          {/* Hero banner */}
+          <div style={{ padding: '24px 20px 20px', background: C.bg }}>
+            <S w={60} h={10} r={4} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 20 }}>
+              <div style={{ width: 68, height: 68, borderRadius: 16, background: sk, flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <S w="60%" h={18} r={6} />
+                <S w="40%" h={11} r={4} />
+              </div>
+            </div>
+          </div>
+          {/* Stats bar */}
+          <div style={{ display: 'flex', gap: 0, padding: '14px 20px 10px', borderTop: '1px solid ' + sk, borderBottom: '1px solid ' + sk }}>
+            {[0,1,2,3,4].map(i => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: i < 4 ? '1px solid ' + sk : 'none' }}>
+                <S w="50%" h={18} r={4} />
+                <S w="70%" h={8} r={3} />
+              </div>
+            ))}
+          </div>
+          {/* Match rows */}
+          <div style={{ padding: '0 20px' }}>
+            {[0,1,2,3,4].map(i => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid ' + sk }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: sk, flexShrink: 0 }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <S w={`${50 + (i % 3) * 12}%`} h={12} r={4} />
+                  <S w="35%" h={9} r={3} />
+                </div>
+                <S w={52} h={20} r={6} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (error) return (
+    <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Kunde inte ladda laget</div>
+      <button onClick={() => { setError(false); setLoading(true) }} style={{ fontSize: 12, fontWeight: 700, color: C.accent, background: 'transparent', border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '7px 16px', cursor: 'pointer' }}>
+        Försök igen
+      </button>
     </main>
   )
 
@@ -711,9 +763,19 @@ export default function TeamPage({ params }: Props) {
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{p.name}</div>
                       {stats && stats.avg > 0 ? (
-                        <div style={{ marginTop: 4 }}>
+                        <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                           <div style={{ fontSize: 26, fontWeight: 900, color: C.accent, lineHeight: 1 }}>{stats.avg}</div>
-                          <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 1.2, marginTop: 3 }}>SNITT</div>
+                          <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 1.2, marginTop: 2 }}>SNITT</div>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{stats.high}</div>
+                              <div style={{ fontSize: 8, color: C.textMuted, letterSpacing: 0.8 }}>BÄST</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{stats.matches}</div>
+                              <div style={{ fontSize: 8, color: C.textMuted, letterSpacing: 0.8 }}>MATCHER</div>
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <div style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>—</div>

@@ -22,7 +22,7 @@ type HonorEntry = { playerName: string; score: number; matchId: string; seriesTo
 type TableRow  = { rank: number; teamId: string; teamName: string; played: number; won: number; drawn: number; lost: number; points: number }
 
 // ── DEMO (set to false to use real Supabase data) ─────────────────────────────
-const DEMO = true
+const DEMO = false
 
 const _now = Date.now()
 const _today = new Date().toISOString().slice(0, 10)
@@ -283,6 +283,26 @@ function streamStyle(url: string): { label: string; color: string; bg: string; b
   return { label: '▶ Livestream', color: '#e05555', bg: 'rgba(224,85,85,0.12)', border: 'rgba(224,85,85,0.3)' }
 }
 
+
+type StandingsMatch = { home_team_id: string; away_team_id: string; home_score: number | null; away_score: number | null; division: string; home: { id: string; name: string }; away: { id: string; name: string } }
+function calcHomeStandings(matches: StandingsMatch[], division: string): TableRow[] {
+  const divMatches = matches.filter(m => m.division === division && m.home_score !== null)
+  const table: Record<string, TableRow & { diff: number }> = {}
+  divMatches.forEach(m => {
+    const hid = m.home_team_id, aid = m.away_team_id
+    if (!table[hid]) table[hid] = { rank: 0, teamId: hid, teamName: m.home.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0 }
+    if (!table[aid]) table[aid] = { rank: 0, teamId: aid, teamName: m.away.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0 }
+    const hs = m.home_score!, as_ = m.away_score!
+    table[hid].played++; table[aid].played++
+    table[hid].diff += hs - as_; table[aid].diff += as_ - hs
+    if (hs > as_)      { table[hid].won++;   table[hid].points += 2; table[aid].lost++ }
+    else if (as_ > hs) { table[aid].won++;   table[aid].points += 2; table[hid].lost++ }
+    else               { table[hid].drawn++; table[hid].points++;     table[aid].drawn++; table[aid].points++ }
+  })
+  return Object.values(table)
+    .sort((a, b) => b.points - a.points || b.diff - a.diff || b.won - a.won)
+    .map((s, i) => ({ rank: i + 1, teamId: s.teamId, teamName: s.teamName, played: s.played, won: s.won, drawn: s.drawn, lost: s.lost, points: s.points }))
+}
 
 const MOCK_MY_PLAYER = {
   name: 'Marcus Lindgren',
@@ -643,6 +663,7 @@ export default function Home() {
   const [now, setNow] = useState(Date.now())
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
   const [tableDiv, setTableDiv] = useState<'Elitserien Herrar' | 'Elitserien Damer'>('Elitserien Herrar')
+  const [standingsMap, setStandingsMap] = useState<Record<string, TableRow[]>>({})
   const [nextMatchHidden, setNextMatchHidden] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('nextMatchHidden') === '1'
@@ -730,6 +751,21 @@ export default function Home() {
         favs?.forEach((f: any) => ids.add(f.team_id))
         if ((claim as any)?.team_id) ids.add((claim as any).team_id)
         setFollowedIds(ids)
+      }
+
+      // Fetch all completed matches for Elitserien standings
+      const { data: eliteMatches } = await supabase
+        .from('matches')
+        .select('home_team_id,away_team_id,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)')
+        .eq('status', 'completed')
+        .in('division', ['Elitserien Herrar', 'Elitserien Damer'])
+        .not('home_score', 'is', null)
+      if (eliteMatches) {
+        const sMap: Record<string, TableRow[]> = {}
+        for (const div of ['Elitserien Herrar', 'Elitserien Damer'] as const) {
+          sMap[div] = calcHomeStandings(eliteMatches as unknown as StandingsMatch[], div)
+        }
+        setStandingsMap(sMap)
       }
 
       setLoading(false)
@@ -899,7 +935,7 @@ export default function Home() {
   const upcomingDates  = Object.keys(upcomingByDate).sort()
   const isEmpty = filteredLive.length === 0 && filteredRecent.length === 0 && filteredUpcoming.length === 0
 
-  const tableRows: TableRow[] = DEMO ? (MOCK_TABLES[tableDiv] ?? []) : []
+  const tableRows: TableRow[] = DEMO ? (MOCK_TABLES[tableDiv] ?? []) : (standingsMap[tableDiv] ?? [])
   const myNextMatch: Match | null = DEMO
     ? (filteredUpcoming[0] ?? null)
     : (session && followedIds.size > 0

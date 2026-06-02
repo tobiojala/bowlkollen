@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
-const DEMO = true
+const DEMO = false
 
 // ─── Types ───
 type Team = { id: string; name: string; club: string }

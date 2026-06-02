@@ -147,7 +147,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Personal dashboard */}
-        <WidgetGrid isDark={isDark} C={C} showGreeting={false} />
+        <WidgetGrid isDark={isDark} C={C} />
 
         {/* Account section header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 16px 6px', borderBottom: '1px solid ' + C.border }}>
