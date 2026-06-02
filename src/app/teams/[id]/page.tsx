@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName } from '@/lib/utils'
 import { MapPin, Globe, Mail, User, Link } from 'lucide-react'
 import { motion } from 'framer-motion'
 import FollowButton from '@/components/FollowButton'
@@ -23,10 +24,6 @@ type Match = {
   away: { id: string; name: string }
 }
 type Player = { id: string; name: string }
-
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
-}
 
 function divisionColor(d: string | null) {
   if (!d) return '#6b7a99'

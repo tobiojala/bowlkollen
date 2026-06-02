@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@remotion/lambda": "^4.0.467",
     "@remotion/player": "^4.0.467",
     "@remotion/renderer": "^4.0.467",
     "@supabase/ssr": "^0.10.3",

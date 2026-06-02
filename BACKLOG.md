@@ -51,11 +51,11 @@
 - [ ] **Split src/app/page.tsx into components**
   1,954 lines in one file. Extract: `HonorRoll`, `StandingsSection`, `RecentResults`, `HeroMatchCard` as separate components. The fetch logic can stay in the page but the render blocks need to move out. Makes it possible to work on one section without touching the others.
 
-- [ ] **Centralize shared helper functions**
-  `shortName()`, `teamColor()`, `divColor()`, `dateLabel()`, `countdown()` are copy-pasted across multiple files. Move all of them into `src/lib/utils.ts` and import from there. Right now a change to one means hunting down every copy.
+- [x] **Centralize shared helper functions**
+  Added `shortDiv`, `dateLabel`, `countdown`, `divTierColor` to `src/lib/utils.ts`. Removed local copies from 8 files: all 4 shared components (TopPerformers, SeasonTimeline, TeamTableWidget, NextMatchPreview), Widgets.tsx, league/page, admin/page, puls/page, teams/[id]/page. `shortName` was already exported from utils — now properly imported everywhere.
 
-- [ ] **Share high game (html2canvas)**
-  `html2canvas` is already installed. When a player rolls ≥220, add a "Del" (Share) button on the match scorecard that screenshots the score row and opens the native share sheet. Zero new dependencies, big social value.
+- [x] **Share high game (Web Share API)**
+  `ScoreChip` in `matches/[id]/page.tsx` now shows a ↗ share button for any score ≥220. Tapping opens the native share sheet with player name, score, and match URL. Falls back to clipboard copy on desktop. No extra dependencies.
 
 ---
 

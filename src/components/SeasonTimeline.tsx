@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName } from '@/lib/utils'
 
 type Props = { teamId: string }
 
@@ -21,9 +22,6 @@ type Match = {
   away: { id: string; name: string }
 }
 
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
-}
 
 export default function SeasonTimeline({ teamId }: Props) {
   const { theme } = useTheme()

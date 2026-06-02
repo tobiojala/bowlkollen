@@ -4,15 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName } from '@/lib/utils'
 
 type Team = { id: string; name: string }
 type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home: { name: string }; away: { name: string } }
 type Lineup = { id: string; team_id: string; player_name: string; bord: number; position: number }
 type MatchResult = { id: string; player_id: string; team_id: string; games: number[]; bord: number; position: number }
 
-function shortName(name: string) {
-  return name.replace(/ A$/, '').replace(/ H A$/, '').trim()
-}
 
 export default function AdminPage() {
   const { theme } = useTheme()

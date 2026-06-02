@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName, shortDiv } from '@/lib/utils'
 
 const DEMO = false
 
@@ -197,23 +198,6 @@ const TIER_GROUPS = [
   ]},
 ]
 
-function shortDiv(d: string) {
-  return d
-    .replace('Sydallsvenskan', 'Syd')
-    .replace('Mellanallsvenskan', 'Mellan')
-    .replace('Nordallsvenskan', 'Nord')
-    .replace('Södra Allsvenskan', 'Södra')
-    .replace('Norra Allsvenskan', 'Norra')
-    .replace(' Herrar', ' H').replace(' Damer', ' D')
-    .replace('Div 1 ', 'D1 ')
-    .replace('Division 1 ', 'Div 1 ')
-    .replace('Norra ', 'N.').replace('Södra ', 'S.')
-    .replace('Götaland', 'Götal.').replace('Norrland', 'Norrl.').replace('Svealand', 'Sveal.')
-}
-
-function shortName(n: string) {
-  return n.replace(/ (A|H A|DA|F)$/, '').trim()
-}
 
 // ─── Component ───
 export default function LeaguePage() {

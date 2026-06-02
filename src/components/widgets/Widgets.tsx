@@ -2,25 +2,10 @@
 
 import React from 'react'
 import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User, Check, HelpCircle, X } from 'lucide-react'
+import { shortName, shortDiv, teamColor, teamInitials } from '@/lib/utils'
 
-function shortName(n: string) {
-  return n?.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim() || ''
-}
-function shortDiv(d: string) {
-  return d.replace(' Herrar', ' H').replace(' Damer', ' D')
-    .replace('Mellanallsvenskan', 'Mellansv.').replace('Allsvenskan', 'Allsv.')
-    .replace('Elitserien', 'Elit.').replace('Div 1 ', 'D1 ')
-    .replace('Norra ', 'N.').replace('Södra ', 'S.')
-}
 function localDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-function teamInitials(n: string) {
-  return shortName(n).split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
-}
-function teamColor(n: string, isDark: boolean) {
-  const hue = (n || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-  return { bg: isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`, border: `hsl(${hue},50%,45%)`, text: `hsl(${hue},50%,45%)` }
 }
 function calcRating(avg: number, best: number, over200: number) {
   if (!avg) return 0

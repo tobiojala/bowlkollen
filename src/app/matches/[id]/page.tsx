@@ -25,26 +25,51 @@ function divisionColor(d: string | null) {
   return '#8a7a5a'
 }
 
-// Score chip — teal glow for 250+, green for 200+, normal otherwise
-function ScoreChip({ score, C }: { score: number; C: any }) {
+// Score chip — teal glow for 250+, gold for 220+, blue for 200+
+function ScoreChip({ score, C, shareData }: {
+  score: number; C: any
+  shareData?: { playerName: string; matchLabel: string }
+}) {
   if (!score) return (
     <span style={{ fontSize: 20, color: C.textMuted, opacity: 0.3, fontWeight: 400, lineHeight: 1 }}>—</span>
   )
   const isElite = score >= 250
   const isGold  = score >= 220 && score < 250
   const isGood  = score >= 200 && score < 220
+  const isShareable = score >= 220 && !!shareData
+
+  const handleShare = () => {
+    if (!shareData) return
+    const text = `${shareData.playerName} rullade ${score} pinnar i ${shareData.matchLabel} 🎳`
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: 'Bowlkollen', text, url: window.location.href }).catch(() => {})
+    } else {
+      navigator.clipboard?.writeText(text + '\n' + window.location.href)
+    }
+  }
+
   return (
-    <span style={{
-      fontSize: isElite ? 28 : isGold ? 25 : isGood ? 23 : 21,
-      fontWeight: isElite ? 900 : isGold ? 800 : isGood ? 700 : 500,
-      lineHeight: 1,
-      color: isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#5a82b4' : C.text,
-      textShadow: isElite
-        ? '0 0 10px rgba(0,240,255,0.3), 0 0 24px rgba(0,240,255,0.15)'
-        : 'none',
-    }}>
-      {score}
-    </span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <span style={{
+        fontSize: isElite ? 28 : isGold ? 25 : isGood ? 23 : 21,
+        fontWeight: isElite ? 900 : isGold ? 800 : isGood ? 700 : 500,
+        lineHeight: 1,
+        color: isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#5a82b4' : C.text,
+        textShadow: isElite ? '0 0 10px rgba(0,240,255,0.3), 0 0 24px rgba(0,240,255,0.15)' : 'none',
+      }}>
+        {score}
+      </span>
+      {isShareable && (
+        <button onClick={handleShare} title="Dela"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
+            fontSize: 13, lineHeight: 1, color: isElite ? 'rgba(255,255,255,0.5)' : 'rgba(245,194,0,0.5)',
+            WebkitTapHighlightColor: 'transparent',
+          }}>
+          ↗
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -426,7 +451,9 @@ export default function MatchPage({ params }: Props) {
                                 ? <a href={`/players/${pid}`} style={style}>{name}</a>
                                 : <span style={style}>{name || '—'}</span>
                             })()}
-                            <ScoreChip score={hp.score} C={C} />
+                            <ScoreChip score={hp.score} C={C}
+                              shareData={hp.score >= 220 && hp.player?.player_name ? { playerName: hp.player.player_name, matchLabel: `${shortName(home?.name || '')} vs ${shortName(away?.name || '')}` } : undefined}
+                            />
                           </div>
 
                           {/* Center divider */}
@@ -447,7 +474,9 @@ export default function MatchPage({ params }: Props) {
                                 ? <a href={`/players/${pid}`} style={style}>{name}</a>
                                 : <span style={style}>{name || '—'}</span>
                             })()}
-                            <ScoreChip score={ap.score} C={C} />
+                            <ScoreChip score={ap.score} C={C}
+                              shareData={ap.score >= 220 && ap.player?.player_name ? { playerName: ap.player.player_name, matchLabel: `${shortName(home?.name || '')} vs ${shortName(away?.name || '')}` } : undefined}
+                            />
                           </div>
                         </div>
                       )

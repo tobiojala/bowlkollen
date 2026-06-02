@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName } from '@/lib/utils'
 
 type Props = { teamId: string }
 
@@ -17,9 +18,6 @@ type PlayerStat = {
   over200: number
 }
 
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').trim()
-}
 
 export default function TopPerformers({ teamId }: Props) {
   const { theme } = useTheme()

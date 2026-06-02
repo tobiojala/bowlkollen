@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { shortName } from '@/lib/utils'
+import { shortName, shortDiv } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Match = {
@@ -101,12 +101,6 @@ function divColor(d: string) {
   return 'hsl(35, 12%, 52%)'
 }
 
-function shortDiv(d: string) {
-  return d.replace(' Herrar', ' H').replace(' Damer', ' D')
-    .replace('Mellanallsvenskan', 'Mellansv.').replace('Allsvenskan', 'Allsv.')
-    .replace('Elitserien', 'Elit.').replace('Div 1 ', 'D1 ')
-    .replace('Norra ', 'N.').replace('Södra ', 'S.')
-}
 
 function streamStyle(url: string) {
   const u = url.toLowerCase()

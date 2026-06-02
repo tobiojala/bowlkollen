@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
+import { shortName } from '@/lib/utils'
 
 type Props = {
   teamId: string
@@ -23,9 +24,6 @@ type Standing = {
   ptsAgainst: number
 }
 
-function shortName(n: string) {
-  return n.replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
-}
 
 export default function TeamTableWidget({ teamId, division }: Props) {
   const { theme } = useTheme()
