@@ -68,6 +68,8 @@ export default function AdminPage() {
 
   const addPlayer = async (teamId: string, name: string, bord: number, position: number) => {
     if (!name.trim()) return
+    const already = lineup.find(l => l.team_id === teamId && l.bord === bord && l.position === position)
+    if (already) return flash(`Bord ${bord} pos ${position} har redan ${already.player_name}`)
     const supabase = createClient()
     const { error } = await supabase.from('match_lineups').insert({ match_id: liveMatch, team_id: teamId, player_name: name.trim(), bord, position })
     if (error) flash('Fel: ' + error.message)

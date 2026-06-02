@@ -254,7 +254,12 @@ export default function MatchPage({ params }: Props) {
           <div style={{ display: 'flex', gap: 12, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, flexWrap: 'wrap' }}>
             {dateStr && <span style={{ fontSize: 11, color: C.textMuted }}>{dateStr}{timeStr ? ' · ' + timeStr : ''}</span>}
             {match.venue && <span style={{ fontSize: 11, color: C.textMuted }}>· {match.venue}</span>}
-            {match.oil_profile && <span style={{ fontSize: 11, color: C.textMuted }}>· Olja: {match.oil_profile}</span>}
+            {match.oil_profile && (
+              <a href={`/oljeprofiler?q=${encodeURIComponent(match.oil_profile)}`}
+                style={{ fontSize: 11, color: C.accent, textDecoration: 'none', fontWeight: 600 }}>
+                · {match.oil_profile} ↗
+              </a>
+            )}
           </div>
         )}
 

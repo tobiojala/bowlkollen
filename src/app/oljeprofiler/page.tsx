@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
@@ -35,6 +36,10 @@ export default function OljeprofilerarPage() {
   const C = theme === 'dark' ? dark : light
   const isDark = theme === 'dark'
 
+  const searchParams = useSearchParams()
+  const highlight = searchParams.get('q')?.toLowerCase() ?? null
+  const highlightRef = useRef<HTMLDivElement | null>(null)
+
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -50,6 +55,14 @@ export default function OljeprofilerarPage() {
         setLoading(false)
       })
   }, [])
+
+  // Scroll to and highlight the profile from ?q= param
+  useEffect(() => {
+    if (!highlight || loading) return
+    setTimeout(() => {
+      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300)
+  }, [highlight, loading])
 
   const filtered = activeCategory
     ? profiles.filter(p => p.category === activeCategory)
@@ -123,17 +136,18 @@ export default function OljeprofilerarPage() {
             {/* Profile cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {group.profiles.map((p, i) => (
+                <div key={p.id} ref={highlight && p.name.toLowerCase().includes(highlight) ? highlightRef : null}>
                 <motion.div
-                  key={p.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ ...SPRING, delay: (gi * 0.05) + (i * 0.04) }}
                   style={{
-                    background: C.card,
-                    border: `1px solid ${C.border}`,
+                    background: highlight && p.name.toLowerCase().includes(highlight) ? 'rgba(245,194,0,0.07)' : C.card,
+                    border: highlight && p.name.toLowerCase().includes(highlight) ? '1.5px solid rgba(245,194,0,0.55)' : `1px solid ${C.border}`,
                     borderRadius: 14,
                     padding: '12px 14px',
                     display: 'flex', alignItems: 'center', gap: 12,
+                    boxShadow: highlight && p.name.toLowerCase().includes(highlight) ? '0 0 0 3px rgba(245,194,0,0.10)' : 'none',
                   }}
                 >
                   {/* Length pill */}
@@ -202,6 +216,7 @@ export default function OljeprofilerarPage() {
                     </a>
                   )}
                 </motion.div>
+                </div>
               ))}
             </div>
           </div>

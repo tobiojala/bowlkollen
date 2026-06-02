@@ -10,7 +10,7 @@ const TABS = [
   { label: 'Hem',       icon: Home,     href: '/' },
   { label: 'Schema',    icon: Calendar, href: '/schema' },
   { label: 'Tävlingar', icon: Trophy,   href: '/tavlingar' },
-  { label: 'Lag',       icon: Users,    href: '/teams' },
+  { label: 'Klubbar',   icon: Users,    href: '/teams' },
   { label: 'Puls',      icon: Activity, href: '/puls' },
 ]
 
