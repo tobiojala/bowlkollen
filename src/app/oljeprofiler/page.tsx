@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
@@ -31,7 +31,7 @@ const CATEGORIES: { key: string; label: string; color: string; bg: string }[] = 
   { key: 'sm',           label: 'SM',            color: '#c07fff', bg: 'rgba(192,127,255,0.10)' },
 ]
 
-export default function OljeprofilerarPage() {
+function OljeprofilerarPageInner() {
   const { theme } = useTheme()
   const C = theme === 'dark' ? dark : light
   const isDark = theme === 'dark'
@@ -229,5 +229,13 @@ export default function OljeprofilerarPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function OljeprofilerarPage() {
+  return (
+    <Suspense>
+      <OljeprofilerarPageInner />
+    </Suspense>
   )
 }

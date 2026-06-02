@@ -46,6 +46,11 @@ export function countdown(dateStr: string, now: number): string | null {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+const DAY_COLORS = ['#7a7898', '#4e72a0', '#5a82b4', '#3d9490', '#b88830', '#a06840', '#7060a8']
+export function dayDotColor(dateStr: string): string {
+  return DAY_COLORS[new Date(dateStr + 'T12:00:00').getDay()]
+}
+
 // Tier-based accent colour used throughout the app
 export function divTierColor(div: string | null): string {
   if (!div) return 'rgba(160,175,200,0.55)'

@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
+import HonorRoll from '@/components/home/HonorRoll'
+import MiniStandings from '@/components/home/MiniStandings'
+import MatchRow from '@/components/home/MatchRow'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Match = {
@@ -947,62 +950,6 @@ export default function Home() {
 
   const myPlayer = DEMO ? MOCK_MY_PLAYER : null
 
-  // ── Sub-components (defined inside render to access C, isDark, now) ──────────
-
-  const MatchRow = ({ m }: { m: Match }) => {
-    const dayColor = dayDotColor(m.date.slice(0, 10))
-    const hasScore = m.home_score !== null
-    const homeWin  = hasScore && m.home_score! > m.away_score!
-    const awayWin  = hasScore && m.away_score! > m.home_score!
-    return (
-      <a href={'/matches/' + m.id}
-        style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none',
-          borderRadius: 0, margin: 0, overflow: 'hidden',
-          WebkitTapHighlightColor: 'transparent' } as any}
-        onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >
-        <div style={{ width: 3, flexShrink: 0, background: dayColor, opacity: 0.7 }} />
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '13px 12px', gap: 8 }}>
-          <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: homeWin ? 700 : 400,
-            color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text,
-            textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {shortName(m.home?.name || '')}
-          </div>
-          <div style={{ flexShrink: 0, width: 72, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {hasScore ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 17, fontWeight: 900, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                  <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 300 }}>–</span>
-                  <span style={{ fontSize: 17, fontWeight: 900, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
-                </div>
-                <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
-              </>
-            ) : (() => {
-              const cd      = countdown(m.date, now)
-              const timeStr = new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-              return (
-                <>
-                  {cd
-                    ? <div style={{ fontSize: 14, fontWeight: 800, color: C.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
-                    : <div style={{ fontSize: 12, color: C.textMuted }}>{timeStr || 'vs'}</div>
-                  }
-                  <div style={{ fontSize: 9, color: C.textMuted, letterSpacing: 0.3, marginTop: 2 }}>{shortDiv(m.division)}</div>
-                </>
-              )
-            })()}
-          </div>
-          <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: awayWin ? 700 : 400,
-            color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {shortName(m.away?.name || '')}
-          </div>
-        </div>
-      </a>
-    )
-  }
-
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -1389,122 +1336,7 @@ export default function Home() {
         })()}
 
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
-        {honor.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px 10px',
-              borderBottom: '1px solid ' + C.border }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: '#f5c200', flexShrink: 0 }} />
-              <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>HONOR ROLL</span>
-              <span style={{ fontSize: 9, color: C.textMuted }}>· senaste 7 dagarna</span>
-            </div>
-            <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 10, padding: '12px 16px 16px' } as any}>
-              {honor.map((e, i) => {
-                const isPerfect    = e.score === 300
-                const isHighSeries = !isPerfect && (e.seriesTotal ?? 0) >= 950
-                const isElite      = !isPerfect && !isHighSeries && e.score >= 250
-                // isGold: 220–249 (threshold raised, no lower tier)
-
-                const nameParts = e.playerName.split(' ')
-                const firstName = nameParts[0]
-                const lastName  = nameParts.slice(1).join(' ')
-
-                // ── Perfect game: Black Diamond ──────────────────────────────
-                if (isPerfect) return (
-                  <a key={i} href={'/matches/' + e.matchId} style={{
-                    flexShrink: 0, textDecoration: 'none', borderRadius: 14,
-                    padding: '12px 14px', textAlign: 'center', minWidth: 96,
-                    background: '#000000',
-                    border: '1px solid rgba(255,255,255,0.18)',
-                    boxShadow: 'inset 0 0 28px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.6)',
-                  }}>
-                    <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
-                      <div style={{
-                        fontSize: 7, fontWeight: 900, letterSpacing: 1.8,
-                        background: 'linear-gradient(90deg, #8a98b8, #ffffff 48%, #8a98b8)',
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                      }}>◆ PERFECT</div>
-                    </div>
-                    <div style={{
-                      fontSize: 48, fontWeight: 900, lineHeight: 1, color: '#ffffff',
-                      textShadow: '0 0 2px #fff, 0 0 10px rgba(255,255,255,0.75), 0 0 28px rgba(255,255,255,0.25)',
-                    }}>300</div>
-                    {e.seriesTotal && (
-                      <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 0.5, marginTop: 4,
-                        color: 'rgba(170,185,220,0.6)' }}>{e.seriesTotal} serie</div>
-                    )}
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 7,
-                      color: 'rgba(215,222,240,0.85)', maxWidth: 84,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(140,155,185,0.7)', maxWidth: 84,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
-                  </a>
-                )
-
-                // ── 950+ series: Series Diamond ──────────────────────────────
-                if (isHighSeries) return (
-                  <a key={i} href={'/matches/' + e.matchId} style={{
-                    flexShrink: 0, textDecoration: 'none', borderRadius: 13,
-                    padding: '12px 14px', textAlign: 'center', minWidth: 86,
-                    background: '#07080e',
-                    border: '1px solid rgba(255,255,255,0.11)',
-                    boxShadow: 'inset 0 0 18px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.45)',
-                  }}>
-                    <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
-                      <div style={{
-                        fontSize: 7, fontWeight: 800, letterSpacing: 1.5,
-                        background: 'linear-gradient(90deg, #6a7a9a, #bcc8e0 50%, #6a7a9a)',
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                      }}>◇ SERIE</div>
-                    </div>
-                    <div style={{
-                      fontSize: 36, fontWeight: 900, lineHeight: 1, color: '#d8dff0',
-                      textShadow: '0 0 8px rgba(205,218,255,0.55), 0 0 22px rgba(175,198,255,0.2)',
-                    }}>{e.seriesTotal}</div>
-                    <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 0.5, marginTop: 3,
-                      color: 'rgba(130,150,195,0.65)' }}>{e.score} bäst</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 6,
-                      color: 'rgba(195,208,235,0.8)', maxWidth: 80,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(115,132,170,0.7)', maxWidth: 80,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
-                  </a>
-                )
-
-                // ── Elite (250+) and Gold (220–249) ────────────────────────────
-                const cardBorder = isElite ? 'rgba(245,194,0,0.4)' : 'rgba(245,194,0,0.25)'
-                const cardBg     = isDark ? 'rgba(245,194,0,0.05)' : 'rgba(245,194,0,0.04)'
-                const label      = isElite ? '★ ELITE' : '◼︎ TOP'
-                return (
-                  <a key={i} href={'/matches/' + e.matchId}
-                    style={{ flexShrink: 0, textDecoration: 'none',
-                      background: cardBg,
-                      border: `1px solid ${cardBorder}`, borderRadius: 12,
-                      padding: '12px 14px', textAlign: 'center', minWidth: 84,
-                      boxShadow: isElite ? '0 0 20px rgba(245,194,0,0.08)' : 'none' } as any}>
-                    <div style={{ height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
-                      <div style={{
-                        fontSize: 7, fontWeight: 800, letterSpacing: 1.5,
-                        background: 'linear-gradient(90deg, #c8a830, #f5c200 50%, #c8a830)',
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                      }}>{label}</div>
-                    </div>
-                    {isElite ? (
-                      <div style={{ fontSize: 32, fontWeight: 900, color: '#ffffff', lineHeight: 1,
-                        textShadow: '0 0 8px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.18)' }}>{e.score}</div>
-                    ) : (
-                      <div style={{ fontSize: 28, fontWeight: 900, color: '#f5c200', lineHeight: 1,
-                        textShadow: '0 0 8px rgba(245,194,0,0.5), 0 0 20px rgba(245,194,0,0.2)' }}>{e.score}</div>
-                    )}
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 8,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
-                    <div style={{ fontSize: 10, color: C.textMuted,
-                      maxWidth: 78, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastName || ' '}</div>
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        <HonorRoll honor={honor} C={C} isDark={isDark} />
 
         {/* ── Personlig profil ─────────────────────────────────────────────── */}
         {myPlayer && (
@@ -1750,73 +1582,14 @@ export default function Home() {
         })()}
 
         {/* ── Mini ligatabell ─────────────────────────────────────────── */}
-        <div style={{ padding: '16px 16px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, flex: 1 }}>LIGATABELL</span>
-            {(['Elitserien Herrar', 'Elitserien Damer'] as const).map(div => (
-              <button key={div} onClick={() => setTableDiv(div)}
-                style={{ fontSize: 9, fontWeight: 700, padding: '4px 10px', borderRadius: 8, marginLeft: 6,
-                  cursor: 'pointer', border: 'none',
-                  background: tableDiv === div ? '#f5c200' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
-                  color: tableDiv === div ? '#1a1400' : C.textMuted,
-                  WebkitTapHighlightColor: 'transparent' } as any}>
-                {div === 'Elitserien Herrar' ? 'Elit H' : 'Elit D'}
-              </button>
-            ))}
-          </div>
-          <div style={{ borderRadius: 14, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center',
-              borderBottom: '1px solid ' + C.border,
-              background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-              <div style={{ width: 3, flexShrink: 0 }} />
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
-                padding: '5px 12px' }}>
-                {(['#', 'Lag', 'M', 'MP'] as const).map((h, i) => (
-                  <span key={h} style={{ fontSize: 9, color: C.textMuted, fontWeight: 700,
-                    textAlign: i >= 2 ? 'center' as const : 'left' as const }}>{h}</span>
-                ))}
-              </div>
-            </div>
-            {tableRows.slice(0, 5).map((row, i) => {
-              const zoneClr = row.rank <= 2 ? '#f5c200' : row.rank <= 6 ? '#38a088'
-                : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)')
-              const isMyTeam = followedIds.has(row.teamId)
-              return (
-                <a key={row.teamId} href={'/teams/' + row.teamId}
-                  style={{ display: 'flex', alignItems: 'center', textDecoration: 'none',
-                    borderTop: i > 0 ? '1px solid ' + C.border : 'none',
-                    background: isMyTeam
-                      ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
-                      : 'transparent',
-                    WebkitTapHighlightColor: 'transparent' } as any}
-                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                  onMouseLeave={e => (e.currentTarget.style.background = isMyTeam
-                    ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)')
-                    : 'transparent')}>
-                  <div style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', background: zoneClr }} />
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '28px 1fr 26px 34px',
-                    padding: '9px 12px', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: row.rank <= 6 ? zoneClr : C.textMuted, textAlign: 'center' }}>{row.rank}</span>
-                    <span style={{ fontSize: 13, fontWeight: isMyTeam ? 700 : 400, color: C.text,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 4 }}>
-                      {shortName(row.teamName)}
-                    </span>
-                    <span style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{row.played}</span>
-                    <span style={{ fontSize: 13, fontWeight: 800, textAlign: 'center',
-                      color: row.rank <= 2 ? '#f5c200' : C.text }}>{row.points}</span>
-                  </div>
-                </a>
-              )
-            })}
-            <a href="/league" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '9px 12px', fontSize: 11, fontWeight: 600, color: C.textMuted,
-              textDecoration: 'none', borderTop: '1px solid ' + C.border,
-              background: isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)',
-              WebkitTapHighlightColor: 'transparent' } as any}>
-              Visa hela tabellen →
-            </a>
-          </div>
-        </div>
+        <MiniStandings
+          tableRows={tableRows}
+          tableDiv={tableDiv}
+          setTableDiv={setTableDiv}
+          followedIds={followedIds}
+          C={C}
+          isDark={isDark}
+        />
 
         {/* ── Recent results ───────────────────────────────────────────────────── */}
         {recentDates.length > 0 && (
@@ -1843,7 +1616,7 @@ export default function Home() {
                   {/* Rows */}
                   {visible.map((m, i) => (
                     <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} />
+                      <MatchRow m={m} C={C} now={now} />
                     </div>
                   ))}
                   {/* Expand */}
@@ -1888,7 +1661,7 @@ export default function Home() {
                   {/* Rows */}
                   {visible.map((m, i) => (
                     <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} />
+                      <MatchRow m={m} C={C} now={now} />
                     </div>
                   ))}
                   {/* Expand */}
