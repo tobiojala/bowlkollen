@@ -12,6 +12,8 @@ import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
 import TopPerformers from '@/components/TopPerformers'
+import { TeamPageSkeleton } from '@/components/teams/TeamPageSkeleton'
+import { Button } from '@/components/ui'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null; description: string | null; contact_email: string | null; contact_phone: string | null; home_hall: string | null; website: string | null; instagram: string | null; facebook: string | null; logo_url: string | null }
@@ -195,67 +197,26 @@ export default function TeamPage({ params }: Props) {
     }).catch(() => { setError(true); setLoading(false) })
   }, [id])
 
-  if (loading) {
-    const sk = C.bg === '#10161e' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
-    const S = ({ w = '100%', h = 12, r = 6 }: { w?: string | number; h?: number; r?: number }) => (
-      <div style={{ width: w, height: h, borderRadius: r, background: sk, flexShrink: 0 }} />
-    )
+  if (loading) return <TeamPageSkeleton />
+
+  if (error) {
     return (
-      <main style={{ minHeight: '100vh', background: C.bg, fontFamily: 'system-ui, sans-serif' }}>
-        <style>{`@keyframes sk-pulse{0%,100%{opacity:.4}50%{opacity:.9}}.sk-team>*{animation:sk-pulse 1.6s ease-in-out infinite}`}</style>
-        <div className="sk-team" style={{ maxWidth: 600, margin: '0 auto' }}>
-          {/* Hero banner */}
-          <div style={{ padding: '24px 20px 20px', background: C.bg }}>
-            <S w={60} h={10} r={4} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 20 }}>
-              <div style={{ width: 68, height: 68, borderRadius: 16, background: sk, flexShrink: 0 }} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <S w="60%" h={18} r={6} />
-                <S w="40%" h={11} r={4} />
-              </div>
-            </div>
-          </div>
-          {/* Stats bar */}
-          <div style={{ display: 'flex', gap: 0, padding: '14px 20px 10px', borderTop: '1px solid ' + sk, borderBottom: '1px solid ' + sk }}>
-            {[0,1,2,3,4].map(i => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: i < 4 ? '1px solid ' + sk : 'none' }}>
-                <S w="50%" h={18} r={4} />
-                <S w="70%" h={8} r={3} />
-              </div>
-            ))}
-          </div>
-          {/* Match rows */}
-          <div style={{ padding: '0 20px' }}>
-            {[0,1,2,3,4].map(i => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid ' + sk }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: sk, flexShrink: 0 }} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <S w={`${50 + (i % 3) * 12}%`} h={12} r={4} />
-                  <S w="35%" h={9} r={3} />
-                </div>
-                <S w={52} h={20} r={6} />
-              </div>
-            ))}
-          </div>
-        </div>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-light-bg font-sans dark:bg-dark-bg">
+        <p className="text-sm font-semibold bk-text-primary">Kunde inte ladda laget</p>
+        <Button variant="ghost" onClick={() => { setError(false); setLoading(true) }}>
+          Försök igen
+        </Button>
       </main>
     )
   }
 
-  if (error) return (
-    <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Kunde inte ladda laget</div>
-      <button onClick={() => { setError(false); setLoading(true) }} style={{ fontSize: 12, fontWeight: 700, color: C.accent, background: 'transparent', border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '7px 16px', cursor: 'pointer' }}>
-        Försök igen
-      </button>
-    </main>
-  )
-
-  if (!team) return (
-    <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ color: C.textMuted }}>Lag hittades inte</div>
-    </main>
-  )
+  if (!team) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-light-bg font-sans dark:bg-dark-bg">
+        <p className="text-sm text-dark-muted">Lag hittades inte</p>
+      </main>
+    )
+  }
 
   const hue = team.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
   const tc = 'hsl(' + hue + ',50%,45%)'
@@ -305,8 +266,8 @@ export default function TeamPage({ params }: Props) {
   const displayMatches = tab === 'results' ? completed : upcoming
 
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 0 48px' }}>
+    <main className="min-h-screen bg-light-bg font-sans bk-text-primary dark:bg-dark-bg">
+      <div className="mx-auto max-w-app pb-12">
 
         {/* Hero banner */}
         <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '24px 20px 20px', marginBottom: 0 }}>
