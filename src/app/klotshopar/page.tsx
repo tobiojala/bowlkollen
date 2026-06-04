@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
-import { MapPin, Phone, Smartphone, Mail, Globe, ExternalLink, Search, Award } from 'lucide-react'
-
-const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+import {
+  MapPin, Phone, Smartphone, Mail, Globe, ExternalLink, Search, Award,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/cn'
 
 type Shop = {
   id: number
@@ -23,51 +22,53 @@ type Shop = {
   accepts_gift_cards: boolean
 }
 
-function ContactRow({ icon: Icon, label, href, value }: {
-  icon: React.ElementType
+function ContactRow({
+  icon: Icon,
+  label,
+  href,
+  value,
+}: {
+  icon: LucideIcon
   label: string
   href?: string
   value: string
 }) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-
   const content = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: 10,
-        background: 'rgba(245,194,0,0.10)',
-        border: '1px solid rgba(245,194,0,0.20)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        <Icon size={14} color="#f5c200" />
+    <div className="flex items-center gap-2.5 py-2">
+      <div
+        className={cn(
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]',
+          'border border-gold/20 bg-gold/10',
+        )}
+      >
+        <Icon size={14} className="text-gold" />
       </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1 }}>{label}</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: href ? '#f5c200' : C.text, marginTop: 2 }}>{value}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] leading-none text-dark-muted">{label}</div>
+        <div className={cn('mt-0.5 text-[13px] font-semibold', href ? 'text-gold' : 'bk-text-primary')}>
+          {value}
+        </div>
       </div>
-      {href && <ExternalLink size={12} color="#f5c200" style={{ marginLeft: 'auto' }} />}
+      {href && <ExternalLink size={12} className="shrink-0 text-gold" />}
     </div>
   )
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer"
-        style={{ textDecoration: 'none', display: 'block', padding: '8px 0' }}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block no-underline"
       >
         {content}
       </a>
     )
   }
-  return <div style={{ padding: '8px 0' }}>{content}</div>
+  return content
 }
 
 export default function KlotshoparPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
-
   const [shops, setShops] = useState<Shop[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -88,161 +89,144 @@ export default function KlotshoparPage() {
     const q = query.toLowerCase()
     if (!q) return shops
     return shops.filter(s =>
-      s.name.toLowerCase().includes(q) || (s.city ?? '').toLowerCase().includes(q)
+      s.name.toLowerCase().includes(q) || (s.city ?? '').toLowerCase().includes(q),
     )
   }, [shops, query])
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, paddingBottom: 96 }}>
-      {/* Header */}
-      <div style={{ padding: '56px 20px 16px' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
-          Klotshopar
-        </h1>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: C.textMuted }}>
+    <div className="min-h-screen bg-light-bg pb-24 dark:bg-dark-bg">
+      <div className="px-5 pt-14 pb-4">
+        <h1 className="m-0 text-[26px] font-black tracking-tight bk-text-primary">Klotshopar</h1>
+        <p className="mt-1 text-[13px] text-dark-muted">
           {loading ? 'Laddar...' : `${shops.length} pro shops i Sverige`}
         </p>
       </div>
 
-      {/* Search */}
-      <div style={{ padding: '12px 16px 16px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 14, padding: '10px 14px',
-        }}>
-          <Search size={16} color={C.textMuted} />
+      <div className="px-4 pb-4">
+        <div
+          className={cn(
+            'flex items-center gap-2.5 rounded-[14px] border px-3.5 py-2.5',
+            'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+          )}
+        >
+          <Search size={16} className="shrink-0 text-dark-muted" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Sök shop eller stad..."
-            style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: C.text, fontSize: 15,
-            }}
+            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] outline-none bk-text-primary placeholder:text-dark-muted"
           />
         </div>
       </div>
 
-      {/* Shop cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 16px' }}>
-        {loading ? (
-          [...Array(4)].map((_, i) => (
-            <div key={i} style={{
-              height: 100, borderRadius: 16,
-              background: C.card, border: `1px solid ${C.border}`,
-              opacity: 0.5,
-            }} />
-          ))
-        ) : filtered.map((shop, i) => {
-          const isOpen = expanded === shop.id
-          const address = [shop.street_address, shop.postal_code && shop.city ? `${shop.postal_code} ${shop.city}` : shop.city].filter(Boolean).join(', ')
-          const mapsUrl = address ? `https://maps.google.com/?q=${encodeURIComponent(address)}` : null
-
-          return (
-            <motion.div
-              key={shop.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SPRING, delay: Math.min(i * 0.04, 0.3) }}
-              style={{
-                background: C.card,
-                border: isOpen ? '1px solid rgba(245,194,0,0.35)' : `1px solid ${C.border}`,
-                borderRadius: 18,
-                overflow: 'hidden',
-                boxShadow: isOpen ? '0 0 20px rgba(245,194,0,0.08)' : 'none',
-                transition: 'border-color 0.2s, box-shadow 0.2s',
-              }}
-            >
-              {/* Card header — tap to expand */}
+      <div className="flex flex-col gap-2.5 px-4">
+        {loading
+          ? [...Array(4)].map((_, i) => (
               <div
-                onClick={() => setExpanded(isOpen ? null : shop.id)}
-                style={{ padding: '16px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.2 }}>{shop.name}</span>
-                      {shop.ibpsia_certified && (
-                        <span style={{
-                          display: 'flex', alignItems: 'center', gap: 3,
-                          fontSize: 10, fontWeight: 700,
-                          padding: '2px 7px', borderRadius: 8,
-                          background: 'rgba(245,194,0,0.12)',
-                          border: '1px solid rgba(245,194,0,0.30)',
-                          color: '#f5c200',
-                        }}>
-                          <Award size={9} /> IBPSIA
-                        </span>
-                      )}
-                    </div>
-                    {shop.city && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 5, color: C.textMuted, fontSize: 13 }}>
-                        <MapPin size={12} />
-                        {shop.city}
+                key={i}
+                className="h-[100px] animate-pulse rounded-[18px] border border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card"
+              />
+            ))
+          : filtered.map(shop => {
+              const isOpen = expanded === shop.id
+              const address = [
+                shop.street_address,
+                shop.postal_code && shop.city ? `${shop.postal_code} ${shop.city}` : shop.city,
+              ]
+                .filter(Boolean)
+                .join(', ')
+              const mapsUrl = address
+                ? `https://maps.google.com/?q=${encodeURIComponent(address)}`
+                : null
+
+              return (
+                <div
+                  key={shop.id}
+                  className={cn(
+                    'overflow-hidden rounded-[18px] border transition-colors duration-200',
+                    'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+                    isOpen && 'border-gold/35 shadow-[0_0_20px_rgba(245,194,0,0.08)]',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(isOpen ? null : shop.id)}
+                    className="w-full cursor-pointer border-0 bg-transparent p-4 text-left"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base leading-tight font-extrabold bk-text-primary">
+                            {shop.name}
+                          </span>
+                          {shop.ibpsia_certified && (
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5',
+                                'border-gold/30 bg-gold/10 text-[10px] font-bold text-gold',
+                              )}
+                            >
+                              <Award size={9} /> IBPSIA
+                            </span>
+                          )}
+                        </div>
+                        {shop.city && (
+                          <div className="mt-1 flex items-center gap-1 text-[13px] text-dark-muted">
+                            <MapPin size={12} />
+                            {shop.city}
+                          </div>
+                        )}
+                        {shop.accepts_gift_cards && (
+                          <span className="mt-2 inline-block rounded-[10px] bg-black/5 px-2 py-0.5 text-[11px] font-semibold text-dark-muted dark:bg-white/6">
+                            Presentkort
+                          </span>
+                        )}
                       </div>
+                      <span
+                        className={cn(
+                          'ml-2 shrink-0 text-xl leading-none text-dark-muted transition-transform duration-200',
+                          isOpen && 'rotate-90',
+                        )}
+                        aria-hidden
+                      >
+                        ›
+                      </span>
+                    </div>
+                  </button>
+
+                  <div
+                    className={cn(
+                      'grid transition-[grid-template-rows] duration-200 ease-out',
+                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
                     )}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
-                      {shop.accepts_gift_cards && (
-                        <span style={{
-                          fontSize: 11, fontWeight: 600,
-                          padding: '3px 8px', borderRadius: 10,
-                          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-                          color: C.textMuted,
-                        }}>
-                          Presentkort
-                        </span>
-                      )}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="border-t border-light-border px-4 pt-3 pb-4 dark:border-dark-border">
+                        {address && (
+                          <ContactRow icon={MapPin} label="Adress" value={address} href={mapsUrl ?? undefined} />
+                        )}
+                        {shop.phone && (
+                          <ContactRow icon={Phone} label="Telefon" value={shop.phone} href={`tel:${shop.phone}`} />
+                        )}
+                        {shop.mobile && (
+                          <ContactRow icon={Smartphone} label="Mobil" value={shop.mobile} href={`tel:${shop.mobile}`} />
+                        )}
+                        {shop.email && (
+                          <ContactRow icon={Mail} label="E-post" value={shop.email} href={`mailto:${shop.email}`} />
+                        )}
+                        {shop.website && (
+                          <ContactRow icon={Globe} label="Hemsida" value="Öppna webbplats" href={shop.website} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <motion.div
-                    animate={{ rotate: isOpen ? 90 : 0 }}
-                    transition={SPRING}
-                    style={{ color: C.textMuted, fontSize: 20, lineHeight: 1, marginLeft: 8, marginTop: 2 }}
-                  >
-                    ›
-                  </motion.div>
                 </div>
-              </div>
-
-              {/* Expanded details */}
-              <motion.div
-                initial={false}
-                animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-                transition={{ duration: 0.22 }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div style={{
-                  padding: '0 16px 16px',
-                  borderTop: `1px solid ${C.border}`,
-                  paddingTop: 12,
-                }}>
-                  {address && (
-                    <ContactRow icon={MapPin} label="Adress" value={address} href={mapsUrl ?? undefined} />
-                  )}
-                  {shop.phone && (
-                    <ContactRow icon={Phone} label="Telefon" value={shop.phone} href={`tel:${shop.phone}`} />
-                  )}
-                  {shop.mobile && (
-                    <ContactRow icon={Smartphone} label="Mobil" value={shop.mobile} href={`tel:${shop.mobile}`} />
-                  )}
-                  {shop.email && (
-                    <ContactRow icon={Mail} label="E-post" value={shop.email} href={`mailto:${shop.email}`} />
-                  )}
-                  {shop.website && (
-                    <ContactRow icon={Globe} label="Hemsida" value="Öppna webbplats" href={shop.website} />
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          )
-        })}
+              )
+            })}
 
         {!loading && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: C.textMuted, padding: '48px 0', fontSize: 14 }}>
-            Inga klotshopar hittades
-          </div>
+          <p className="py-12 text-center text-sm text-dark-muted">Inga klotshopar hittades</p>
         )}
       </div>
     </div>
