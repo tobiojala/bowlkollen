@@ -91,6 +91,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 - [x] `TeamTableWidget` (full)
 - [x] `PlayerCard` — drawer/chrome only; holographic card faces keep inline `style` for export/animation
 - [x] `HomePageSkeleton`, `TeamZoneCard` (home-only; zone bar keeps dynamic gradient `style`)
+- [x] `TeamPageSkeleton`, `TeamHero`, `TeamStatsBar`, `TeamTabBar`, `TeamMatchRow` + `lib/team-ui.ts`
 
 ### Then (Phase 3 — pages, small → large)
 
@@ -98,7 +99,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 2. [x] `mer`
 3. [x] `league`, [x] `hallar`, [x] `oljeprofiler`, [x] `klotshopar`
 4. [x] `teams/page`, `clubs/[bitsId]`, `players/page`
-5. [ ] `matches/[id]`, `players/[id]`, `teams/[id]`
+5. [ ] `matches/[id]`, `players/[id]`, [~] `teams/[id]` — hero, stats bar, tabs, match rows migrated; H2H / trupp / community still inline
 6. [x] `app/page.tsx` — shell, tabs, hero, lists, `HomePageSkeleton`, `TeamZoneCard` (set `DEMO = true` locally to preview zone card)
 
 ## Per-file workflow
