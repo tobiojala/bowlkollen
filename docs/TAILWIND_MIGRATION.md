@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `reset-password` migration. Regenerate counts with:_
+_Last updated: after `tavlingar` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,7 +93,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **19** (~61%) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **20** (~65%) |
 | Files importing `@/lib/colors` | **16** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
@@ -157,7 +157,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `profile` | 66 | [ ] | uses `Widgets` |
 | `puls` | 65 | [ ] | |
 | `schema` | 79 | [ ] | |
-| `tavlingar` | 44 | [ ] | |
+| `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
 | `sllm` | 44 | [ ] | |
 | `reset-password` | 0 | [x] | matches `login` patterns |
 | `admin` | 74 | [ ] | |
@@ -172,7 +172,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 1. [x] `matches/[id]`, [x] `players/[id]`
 2. [x] `compare/*` — all compare routes migrated
 3. [x] `club/[club_slug]`
-4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm` (large; use Widgets last)
+4. [ ] `profile`, `puls`, `schema`, `sllm` (large; use Widgets last)
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
 6. [ ] `Widgets.tsx` + embeds on migrated pages
 
