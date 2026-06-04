@@ -98,7 +98,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 3. [x] `league`, [x] `hallar`, [x] `oljeprofiler`, [x] `klotshopar`
 4. [x] `teams/page`, `clubs/[bitsId]`, `players/page`
 5. [ ] `matches/[id]`, `players/[id]`, `teams/[id]`
-6. [ ] `app/page.tsx` — **in progress** (recent/upcoming match groups + SLLM promo done; hero carousel still inline)
+6. [ ] `app/page.tsx` — **mostly done** (HeroStrip, MatchPulsen, MyNextMatch, profile, tabs, match lists; loading skeleton + “Vad behöver mitt lag” still inline)
 
 ## Per-file workflow
 
