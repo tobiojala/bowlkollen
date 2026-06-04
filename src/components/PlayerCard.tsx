@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { cn } from '@/lib/cn'
 
 const RemotionPlayer = dynamic(() => import('./RemotionPlayerEmbed'), { ssr: false })
 
@@ -409,7 +410,6 @@ export default function PlayerCard({
   const rating = calcRating(avg, bestSeries, over200, avg > 0)
   const tier   = getTier(rating)
   const st     = starDisplay(rating)
-  const muted  = '#6b7a99'
 
   // Periodic shimmer
   useEffect(() => {
@@ -489,19 +489,32 @@ export default function PlayerCard({
   const sharedProps = { name, teamName, tier, avg, bestSeries, over200, matches, division, hand, style: bStyle, ballBrand, achievements, rating }
 
   return (
-    <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 360, background: isDark ? '#0d1520' : '#f0f4f8', zIndex: 100, display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 40px rgba(0,0,0,0.4)', overflowY: 'auto' }}>
-
-      {/* Header */}
-      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), flexShrink: 0 }}>
+    <div
+      className={cn(
+        'fixed top-0 right-0 bottom-0 z-100 flex w-full max-w-[360px] flex-col overflow-y-auto',
+        'bg-light-bg shadow-[-4px_0_40px_rgba(0,0,0,0.4)] dark:bg-dark-bg',
+      )}
+    >
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between border-b px-5 py-4',
+          'border-light-border dark:border-dark-border',
+        )}
+      >
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: muted, letterSpacing: 1.5 }}>SPELARKORT</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#fff' : '#0d1f35', marginTop: 2 }}>{name}</div>
+          <div className="text-[11px] font-bold tracking-widest text-dark-muted">SPELARKORT</div>
+          <div className="mt-0.5 text-sm font-bold bk-text-primary">{name}</div>
         </div>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: muted, fontSize: 24, cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>×</button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="cursor-pointer border-0 bg-transparent px-2 py-1 text-2xl leading-none text-dark-muted"
+        >
+          ×
+        </button>
       </div>
 
-      {/* Card display */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 20px 16px', gap: 14 }}>
+      <div className="flex flex-col items-center gap-3.5 px-5 pt-7 pb-4">
         {/* Drop-shadow wrapper — must be separate from preserve-3d element */}
         <div style={{ filter: `drop-shadow(0 20px 36px rgba(0,0,0,0.55)) drop-shadow(0 4px 12px ${tier.glowColor})` }}>
         {/* Perspective wrapper */}
@@ -531,52 +544,73 @@ export default function PlayerCard({
             </div>
           </div>
         </div>
-        </div>{/* end drop-shadow wrapper */}
-        <div style={{ fontSize: 11, color: muted }}>
+        </div>
+        <div className="text-[11px] text-dark-muted">
           {flipped ? 'Klicka för att se framsidan' : 'Klicka för att vända kortet'}
         </div>
       </div>
 
-      {/* Tier info */}
-      <div style={{ margin: '0 20px 16px', padding: '12px 14px', background: tier.bg, border: `1px solid ${tier.borderColor}44`, borderRadius: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        className="mx-5 mb-4 rounded-xl border p-3.5"
+        style={{ background: tier.bg, borderColor: `${tier.borderColor}44` }}
+      >
+        <div className="flex items-center justify-between">
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: tier.accent }}>{tier.label} tier</div>
-            <div style={{ fontSize: 11, color: muted, marginTop: 2 }}>BK Rating {rating} / 99</div>
+            <div className="text-[13px] font-bold" style={{ color: tier.accent }}>
+              {tier.label} tier
+            </div>
+            <div className="mt-0.5 text-[11px] text-dark-muted">BK Rating {rating} / 99</div>
           </div>
-          <div style={{ fontSize: 20, letterSpacing: 2 }}>
-            <span style={{ color: '#f5c200' }}>{'★'.repeat(st.filled)}</span>
-            <span style={{ color: isDark ? '#2a3858' : '#d0d8e8' }}>{'★'.repeat(st.empty)}</span>
+          <div className="text-xl tracking-widest">
+            <span className="text-gold">{'★'.repeat(st.filled)}</span>
+            <span className="text-light-border dark:text-dark-border">{'★'.repeat(st.empty)}</span>
           </div>
         </div>
       </div>
 
-      {/* Owner actions */}
       {isOwner && (
-        <div style={{ padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => setShareOpen(s => !s)}
-            style={{ width: '100%', padding: '13px', background: tier.bg, border: `1px solid ${tier.borderColor}66`, borderRadius: 12, fontSize: 13, fontWeight: 700, color: tier.accent, cursor: 'pointer' }}>
+        <div className="flex flex-col gap-2.5 px-5 pb-6">
+          <button
+            type="button"
+            onClick={() => setShareOpen(s => !s)}
+            className="w-full cursor-pointer rounded-xl border px-3 py-3.25 text-[13px] font-bold"
+            style={{
+              background: tier.bg,
+              borderColor: `${tier.borderColor}66`,
+              color: tier.accent,
+            }}
+          >
             Dela kortet
           </button>
           {shareOpen && (
-            <div style={{ background: isDark ? '#172030' : '#fff', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 14, overflow: 'hidden' }}>
+            <div
+              className={cn(
+                'overflow-hidden rounded-[14px] border',
+                'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+              )}
+            >
               {[
-                { platform: 'video',     label: 'Animerat kort (1080×1080)', emoji: '🎬', hint: 'Förhandsgranska & exportera' },
+                { platform: 'video', label: 'Animerat kort (1080×1080)', emoji: '🎬', hint: 'Förhandsgranska & exportera' },
                 { platform: 'instagram', label: 'Instagram', emoji: '📸', hint: 'Laddar ner PNG för Stories/Post' },
-                { platform: 'tiktok',    label: 'TikTok',    emoji: '🎵', hint: 'Laddar ner PNG för TikTok' },
-                { platform: 'facebook',  label: 'Facebook',  emoji: '👥', hint: 'Öppnar Facebook' },
-                { platform: 'x',         label: 'X / Twitter', emoji: '𝕏', hint: 'Öppnar X' },
-                { platform: 'download',  label: 'Ladda ner PNG', emoji: '⬇', hint: 'Framsida som PNG' },
+                { platform: 'tiktok', label: 'TikTok', emoji: '🎵', hint: 'Laddar ner PNG för TikTok' },
+                { platform: 'facebook', label: 'Facebook', emoji: '👥', hint: 'Öppnar Facebook' },
+                { platform: 'x', label: 'X / Twitter', emoji: '𝕏', hint: 'Öppnar X' },
+                { platform: 'download', label: 'Ladda ner PNG', emoji: '⬇', hint: 'Framsida som PNG' },
               ].map((s, i) => (
-                <button key={s.platform} onClick={() => shareToSocial(s.platform)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', background: 'transparent', border: 'none', borderBottom: i < 4 ? '1px solid ' + (isDark ? '#2a3858' : '#e8f0f8') : 'none', cursor: 'pointer', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                <button
+                  key={s.platform}
+                  type="button"
+                  onClick={() => shareToSocial(s.platform)}
+                  className={cn(
+                    'flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-4 py-3.25 text-left',
+                    'hover:bg-black/5 dark:hover:bg-white/3',
+                    i < 5 && 'border-b border-light-border dark:border-dark-border',
+                  )}
                 >
-                  <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{s.emoji}</span>
+                  <span className="w-7 text-center text-xl">{s.emoji}</span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? '#fff' : '#0d1f35' }}>{s.label}</div>
-                    <div style={{ fontSize: 11, color: muted }}>{s.hint}</div>
+                    <div className="text-[13px] font-semibold bk-text-primary">{s.label}</div>
+                    <div className="text-[11px] text-dark-muted">{s.hint}</div>
                   </div>
                 </button>
               ))}
@@ -603,16 +637,24 @@ export default function PlayerCard({
             />
           )}
 
-          <button onClick={downloadCard} disabled={downloading}
-            style={{ width: '100%', padding: '13px', background: 'transparent', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 12, fontSize: 13, fontWeight: 600, color: muted, cursor: 'pointer', opacity: downloading ? 0.7 : 1 }}>
+          <button
+            type="button"
+            onClick={downloadCard}
+            disabled={downloading}
+            className={cn(
+              'w-full cursor-pointer rounded-xl border px-3 py-3.25 text-[13px] font-semibold',
+              'border-light-border text-dark-muted dark:border-dark-border',
+              downloading && 'opacity-70',
+            )}
+          >
             {downloading ? 'Laddar ner...' : '⬇ Ladda ner framsida + baksida'}
           </button>
         </div>
       )}
 
       {!isOwner && (
-        <div style={{ padding: '0 20px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: muted }}>
+        <div className="px-5 pb-6 text-center">
+          <div className="text-xs text-dark-muted">
             Är det du? Claima profilen för att ladda ner och dela ditt kort.
           </div>
         </div>

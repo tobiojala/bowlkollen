@@ -83,12 +83,13 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 - [x] `ThemeProvider`, `layout`, `NavTitle`, `Footer`
 - [x] `Nav` / `BottomNav` — layout + glass via shared classes (some effects stay in CSS)
 
-### Next (Phase 2 — shared components)
+### Done (Phase 2 — shared components)
 
 - [x] `components/home/MatchRow` — **use this as your template**
-- [ ] `MiniStandings`, `HonorRoll`
-- [ ] `FollowButton`, `NextMatchPreview`, `MatchDayStrip`
-- [ ] `PlayerCard`, `TeamTableWidget`
+- [x] `MiniStandings`, `HonorRoll`
+- [x] `FollowButton`, `NextMatchPreview`, `MatchDayStrip`
+- [x] `TeamTableWidget` (full)
+- [x] `PlayerCard` — drawer/chrome only; holographic card faces keep inline `style` for export/animation
 
 ### Then (Phase 3 — pages, small → large)
 

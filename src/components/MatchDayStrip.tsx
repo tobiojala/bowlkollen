@@ -1,13 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { cn } from '@/lib/cn'
 
 export default function MatchDayStrip() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
   const [dates, setDates] = useState<string[]>([])
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -22,7 +19,7 @@ export default function MatchDayStrip() {
       .order('date')
       .then(({ data }) => {
         if (!data) return
-        const allDates = [...new Set((data as any[]).map((m: any) => m.date.slice(0, 10)))].sort()
+        const allDates = [...new Set(data.map((m: { date: string }) => m.date.slice(0, 10)))].sort()
         setDates(allDates)
         const today = new Date().toISOString().slice(0, 10)
         const target = allDates.find(d => d >= today) || allDates[allDates.length - 1]
@@ -35,7 +32,10 @@ export default function MatchDayStrip() {
       setTimeout(() => {
         const el = activeDateRef.current!
         const container = scrollRef.current!
-        container.scrollTo({ left: el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2, behavior: 'smooth' })
+        container.scrollTo({
+          left: el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2,
+          behavior: 'smooth',
+        })
       }, 150)
     }
   }, [activeDate, dates])
@@ -43,40 +43,66 @@ export default function MatchDayStrip() {
   if (dates.length === 0) return null
 
   const today = new Date().toISOString().slice(0, 10)
-  const days = ['Son','Man','Tis','Ons','Tor','Fre','Lor']
-  const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
+  const days = ['Son', 'Man', 'Tis', 'Ons', 'Tor', 'Fre', 'Lor']
+  const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
 
   return (
-    <div style={{ borderBottom: '1px solid ' + C.border, background: C.bg, position: 'sticky', top: 56, zIndex: 30 }}>
-      <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex' }}>
+    <div
+      className={cn(
+        'sticky top-14 z-30 border-b',
+        'border-light-border bg-light-bg dark:border-dark-border dark:bg-dark-bg',
+      )}
+    >
+      <div
+        ref={scrollRef}
+        className={cn(
+          'flex overflow-x-auto',
+          '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+        )}
+      >
         {dates.map(dateKey => {
-          const d = new Date(dateKey + 'T12:00:00')
+          const d = new Date(`${dateKey}T12:00:00`)
           const isActive = dateKey === activeDate
           const isToday = dateKey === today
           const isPast = dateKey < today
+
           return (
             <div
               key={dateKey}
               ref={isActive ? activeDateRef : null}
-              onClick={() => { setActiveDate(dateKey); window.location.href = '/schema?date=' + dateKey }}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '10px 14px',
-                borderBottom: '2px solid ' + (isActive ? '#f5c200' : 'transparent'),
-                background: 'transparent',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                opacity: isPast && !isActive ? 0.35 : 1,
-                gap: 1,
-                userSelect: 'none',
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setActiveDate(dateKey)
+                window.location.href = `/schema?date=${dateKey}`
               }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setActiveDate(dateKey)
+                  window.location.href = `/schema?date=${dateKey}`
+                }
+              }}
+              className={cn(
+                'flex shrink-0 cursor-pointer flex-col items-center gap-px px-3.5 py-2.5 select-none',
+                'border-b-2',
+                isActive ? 'border-gold' : 'border-transparent',
+                isPast && !isActive && 'opacity-35',
+              )}
             >
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: isActive ? '#f5c200' : C.textMuted }}>
+              <span
+                className={cn(
+                  'text-[9px] font-bold tracking-wide',
+                  isActive ? 'text-gold' : 'text-dark-muted',
+                )}
+              >
                 {isToday ? 'IDAG' : days[d.getDay()].toUpperCase()}
               </span>
-              <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 400, color: isActive ? '#f5c200' : C.text }}>
+              <span
+                className={cn(
+                  'text-sm',
+                  isActive ? 'font-bold text-gold' : 'font-normal bk-text-primary',
+                )}
+              >
                 {d.getDate()} {months[d.getMonth()]}
               </span>
             </div>

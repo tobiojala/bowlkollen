@@ -1336,7 +1336,7 @@ export default function Home() {
         })()}
 
         {/* ── Honor Roll ───────────────────────────────────────────────────────── */}
-        <HonorRoll honor={honor} C={C} isDark={isDark} />
+        <HonorRoll honor={honor} />
 
         {/* ── Personlig profil ─────────────────────────────────────────────── */}
         {myPlayer && (
@@ -1587,8 +1587,6 @@ export default function Home() {
           tableDiv={tableDiv}
           setTableDiv={setTableDiv}
           followedIds={followedIds}
-          C={C}
-          isDark={isDark}
         />
 
         {/* ── Recent results ───────────────────────────────────────────────────── */}
