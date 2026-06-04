@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `compare/[id1]/[id2]` player compare migration. Regenerate counts with:_
+_Last updated: after `hallar/[id]` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,7 +93,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **15** (~48%) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **17** (~55%) |
 | Files importing `@/lib/colors` | **16** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
@@ -121,7 +121,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `PlayerCard` | 61 | [~] chrome done; card face animation inline |
 | `teams/*` (hero, tabs, H2H, …) | low | [x] |
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
-| `compare/*` (hero, search, results) | low | [x] team compare done; player compare pending |
+| `compare/*` (hero, search, results) | low | [x] team + player compare |
 | `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
 | `SeasonTimeline` | 24 | [ ] |
 | `TopPerformers` | 9 | [ ] |
@@ -149,7 +149,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `teams/[id]` | 0 | [x] | |
 | **`matches/[id]`** | **0** | **[x]** | `components/matches/*` |
 | **`players/[id]`** | **0** | **[x]** | `components/players/*`; `PlayerCard` drawer still legacy |
-| `hallar/[id]` | 27 | [ ] | |
+| `hallar/[id]` | 0 | [x] | `components/hallar/*`, `lib/hall-ui.ts` |
 | `club/[club_slug]` | 23 | [ ] | |
 | `compare/[id1]/[id2]` | 0 | [x] | `PlayerCompareHero`, `PlayerCompareResults` |
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
@@ -170,8 +170,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 ### Suggested order (remaining)
 
 1. [x] `matches/[id]`, [x] `players/[id]`
-2. [~] `compare/*` — team compare done; `compare/[id1]/[id2]` (players) remains
-3. [ ] `hallar/[id]`, `club/[club_slug]`
+2. [x] `compare/*` — all compare routes migrated
+3. [ ] `club/[club_slug]`
 4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm`
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
 6. [ ] `Widgets.tsx` + embeds on migrated pages
