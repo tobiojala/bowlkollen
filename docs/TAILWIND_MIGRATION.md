@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `compare/teams/[id1]/[id2]` migration. Regenerate counts with:_
+_Last updated: after `compare/[id1]/[id2]` player compare migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -121,7 +121,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `PlayerCard` | 61 | [~] chrome done; card face animation inline |
 | `teams/*` (hero, tabs, H2H, …) | low | [x] |
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
-| `compare/*` (hero, search, skeleton) | low | [x] picker; full compare pages pending |
+| `compare/*` (hero, search, results) | low | [x] team compare done; player compare pending |
 | `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
 | `SeasonTimeline` | 24 | [ ] |
 | `TopPerformers` | 9 | [ ] |
@@ -151,9 +151,9 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | **`players/[id]`** | **0** | **[x]** | `components/players/*`; `PlayerCard` drawer still legacy |
 | `hallar/[id]` | 27 | [ ] | |
 | `club/[club_slug]` | 23 | [ ] | |
-| `compare/[id1]/[id2]` | 53 | [ ] | |
+| `compare/[id1]/[id2]` | 0 | [x] | `PlayerCompareHero`, `PlayerCompareResults` |
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
-| `compare/teams/[id1]/[id2]` | 83 | [ ] | |
+| `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
 | `profile` | 66 | [ ] | uses `Widgets` |
 | `puls` | 65 | [ ] | |
 | `schema` | 79 | [ ] | |

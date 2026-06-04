@@ -91,6 +91,62 @@ export function compareWinProbability(winRate1: number, winRate2: number) {
   return { prob1, prob2: 100 - prob1 }
 }
 
+export type PlayerCompareRow = { games?: number[] }
+
+export type PlayerCompareStats = {
+  avg: number
+  bestSeries: number
+  bestGame: number
+  over200: number
+  over250: number
+  matches: number
+  totalGames: number
+}
+
+export type PlayerCompareMetric = {
+  label: string
+  key: keyof PlayerCompareStats
+}
+
+export const PLAYER_COMPARE_METRICS: PlayerCompareMetric[] = [
+  { label: 'Snitt', key: 'avg' },
+  { label: 'Bästa serie', key: 'bestSeries' },
+  { label: 'Högsta spel', key: 'bestGame' },
+  { label: '200+ spel', key: 'over200' },
+  { label: '250+ spel', key: 'over250' },
+  { label: 'Matcher', key: 'matches' },
+]
+
+export function computePlayerCompareStats(results: PlayerCompareRow[]): PlayerCompareStats {
+  const allGames = results.flatMap(r => (r.games || []).filter(g => g > 0))
+  const seriesTotals = results
+    .map(r => (r.games || []).filter(g => g > 0).reduce((a, b) => a + b, 0))
+    .filter(t => t > 0)
+  return {
+    avg:
+      allGames.length > 0
+        ? Math.round(allGames.reduce((a, b) => a + b, 0) / allGames.length)
+        : 0,
+    bestSeries: seriesTotals.length > 0 ? Math.max(...seriesTotals) : 0,
+    bestGame: allGames.length > 0 ? Math.max(...allGames) : 0,
+    over200: allGames.filter(g => g >= 200).length,
+    over250: allGames.filter(g => g >= 250).length,
+    matches: results.length,
+    totalGames: allGames.length,
+  }
+}
+
+export function countPlayerMetricWins(
+  stats1: PlayerCompareStats,
+  stats2: PlayerCompareStats,
+  metrics: PlayerCompareMetric[] = PLAYER_COMPARE_METRICS,
+) {
+  const p1Wins = metrics.filter(m => (stats1[m.key] as number) > (stats2[m.key] as number)).length
+  const p2Wins = metrics.filter(m => (stats2[m.key] as number) > (stats1[m.key] as number)).length
+  const overall = p1Wins > p2Wins ? 1 : p2Wins > p1Wins ? 2 : 0
+  return { p1Wins, p2Wins, overall }
+}
+
 export function countMetricWins(
   stats1: TeamCompareStats,
   stats2: TeamCompareStats,
