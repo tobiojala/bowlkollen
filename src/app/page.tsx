@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
 import { shortName, shortDiv, dateLabel, countdown } from '@/lib/utils'
 import HonorRoll from '@/components/home/HonorRoll'
 import MiniStandings from '@/components/home/MiniStandings'
@@ -258,10 +256,6 @@ const DIVISION_ZONES: Record<string, { promotionRanks?: number; playoffRanks?: n
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
-
   const [live, setLive] = useState<Match[]>([])
   const [recent, setRecent] = useState<Match[]>([])
   const [upcoming, setUpcoming] = useState<Match[]>([])

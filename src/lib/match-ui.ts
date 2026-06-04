@@ -14,6 +14,16 @@ export type MatchLike = {
   totalGames?: number
 }
 
+/** Full division name badge color (match / team detail pages). */
+export function matchDivisionColor(d: string | null): string {
+  if (!d) return '#6b7a99'
+  if (d.includes('SM') || d.includes('slutspel')) return '#f5c200'
+  if (d.includes('Damer')) return '#d94a90'
+  if (d.includes('Elitserien')) return '#4a90d9'
+  if (d.includes('Allsvenskan')) return '#5ba85a'
+  return '#8a7a5a'
+}
+
 export function divisionAccentColor(d: string): string {
   if (d.includes('Elit')) return '#f5c200'
   if (d.includes('Allsv')) return '#5a82b4'

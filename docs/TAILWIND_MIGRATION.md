@@ -6,7 +6,7 @@ You do **not** need to rewrite the whole app at once. Tailwind v4 is already ins
 
 > **New UI → Tailwind. Old inline `style={{}}` → convert when you touch that file.**
 
-Never try to convert `app/page.tsx` in a single sitting (~1,700 lines). Do one section per PR.
+Never try to convert a large page in a single sitting. Extract one section per commit.
 
 ## What is already set up
 
@@ -18,6 +18,7 @@ Never try to convert `app/page.tsx` in a single sitting (~1,700 lines). Do one s
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
+| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts` |
 
 ## Copy-paste patterns
 
@@ -73,35 +74,112 @@ import { cn } from '@/lib/cn'
 | `border: '1px solid ' + C.border` | `border border-light-border dark:border-dark-border` |
 | `maxWidth: 600, margin: '0 auto'` | `mx-auto max-w-app` |
 
-Keep **inline `style` only** for truly dynamic values (e.g. division color from data, HSL from team name).
+Keep **inline `style` only** for truly dynamic values (e.g. division color from data, HSL from team name, elite score glow).
 
-## Migration order
+---
 
-### Done (Phase 0 + 1)
+## Migration checklist (tracked)
+
+_Last updated: after `matches/[id]` migration. Regenerate counts with:_
+
+```bash
+rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
+rg -c 'style=\{\{' src/components --glob '*.tsx' | sort -t: -k2 -nr
+rg -l "from '@/lib/colors'" src --glob '*.tsx'
+```
+
+### Summary
+
+| Metric | Value |
+|--------|------:|
+| App routes (`page.tsx`) | 31 |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **12** (~39%) |
+| Files importing `@/lib/colors` | **18** |
+| `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
+| `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
+
+### Phase 0 + 1 — shell (done)
 
 - [x] `cn`, UI kit, glass CSS helpers
 - [x] `ThemeProvider`, `layout`, `NavTitle`, `Footer`
-- [x] `Nav` / `BottomNav` — layout + glass via shared classes (some effects stay in CSS)
+- [x] `Nav` / `BottomNav` — layout + glass (minimal inline)
 
-### Done (Phase 2 — shared components)
+### Phase 2 — shared components
 
-- [x] `components/home/MatchRow` — **use this as your template**
-- [x] `MiniStandings`, `HonorRoll`
-- [x] `FollowButton`, `NextMatchPreview`, `MatchDayStrip`
-- [x] `TeamTableWidget` (full)
-- [x] `PlayerCard` — drawer/chrome only; holographic card faces keep inline `style` for export/animation
-- [x] `HomePageSkeleton`, `TeamZoneCard` (home-only; zone bar keeps dynamic gradient `style`)
-- [x] `TeamPageSkeleton`, `TeamHero`, `TeamStatsBar`, `TeamTabBar`, `TeamMatchRow`, `TeamH2HTab`, `TeamSquadTab`, `TeamCommunityTab` + `lib/team-ui.ts`
+| Component | `style={{}}` | Status |
+|-----------|-------------:|--------|
+| `home/MatchRow` | 2 | [x] template |
+| `home/MiniStandings` | 3 | [x] |
+| `home/HonorRoll` | 0 | [x] |
+| `home/HeroStrip` | 9 | [x] dynamic |
+| `home/MatchPulsen` | 11 | [x] SVG |
+| `home/TeamZoneCard` | 8 | [x] dynamic bar |
+| `home/*` skeleton, profile, streams | low | [x] |
+| `FollowButton` | 1 | [x] |
+| `NextMatchPreview` | 0 | [x] |
+| `TeamTableWidget` | 2 | [x] |
+| `PlayerCard` | 61 | [~] chrome done; card face animation inline |
+| `teams/*` (hero, tabs, H2H, …) | low | [x] |
+| `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
+| `SeasonTimeline` | 24 | [ ] |
+| `TopPerformers` | 9 | [ ] |
+| `widgets/Widgets.tsx` | 114 | [ ] |
+| `widgets/WidgetGrid` | 26 | [ ] |
+| `HeroCarousel` | 33 | [ ] |
+| `LiveLaneViewer` | 19 | [ ] |
+| `RemotionPlayerEmbed` | 5 | [ ] |
 
-### Then (Phase 3 — pages, small → large)
+### Phase 3 — app pages
 
-1. [x] `login`, `legal`
-2. [x] `mer`
-3. [x] `league`, [x] `hallar`, [x] `oljeprofiler`, [x] `klotshopar`
-4. [x] `teams/page`, `clubs/[bitsId]`, `players/page`
-5. [ ] `matches/[id]`, `players/[id]`
-6. [x] `teams/[id]` — full page (all tabs); child widgets (`NextMatchPreview`, `TeamTableWidget`, …) may still use inline styles
-6. [x] `app/page.tsx` — shell, tabs, hero, lists, `HomePageSkeleton`, `TeamZoneCard` (set `DEMO = true` locally to preview zone card)
+| Page | `style={{}}` on page file | Shell | Notes |
+|------|-------------------------:|:-----:|-------|
+| `app/page.tsx` | 1 | [x] | Remove stale `lib/colors` import |
+| `login` | 0 | [x] | |
+| `legal` | 0 | [x] | |
+| `mer` | 1 | [x] | |
+| `hallar` | 0 | [x] | |
+| `league` | 5 | [x] | |
+| `oljeprofiler` | 5 | [x] | |
+| `klotshopar` | 1 | [x] | |
+| `teams/page` | 8 | [x] | |
+| `clubs/[bitsId]` | 1 | [x] | |
+| `players/page` | 2 | [x] | |
+| `teams/[id]` | 0 | [x] | |
+| **`matches/[id]`** | **0** | **[x]** | `components/matches/*` |
+| `players/[id]` | 129 | [ ] | **next priority** |
+| `hallar/[id]` | 27 | [ ] | |
+| `club/[club_slug]` | 23 | [ ] | |
+| `compare/[id1]/[id2]` | 53 | [ ] | |
+| `compare/teams/[id1]` | 29 | [ ] | |
+| `compare/teams/[id1]/[id2]` | 83 | [ ] | |
+| `profile` | 66 | [ ] | uses `Widgets` |
+| `puls` | 65 | [ ] | |
+| `schema` | 79 | [ ] | |
+| `tavlingar` | 44 | [ ] | |
+| `sllm` | 44 | [ ] | |
+| `reset-password` | 15 | [ ] | |
+| `admin` | 74 | [ ] | |
+| `team/[id]/intern` | 69 | [ ] | |
+| `team/.../laguttagning/[matchid]` | 99 | [ ] | |
+| `team/.../tillganglighet/[matchid]` | 58 | [ ] | |
+| `[slug]/page` | 0 | n/a | redirect only |
+| `[slug]/intern` | — | [ ] | not audited |
+
+### Suggested order (remaining)
+
+1. [x] `matches/[id]`
+2. [ ] `players/[id]`
+3. [ ] `compare/*`, `hallar/[id]`, `club/[club_slug]`
+4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm`
+5. [ ] `admin`, team intern / laguttagning / tillgänglighet
+6. [ ] `Widgets.tsx` + embeds on migrated pages
+
+### Do not migrate (yet)
+
+- `remotion/*` — separate animation styling (~32 inline)
+- Highly dynamic tier colors — `style={{ color: … }}` or `match-ui` / `team-ui` helpers
+
+---
 
 ## Per-file workflow
 
@@ -110,19 +188,14 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 3. Extract to `components/...` if it helps.
 4. Replace `style={{}}` with classes; delete `const C = ...` when unused.
 5. Run `npm run dev` and click through the page.
-6. Commit: `style: migrate login page to Tailwind`
-
-## Do not migrate (yet)
-
-- `remotion/*` — separate animation styling
-- Highly dynamic tier colors — keep `style={{ color: divTierColor(d) }}` or move to a small map in `utils.ts`
-
-## When you are stuck
-
-1. Inspect an already-migrated file: `NavTitle.tsx`, `Footer.tsx`, `components/ui/Card.tsx`.
-2. Check tokens in `globals.css` under `@theme`.
-3. Use [Tailwind docs](https://tailwindcss.com/docs) — search “flex”, “padding”, “dark variant”.
+6. Commit: `style: migrate matches/[id] to Tailwind`
 
 ## Deprecating `lib/colors.ts`
 
 Keep it until no file imports `dark` / `light` for layout. Tier colors in `utils.ts` (`divTierColor`) can stay forever.
+
+## When you are stuck
+
+1. Inspect: `components/matches/MatchHeader.tsx`, `components/teams/TeamHero.tsx`, `components/ui/Card.tsx`.
+2. Check tokens in `globals.css` under `@theme`.
+3. Use [Tailwind docs](https://tailwindcss.com/docs).
