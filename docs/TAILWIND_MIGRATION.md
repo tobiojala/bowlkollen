@@ -92,11 +92,12 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ### Then (Phase 3 — pages, small → large)
 
-1. `login`, `legal`, `mer`
-2. `league`, `hallar`, `oljeprofiler`, `klotshopar`
-3. `teams/page`, `clubs/[bitsId]`
-4. `matches/[id]`, `players/[id]`, `teams/[id]`
-5. `app/page.tsx` — **one block at a time** (honor roll, match list, standings, …)
+1. [x] `login`, `legal`
+2. [ ] `mer`
+3. [ ] `league`, `hallar`, `oljeprofiler`, `klotshopar`
+4. [ ] `teams/page`, `clubs/[bitsId]`
+5. [ ] `matches/[id]`, `players/[id]`, `teams/[id]`
+6. [ ] `app/page.tsx` — **one block at a time** (honor roll, match list, standings, …)
 
 ## Per-file workflow
 
