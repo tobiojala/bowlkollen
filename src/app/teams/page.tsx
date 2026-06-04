@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
+import { safeClubLogoUrl } from '@/lib/club-logo-url'
 
 type Club = {
   bits_id: number
@@ -80,15 +81,13 @@ function clubInitials(name: string) {
     .split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
 }
 
-const BITS_LOGO_BASE = 'https://bits.swebowl.se/images/ClubLogo'
-
 function ClubAvatar({ bitsId, name, storedUrl, isDark, tc, tclo, ini }: {
   bitsId: number; name: string; storedUrl: string | null
   isDark: boolean; tc: string; tclo: string; ini: string
 }) {
   const [imgFailed, setImgFailed] = useState(false)
-  const src = storedUrl ?? `${BITS_LOGO_BASE}/${bitsId}.png`
-  const showImg = !imgFailed
+  const src = safeClubLogoUrl(storedUrl, bitsId)
+  const showImg = !imgFailed && !!src
 
   return (
     <div style={{

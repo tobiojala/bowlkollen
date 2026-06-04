@@ -7,7 +7,8 @@
  *   2. Get a fresh session cookie from bits.swebowl.se DevTools:
  *      - Open DevTools → Network → Fetch/XHR → any request to api.swebowl.se
  *      - Copy the full "cookie" request header value
- *   3. BITS_COOKIE="<paste>" npx tsx scripts/import-bits-teams.ts
+ *   3. Add BITS_API_KEY and BITS_COOKIE to .env.local (see .env.example)
+ *   4. npx tsx scripts/import-bits-teams.ts
  *
  * Safe to re-run — upserts on bits_team_id.
  *
@@ -48,18 +49,21 @@ if (fs.existsSync(envPath)) {
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SRK = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SRK = process.env.SUPABASE_SERVICE_ROLE_KEY
 const BITS_COOKIE  = process.env.BITS_COOKIE
-const API_KEY      = '62fcl8gPUMXSQGW1t2Y8mc2zeTk97vbd'
+const API_KEY      = process.env.BITS_API_KEY
 
 if (!SUPABASE_URL || !SUPABASE_SRK) {
   console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')
   process.exit(1)
 }
+if (!API_KEY) {
+  console.error('❌  Missing BITS_API_KEY in .env.local (BITS/Swebowl API key — never commit this)')
+  process.exit(1)
+}
 if (!BITS_COOKIE) {
   console.error('❌  Missing BITS_COOKIE env var')
   console.error('   Get it from DevTools → any api.swebowl.se request → copy the "cookie" header')
-  console.error('   Then run: BITS_COOKIE="<paste>" npx tsx scripts/import-bits-teams.ts')
   process.exit(1)
 }
 

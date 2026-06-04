@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isAppAdmin } from '@/lib/app-admin'
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next()
@@ -22,8 +23,13 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && request.nextUrl.pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    if (!isAppAdmin(user)) {
+      return NextResponse.redirect(new URL('/?error=admin_denied', request.url))
+    }
   }
 
   return response

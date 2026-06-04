@@ -4,7 +4,7 @@
  * Source: https://www.swebowl.se/vaar-verksamhet/foerbundet/foerbundsinfo/regelverk/oljeprofiler/
  *
  * Run: npx tsx scripts/seed-oil-profiles.ts
- * Requires SUPABASE_SERVICE_ROLE_KEY (or NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY) in .env.local
+ * Requires SUPABASE_SERVICE_ROLE_KEY in .env.local
  */
 
 import * as fs from 'fs'
@@ -25,7 +25,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error('❌  Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')

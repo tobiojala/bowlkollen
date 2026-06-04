@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
+import { safeClubLogoUrl } from '@/lib/club-logo-url'
 
 type Club = {
   bits_id: number
@@ -117,6 +118,8 @@ export default function ClubPage({ params }: Props) {
     ) ?? null
   }
 
+  const logoSrc = club ? safeClubLogoUrl(club.logo_url, club.bits_id) : null
+
   const bg = isDark ? '#10161e' : '#f0f2f5'
   const cardBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)'
   const cardBorder = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)'
@@ -158,13 +161,13 @@ export default function ClubPage({ params }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 64, height: 64, borderRadius: 16, flexShrink: 0, overflow: 'hidden',
-              background: club.logo_url && !logoFailed ? (isDark ? 'rgba(255,255,255,0.06)' : '#fff') : `hsla(${hue},50%,45%,0.15)`,
-              border: club.logo_url && !logoFailed ? (isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)') : `2px solid hsla(${hue},50%,45%,0.5)`,
+              background: logoSrc && !logoFailed ? (isDark ? 'rgba(255,255,255,0.06)' : '#fff') : `hsla(${hue},50%,45%,0.15)`,
+              border: logoSrc && !logoFailed ? (isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)') : `2px solid hsla(${hue},50%,45%,0.5)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 18, fontWeight: 900, color: `hsl(${hue},50%,55%)`,
             }}>
-              {club.logo_url && !logoFailed
-                ? <img src={club.logo_url} alt={club.name} onError={() => setLogoFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+              {logoSrc && !logoFailed
+                ? <img src={logoSrc} alt={club.name} onError={() => setLogoFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
                 : initials
               }
             </div>

@@ -27,7 +27,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SRK = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SRK = process.env.SUPABASE_SERVICE_ROLE_KEY
 const FORCE        = process.argv.includes('--force')
 const LOGO_BASE    = 'https://bits.swebowl.se/images/ClubLogo'
 const CONCURRENCY  = 10 // parallel HEAD requests

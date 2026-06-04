@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server'
+import { assertScoringPageUrl } from '@/lib/allowed-fetch-url'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const url = searchParams.get('url')
-  if (!url) return NextResponse.json({ error: 'No URL' }, { status: 400 })
+  const rawUrl = searchParams.get('url')
+  if (!rawUrl) return NextResponse.json({ error: 'No URL' }, { status: 400 })
+
+  let target: URL
   try {
-    const res = await fetch(url, {
+    target = assertScoringPageUrl(rawUrl)
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Invalid URL' }, { status: 400 })
+  }
+
+  try {
+    const res = await fetch(target.toString(), {
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
         'Accept': 'text/html,application/xhtml+xml',
         'Referer': 'https://scoring.se/',
       },
-      next: { revalidate: 0 }
+      next: { revalidate: 0 },
     })
     if (!res.ok) return NextResponse.json({ error: 'HTTP ' + res.status }, { status: 500 })
     const html = await res.text()
 
-    // Parse the key variables from the JS
     const alleyMatch = html.match(/alleyID\s*=\s*(\d+)/)
     const lanesMatch = html.match(/alleyLanes\s*=\s*(\d+)/)
     const sessionMatch = html.match(/useSession\s*=\s*(\d+)/)
