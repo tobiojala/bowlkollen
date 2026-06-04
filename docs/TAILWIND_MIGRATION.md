@@ -90,6 +90,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 - [x] `FollowButton`, `NextMatchPreview`, `MatchDayStrip`
 - [x] `TeamTableWidget` (full)
 - [x] `PlayerCard` — drawer/chrome only; holographic card faces keep inline `style` for export/animation
+- [x] `HomePageSkeleton`, `TeamZoneCard` (home-only; zone bar keeps dynamic gradient `style`)
 
 ### Then (Phase 3 — pages, small → large)
 
