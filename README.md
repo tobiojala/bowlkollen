@@ -20,6 +20,25 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Security setup (required for production)
+
+After deploying or cloning, complete these steps so admin access and live scoring are properly locked down:
+
+1. **Environment variables** — Copy `.env.example` to `.env.local` and set at least:
+   - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `ADMIN_EMAILS` — comma-separated emails allowed to use `/admin` (must match Supabase Auth users)
+   - Optional: `ADMIN_USER_IDS`, `SUPABASE_SERVICE_ROLE_KEY` (scripts only; never use a `NEXT_PUBLIC_` prefix)
+
+2. **Rotate the BITS API key** — If the repo ever contained a committed key, request a new key from BITS/Swebowl and set `BITS_API_KEY` in `.env.local` for import scripts (`scripts/import-bits-teams.ts`).
+
+3. **Supabase RLS** — In the Supabase SQL editor, run `supabase/rls_security.sql`. Then either:
+   - Insert your user into `app_admins`, or
+   - Set `app_metadata.role` to `"admin"` on your auth user in the Supabase dashboard.
+
+   Before running the migration, remove any old policies that allow unrestricted writes on `matches`, `match_lineups`, and `match_results`.
+
+Until step 3 is done, `/admin` is blocked in the app for non-admins, but direct Supabase client writes may still succeed if RLS is too permissive.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

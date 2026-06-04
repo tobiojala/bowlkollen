@@ -75,6 +75,10 @@ export default function AdminPage() {
   }
 
   const saveScore = async (teamId: string, bord: number, position: number, gameIndex: number, score: number) => {
+    if (!Number.isFinite(score) || score < 0 || score > 300) {
+      flash('Ogiltig poäng — måste vara 0–300')
+      return
+    }
     const supabase = createClient()
     const player = lineup.find(l => l.team_id === teamId && l.bord === bord && l.position === position)
     if (!player) return

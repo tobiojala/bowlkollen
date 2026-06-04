@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server'
+import { BITS_FETCH_HOSTS, parseAllowedHttpsUrl } from '@/lib/allowed-fetch-url'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const url = searchParams.get('url')
-  const method = searchParams.get('method') || 'GET'
-  if (!url) return NextResponse.json({ error: 'No URL' }, { status: 400 })
+  const rawUrl = searchParams.get('url')
+  const method = (searchParams.get('method') || 'GET').toUpperCase()
+
+  if (!rawUrl) return NextResponse.json({ error: 'No URL' }, { status: 400 })
+  if (method !== 'GET' && method !== 'POST') {
+    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+  }
+
+  let target: URL
   try {
-    const res = await fetch(url, {
+    target = parseAllowedHttpsUrl(rawUrl, BITS_FETCH_HOSTS)
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Invalid URL' }, { status: 400 })
+  }
+
+  try {
+    const res = await fetch(target.toString(), {
       method,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
@@ -16,7 +29,7 @@ export async function GET(request: Request) {
         'Referer': 'https://bits.swebowl.se/',
       },
       ...(method === 'POST' ? { body: JSON.stringify({ search: '' }) } : {}),
-      next: { revalidate: 0 }
+      next: { revalidate: 0 },
     })
     const text = await res.text()
     return NextResponse.json({ html: text.slice(0, 50000), status: res.status })

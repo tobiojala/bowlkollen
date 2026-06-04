@@ -13,7 +13,7 @@ type Member = {
   user_id: string
   role: string
   status: string
-  profiles?: { full_name: string; avatar_url: string; email: string }
+  profiles?: { full_name: string; avatar_url: string }
 }
 
 type Post = {
@@ -119,7 +119,7 @@ export default function InternPage({ params }: Props) {
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, email')
+            .select('id, full_name, avatar_url')
             .in('id', userIds)
           if (profileData) {
             const map: Record<string, any> = {}
@@ -412,7 +412,7 @@ export default function InternPage({ params }: Props) {
                 {members.filter(m => m.status === 'pending').map(m => (
                   <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                     <div style={{ flex: 1, fontSize: 13, color: C.text }}>
-                    {profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Okänd'}
+                    {profiles[m.user_id]?.full_name || (m.user_id === user?.id ? user?.email : null) || 'Okänd'}
                   </div>
                     <button onClick={async () => {
                       const supabase = createClient()
@@ -446,12 +446,12 @@ export default function InternPage({ params }: Props) {
                     <img src={profiles[m.user_id].avatar_url} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                      {(profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || '?')[0].toUpperCase()}
+                      {(profiles[m.user_id]?.full_name || (m.user_id === user?.id ? user?.email : null) || '?')[0].toUpperCase()}
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                      {isMe ? 'Du' : (profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Lagmedlem')}
+                      {isMe ? 'Du' : (profiles[m.user_id]?.full_name || 'Lagmedlem')}
                     </div>
                     <div style={{ fontSize: 11, color: C.textMuted }}>{roleLabel(m.role)}</div>
                   </div>

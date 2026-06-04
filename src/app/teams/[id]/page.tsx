@@ -12,6 +12,7 @@ import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
 import TopPerformers from '@/components/TopPerformers'
+import { safeClubLogoUrl } from '@/lib/club-logo-url'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null; description: string | null; contact_email: string | null; contact_phone: string | null; home_hall: string | null; website: string | null; instagram: string | null; facebook: string | null; logo_url: string | null }
@@ -132,7 +133,10 @@ export default function TeamPage({ params }: Props) {
         // Fetch the club's BITS logo by matching club name
         if ((t as any).club) {
           supabase.from('bits_clubs').select('logo_url').eq('name', (t as any).club).limit(1)
-            .then(({ data }) => { if (data?.[0]?.logo_url) setClubLogoUrl(data[0].logo_url) })
+            .then(({ data }) => {
+              const safe = safeClubLogoUrl(data?.[0]?.logo_url ?? null)
+              if (safe) setClubLogoUrl(safe)
+            })
         }
         if ((t as any).club_slug) {
           supabase.from('teams').select('id, name, club_slug, team_path')
