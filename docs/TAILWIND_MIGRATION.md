@@ -93,8 +93,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **12** (~39%) |
-| Files importing `@/lib/colors` | **18** |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **13** (~42%) |
+| Files importing `@/lib/colors` | **17** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
 
@@ -121,6 +121,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `PlayerCard` | 61 | [~] chrome done; card face animation inline |
 | `teams/*` (hero, tabs, H2H, …) | low | [x] |
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
+| `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
 | `SeasonTimeline` | 24 | [ ] |
 | `TopPerformers` | 9 | [ ] |
 | `widgets/Widgets.tsx` | 114 | [ ] |
@@ -146,7 +147,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `players/page` | 2 | [x] | |
 | `teams/[id]` | 0 | [x] | |
 | **`matches/[id]`** | **0** | **[x]** | `components/matches/*` |
-| `players/[id]` | 129 | [ ] | **next priority** |
+| **`players/[id]`** | **0** | **[x]** | `components/players/*`; `PlayerCard` drawer still legacy |
 | `hallar/[id]` | 27 | [ ] | |
 | `club/[club_slug]` | 23 | [ ] | |
 | `compare/[id1]/[id2]` | 53 | [ ] | |
@@ -167,9 +168,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 
 ### Suggested order (remaining)
 
-1. [x] `matches/[id]`
-2. [ ] `players/[id]`
-3. [ ] `compare/*`, `hallar/[id]`, `club/[club_slug]`
+1. [x] `matches/[id]`, [x] `players/[id]`
+2. [ ] `compare/*`, `hallar/[id]`, `club/[club_slug]`
 4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm`
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
 6. [ ] `Widgets.tsx` + embeds on migrated pages
