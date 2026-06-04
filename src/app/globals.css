@@ -10,6 +10,30 @@
 .mobile-page-title { display: none; }
 @media (max-width: 767px) { .mobile-page-title { display: block; } }
 
+/* Light entrance animation (CSS only — faster than Framer Motion on list pages) */
+@keyframes bk-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bk-stagger-item {
+  animation: bk-fade-up 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bk-stagger-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ── Trading card effects ─────────────────────────────────────────────────── */
 @keyframes shimmerSweep {
   0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }

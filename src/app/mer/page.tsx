@@ -1,12 +1,7 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { MapPin, ShoppingBag, Droplets } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
-
-const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
 const ITEMS: {
   href: string
@@ -47,39 +42,34 @@ export default function MerPage() {
 
       <div className="flex flex-col gap-3 px-4 py-2">
         {ITEMS.map(({ href, icon: Icon, label, sub, description }, i) => (
-          <motion.div
+          <Link
             key={href}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...SPRING, delay: i * 0.07 }}
+            href={href}
+            style={{ animationDelay: `${i * 35}ms` }}
+            className={cn(
+              'bk-stagger-item flex items-center gap-4 rounded-[18px] border p-4 no-underline',
+              'border-light-border bg-light-card',
+              'dark:border-dark-border dark:bg-dark-card',
+              'transition-transform duration-150 active:scale-[0.98]',
+            )}
           >
-            <Link
-              href={href}
+            <div
               className={cn(
-                'flex items-center gap-4 rounded-[18px] border p-4 no-underline',
-                'border-light-border bg-light-card',
-                'dark:border-dark-border dark:bg-dark-card',
-                'active:scale-[0.97] transition-transform',
+                'flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]',
+                'border border-gold/25 bg-gold/10',
               )}
             >
-              <div
-                className={cn(
-                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]',
-                  'border border-gold/25 bg-gold/10',
-                )}
-              >
-                <Icon size={22} className="text-gold" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-base leading-tight font-extrabold bk-text-primary">{label}</div>
-                <div className="mt-0.5 text-xs text-dark-muted">{sub}</div>
-                <div className="mt-1 text-xs leading-snug text-dark-muted">{description}</div>
-              </div>
-              <span className="shrink-0 text-[22px] text-dark-muted" aria-hidden>
-                ›
-              </span>
-            </Link>
-          </motion.div>
+              <Icon size={22} className="text-gold" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-base leading-tight font-extrabold bk-text-primary">{label}</div>
+              <div className="mt-0.5 text-xs text-dark-muted">{sub}</div>
+              <div className="mt-1 text-xs leading-snug text-dark-muted">{description}</div>
+            </div>
+            <span className="shrink-0 text-[22px] text-dark-muted" aria-hidden>
+              ›
+            </span>
+          </Link>
         ))}
       </div>
     </div>
