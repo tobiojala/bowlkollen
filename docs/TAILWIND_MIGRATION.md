@@ -96,9 +96,9 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 1. [x] `login`, `legal`
 2. [x] `mer`
 3. [x] `league`, [x] `hallar`, [x] `oljeprofiler`, [x] `klotshopar`
-4. [ ] `teams/page`, `clubs/[bitsId]`
+4. [x] `teams/page`, `clubs/[bitsId]`, `players/page`
 5. [ ] `matches/[id]`, `players/[id]`, `teams/[id]`
-6. [ ] `app/page.tsx` — **one block at a time** (honor roll, match list, standings, …)
+6. [ ] `app/page.tsx` — **in progress** (recent/upcoming match groups + SLLM promo done; hero carousel still inline)
 
 ## Per-file workflow
 

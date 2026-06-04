@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
+import { ChevronRight, Users } from 'lucide-react'
+import { cn } from '@/lib/cn'
 
 type Club = {
   bits_id: number
@@ -55,10 +57,7 @@ function teamTypeLabel(t: BitsTeam): string {
 }
 
 export default function ClubPage({ params }: Props) {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
   const router = useRouter()
-
   const [club, setClub] = useState<Club | null>(null)
   const [bitsTeams, setBitsTeams] = useState<BitsTeam[]>([])
   const [ourTeams, setOurTeams] = useState<OurTeam[]>([])
@@ -70,31 +69,38 @@ export default function ClubPage({ params }: Props) {
       const numId = Number(bitsId)
       const supabase = createClient()
 
-      // Fetch club first — need the name to filter teams table
       const { data: c } = await supabase
         .from('bits_clubs')
         .select('bits_id, name, county, hall_name, is_active, logo_url')
-        .eq('bits_id', numId).single()
+        .eq('bits_id', numId)
+        .single()
 
-      if (!c) { setLoading(false); return }
+      if (!c) {
+        setLoading(false)
+        return
+      }
       setClub(c as Club)
 
-      // Now fetch bits_teams + matching teams filtered by club name, + matches for division
       const [{ data: bt }, { data: ot }, { data: matchDiv }] = await Promise.all([
-        supabase.from('bits_teams')
+        supabase
+          .from('bits_teams')
           .select('bits_team_id, bits_club_id, name, hall_name, team_type, team_type_desc, team_alias')
-          .eq('bits_club_id', numId).order('name'),
-        supabase.from('teams')
+          .eq('bits_club_id', numId)
+          .order('name'),
+        supabase
+          .from('teams')
           .select('id, name, club, club_slug, team_path')
           .eq('club', (c as Club).name),
-        supabase.from('matches')
+        supabase
+          .from('matches')
           .select('home_team_id, away_team_id, division')
-          .not('division', 'is', null).eq('status', 'completed').limit(200),
+          .not('division', 'is', null)
+          .eq('status', 'completed')
+          .limit(200),
       ])
 
-      // Build teamId → division map
       const divMap: Record<string, string> = {}
-      matchDiv?.forEach((m: any) => {
+      matchDiv?.forEach((m: { home_team_id?: string; away_team_id?: string; division?: string }) => {
         if (m.division) {
           if (m.home_team_id) divMap[m.home_team_id] = m.division
           if (m.away_team_id) divMap[m.away_team_id] = m.division
@@ -102,200 +108,218 @@ export default function ClubPage({ params }: Props) {
       })
 
       if (bt) setBitsTeams(bt as BitsTeam[])
-      if (ot) setOurTeams((ot as any[]).map(t => ({ ...t, division: divMap[t.id] ?? null })))
+      if (ot) setOurTeams((ot as OurTeam[]).map(t => ({ ...t, division: divMap[t.id] ?? null })))
       setLoading(false)
     })
   }, [params])
 
-  // Match a bits team to one of our teams (by name similarity)
   function findOurTeam(bt: BitsTeam): OurTeam | null {
     const n = bt.name.toLowerCase()
-    return ourTeams.find(t =>
-      t.name.toLowerCase() === n ||
-      t.name.toLowerCase().includes(n) ||
-      n.includes(t.name.toLowerCase())
-    ) ?? null
+    return (
+      ourTeams.find(
+        t =>
+          t.name.toLowerCase() === n ||
+          t.name.toLowerCase().includes(n) ||
+          n.includes(t.name.toLowerCase()),
+      ) ?? null
+    )
   }
 
-  const bg = isDark ? '#10161e' : '#f0f2f5'
-  const cardBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)'
-  const cardBorder = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)'
-  const textPrimary = isDark ? '#ffffff' : '#1a2535'
-  const textSecondary = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)'
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-light-bg font-sans dark:bg-dark-bg">
+        <div className="text-sm text-dark-muted">Laddar...</div>
+      </main>
+    )
+  }
 
-  if (loading) return (
-    <main style={{ minHeight: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ color: textSecondary }}>Laddar...</div>
-    </main>
-  )
+  if (!club) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-light-bg font-sans dark:bg-dark-bg">
+        <div className="text-sm text-dark-muted">Klubben hittades inte</div>
+      </main>
+    )
+  }
 
-  if (!club) return (
-    <main style={{ minHeight: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ color: textSecondary }}>Klubben hittades inte</div>
-    </main>
-  )
-
-  const initials = club.name.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
+  const initials = club.name
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .slice(0, 3)
+    .toUpperCase()
   const hue = club.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
   const teamsWithData = bitsTeams.filter(bt => findOurTeam(bt) !== null)
+  const showLogo = club.logo_url && !logoFailed
 
   return (
-    <main style={{ minHeight: '100vh', background: bg, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
-
-        {/* Header */}
-        <div style={{
-          background: isDark ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)',
-          padding: '20px 20px 24px',
-        }}>
-          <button onClick={() => router.push('/teams')} style={{
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontSize: 12, color: textSecondary, display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20,
-          }}>
+    <main className="min-h-screen bg-light-bg pb-12 font-sans dark:bg-dark-bg">
+      <div className="mx-auto max-w-app">
+        <div
+          className={cn(
+            'px-5 pt-5 pb-6',
+            'bg-linear-to-br from-[#e8f0f8] to-[#d0e0f0]',
+            'dark:from-[#0d1a2e] dark:to-[#1a2840]',
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => router.push('/teams')}
+            className="mb-5 inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-xs text-dark-muted"
+          >
             ← Alla klubbar
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: 16, flexShrink: 0, overflow: 'hidden',
-              background: club.logo_url && !logoFailed ? (isDark ? 'rgba(255,255,255,0.06)' : '#fff') : `hsla(${hue},50%,45%,0.15)`,
-              border: club.logo_url && !logoFailed ? (isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)') : `2px solid hsla(${hue},50%,45%,0.5)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, fontWeight: 900, color: `hsl(${hue},50%,55%)`,
-            }}>
-              {club.logo_url && !logoFailed
-                ? <img src={club.logo_url} alt={club.name} onError={() => setLogoFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
-                : initials
+          <div className="flex items-center gap-4">
+            <div
+              className={cn(
+                'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-lg font-black',
+                showLogo
+                  ? 'border border-black/10 bg-white dark:border-white/12 dark:bg-white/6'
+                  : 'border-2',
+              )}
+              style={
+                showLogo
+                  ? undefined
+                  : {
+                      background: `hsla(${hue},50%,45%,0.15)`,
+                      borderColor: `hsla(${hue},50%,45%,0.5)`,
+                      color: `hsl(${hue},50%,55%)`,
+                    }
               }
+            >
+              {showLogo ? (
+                <img
+                  src={club.logo_url!}
+                  alt={club.name}
+                  onError={() => setLogoFailed(true)}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                initials
+              )}
             </div>
 
             <div>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: textPrimary, marginBottom: 4 }}>
-                {club.name}
-              </h1>
-              <div style={{ fontSize: 13, color: textSecondary }}>
+              <h1 className="m-0 mb-1 text-[22px] font-black bk-text-primary">{club.name}</h1>
+              <div className="text-[13px] text-dark-muted">
                 {[club.county, club.hall_name].filter(Boolean).join(' · ')}
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(245,194,0,0.12)', border: '1px solid rgba(245,194,0,0.25)',
-                  borderRadius: 8, padding: '4px 10px',
-                }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#f5c200' }}>{bitsTeams.length} lag</span>
-                </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="inline-flex items-center rounded-lg border border-gold/25 bg-gold/12 px-2.5 py-1 text-[11px] font-extrabold text-gold">
+                  {bitsTeams.length} lag
+                </span>
                 {teamsWithData.length > 0 && (
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    background: 'rgba(56,160,136,0.12)', border: '1px solid rgba(56,160,136,0.25)',
-                    borderRadius: 8, padding: '4px 10px',
-                  }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#38a088' }}>{teamsWithData.length} med resultat</span>
-                  </div>
+                  <span className="inline-flex items-center rounded-lg border border-[#38a088]/25 bg-[#38a088]/12 px-2.5 py-1 text-[11px] font-extrabold text-[#38a088]">
+                    {teamsWithData.length} med resultat
+                  </span>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Teams list */}
-        <div style={{ padding: '16px 12px' }}>
+        <div className="px-3 pt-4">
           {bitsTeams.length === 0 ? (
-            <div style={{
-              textAlign: 'center', padding: '48px 24px',
-              background: cardBg, border: cardBorder, borderRadius: 16,
-            }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🎳</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: textPrimary, marginBottom: 6 }}>
-                Inga aktiva lag
-              </div>
-              <div style={{ fontSize: 13, color: textSecondary }}>
+            <div
+              className={cn(
+                'rounded-2xl border px-6 py-12 text-center',
+                'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+              )}
+            >
+              <div className="mb-3 text-[32px]">🎳</div>
+              <div className="mb-1.5 text-[15px] font-bold bk-text-primary">Inga aktiva lag</div>
+              <div className="text-[13px] text-dark-muted">
                 Den här klubben har inga registrerade lag i BITS just nu
               </div>
             </div>
           ) : (
             <>
-              <div style={{ fontSize: 11, fontWeight: 800, color: textSecondary, letterSpacing: 1.5, textTransform: 'uppercase', padding: '0 4px 12px' }}>
+              <div className="px-1 pb-3 text-[11px] font-extrabold tracking-widest text-dark-muted uppercase">
                 Lag ({bitsTeams.length})
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {bitsTeams.map(bt => {
                   const ourTeam = findOurTeam(bt)
-                  const href = ourTeam?.club_slug && ourTeam?.team_path
-                    ? `/${ourTeam.club_slug}/${ourTeam.team_path}`
-                    : ourTeam ? `/teams/${ourTeam.id}` : null
+                  const href =
+                    ourTeam?.club_slug && ourTeam?.team_path
+                      ? `/${ourTeam.club_slug}/${ourTeam.team_path}`
+                      : ourTeam
+                        ? `/teams/${ourTeam.id}`
+                        : null
                   const typeLabel = teamTypeLabel(bt)
+                  const divClr = ourTeam?.division ? divisionColor(ourTeam.division) : null
 
                   const inner = (
-                    <div style={{
-                      background: cardBg, border: cardBorder, borderRadius: 16,
-                      padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
-                      boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.06)',
-                      opacity: ourTeam ? 1 : 0.65,
-                    }}>
-                      {/* Type badge */}
-                      <div style={{
-                        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                        background: ourTeam
-                          ? isDark ? 'rgba(56,160,136,0.12)' : 'rgba(56,160,136,0.10)'
-                          : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                        border: ourTeam ? '1px solid rgba(56,160,136,0.30)' : cardBorder,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ourTeam ? '#38a088' : textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                          <circle cx="9" cy="7" r="4"/>
-                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
+                    <div
+                      className={cn(
+                        'flex items-center gap-3 rounded-2xl border p-4',
+                        'border-light-border bg-light-card shadow-sm',
+                        'dark:border-dark-border dark:bg-dark-card dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]',
+                        !ourTeam && 'opacity-65',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
+                          ourTeam
+                            ? 'border-[#38a088]/30 bg-[#38a088]/10 dark:bg-[#38a088]/12'
+                            : 'border-light-border bg-black/5 dark:border-dark-border dark:bg-white/5',
+                        )}
+                      >
+                        <Users
+                          size={18}
+                          className={ourTeam ? 'text-[#38a088]' : 'text-dark-muted'}
+                          strokeWidth={2}
+                        />
                       </div>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: textPrimary, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-[3px] truncate text-[15px] font-bold bk-text-primary">
                           {bt.name}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          {ourTeam?.division && (
-                            <span style={{
-                              fontSize: 10, fontWeight: 800,
-                              color: divisionColor(ourTeam.division),
-                              background: divisionColor(ourTeam.division) + '20',
-                              borderRadius: 5, padding: '2px 7px',
-                            }}>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {ourTeam?.division && divClr ? (
+                            <span
+                              className="rounded-[5px] px-[7px] py-0.5 text-[10px] font-extrabold"
+                              style={{
+                                color: divClr,
+                                background: `${divClr}20`,
+                              }}
+                            >
                               {ourTeam.division}
                             </span>
-                          )}
-                          {typeLabel && !ourTeam?.division && (
-                            <span style={{
-                              fontSize: 10, fontWeight: 700,
-                              color: ourTeam ? '#38a088' : textSecondary,
-                              background: ourTeam ? 'rgba(56,160,136,0.12)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-                              borderRadius: 5, padding: '2px 7px',
-                            }}>
+                          ) : null}
+                          {typeLabel && !ourTeam?.division ? (
+                            <span
+                              className={cn(
+                                'rounded-[5px] px-[7px] py-0.5 text-[10px] font-bold',
+                                ourTeam
+                                  ? 'bg-[#38a088]/12 text-[#38a088]'
+                                  : 'bg-black/6 text-dark-muted dark:bg-white/6',
+                              )}
+                            >
                               {typeLabel}
                             </span>
-                          )}
-                          {bt.hall_name && (
-                            <span style={{ fontSize: 11, color: textSecondary }}>{bt.hall_name}</span>
-                          )}
-                          {!ourTeam && (
-                            <span style={{ fontSize: 10, color: textSecondary, fontStyle: 'italic' }}>Inte i Bowlkollen än</span>
-                          )}
+                          ) : null}
+                          {bt.hall_name ? (
+                            <span className="text-[11px] text-dark-muted">{bt.hall_name}</span>
+                          ) : null}
+                          {!ourTeam ? (
+                            <span className="text-[10px] text-dark-muted italic">
+                              Inte i Bowlkollen än
+                            </span>
+                          ) : null}
                         </div>
                       </div>
 
-                      {ourTeam && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                      )}
+                      {ourTeam ? <ChevronRight size={14} className="shrink-0 text-dark-muted" /> : null}
                     </div>
                   )
 
                   return href ? (
-                    <a key={bt.bits_team_id} href={href} style={{ textDecoration: 'none', display: 'block' }}>
+                    <Link key={bt.bits_team_id} href={href} className="block no-underline">
                       {inner}
-                    </a>
+                    </Link>
                   ) : (
                     <div key={bt.bits_team_id}>{inner}</div>
                   )
@@ -304,7 +328,6 @@ export default function ClubPage({ params }: Props) {
             </>
           )}
         </div>
-
       </div>
     </main>
   )

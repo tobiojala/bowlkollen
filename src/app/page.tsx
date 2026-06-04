@@ -8,6 +8,7 @@ import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
 import HonorRoll from '@/components/home/HonorRoll'
 import MiniStandings from '@/components/home/MiniStandings'
+import { MatchDateGroup } from '@/components/home/MatchDateGroup'
 import MatchRow from '@/components/home/MatchRow'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1591,107 +1592,65 @@ export default function Home() {
 
         {/* ── Recent results ───────────────────────────────────────────────────── */}
         {recentDates.length > 0 && (
-          <div style={{ padding: '16px 16px 0' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
+          <div className="px-4 pt-4">
+            <div className="mb-2.5 text-[10px] font-extrabold tracking-widest text-dark-muted">
               SENASTE RESULTAT
             </div>
-            {recentDates.map(date => {
-              const all        = recentByDate[date]
-              const isExpanded = expandedDates.has(date)
-              const visible    = isExpanded ? all : all.slice(0, LIMIT)
-              const hidden     = all.length - LIMIT
-              return (
-                <div key={date} style={{ marginBottom: 12, borderRadius: 14,
-                  border: '1px solid ' + C.border, overflow: 'hidden' }}>
-                  {/* Card header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
-                    borderBottom: '1px solid ' + C.border,
-                    background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dayDotColor(date), flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{dateLabel(date)}</span>
-                    <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 2 }}>· {all.length} matcher</span>
-                  </div>
-                  {/* Rows */}
-                  {visible.map((m, i) => (
-                    <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} now={now} />
-                    </div>
-                  ))}
-                  {/* Expand */}
-                  {hidden > 0 && (
-                    <button onClick={() => toggleDate(date)}
-                      style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none',
-                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 11, fontWeight: 600,
-                        color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                        WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
-                      {isExpanded ? '↑ Visa färre' : `Visa alla ${all.length} matcher ↓`}
-                    </button>
-                  )}
-                </div>
-              )
-            })}
+            {recentDates.map(date => (
+              <MatchDateGroup
+                key={date}
+                date={date}
+                matches={recentByDate[date]}
+                now={now}
+                isExpanded={expandedDates.has(date)}
+                limit={LIMIT}
+                onToggle={() => toggleDate(date)}
+              />
+            ))}
           </div>
         )}
 
         {/* ── Remaining upcoming ───────────────────────────────────────────────── */}
         {upcomingDates.length > 0 && (
-          <div style={{ padding: '16px 16px 0' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
+          <div className="px-4 pt-4">
+            <div className="mb-2.5 text-[10px] font-extrabold tracking-widest text-dark-muted">
               KOMMANDE MATCHER
             </div>
             {upcomingDates.map(date => {
-              const all        = upcomingByDate[date]
-              const key        = 'up-' + date
-              const isExpanded = expandedDates.has(key)
-              const visible    = isExpanded ? all : all.slice(0, LIMIT)
-              const hidden     = all.length - LIMIT
+              const key = `up-${date}`
               return (
-                <div key={date} style={{ marginBottom: 12, borderRadius: 14,
-                  border: '1px solid ' + C.border, overflow: 'hidden' }}>
-                  {/* Card header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
-                    borderBottom: '1px solid ' + C.border,
-                    background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 2, background: dayDotColor(date), flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{dateLabel(date)}</span>
-                    <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 2 }}>· {all.length} matcher</span>
-                  </div>
-                  {/* Rows */}
-                  {visible.map((m, i) => (
-                    <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} now={now} />
-                    </div>
-                  ))}
-                  {/* Expand */}
-                  {hidden > 0 && (
-                    <button onClick={() => toggleDate(key)}
-                      style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none',
-                        borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 11, fontWeight: 600,
-                        color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                        WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
-                      {isExpanded ? '↑ Visa färre' : `Visa alla ${all.length} matcher ↓`}
-                    </button>
-                  )}
-                </div>
+                <MatchDateGroup
+                  key={date}
+                  date={date}
+                  matches={upcomingByDate[date]}
+                  now={now}
+                  isExpanded={expandedDates.has(key)}
+                  limit={LIMIT}
+                  onToggle={() => toggleDate(key)}
+                  squareDot
+                />
               )
             })}
           </div>
         )}
 
         {/* ── SLLM promo ───────────────────────────────────────────────────────── */}
-        <a href="/sllm" style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          margin: '16px 16px 0', padding: '14px 16px',
-          borderRadius: 14, textDecoration: 'none',
-          background: isDark ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.08)',
-          border: '1px solid rgba(245,194,0,0.22)',
-        } as any}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#f5c200', letterSpacing: 1.4, marginBottom: 4 }}>KOMMANDE TURNERING</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: C.text, lineHeight: 1.2 }}>Storm Lucky Larsen Masters</div>
-            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>22–30 aug · Lucky Bowl, Helsingborg</div>
+        <a
+          href="/sllm"
+          className="mx-4 mt-4 flex items-center gap-3 rounded-[14px] border border-gold/22 bg-gold/[0.08] px-4 py-3.5 no-underline dark:bg-gold/[0.07]"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 text-[9px] font-extrabold tracking-wide text-gold">
+              KOMMANDE TURNERING
+            </div>
+            <div className="text-sm leading-tight font-extrabold bk-text-primary">
+              Storm Lucky Larsen Masters
+            </div>
+            <div className="mt-[3px] text-[11px] text-dark-muted">
+              22–30 aug · Lucky Bowl, Helsingborg
+            </div>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', flexShrink: 0 }}>Mer info →</div>
+          <div className="shrink-0 text-[11px] font-bold text-gold">Mer info →</div>
         </a>
 
         {/* ── Din nästa match compact strip (when hidden) / Login CTA ──────────── */}
