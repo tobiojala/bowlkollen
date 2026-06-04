@@ -15,11 +15,14 @@ export type CompareHeroTeam = {
   name: string
   city?: string | null
   href?: string
+  isFavorite?: boolean
 }
 
 type Props = {
   team1: CompareHeroTeam
   team2?: CompareHeroTeam | null
+  /** Split last word in team accent color (full compare page). */
+  nameLayout?: 'compact' | 'split'
 }
 
 function TeamAvatar({
@@ -47,31 +50,63 @@ function TeamAvatar({
   )
 }
 
+function TeamNameBlock({
+  name,
+  accentColor,
+  layout,
+}: {
+  name: string
+  accentColor: string
+  layout: 'compact' | 'split'
+}) {
+  const sn = shortName(name)
+  if (layout === 'compact') {
+    return (
+      <div className="text-center">
+        <div className="text-sm font-black leading-tight text-light-text dark:text-dark-text">
+          {sn}
+        </div>
+      </div>
+    )
+  }
+  const words = sn.split(' ')
+  const head = words.slice(0, -1).join(' ') || sn
+  const tail = words.slice(-1)[0]
+  return (
+    <div className="text-center">
+      <div className="text-[13px] font-black leading-tight text-light-text dark:text-dark-text">
+        {head}
+      </div>
+      <div className="text-xs font-bold" style={{ color: accentColor }}>
+        {tail}
+      </div>
+    </div>
+  )
+}
+
 function TeamSide({
   team,
   dark,
   filled,
   align,
   delay,
+  nameLayout,
 }: {
   team: CompareHeroTeam
   dark: boolean
   filled: boolean
   align: 'left' | 'right'
   delay: number
+  nameLayout: 'compact' | 'split'
 }) {
   const col = compareTeamColors(team.name, dark)
   const content = (
     <>
       <TeamAvatar name={team.name} dark={dark} />
-      <div className="text-center">
-        <div className="text-sm font-black leading-tight text-light-text dark:text-dark-text">
-          {shortName(team.name)}
-        </div>
-        {team.city && (
-          <div className="mt-0.5 text-[10px] text-dark-muted">{team.city}</div>
-        )}
-      </div>
+      <TeamNameBlock name={team.name} accentColor={col.border} layout={nameLayout} />
+      {team.city && (
+        <div className="mt-0.5 text-[10px] text-dark-muted">{team.city}</div>
+      )}
     </>
   )
 
@@ -86,18 +121,30 @@ function TeamSide({
       )}
       style={
         filled
-          ? { background: compareHeroGradient(col.bg, dark) }
+          ? { background: compareHeroGradient(col.bg, dark, align) }
           : undefined
       }
     >
       {filled ? (
-        team.href ? (
-          <a href={team.href} className="flex flex-col items-center gap-2 no-underline">
-            {content}
-          </a>
-        ) : (
-          <div className="flex flex-col items-center gap-2">{content}</div>
-        )
+        <>
+          {team.href ? (
+            <a href={team.href} className="flex flex-col items-center gap-2 no-underline">
+              {content}
+            </a>
+          ) : (
+            <div className="flex flex-col items-center gap-2">{content}</div>
+          )}
+          {team.isFavorite && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ ...COMPARE_SPRING, delay: 0.6 }}
+              className="rounded-[20px] border border-gold/30 bg-gold/[0.08] px-2.5 py-0.5 text-[9px] font-extrabold tracking-wide text-gold"
+            >
+              FAVORIT
+            </motion.div>
+          )}
+        </>
       ) : (
         <>
           <motion.div
@@ -117,16 +164,30 @@ function TeamSide({
   )
 }
 
-export function CompareSplitHero({ team1, team2 }: Props) {
+export function CompareSplitHero({ team1, team2, nameLayout = 'compact' }: Props) {
   const { theme } = useTheme()
   const dark = theme === 'dark'
 
   return (
     <div className="relative flex h-[220px] overflow-hidden">
-      <TeamSide team={team1} dark={dark} filled align="left" delay={0.05} />
+      <TeamSide
+        team={team1}
+        dark={dark}
+        filled
+        align="left"
+        delay={0.05}
+        nameLayout={nameLayout}
+      />
 
       {team2 ? (
-        <TeamSide team={team2} dark={dark} filled align="right" delay={0.05} />
+        <TeamSide
+          team={team2}
+          dark={dark}
+          filled
+          align="right"
+          delay={0.05}
+          nameLayout={nameLayout}
+        />
       ) : (
         <motion.div
           initial={{ x: 40, opacity: 0 }}

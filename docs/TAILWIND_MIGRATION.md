@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `compare/teams/[id1]` picker migration. Regenerate counts with:_
+_Last updated: after `compare/teams/[id1]/[id2]` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,7 +93,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **14** (~45%) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **15** (~48%) |
 | Files importing `@/lib/colors` | **16** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
@@ -170,7 +170,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 ### Suggested order (remaining)
 
 1. [x] `matches/[id]`, [x] `players/[id]`
-2. [~] `compare/*` — picker done; `compare/teams/[id1]/[id2]`, `compare/[id1]/[id2]` remain
+2. [~] `compare/*` — team compare done; `compare/[id1]/[id2]` (players) remains
 3. [ ] `hallar/[id]`, `club/[club_slug]`
 4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm`
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
