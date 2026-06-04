@@ -1,13 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { cn } from '@/lib/cn'
+import { Button, Card } from '@/components/ui'
 
 export default function ResetPasswordPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -18,7 +16,6 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Parse hash from URL manually
     const hash = window.location.hash
     if (hash) {
       const params = new URLSearchParams(hash.substring(1))
@@ -27,19 +24,22 @@ export default function ResetPasswordPage() {
       const type = params.get('type')
 
       if (accessToken && type === 'recovery') {
-        supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        }).then(({ error }) => {
-          if (!error) setReady(true)
-          else setError('Ogiltig eller utgangen aterstallningslank')
-        })
+        supabase.auth
+          .setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          })
+          .then(({ error: sessionError }) => {
+            if (!sessionError) setReady(true)
+            else setError('Ogiltig eller utgangen aterstallningslank')
+          })
         return
       }
     }
 
-    // Fallback: listen for PASSWORD_RECOVERY event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(event => {
       if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
 
@@ -53,75 +53,104 @@ export default function ResetPasswordPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) {
-      setError('Fel: ' + error.message)
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+    if (updateError) {
+      setError('Fel: ' + updateError.message)
       setLoading(false)
     } else {
       setSuccess(true)
-      setTimeout(() => { window.location.href = '/admin' }, 2000)
+      setTimeout(() => {
+        window.location.href = '/admin'
+      }, 2000)
     }
   }
 
-  const inp = {
-    background: C.surface,
-    border: '1px solid ' + C.border,
-    borderRadius: 10,
-    padding: '12px 14px',
-    color: C.text,
-    fontSize: 14,
-    outline: 'none',
-    width: '100%',
-  } as React.CSSProperties
+  const inputClass = cn(
+    'w-full rounded-[10px] border border-light-border bg-light-surface px-3.5 py-3 text-sm outline-none',
+    'text-light-text placeholder:text-dark-muted',
+    'dark:border-dark-border dark:bg-dark-surface dark:text-dark-text',
+  )
+
+  const labelClass =
+    'mb-1.5 block text-[11px] font-bold tracking-wide text-dark-muted uppercase'
 
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 380, padding: '0 24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 6 }}>
-            Bowl<span style={{ color: '#f5c200' }}>kollen</span>
+    <main className="flex min-h-screen items-center justify-center bg-light-bg font-sans text-light-text dark:bg-dark-bg dark:text-dark-text">
+      <div className="w-full max-w-[380px] px-6">
+        <div className="mb-8 text-center">
+          <div className="mb-1.5 text-[28px] font-black bk-text-primary">
+            Bowl<span className="text-gold">kollen</span>
           </div>
-          <div style={{ fontSize: 14, color: C.textMuted }}>Skapa nytt losenord</div>
+          <p className="text-sm text-dark-muted">Skapa nytt losenord</p>
         </div>
 
-        <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
-
+        <Card className="flex flex-col gap-3.5 p-7">
           {success && (
-            <div style={{ background: theme === 'dark' ? '#122a1a' : '#f0fff4', border: '1px solid #aaffcc', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: C.green, fontWeight: 600, textAlign: 'center' }}>
+            <div className="rounded-lg border border-green/40 bg-green/10 px-3.5 py-3 text-center text-[13px] font-semibold text-green">
               Losenord uppdaterat! Omdirigerar till admin...
             </div>
           )}
 
           {error && (
-            <div style={{ background: theme === 'dark' ? '#2a1212' : '#fff0f0', border: '1px solid #ffaaaa', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#e05555', fontWeight: 600 }}>
+            <div className="rounded-lg border border-red bg-red/10 px-3.5 py-2.5 text-[13px] font-semibold text-red">
               {error}
             </div>
           )}
 
           {!ready && !success && !error && (
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 8 }}>Verifierar aterstallningslank...</div>
-              <div style={{ width: 32, height: 32, border: '3px solid ' + C.border, borderTop: '3px solid #f5c200', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+            <div className="py-5 text-center">
+              <p className="mb-2 text-[13px] text-dark-muted">
+                Verifierar aterstallningslank...
+              </p>
+              <div
+                className="mx-auto size-8 animate-spin rounded-full border-[3px] border-light-border border-t-gold dark:border-dark-border"
+                role="status"
+                aria-label="Laddar"
+              />
             </div>
           )}
 
           {ready && !success && (
             <>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, display: 'block', marginBottom: 6 }}>NYTT LOSENORD</label>
-                <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minst 6 tecken" onKeyDown={e => e.key === 'Enter' && updatePassword()} />
+                <label className={labelClass} htmlFor="new-password">
+                  NYTT LOSENORD
+                </label>
+                <input
+                  id="new-password"
+                  className={inputClass}
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Minst 6 tecken"
+                  onKeyDown={e => e.key === 'Enter' && updatePassword()}
+                />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, display: 'block', marginBottom: 6 }}>BEKRAFTA LOSENORD</label>
-                <input style={inp} type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Upprepa losenordet" onKeyDown={e => e.key === 'Enter' && updatePassword()} />
+                <label className={labelClass} htmlFor="confirm-password">
+                  BEKRAFTA LOSENORD
+                </label>
+                <input
+                  id="confirm-password"
+                  className={inputClass}
+                  type="password"
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="Upprepa losenordet"
+                  onKeyDown={e => e.key === 'Enter' && updatePassword()}
+                />
               </div>
-              <button onClick={updatePassword} disabled={loading} style={{ background: '#f5c200', color: '#1a1400', border: 'none', borderRadius: 10, padding: '13px', fontSize: 14, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+              <Button
+                variant="primary"
+                onClick={updatePassword}
+                disabled={loading}
+                className="w-full rounded-[10px] py-3 disabled:cursor-not-allowed disabled:opacity-70"
+              >
                 {loading ? 'Sparar...' : 'Uppdatera losenord'}
-              </button>
+              </Button>
             </>
           )}
-        </div>
+        </Card>
       </div>
     </main>
   )
