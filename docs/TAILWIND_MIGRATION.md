@@ -93,7 +93,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 ### Then (Phase 3 — pages, small → large)
 
 1. [x] `login`, `legal`
-2. [ ] `mer`
+2. [x] `mer`
 3. [ ] `league`, `hallar`, `oljeprofiler`, `klotshopar`
 4. [ ] `teams/page`, `clubs/[bitsId]`
 5. [ ] `matches/[id]`, `players/[id]`, `teams/[id]`
