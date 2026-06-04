@@ -1616,7 +1616,7 @@ export default function Home() {
                   {/* Rows */}
                   {visible.map((m, i) => (
                     <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} C={C} now={now} />
+                      <MatchRow m={m} now={now} />
                     </div>
                   ))}
                   {/* Expand */}
@@ -1661,7 +1661,7 @@ export default function Home() {
                   {/* Rows */}
                   {visible.map((m, i) => (
                     <div key={m.id} style={{ borderTop: i > 0 ? '1px solid ' + C.border : 'none' }}>
-                      <MatchRow m={m} C={C} now={now} />
+                      <MatchRow m={m} now={now} />
                     </div>
                   ))}
                   {/* Expand */}

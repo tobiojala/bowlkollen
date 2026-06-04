@@ -1,8 +1,7 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
 
 const HIDE_PATHS = [
   '/intern', '/laguttagning', '/admin',
@@ -12,24 +11,23 @@ const HIDE_PATHS = [
 const YEAR = new Date().getFullYear()
 
 export default function Footer() {
-  const pathname  = usePathname()
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const pathname = usePathname()
 
   if (HIDE_PATHS.some(p => pathname.includes(p))) return null
 
   return (
-    <footer style={{ padding: '20px 20px 8px', textAlign: 'center',
-      borderTop: '1px solid ' + C.border }}>
-      <p style={{ margin: 0, fontSize: 11, color: C.textMuted, lineHeight: 1.6 }}>
+    <footer className="border-t border-light-border px-5 pt-5 pb-2 text-center dark:border-dark-border">
+      <p className="m-0 text-[11px] leading-relaxed text-dark-muted">
         © {YEAR} Tobias Ek-Ojala · Bowlkollen™
       </p>
-      <p style={{ margin: '2px 0 0', fontSize: 10, color: C.textMuted }}>
+      <p className="mt-0.5 text-[10px] text-dark-muted">
         Alla rättigheter förbehålls ·{' '}
-        <a href="/legal" style={{ color: C.textMuted, textDecoration: 'underline',
-          textDecorationColor: C.border }}>
+        <Link
+          href="/legal"
+          className="text-dark-muted underline decoration-light-border dark:decoration-dark-border"
+        >
           Legal
-        </a>
+        </Link>
       </p>
     </footer>
   )

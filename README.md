@@ -16,6 +16,14 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Styling (Tailwind)
+
+The app is moving from inline `style={{}}` to **Tailwind CSS v4**. New UI should use Tailwind; convert old pages when you touch them.
+
+- **Migration guide:** [docs/TAILWIND_MIGRATION.md](docs/TAILWIND_MIGRATION.md)
+- **Reusable pieces:** `src/components/ui/` (`Card`, `Button`, `SectionHeader`, `GlassPill`)
+- **Design tokens:** `src/app/globals.css` (`@theme` colors, `dark:` variant)
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

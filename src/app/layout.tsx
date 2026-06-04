@@ -15,17 +15,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sv">
-      <body style={{ margin: 0, padding: 0 }}>
+    <html lang="sv" suppressHydrationWarning>
+      <body className="m-0 p-0">
         <ThemeProvider>
           <AuthRedirect />
           <Nav />
-        <div className="main-content" style={{ paddingBottom: 102 }}>
-          <NavTitle />
-          {children}
-          <Footer />
-        </div>
-        <BottomNav />
+          <div className="main-content pb-[102px]">
+            <NavTitle />
+            {children}
+            <Footer />
+          </div>
+          <BottomNav />
         </ThemeProvider>
       </body>
     </html>
