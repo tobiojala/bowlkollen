@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `hallar/[id]` migration. Regenerate counts with:_
+_Last updated: after `club/[club_slug]` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,7 +93,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **17** (~55%) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **18** (~58%) |
 | Files importing `@/lib/colors` | **16** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
@@ -150,7 +150,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | **`matches/[id]`** | **0** | **[x]** | `components/matches/*` |
 | **`players/[id]`** | **0** | **[x]** | `components/players/*`; `PlayerCard` drawer still legacy |
 | `hallar/[id]` | 0 | [x] | `components/hallar/*`, `lib/hall-ui.ts` |
-| `club/[club_slug]` | 23 | [ ] | |
+| `club/[club_slug]` | 0 | [x] | `components/club/*`, `lib/club-ui.ts` |
 | `compare/[id1]/[id2]` | 0 | [x] | `PlayerCompareHero`, `PlayerCompareResults` |
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
@@ -171,8 +171,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 
 1. [x] `matches/[id]`, [x] `players/[id]`
 2. [x] `compare/*` — all compare routes migrated
-3. [ ] `club/[club_slug]`
-4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm`
+3. [x] `club/[club_slug]`
+4. [ ] `profile`, `puls`, `schema`, `tavlingar`, `sllm` (large; use Widgets last)
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
 6. [ ] `Widgets.tsx` + embeds on migrated pages
 
