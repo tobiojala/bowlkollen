@@ -1,16 +1,82 @@
 @import "tailwindcss";
 
-/* ── Responsive nav spacing ──────────────────────────────────────────────── */
-/* Desktop: pills float over content, no top padding needed                   */
-/* Mobile:  pills occupy ~56px — push content below them                      */
+/* ── Responsive nav spacing ─────────────────────────────────────────────── */
 .main-content { padding-top: 0; }
 @media (max-width: 767px) { .main-content { padding-top: 64px; } }
 
-/* Page title visible on mobile only (desktop has room beside the pills) */
 .mobile-page-title { display: none; }
 @media (max-width: 767px) { .mobile-page-title { display: block; } }
 
-/* ── Trading card effects ─────────────────────────────────────────────────── */
+/* ── Dark mode: triggers on data-theme="dark" ───────────────────────────── */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+@theme {
+  /* ── Dark surface palette ── */
+  --color-dark-bg:       #10161e;
+  --color-dark-surface:  #172030;
+  --color-dark-card:     #1c2840;
+  --color-dark-border:   #2a3858;
+  --color-dark-muted:    #6b7a99;
+
+  /* ── Light surface palette ── */
+  --color-light-bg:      #f5f2ec;
+  --color-light-surface: #ffffff;
+  --color-light-card:    #ffffff;
+  --color-light-border:  #e8e0d4;
+  --color-light-muted:   #6b7a8d;
+
+  /* ── Brand colours ── */
+  --color-gold:          #f5c200;   /* achievements, active selections, milestones   */
+  --color-green:         #5dcaa5;   /* form, improvement, streaks, positive          */
+  --color-blue:          #7ab4e8;   /* info, history, comparison, previous season    */
+  --color-blue-muted:    #5a82b4;   /* action blue (upcoming matches, buttons)       */
+  --color-red:           #e05555;   /* danger, relegation, negative                  */
+  --color-pink:          #d94a90;   /* special events                                */
+
+  /* ── Motion: duration scale ── */
+  --duration-instant:    80ms;
+  --duration-fast:       150ms;
+  --duration-normal:     220ms;
+  --duration-slow:       350ms;
+  --duration-enter:      280ms;
+
+  /* ── Motion: easing ── */
+  --ease-out:            cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-in-out:         cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-spring:         cubic-bezier(0.34, 1.56, 0.64, 1);   /* slight overshoot  */
+
+  /* ── Radius scale ── */
+  --radius-sm:           8px;
+  --radius-md:           12px;
+  --radius-lg:           16px;
+  --radius-xl:           20px;
+  --radius-pill:         999px;
+
+  /* ── Layout ── */
+  --max-w-app:           600px;
+
+  /* ── Typography ── */
+  --font-sans:           system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-dark-bg);
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+/* ── Skeleton pulse ─────────────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1;    }
+}
+.skeleton {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Trading card effects ───────────────────────────────────────────────── */
 @keyframes shimmerSweep {
   0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
   10%  { opacity: 1; }
@@ -26,43 +92,10 @@
   50%       { opacity: 1; }
 }
 @keyframes particleRise {
-  0%   { transform: translateY(0px) translateX(0px) scale(1);    opacity: 0.9; }
+  0%   { transform: translateY(0px) translateX(0px) scale(1);     opacity: 0.9; }
   100% { transform: translateY(-45px) translateX(6px) scale(0.4); opacity: 0; }
 }
 @keyframes particleRise2 {
-  0%   { transform: translateY(0px) translateX(0px) scale(0.8);   opacity: 0.7; }
+  0%   { transform: translateY(0px) translateX(0px) scale(0.8);    opacity: 0.7; }
   100% { transform: translateY(-35px) translateX(-8px) scale(0.3); opacity: 0; }
-}
-
-/* ── Dark mode: triggers on data-theme="dark" (set by ThemeProvider) ── */
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
-
-/* ── Design tokens ───────────────────────────────────────────────────── */
-@theme {
-  /* Dark palette */
-  --color-dark-bg:      #10161e;
-  --color-dark-surface: #172030;
-  --color-dark-card:    #1c2840;
-  --color-dark-border:  #2a3858;
-  --color-dark-muted:   #6b7a99;
-
-  /* Light palette */
-  --color-light-bg:      #f5f2ec;
-  --color-light-surface: #ffffff;
-  --color-light-card:    #ffffff;
-  --color-light-border:  #e8e0d4;
-  --color-light-muted:   #6b7a8d;
-
-  /* Brand */
-  --color-gold:   #f5c200;
-  --color-green:  #4caf7d;
-  --color-red:    #e05555;
-  --color-pink:   #d94a90;
-  --color-blue:   #4a90d9;
-
-  /* Layout */
-  --max-w-app: 600px;
-
-  /* Typography */
-  --font-sans: system-ui, sans-serif;
 }
