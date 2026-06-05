@@ -81,7 +81,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `SeasonTimeline` + `TopPerformers`. Regenerate counts with:_
+_Last updated: after `HeroCarousel` + `LiveLaneViewer`. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -95,7 +95,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
-| Files importing `@/lib/colors` | **2** (`TeamInternPageContent`, `LiveLaneViewer`) |
+| Files importing `@/lib/colors` | **0** (ready to delete `lib/colors.ts` when verified) |
 | `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
