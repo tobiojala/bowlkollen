@@ -1,0 +1,237 @@
+/** Compare pages: team colors, motion, initials. */
+
+import type { CSSProperties } from 'react'
+import { cn } from '@/lib/cn'
+import { shortName } from '@/lib/utils'
+import { teamHue } from '@/lib/team-ui'
+
+export const COMPARE_SPRING = { type: 'spring', stiffness: 280, damping: 28 } as const
+
+export function compareTeamColors(name: string, dark: boolean) {
+  const hue = teamHue(name)
+  return {
+    border: `hsl(${hue},50%,45%)`,
+    bg: dark ? `hsl(${hue},40%,12%)` : `hsl(${hue},40%,92%)`,
+  }
+}
+
+export function compareHeroGradient(
+  teamBg: string,
+  dark: boolean,
+  side: 'left' | 'right' = 'left',
+): string {
+  const deg = side === 'left' ? 135 : 225
+  const end = dark ? 'rgba(11,21,40,0.95)' : 'rgba(235,240,250,0.98)'
+  return `linear-gradient(${deg}deg, ${teamBg} 0%, ${end} 100%)`
+}
+
+export type TeamCompareMatch = {
+  id: string
+  date: string
+  home_score: number | null
+  away_score: number | null
+  home_team_id: string
+  away_team_id: string
+}
+
+export type TeamCompareStats = {
+  wins: number
+  draws: number
+  losses: number
+  winRate: number
+  avgMP: number
+  bestMP: number
+  matchesPlayed: number
+}
+
+export type TeamCompareMetric = {
+  label: string
+  key: keyof TeamCompareStats
+  lowerIsBetter?: boolean
+  format?: (v: number) => string
+}
+
+export const TEAM_COMPARE_METRICS: TeamCompareMetric[] = [
+  { label: 'Vinstprocent', key: 'winRate', format: v => v + '%' },
+  { label: 'Matcher vunna', key: 'wins' },
+  { label: 'Snitt matchpoäng', key: 'avgMP', format: v => v.toFixed(1) },
+  { label: 'Bästa matchpoäng', key: 'bestMP' },
+  { label: 'Oavgjorda', key: 'draws' },
+  { label: 'Matcher förlorade', key: 'losses', lowerIsBetter: true },
+]
+
+export function computeTeamCompareStats(
+  matches: TeamCompareMatch[],
+  teamId: string,
+): TeamCompareStats {
+  const done = matches.filter(m => m.home_score !== null && m.away_score !== null)
+  const isHome = (m: TeamCompareMatch) => m.home_team_id === teamId
+  const wins = done.filter(m =>
+    isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!,
+  ).length
+  const losses = done.filter(m =>
+    isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!,
+  ).length
+  const draws = done.length - wins - losses
+  const scores = done.map(m => (isHome(m) ? m.home_score! : m.away_score!))
+  const total = scores.reduce((a, b) => a + b, 0)
+  return {
+    wins,
+    draws,
+    losses,
+    winRate: done.length > 0 ? Math.round((wins / done.length) * 100) : 0,
+    avgMP: done.length > 0 ? Math.round((total / done.length) * 10) / 10 : 0,
+    bestMP: scores.length > 0 ? Math.max(...scores) : 0,
+    matchesPlayed: done.length,
+  }
+}
+
+export function compareWinProbability(winRate1: number, winRate2: number) {
+  const total = winRate1 + winRate2
+  const prob1 =
+    total === 0 ? 50 : Math.round(Math.min(95, Math.max(5, (winRate1 / total) * 100)))
+  return { prob1, prob2: 100 - prob1 }
+}
+
+export type PlayerCompareRow = { games?: number[] }
+
+export type PlayerCompareStats = {
+  avg: number
+  bestSeries: number
+  bestGame: number
+  over200: number
+  over250: number
+  matches: number
+  totalGames: number
+}
+
+export type PlayerCompareMetric = {
+  label: string
+  key: keyof PlayerCompareStats
+}
+
+export const PLAYER_COMPARE_METRICS: PlayerCompareMetric[] = [
+  { label: 'Snitt', key: 'avg' },
+  { label: 'Bästa serie', key: 'bestSeries' },
+  { label: 'Högsta spel', key: 'bestGame' },
+  { label: '200+ spel', key: 'over200' },
+  { label: '250+ spel', key: 'over250' },
+  { label: 'Matcher', key: 'matches' },
+]
+
+export function computePlayerCompareStats(results: PlayerCompareRow[]): PlayerCompareStats {
+  const allGames = results.flatMap(r => (r.games || []).filter(g => g > 0))
+  const seriesTotals = results
+    .map(r => (r.games || []).filter(g => g > 0).reduce((a, b) => a + b, 0))
+    .filter(t => t > 0)
+  return {
+    avg:
+      allGames.length > 0
+        ? Math.round(allGames.reduce((a, b) => a + b, 0) / allGames.length)
+        : 0,
+    bestSeries: seriesTotals.length > 0 ? Math.max(...seriesTotals) : 0,
+    bestGame: allGames.length > 0 ? Math.max(...allGames) : 0,
+    over200: allGames.filter(g => g >= 200).length,
+    over250: allGames.filter(g => g >= 250).length,
+    matches: results.length,
+    totalGames: allGames.length,
+  }
+}
+
+export function countPlayerMetricWins(
+  stats1: PlayerCompareStats,
+  stats2: PlayerCompareStats,
+  metrics: PlayerCompareMetric[] = PLAYER_COMPARE_METRICS,
+) {
+  const p1Wins = metrics.filter(m => (stats1[m.key] as number) > (stats2[m.key] as number)).length
+  const p2Wins = metrics.filter(m => (stats2[m.key] as number) > (stats1[m.key] as number)).length
+  const overall = p1Wins > p2Wins ? 1 : p2Wins > p1Wins ? 2 : 0
+  return { p1Wins, p2Wins, overall }
+}
+
+export function countMetricWins(
+  stats1: TeamCompareStats,
+  stats2: TeamCompareStats,
+  metrics: TeamCompareMetric[] = TEAM_COMPARE_METRICS,
+) {
+  const t1Wins = metrics.filter(m => {
+    const v1 = stats1[m.key] as number
+    const v2 = stats2[m.key] as number
+    return m.lowerIsBetter ? v1 < v2 : v1 > v2
+  }).length
+  const t2Wins = metrics.filter(m => {
+    const v1 = stats1[m.key] as number
+    const v2 = stats2[m.key] as number
+    return m.lowerIsBetter ? v2 < v1 : v2 > v1
+  }).length
+  const overall = t1Wins > t2Wins ? 1 : t2Wins > t1Wins ? 2 : 0
+  return { t1Wins, t2Wins, overall }
+}
+
+export function teamInitials(name: string): string {
+  return shortName(name)
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .slice(0, 3)
+    .toUpperCase()
+}
+
+export const COMPARE_GOLD_GLOW = 'rgba(245,194,0,0.40)'
+
+export function compareWinnerGlowStyle(active: boolean): CSSProperties | undefined {
+  return active ? { textShadow: `0 0 16px ${COMPARE_GOLD_GLOW}` } : undefined
+}
+
+export function compareMetricWinGlowStyle(active: boolean): CSSProperties | undefined {
+  return active ? { textShadow: `0 0 14px ${COMPARE_GOLD_GLOW}` } : undefined
+}
+
+export const compareVsLabel = cn(
+  'pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 select-none',
+  'text-center text-xl font-black tracking-[3px] text-gold',
+  'drop-shadow-[0_0_12px_rgba(245,194,0,0.9)] drop-shadow-[0_0_32px_rgba(245,194,0,0.45)]',
+)
+
+export function compareColorStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function compareHeroSideStyle(
+  teamBg: string,
+  dark: boolean,
+  align: 'left' | 'right',
+): CSSProperties {
+  return { background: compareHeroGradient(teamBg, dark, align) }
+}
+
+export function compareTeamBadgeStyle(
+  col: { bg: string; border: string },
+  size: 'sm' | 'md' | 'lg' = 'md',
+): CSSProperties {
+  const borderW = size === 'lg' ? 2.5 : size === 'sm' ? 1.5 : 1.5
+  return {
+    background: col.bg,
+    border: `${borderW}px solid ${col.border}`,
+    color: col.border,
+  }
+}
+
+export function comparePlayerAvatarBorder(borderColor: string): CSSProperties {
+  return { border: `2.5px solid ${borderColor}` }
+}
+
+export function comparePlayerAvatarStyle(
+  borderColor: string,
+  bgColor: string,
+): CSSProperties {
+  return {
+    background: bgColor,
+    border: `2.5px solid ${borderColor}`,
+    color: borderColor,
+  }
+}
+
+export function compareProbBarStyle(color: string): CSSProperties {
+  return { background: color }
+}

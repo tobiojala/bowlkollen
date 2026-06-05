@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
+import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
+import { hslNameBadgeStyle } from '@/lib/team-ui'
+import { GlassPill } from '@/components/ui'
 
-type NavConfig = {
-  backHref: string | null
-}
+type NavConfig = { backHref: string | null }
 
 function getConfig(pathname: string): NavConfig {
   if (pathname.startsWith('/hallar/'))           return { backHref: '/hallar' }
@@ -29,13 +30,11 @@ type TeamResult   = { kind: 'team';   id: string; name: string; club: string; ci
 
 export default function Nav() {
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, string> } | null>(null)
   const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null)
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
 
   const [searching, setSearching] = useState(false)
-  const [menuOpen, setMenuOpen]   = useState(false)
+  const [menuOpen, setMenuOpen]     = useState(false)
   const [query, setQuery] = useState('')
   const [players, setPlayers] = useState<PlayerResult[]>([])
   const [teams, setTeams]     = useState<TeamResult[]>([])
@@ -73,8 +72,10 @@ export default function Nav() {
           .or(`club.ilike.%${query}%,name.ilike.%${query}%,city.ilike.%${query}%`).limit(10),
       ])
       const teamMap: Record<string, string> = {}
-      allTeams?.forEach((t: any) => { teamMap[t.id] = t.name })
-      setPlayers((ps || []).map((p: any) => ({ kind: 'player', id: p.id, name: p.name, teamName: shortName(teamMap[p.team_id] || '') })))
+      allTeams?.forEach((t: { id: string; name: string }) => { teamMap[t.id] = t.name })
+      setPlayers((ps || []).map((p: { id: string; name: string; team_id: string }) => ({
+        kind: 'player', id: p.id, name: p.name, teamName: shortName(teamMap[p.team_id] || ''),
+      })))
       const seen = new Set<string>()
       const clubResults: TeamResult[] = []
       for (const t of (ts || [])) {
@@ -96,195 +97,107 @@ export default function Nav() {
   const cfg = getConfig(pathname)
   const avatar   = user?.user_metadata?.avatar_url
   const name     = user?.user_metadata?.full_name || user?.email || ''
-  const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 
-  const mutedColor = isDark ? 'rgba(255,255,255,0.82)' : 'rgba(20,30,55,0.60)'
-  const textColor  = isDark ? '#ffffff' : '#1a2535'
-
-  const glass: React.CSSProperties = {
-    position: 'absolute', inset: 0, overflow: 'hidden',
-    backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-    WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-    background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.28)',
-  }
-  const rim: React.CSSProperties = {
-    position: 'absolute', inset: 0, pointerEvents: 'none',
-    border: isDark ? '0.5px solid rgba(255,255,255,0.28)' : '0.5px solid rgba(255,255,255,0.80)',
-    boxShadow: isDark
-      ? 'inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -0.5px 0 rgba(255,255,255,0.08), inset 1px 0 0 rgba(255,255,255,0.10), inset -1px 0 0 rgba(255,255,255,0.10), 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.28)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.90), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07)',
-  }
-  const iconBtn: React.CSSProperties = {
-    position: 'relative', zIndex: 1,
-    width: 36, height: 36, borderRadius: '50%',
-    border: 'none', cursor: 'pointer',
-    background: 'transparent',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    WebkitTapHighlightColor: 'transparent',
-    flexShrink: 0,
-  }
-
-  const pillR = 22
+  const rowHover = 'hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
 
   return (
     <>
-      {/* Subtle gold glow — starts at top so no bare background shows behind pills */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 136,
-        background: isDark
-          ? 'linear-gradient(180deg, rgba(245,194,0,0.07) 0%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(245,194,0,0.04) 0%, transparent 100%)',
-        pointerEvents: 'none', zIndex: 39,
-      }} />
+      <div className="bk-nav-glow" aria-hidden />
 
-      <header style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 56,
-        zIndex: 40,
-        display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: 8,
-        pointerEvents: 'none',
-      }}>
-
-        {/* ── LEFT PILL: logo / back / cancel ── */}
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 px-4">
+        {/* Left pill */}
         {searching ? (
           <button
+            type="button"
             onClick={() => setSearching(false)}
-            style={{
-              pointerEvents: 'auto', flexShrink: 0,
-              position: 'relative', height: 44, borderRadius: pillR,
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '0 14px 0 10px',
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
+            className="pointer-events-auto shrink-0 border-0 bg-transparent p-0"
           >
-            <div style={{ ...glass, borderRadius: pillR }} />
-            <div style={{ ...rim,   borderRadius: pillR }} />
-            <X size={16} color={mutedColor} style={{ position: 'relative', zIndex: 1 }} />
-            <span style={{ position: 'relative', zIndex: 1, fontSize: 14, fontWeight: 600, color: mutedColor }}>
-              Avbryt
-            </span>
+            <GlassPill className="flex h-11 items-center gap-1.5 px-2.5">
+              <X size={16} className="bk-text-muted" />
+              <span className="text-sm font-semibold bk-text-muted">Avbryt</span>
+            </GlassPill>
           </button>
         ) : cfg.backHref ? (
-          <a
-            href={cfg.backHref}
-            style={{
-              pointerEvents: 'auto', flexShrink: 0,
-              position: 'relative', height: 44, borderRadius: pillR,
-              display: 'flex', alignItems: 'center', gap: 4,
-              padding: '0 14px 0 8px',
-              textDecoration: 'none',
-            }}
-          >
-            <div style={{ ...glass, borderRadius: pillR }} />
-            <div style={{ ...rim,   borderRadius: pillR }} />
-            <ChevronLeft size={20} color={isDark ? '#f5c200' : '#1a2535'} strokeWidth={2.5} style={{ position: 'relative', zIndex: 1 }} />
-            <span style={{ position: 'relative', zIndex: 1, fontSize: 14, fontWeight: 600, color: isDark ? '#f5c200' : '#1a2535' }}>
-              Tillbaka
-            </span>
-          </a>
+          <Link href={cfg.backHref} className="pointer-events-auto shrink-0 no-underline">
+            <GlassPill className="flex h-11 items-center gap-1 px-2 pr-3.5">
+              <ChevronLeft size={20} className="text-gold" strokeWidth={2.5} />
+              <span className="text-sm font-semibold text-[#1a2535] dark:text-gold">Tillbaka</span>
+            </GlassPill>
+          </Link>
         ) : (
-          <a
-            href="/"
-            style={{
-              pointerEvents: 'auto', flexShrink: 0,
-              position: 'relative', height: 44, borderRadius: pillR,
-              display: 'flex', alignItems: 'center',
-              padding: '0 20px',
-              textDecoration: 'none',
-            }}
-          >
-            <div style={{ ...glass, borderRadius: pillR }} />
-            <div style={{ ...rim,   borderRadius: pillR }} />
-            <span style={{ position: 'relative', zIndex: 1, fontSize: 17, fontWeight: 900, color: textColor, letterSpacing: -0.5 }}>
-              Bowl<span style={{ color: '#f5c200' }}>kollen</span>
-            </span>
-          </a>
+          <Link href="/" className="pointer-events-auto shrink-0 no-underline">
+            <GlassPill className="flex h-11 items-center px-5">
+              <span className="text-[17px] font-black tracking-tight bk-text-primary">
+                Bowl<span className="text-gold">kollen</span>
+              </span>
+            </GlassPill>
+          </Link>
         )}
 
-        {/* ── SEARCH INPUT PILL (replaces right pill while searching) ── */}
         {searching && (
-          <div style={{
-            pointerEvents: 'auto', flex: 1,
-            position: 'relative', height: 44, borderRadius: pillR,
-            display: 'flex', alignItems: 'center',
-            padding: '0 14px', gap: 8,
-          }}>
-            <div style={{ ...glass, borderRadius: pillR }} />
-            <div style={{ ...rim,   borderRadius: pillR }} />
-            <Search size={14} color={mutedColor} style={{ position: 'relative', zIndex: 1, flexShrink: 0 }} />
+          <GlassPill className="pointer-events-auto relative flex h-11 flex-1 items-center gap-2 px-3.5">
+            <Search size={14} className="relative z-[1] shrink-0 bk-text-muted" />
             <input
               ref={inputRef}
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Sök spelare eller lag..."
-              style={{
-                flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                fontSize: 14, fontWeight: 500, color: textColor,
-                position: 'relative', zIndex: 1,
-              }}
+              className="relative z-[1] min-w-0 flex-1 border-0 bg-transparent text-sm font-medium outline-none bk-text-primary"
             />
-          </div>
+          </GlassPill>
         )}
 
-        {/* ── RIGHT PILL: search · theme · profile · menu ── */}
         {!searching && (
-          <div style={{
-            pointerEvents: 'auto', flexShrink: 0, marginLeft: 'auto',
-            position: 'relative', height: 44, borderRadius: pillR,
-            display: 'flex', alignItems: 'center',
-            padding: '0 4px',
-          }}>
-            <div style={{ ...glass, borderRadius: pillR }} />
-            <div style={{ ...rim,   borderRadius: pillR }} />
-
-            <button onClick={() => setSearching(true)} style={iconBtn}>
-              <Search size={16} color={mutedColor} />
+          <GlassPill className="pointer-events-auto relative ml-auto flex h-11 shrink-0 items-center px-1">
+            <button type="button" onClick={() => setSearching(true)} className="bk-icon-btn">
+              <Search size={16} className="bk-text-muted" />
             </button>
 
             {user ? (
-              <a href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'} style={{ ...iconBtn, textDecoration: 'none' }}>
+              <Link
+                href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'}
+                className="bk-icon-btn no-underline"
+              >
                 {avatar ? (
-                  <img src={avatar} alt={name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(245,194,0,0.35)' }} />
+                  <img
+                    src={avatar}
+                    alt={name}
+                    className="h-7 w-7 rounded-full border-[1.5px] border-gold/35 object-cover"
+                  />
                 ) : (
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', border: '1.5px solid rgba(245,194,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#f5c200' }}>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-gold/35 bg-gold/10 text-[10px] font-bold text-gold">
                     {initials}
                   </div>
                 )}
-              </a>
+              </Link>
             ) : (
-              <a href="/login" style={{ ...iconBtn, textDecoration: 'none' }}>
-                <User size={16} color={mutedColor} />
-              </a>
+              <Link href="/login" className="bk-icon-btn no-underline">
+                <User size={16} className="bk-text-muted" />
+              </Link>
             )}
 
             <button
+              type="button"
               onClick={() => setMenuOpen(o => !o)}
-              style={{ ...iconBtn, background: menuOpen ? (isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)') : 'transparent' }}
+              className={cn('bk-icon-btn', menuOpen && 'bg-black/10 dark:bg-white/10')}
             >
-              <Menu size={15} color={mutedColor} />
+              <Menu size={15} className="bk-text-muted" />
             </button>
-          </div>
+          </GlassPill>
         )}
       </header>
 
-      {/* ── BURGER MENU DROPDOWN ── */}
       {menuOpen && !searching && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 38, background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)' }}
-            onClick={() => setMenuOpen(false)} />
-          <div style={{
-            position: 'fixed', top: 60, right: 16, zIndex: 39, width: 236,
-            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
-            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.85)'}`,
-            borderRadius: 20, overflow: 'hidden',
-            boxShadow: isDark
-              ? 'inset 0 1.5px 0 rgba(255,255,255,0.18), 0 12px 40px rgba(0,0,0,0.40)'
-              : 'inset 0 1.5px 0 rgba(255,255,255,0.95), 0 12px 40px rgba(0,0,0,0.12)',
-          }}>
-            <div style={{ padding: '10px 16px 6px', fontSize: 9, fontWeight: 800, color: mutedColor, letterSpacing: 1.5 }}>
+          <button
+            type="button"
+            aria-label="Stäng meny"
+            className="fixed inset-0 z-[38] bg-black/15 dark:bg-black/40"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="bk-menu-panel fixed top-[60px] right-4 z-[39] w-[236px]">
+            <div className="px-4 pt-2.5 pb-1.5 text-[9px] font-extrabold tracking-widest bk-text-muted">
               UTFORSKA
             </div>
             {[
@@ -292,81 +205,79 @@ export default function Nav() {
               { href: '/klotshopar',   icon: ShoppingBag, label: 'Klotshopar',    sub: '16 pro shops' },
               { href: '/oljeprofiler', icon: Droplets,    label: 'Oljeprofiler',  sub: 'Säsong 2025/2026' },
             ].map(({ href, icon: Icon, label, sub }) => (
-              <a key={href} href={href}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
-                  textDecoration: 'none', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}
-                onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-3 border-t border-black/5 px-4 py-2.5 no-underline',
+                  'dark:border-white/5',
+                  rowHover,
+                )}
               >
-                <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                  background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.18)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={16} color="#f5c200" />
+                <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] border border-gold/20 bg-gold/[0.08]">
+                  <Icon size={16} className="text-gold" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: textColor }}>{label}</div>
-                  <div style={{ fontSize: 10, color: mutedColor, marginTop: 1 }}>{sub}</div>
+                  <div className="text-[13px] font-bold bk-text-primary">{label}</div>
+                  <div className="mt-px text-[10px] bk-text-muted">{sub}</div>
                 </div>
-              </a>
+              </Link>
             ))}
-            <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: '10px 16px' }}>
-              <a href="/mer" style={{ fontSize: 12, fontWeight: 600, color: mutedColor, textDecoration: 'none' }}>
+            <div className="border-t border-black/6 px-4 py-2.5 dark:border-white/6">
+              <Link href="/mer" className="text-xs font-semibold bk-text-muted no-underline">
                 Visa mer →
-              </a>
+              </Link>
             </div>
           </div>
         </>
       )}
 
-      {/* ── SEARCH RESULTS OVERLAY ── */}
       {searching && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 38, background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)' }}
-            onClick={() => setSearching(false)} />
-          <div style={{
-            position: 'fixed', top: 56, left: 0, right: 0, zIndex: 39,
-            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
-            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.70)'}`,
-            boxShadow: isDark
-              ? 'inset 0 -1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.30)'
-              : 'inset 0 -1px 0 rgba(255,255,255,0.80), 0 8px 24px rgba(0,0,0,0.08)',
-            maxHeight: '60vh', overflowY: 'auto',
-          }}>
+          <button
+            type="button"
+            aria-label="Stäng sök"
+            className="fixed inset-0 z-[38] bg-black/20 dark:bg-black/50"
+            onClick={() => setSearching(false)}
+          />
+          <div
+            className={cn(
+              'bk-menu-panel fixed inset-x-0 top-14 z-[39] max-h-[60vh] overflow-y-auto rounded-none border-x-0',
+            )}
+          >
             {!query.trim() && (
-              <div style={{ padding: '16px 20px', fontSize: 13, color: mutedColor }}>
-                Sök efter spelare, lag eller klubb...
-              </div>
+              <p className="px-5 py-4 text-[13px] bk-text-muted">Sök efter spelare, lag eller klubb...</p>
             )}
             {query.trim() && players.length === 0 && teams.length === 0 && (
-              <div style={{ padding: '20px', fontSize: 13, color: mutedColor, textAlign: 'center' }}>
-                Inga resultat hittades
-              </div>
+              <p className="px-5 py-5 text-center text-[13px] bk-text-muted">Inga resultat hittades</p>
             )}
 
             {players.length > 0 && (
               <>
-                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5 }}>SPELARE</div>
+                <div className="px-5 pt-2.5 pb-1 text-[10px] font-bold tracking-widest bk-text-muted">SPELARE</div>
                 {players.map((p, i) => {
-                  const hue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                  const tc  = `hsl(${hue},50%,45%)`
-                  const bg  = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
                   return (
-                    <a key={p.id} href={`/players/${p.id}`}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none', textDecoration: 'none', background: 'transparent' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    <Link
+                      key={p.id}
+                      href={`/players/${p.id}`}
+                      className={cn(
+                        'flex items-center gap-3 px-5 py-2.5 no-underline',
+                        i > 0 && 'border-t border-black/5 dark:border-white/5',
+                        rowHover,
+                      )}
                     >
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: bg, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+                        style={hslNameBadgeStyle(p.name)}
+                      >
                         {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{p.name}</div>
-                        {p.teamName && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{p.teamName}</div>}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold bk-text-primary">{p.name}</div>
+                        {p.teamName && <div className="mt-px text-[11px] bk-text-muted">{p.teamName}</div>}
                       </div>
-                      <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
-                    </a>
+                      <ChevronLeft size={15} className="shrink-0 rotate-180 bk-text-muted" />
+                    </Link>
                   )
                 })}
               </>
@@ -374,40 +285,54 @@ export default function Nav() {
 
             {teams.length > 0 && (
               <>
-                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5, borderTop: players.length > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` : 'none' }}>LAG & KLUBBAR</div>
+                <div
+                  className={cn(
+                    'px-5 pt-2.5 pb-1 text-[10px] font-bold tracking-widest bk-text-muted',
+                    players.length > 0 && 'border-t border-black/8 dark:border-white/8',
+                  )}
+                >
+                  LAG & KLUBBAR
+                </div>
                 {teams.map((t, i) => {
-                  const hue = t.club.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                  const tc  = `hsl(${hue},50%,45%)`
-                  const bg  = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
-                  const ini = t.club.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+                  const ini = t.club.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
                   return (
-                    <a key={t.id} href={t.href}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none', textDecoration: 'none', background: 'transparent' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    <Link
+                      key={t.id}
+                      href={t.href}
+                      className={cn(
+                        'flex items-center gap-3 px-5 py-2.5 no-underline',
+                        i > 0 && 'border-t border-black/5 dark:border-white/5',
+                        rowHover,
+                      )}
                     >
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
+                      <div
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
+                        style={hslNameBadgeStyle(t.club)}
+                      >
                         {ini}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{t.club}</div>
-                        {t.city && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{t.city}</div>}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold bk-text-primary">{t.club}</div>
+                        {t.city && <div className="mt-px text-[11px] bk-text-muted">{t.city}</div>}
                       </div>
-                      <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
-                    </a>
+                      <ChevronLeft size={15} className="shrink-0 rotate-180 bk-text-muted" />
+                    </Link>
                   )
                 })}
               </>
             )}
 
             {(players.length > 0 || teams.length > 0) && (
-              <div style={{ display: 'flex', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <a href="/players" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center' }}>
+              <div className="flex border-t border-black/6 dark:border-white/6">
+                <Link href="/players" className="flex-1 py-3 text-center text-xs font-semibold text-gold no-underline">
                   Alla spelare →
-                </a>
-                <a href="/teams" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center', borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                </Link>
+                <Link
+                  href="/teams"
+                  className="flex-1 border-l border-black/6 py-3 text-center text-xs font-semibold text-gold no-underline dark:border-white/6"
+                >
                   Alla lag →
-                </a>
+                </Link>
               </div>
             )}
           </div>

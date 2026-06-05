@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
+import { cn } from '@/lib/cn'
 
 type Props = {
   teamId: string
@@ -19,12 +19,13 @@ type Props = {
   }
 }
 
-
 export default function NextMatchPreview({ teamId, nextMatch }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
   const [oppForm, setOppForm] = useState<string[]>([])
-  const [h2h, setH2h] = useState<{ wins: number; draws: number; losses: number }>({ wins: 0, draws: 0, losses: 0 })
+  const [h2h, setH2h] = useState<{ wins: number; draws: number; losses: number }>({
+    wins: 0,
+    draws: 0,
+    losses: 0,
+  })
   const [loading, setLoading] = useState(true)
 
   const isHome = nextMatch.home_team_id === teamId
@@ -32,37 +33,32 @@ export default function NextMatchPreview({ teamId, nextMatch }: Props) {
   const oppId = opp.id
 
   const matchDate = new Date(nextMatch.date)
-  const days = ['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag']
-  const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec']
-  const dateStr = days[matchDate.getDay()] + ' ' + matchDate.getDate() + ' ' + months[matchDate.getMonth()]
+  const days = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag']
+  const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+  const dateStr = `${days[matchDate.getDay()]} ${matchDate.getDate()} ${months[matchDate.getMonth()]}`
   const timeStr = matchDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-
-  const oppHue = oppId.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-  const oppTc = 'hsl(' + oppHue + ',50%,45%)'
-  const oppTclo = theme === 'dark' ? 'hsl(' + oppHue + ',40%,15%)' : 'hsl(' + oppHue + ',40%,92%)'
 
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      // Opponent last 5 matches
-      supabase.from('matches')
+      supabase
+        .from('matches')
         .select('home_team_id, away_team_id, home_score, away_score')
-        .or('home_team_id.eq.' + oppId + ',away_team_id.eq.' + oppId)
+        .or(`home_team_id.eq.${oppId},away_team_id.eq.${oppId}`)
         .eq('status', 'completed')
         .not('home_score', 'is', null)
         .order('date', { ascending: false })
         .limit(5),
-      // Head to head
-      supabase.from('matches')
+      supabase
+        .from('matches')
         .select('home_team_id, away_team_id, home_score, away_score')
         .or(
-          'and(home_team_id.eq.' + teamId + ',away_team_id.eq.' + oppId + '),' +
-          'and(home_team_id.eq.' + oppId + ',away_team_id.eq.' + teamId + ')'
+          `and(home_team_id.eq.${teamId},away_team_id.eq.${oppId}),` +
+            `and(home_team_id.eq.${oppId},away_team_id.eq.${teamId})`,
         )
         .eq('status', 'completed')
         .not('home_score', 'is', null),
     ]).then(([{ data: oppMatches }, { data: h2hMatches }]) => {
-      // Opponent form
       if (oppMatches) {
         const form = oppMatches.map(m => {
           const isOppHome = m.home_team_id === oppId
@@ -75,9 +71,10 @@ export default function NextMatchPreview({ teamId, nextMatch }: Props) {
         setOppForm(form)
       }
 
-      // H2H
       if (h2hMatches) {
-        let wins = 0, draws = 0, losses = 0
+        let wins = 0
+        let draws = 0
+        let losses = 0
         h2hMatches.forEach(m => {
           const myHome = m.home_team_id === teamId
           const myScore = myHome ? m.home_score! : m.away_score!
@@ -92,91 +89,96 @@ export default function NextMatchPreview({ teamId, nextMatch }: Props) {
     })
   }, [teamId, oppId])
 
-  const formColor = (f: string) => f === 'V' ? C.green : f === 'F' ? '#e05555' : C.textMuted
-
   return (
-    <div style={{ borderTop: '1px solid ' + C.border }}>
-      <div style={{ padding: '14px 20px 8px', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
+    <div className="border-t border-light-border dark:border-dark-border">
+      <div className="px-5 pt-3.5 pb-2 text-[10px] font-extrabold tracking-[2px] text-dark-muted">
         NASTA MATCH
       </div>
 
-      <a href={'/matches/' + nextMatch.id} style={{ display: 'block', textDecoration: 'none', padding: '0 20px 16px' }}>
-
-        {/* Date and venue */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <div style={{ background: '#f5c200', color: '#1a1400', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 800 }}>
+      <Link
+        href={`/matches/${nextMatch.id}`}
+        className="block px-5 pb-4 no-underline"
+      >
+        <div className="mb-3.5 flex items-center gap-2">
+          <div className="rounded-lg bg-gold px-2.5 py-1 text-xs font-extrabold text-[#1a1400]">
             {dateStr}
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{timeStr}</div>
-          {nextMatch.venue && (
-            <div style={{ fontSize: 11, color: C.textMuted, marginLeft: 'auto' }}>📍 {nextMatch.venue}</div>
-          )}
+          <div className="text-xs font-bold bk-text-primary">{timeStr}</div>
+          {nextMatch.venue ? (
+            <div className="ml-auto text-[11px] text-dark-muted">📍 {nextMatch.venue}</div>
+          ) : null}
         </div>
 
-        {/* Teams */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <div style={{ flex: 1, textAlign: isHome ? 'left' : 'right' }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: C.accent }}>
+        <div className="mb-3.5 flex items-center gap-3">
+          <div className={cn('flex-1', isHome ? 'text-left' : 'text-right')}>
+            <div className="text-base font-extrabold text-gold">
               {shortName(isHome ? nextMatch.home.name : nextMatch.away.name)}
             </div>
-            <div style={{ fontSize: 10, color: C.textMuted }}>Hemmalag</div>
+            <div className="text-[10px] text-dark-muted">Hemmalag</div>
           </div>
-          <div style={{ fontSize: 16, color: C.textMuted, fontWeight: 300 }}>vs</div>
-          <div style={{ flex: 1, textAlign: isHome ? 'right' : 'left' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
-              {shortName(opp.name)}
-            </div>
-            <div style={{ fontSize: 10, color: C.textMuted }}>Bortalag</div>
+          <div className="text-base font-light text-dark-muted">vs</div>
+          <div className={cn('flex-1', isHome ? 'text-right' : 'text-left')}>
+            <div className="text-base font-bold bk-text-primary">{shortName(opp.name)}</div>
+            <div className="text-[10px] text-dark-muted">Bortalag</div>
           </div>
         </div>
 
-        {/* Opponent info */}
         {!loading && (
-          <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: 14, display: 'flex', gap: 16 }}>
-
-            {/* Opponent form */}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 8 }}>
+          <div
+            className={cn(
+              'flex gap-4 rounded-xl border p-3.5',
+              'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+            )}
+          >
+            <div className="flex-1">
+              <div className="mb-2 text-[10px] font-bold tracking-wide text-dark-muted">
                 {shortName(opp.name).toUpperCase()} FORM
               </div>
               {oppForm.length > 0 ? (
-                <div style={{ display: 'flex', gap: 4 }}>
+                <div className="flex gap-1">
                   {oppForm.map((f, i) => (
-                    <div key={i} style={{ width: 24, height: 24, borderRadius: '50%', background: formColor(f) + '22', border: '1.5px solid ' + formColor(f), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: formColor(f) }}>
+                    <div
+                      key={i}
+                      className={cn(
+                        'flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] text-[9px] font-extrabold',
+                        f === 'V' && 'border-green bg-green/13 text-green',
+                        f === 'F' && 'border-red bg-red/13 text-red',
+                        f === 'O' && 'border-dark-muted text-dark-muted',
+                      )}
+                    >
                       {f}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 12, color: C.textMuted }}>Inga data</div>
+                <div className="text-xs text-dark-muted">Inga data</div>
               )}
             </div>
 
-            {/* H2H */}
-            {(h2h.wins + h2h.draws + h2h.losses) > 0 && (
-              <div style={{ borderLeft: '1px solid ' + C.border, paddingLeft: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 8 }}>
+            {h2h.wins + h2h.draws + h2h.losses > 0 && (
+              <div className="border-l border-light-border pl-4 dark:border-dark-border">
+                <div className="mb-2 text-[10px] font-bold tracking-wide text-dark-muted">
                   INBÖRDES
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: C.green }}>{h2h.wins}</div>
-                    <div style={{ fontSize: 9, color: C.textMuted }}>V</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-center">
+                    <div className="text-lg font-black text-green">{h2h.wins}</div>
+                    <div className="text-[9px] text-dark-muted">V</div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: C.textMuted }}>{h2h.draws}</div>
-                    <div style={{ fontSize: 9, color: C.textMuted }}>O</div>
+                  <div className="text-center">
+                    <div className="text-lg font-black text-dark-muted">{h2h.draws}</div>
+                    <div className="text-[9px] text-dark-muted">O</div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: '#e05555' }}>{h2h.losses}</div>
-                    <div style={{ fontSize: 9, color: C.textMuted }}>F</div>
+                  <div className="text-center">
+                    <div className="text-lg font-black text-red">{h2h.losses}</div>
+                    <div className="text-[9px] text-dark-muted">F</div>
                   </div>
                 </div>
               </div>
             )}
           </div>
         )}
-      </a>
+      </Link>
     </div>
   )
 }

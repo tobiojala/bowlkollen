@@ -1,10 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
 import { shortName, shortDiv } from '@/lib/utils'
+import { cn } from '@/lib/cn'
+import { FilterChip } from '@/components/ui'
+import {
+  leagueLegendDotStyle,
+  leagueRankStyle,
+  leagueRowBorderStyle,
+  leagueShowZoneDivider,
+  leagueZoneColor,
+  leagueZoneDividerStyle,
+  type LeagueZone,
+} from '@/lib/league-ui'
 
 const DEMO = false
 
@@ -24,9 +34,7 @@ type Standing = {
 // ─── Zone config per §D 109, §D 102–104 ───
 // Ranking: 1) matchpoäng 2) bp-differens 3) inbördes möten (approx: bpFor) 4-6) h2h/lottning
 // maxRank is 1-indexed inclusive; 'transparent' = mid-table / no movement
-type Zone = { maxRank: number; color: string; label: string }
-
-function getZones(division: string, total: number): Zone[] {
+function getZones(division: string, total: number): LeagueZone[] {
   switch (division) {
     case 'Elitserien Herrar': return [
       { maxRank: 2,       color: '#f5c200', label: 'SM-slutspel' },
@@ -81,20 +89,6 @@ function getZones(division: string, total: number): Zone[] {
         { maxRank: total,     color: '#666',    label: 'Nedflyttning' },
       ]
   }
-}
-
-function zoneColor(rank1: number, zones: Zone[]): string {
-  for (const z of zones) {
-    if (rank1 <= z.maxRank) return z.color
-  }
-  return 'transparent'
-}
-
-function showDivider(rank1: number, zones: Zone[]): boolean {
-  for (let i = 1; i < zones.length; i++) {
-    if (rank1 === zones[i - 1].maxRank + 1) return true
-  }
-  return false
 }
 
 // ─── Mock standings (swap for real API data when ready) ───
@@ -198,13 +192,11 @@ const TIER_GROUPS = [
   ]},
 ]
 
+const TABLE_GRID =
+  'grid grid-cols-[24px_1fr_28px_68px_40px_30px] items-center gap-1 px-2 py-[9px]'
 
 // ─── Component ───
 export default function LeaguePage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
-  const teal = isDark ? '#38a088' : '#1a8870'
   const [division, setDivision] = useState('Elitserien Herrar')
   const [teams, setTeams]   = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
@@ -240,27 +232,37 @@ export default function LeaguePage() {
   const total = standings.length
   const zones = getZones(division, total)
   const legendZones = zones.filter(z => z.color !== 'transparent' && z.label)
+  const activeGroup = TIER_GROUPS.find(g => g.divisions.includes(division))
 
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
+    <main className="min-h-screen bg-light-bg font-sans dark:bg-dark-bg">
 
-      {/* ─── Sticky header ─── */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30, borderBottom: '1px solid ' + C.border }}>
-
-        {/* Tier pills */}
-        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '10px 16px 6px' } as any}>
+      <div
+        className={cn(
+          'sticky top-14 z-30 border-b',
+          'border-light-border bg-light-bg dark:border-dark-border dark:bg-dark-bg',
+        )}
+      >
+        <div
+          className={cn(
+            'flex gap-1.5 overflow-x-auto px-4 pt-2.5 pb-1.5',
+            '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+          )}
+        >
           {TIER_GROUPS.map(group => {
-            const isActive = TIER_GROUPS.find(g => g.divisions.includes(division))?.label === group.label
+            const isActive = activeGroup?.label === group.label
             return (
-              <button key={group.label} onClick={() => setDivision(group.divisions[0])}
-                style={{
-                  background: isActive ? C.accent : 'transparent',
-                  border: '1px solid ' + (isActive ? C.accent : C.border),
-                  borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700,
-                  color: isActive ? '#1a1400' : C.textMuted,
-                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                  WebkitTapHighlightColor: 'transparent',
-                } as any}
+              <button
+                key={group.label}
+                type="button"
+                onClick={() => setDivision(group.divisions[0])}
+                className={cn(
+                  'shrink-0 cursor-pointer rounded-full border px-3.5 py-[5px] text-xs font-bold whitespace-nowrap',
+                  '[-webkit-tap-highlight-color:transparent]',
+                  isActive
+                    ? 'border-gold bg-gold text-[#1a1400]'
+                    : 'border-light-border bg-transparent text-dark-muted dark:border-dark-border',
+                )}
               >
                 {group.label}
               </button>
@@ -268,141 +270,168 @@ export default function LeaguePage() {
           })}
         </div>
 
-        {/* Division pills */}
-        {(() => {
-          const activeGroup = TIER_GROUPS.find(g => g.divisions.includes(division))
-          if (!activeGroup || activeGroup.divisions.length <= 1) return null
-          return (
-            <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', gap: 6, padding: '4px 16px 8px' } as any}>
-              {activeGroup.divisions.map(d => {
-                const isActive = division === d
-                return (
-                  <button key={d} onClick={() => setDivision(d)}
-                    style={{
-                      background: isActive ? C.surface : 'transparent',
-                      border: '1px solid ' + (isActive ? C.border : 'transparent'),
-                      borderRadius: 20, padding: '4px 12px', fontSize: 11,
-                      fontWeight: isActive ? 700 : 400,
-                      color: isActive ? C.text : C.textMuted,
-                      cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                      WebkitTapHighlightColor: 'transparent',
-                    } as any}
-                  >
-                    {shortDiv(d)}
-                  </button>
-                )
-              })}
-            </div>
-          )
-        })()}
+        {activeGroup && activeGroup.divisions.length > 1 && (
+          <div
+            className={cn(
+              'flex gap-1.5 overflow-x-auto px-4 pt-1 pb-2',
+              '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+            )}
+          >
+            {activeGroup.divisions.map(d => {
+              const isActive = division === d
+              return (
+                <FilterChip key={d} active={isActive} onClick={() => setDivision(d)}>
+                  {shortDiv(d)}
+                </FilterChip>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* ─── Table ─── */}
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 16px 48px' }}>
-        {loading && (() => {
-          const skelClr = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
-          const S = ({ w = '100%', h = 11, r = 5 }: { w?: number | string; h?: number; r?: number }) => (
-            <div style={{ width: w, height: h, borderRadius: r, background: skelClr, flexShrink: 0 }} />
-          )
-          return (
-            <div style={{ marginTop: 12 }}>
-              <style>{`@keyframes skel-pulse{0%,100%{opacity:.45}50%{opacity:1}}.skel-league>*{animation:skel-pulse 1.6s ease-in-out infinite}`}</style>
-              <div className="skel-league" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {[0,1,2,3,4,5,6,7,8,9].map(i => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 8px' }}>
-                    <S w={16} h={11} />
-                    <div style={{ flex: 1 }}><S w={`${50 + (i % 4) * 10}%`} /></div>
-                    <S w={22} />
-                    <S w={52} />
-                    <S w={30} />
-                    <S w={24} />
-                  </div>
-                ))}
+      <div className="mx-auto max-w-app px-4 pb-12">
+        {loading && (
+          <div className="mt-3 flex flex-col gap-0.5">
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+              <div key={i} className={cn(TABLE_GRID)}>
+                <div className="h-[11px] w-4 animate-pulse rounded bg-black/7 dark:bg-white/7" />
+                <div
+                  className={cn(
+                    'h-[11px] animate-pulse rounded bg-black/7 dark:bg-white/7',
+                    (['w-1/2', 'w-[60%]', 'w-[70%]', 'w-[80%]'] as const)[i % 4],
+                  )}
+                />
+                <div className="h-[11px] w-[22px] animate-pulse rounded bg-black/7 dark:bg-white/7" />
+                <div className="h-[11px] w-[52px] animate-pulse rounded bg-black/7 dark:bg-white/7" />
+                <div className="h-[11px] w-[30px] animate-pulse rounded bg-black/7 dark:bg-white/7" />
+                <div className="h-[11px] w-6 animate-pulse rounded bg-black/7 dark:bg-white/7" />
               </div>
-            </div>
-          )
-        })()}
-        {!loading && standings.length === 0 && (
-          <div style={{ padding: 32, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>Inga resultat</div>
+            ))}
+          </div>
         )}
-        {!loading && standings.length > 0 && (
-          <div style={{ marginTop: 12 }}>
 
-            {/* Column headers: pos | team | M | V | O | F | +/- | MP */}
-            <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 28px 68px 40px 30px', gap: 4, padding: '4px 8px 6px', borderBottom: '1px solid ' + C.border }}>
-              <div /><div />
+        {!loading && standings.length === 0 && (
+          <p className="py-8 text-center text-[13px] text-dark-muted">Inga resultat</p>
+        )}
+
+        {!loading && standings.length > 0 && (
+          <div className="mt-3">
+            <div
+              className={cn(
+                TABLE_GRID,
+                'border-b border-light-border pb-1.5 dark:border-dark-border',
+              )}
+            >
+              <div />
+              <div />
               {['M', 'V-O-F', '+/−', 'MP'].map(h => (
-                <div key={h} style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textAlign: 'center', letterSpacing: 0.5 }}>{h}</div>
+                <div
+                  key={h}
+                  className="text-center text-[10px] font-bold tracking-wide text-dark-muted"
+                >
+                  {h}
+                </div>
               ))}
             </div>
 
             {standings.map((s, i) => {
-              const rank  = i + 1
-              const zones_ = zones
-              const zc    = zoneColor(rank, zones_)
-              const dl    = s.diff > 0 ? '+' + s.diff : String(s.diff)
-              const dc    = s.diff > 0 ? teal : s.diff < 0 ? C.red : C.textMuted
+              const rank = i + 1
+              const zc = leagueZoneColor(rank, zones)
+              const dl = s.diff > 0 ? '+' + s.diff : String(s.diff)
+              const followed = followedIds.has(s.teamId)
+
               return (
                 <div key={s.teamId}>
-                  {showDivider(rank, zones_) && (
-                    <div style={{ height: 2, background: zc !== 'transparent' ? zc : '#444', margin: '2px 0', borderRadius: 1, opacity: 0.3 }} />
+                  {leagueShowZoneDivider(rank, zones) && (
+                    <div
+                      className="my-0.5 h-0.5 rounded-sm opacity-30"
+                      style={leagueZoneDividerStyle(zc)}
+                    />
                   )}
-                  <a href={'/teams/' + s.teamId}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '24px 1fr 28px 68px 40px 30px',
-                      gap: 4, padding: '9px 8px',
-                      textDecoration: 'none', borderRadius: 8, alignItems: 'center',
-                      borderLeft: '3px solid ' + (zc !== 'transparent' ? zc : 'transparent'),
-                      background: followedIds.has(s.teamId)
-                        ? (isDark ? 'rgba(91,130,180,0.1)' : 'rgba(91,130,180,0.07)')
-                        : 'transparent',
-                    } as any}
-                    onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                    onMouseLeave={e => (e.currentTarget.style.background = followedIds.has(s.teamId)
-                      ? (isDark ? 'rgba(91,130,180,0.1)' : 'rgba(91,130,180,0.07)')
-                      : 'transparent')}
+                  <Link
+                    href={`/teams/${s.teamId}`}
+                    className={cn(
+                      TABLE_GRID,
+                      'rounded-lg no-underline transition-colors',
+                      'hover:bg-light-card dark:hover:bg-dark-card',
+                      followed && 'bg-[rgba(91,130,180,0.07)] dark:bg-[rgba(91,130,180,0.10)]',
+                    )}
+                    style={leagueRowBorderStyle(zc)}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 700, color: zc !== 'transparent' ? zc : C.textMuted, textAlign: 'center' }}>{rank}</div>
-                    <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: followedIds.has(s.teamId) ? 700 : 500, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {shortName(s.teamName)}
-                      </div>
+                    <div
+                      className={cn(
+                        'text-center text-xs font-bold',
+                        zc === 'transparent' && 'text-dark-muted',
+                      )}
+                      style={leagueRankStyle(zc)}
+                    >
+                      {rank}
                     </div>
-                    <div style={{ fontSize: 12, color: C.textMuted, textAlign: 'center' }}>{s.played}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>
-                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', fontWeight: 700, color: teal }}>{s.wins}</span>
-                      <span style={{ color: C.textMuted, fontSize: 10 }}>-</span>
-                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', color: C.textMuted }}>{s.draws}</span>
-                      <span style={{ color: C.textMuted, fontSize: 10 }}>-</span>
-                      <span style={{ display: 'inline-block', width: 18, textAlign: 'center', color: C.red }}>{s.losses}</span>
+                    <div
+                      className={cn(
+                        'min-w-0 truncate text-sm bk-text-primary',
+                        followed ? 'font-bold' : 'font-medium',
+                      )}
+                    >
+                      {shortName(s.teamName)}
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: dc, textAlign: 'center' }}>{dl}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text, textAlign: 'center' }}>{s.points}</div>
-                  </a>
+                    <div className="text-center text-xs text-dark-muted tabular-nums">
+                      {s.played}
+                    </div>
+                    <div className="flex items-center justify-center text-xs tabular-nums">
+                      <span className="inline-block w-[18px] text-center font-bold text-[#1a8870] dark:text-[#38a088]">
+                        {s.wins}
+                      </span>
+                      <span className="text-[10px] text-dark-muted">-</span>
+                      <span className="inline-block w-[18px] text-center text-dark-muted">
+                        {s.draws}
+                      </span>
+                      <span className="text-[10px] text-dark-muted">-</span>
+                      <span className="inline-block w-[18px] text-center text-red">
+                        {s.losses}
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        'text-center text-[11px] font-semibold tabular-nums',
+                        s.diff > 0 && 'text-[#1a8870] dark:text-[#38a088]',
+                        s.diff < 0 && 'text-red',
+                        s.diff === 0 && 'text-dark-muted',
+                      )}
+                    >
+                      {dl}
+                    </div>
+                    <div className="text-center text-sm font-extrabold tabular-nums bk-text-primary">
+                      {s.points}
+                    </div>
+                  </Link>
                 </div>
               )
             })}
           </div>
         )}
 
-        {/* ─── Legend ─── */}
         {legendZones.length > 0 && (
-          <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' as const }}>
+          <div className="mt-4 flex flex-wrap gap-2.5">
             {legendZones.map(z => (
-              <div key={z.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: C.textMuted }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: z.color }} />
+              <div
+                key={z.label}
+                className="flex items-center gap-[5px] text-[11px] text-dark-muted"
+              >
+                <div
+                  className="h-2 w-2 rounded-sm"
+                  style={leagueLegendDotStyle(z.color)}
+                />
                 {z.label}
               </div>
             ))}
           </div>
         )}
 
-        {/* Column legend */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' as const }}>
+        <div className="mt-2.5 flex flex-wrap gap-3">
           {[['M', 'Matcher'], ['V-O-F', 'Vinst–Oavgjort–Förlust'], ['+/−', 'Banpoängsdifferens'], ['MP', 'Matchpoäng']].map(([abbr, full]) => (
-            <div key={abbr} style={{ fontSize: 10, color: C.textMuted }}>
-              <span style={{ fontWeight: 700 }}>{abbr}</span> {full}
+            <div key={abbr} className="text-[10px] text-dark-muted">
+              <span className="font-bold">{abbr}</span> {full}
             </div>
           ))}
         </div>

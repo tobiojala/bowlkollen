@@ -1,8 +1,44 @@
 'use client'
 
 import React from 'react'
-import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User, Check, HelpCircle, X } from 'lucide-react'
+import {
+  ChevronRight,
+  Trophy,
+  Calendar,
+  Heart,
+  BarChart2,
+  Bell,
+  FileText,
+  User,
+  Check,
+  HelpCircle,
+  X,
+} from 'lucide-react'
+import { cn } from '@/lib/cn'
 import { shortName, shortDiv, teamColor, teamInitials } from '@/lib/utils'
+import {
+  widgetShell,
+  widgetLink,
+  widgetEyebrow,
+  widgetEyebrowGold,
+  widgetEyebrowMuted,
+  widgetEyebrowBlue,
+  widgetEyebrowHeart,
+  widgetEmpty,
+  widgetYes,
+  widgetNo,
+  widgetIconMuted,
+  widgetAvailMaybeBtn,
+  widgetAvailNoBtn,
+  widgetAvailYesBtn,
+  widgetOutcomeBadgeClass,
+  widgetTeamBadgeBorder2,
+  widgetTeamBadgeStyle,
+  widgetTierAccentClass,
+  widgetTierBadgeClass,
+  widgetTierBorderClass,
+  widgetProgressWidthStyle,
+} from '@/lib/widget-ui'
 
 function localDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -10,13 +46,6 @@ function localDate(d: Date) {
 function calcRating(avg: number, best: number, over200: number) {
   if (!avg) return 0
   return Math.min(99, Math.round(avg * 0.4 + (best / 4 / 10) * 0.4 + over200 * 1.5))
-}
-function getTierColor(r: number) {
-  if (r >= 95) return '#f5c200'
-  if (r >= 85) return '#afa9ec'
-  if (r >= 75) return '#5dcaa5'
-  if (r >= 60) return '#ef9f27'
-  return '#8899aa'
 }
 function getTierLabel(r: number) {
   if (r >= 95) return 'LEGEND'
@@ -26,31 +55,21 @@ function getTierLabel(r: number) {
   return 'ROOKIE'
 }
 
-type WProps = { isDark: boolean; C: any; data: any }
+type WProps = { isDark: boolean; data: Record<string, unknown> }
 
-function base(isDark: boolean, bg?: string, borderColor?: string) {
-  return {
-    borderRadius: 20,
-    background: bg || (isDark ? 'rgba(255,255,255,0.04)' : '#ffffff'),
-    border: `1px solid ${borderColor || (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)')}`,
-    overflow: 'hidden' as const,
-    height: '100%',
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
-    padding: '14px',
+export function NextMatchWidget({ isDark, data }: WProps) {
+  const m = data.myNextMatch as Record<string, unknown> | undefined
+  if (!m) {
+    return (
+      <div className={widgetShell()}>
+        <div className={cn(widgetEyebrowGold, 'mb-2')}>NÄSTA MATCH</div>
+        <div className={widgetEmpty}>Inga kommande matcher</div>
+      </div>
+    )
   }
-}
-
-export function NextMatchWidget({ isDark, C, data }: WProps) {
-  const m = data.myNextMatch
-  if (!m) return (
-    <div style={base(isDark)}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#f5c200', letterSpacing: 1.5, marginBottom: 8 }}>NÄSTA MATCH</div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: C.textMuted }}>Inga kommande matcher</div>
-    </div>
-  )
-  const isHome = m.home_team_id === data.myTeam?.id
-  const opp = isHome ? m.away : m.home
+  const myTeam = data.myTeam as { id?: string } | undefined
+  const isHome = m.home_team_id === myTeam?.id
+  const opp = (isHome ? m.away : m.home) as { name?: string } | undefined
   const tc = teamColor(opp?.name || '', isDark)
 
   const today = localDate(new Date())
@@ -62,74 +81,127 @@ export function NextMatchWidget({ isDark, C, data }: WProps) {
   const countdownSub = mDate === today || mDate === tomorrow ? '' : days === 1 ? 'DAG' : 'DAGAR'
 
   return (
-    <a href={'/matches/' + m.id} style={{ ...base(isDark, isDark ? 'linear-gradient(135deg,#0d1a2e,#192540)' : 'linear-gradient(135deg,#e8f4ff,#ddeeff)', isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#f5c200', letterSpacing: 1.5 }}>NÄSTA MATCH</div>
-        <div style={{ fontSize: 9, color: C.textMuted }}>{isHome ? 'HEMMA' : 'BORTA'}</div>
+    <a
+      href={'/matches/' + m.id}
+      className={cn(
+        widgetShell(),
+        widgetLink,
+        'border-gold/20 bg-gradient-to-br from-[#e8f4ff] to-[#ddeeff]',
+        'dark:border-gold/15 dark:from-[#0d1a2e] dark:to-[#192540]',
+      )}
+    >
+      <div className="mb-2.5 flex items-start justify-between">
+        <div className={widgetEyebrowGold}>NÄSTA MATCH</div>
+        <div className="text-[9px] text-dark-muted">{isHome ? 'HEMMA' : 'BORTA'}</div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: tc.bg, border: `2px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc.text, flexShrink: 0 }}>
+      <div className="flex flex-1 items-center gap-2.5">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[9px] font-extrabold"
+          style={widgetTeamBadgeBorder2(tc)}
+        >
           {teamInitials(opp?.name || '')}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
-          {m.division && <div style={{ fontSize: 9, color: '#f5c200', marginTop: 1, opacity: 0.7 }}>{shortDiv(m.division)}</div>}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-bold bk-text-primary">{shortName(opp?.name || '')}</div>
+          <div className="mt-0.5 text-[10px] text-dark-muted">
+            {new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+            })}
+          </div>
+          {!!m.division && (
+            <div className="mt-px text-[9px] text-gold/70">{shortDiv(m.division as string)}</div>
+          )}
         </div>
-        <div style={{ textAlign: 'center', background: urgent ? 'rgba(245,194,0,0.15)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: `1px solid ${urgent ? 'rgba(245,194,0,0.4)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 10, padding: '6px 10px', flexShrink: 0, minWidth: 52 }}>
-          <div style={{ fontSize: countdownLabel.length > 4 ? 11 : 20, fontWeight: 900, color: urgent ? '#f5c200' : C.text, lineHeight: 1 }}>{countdownLabel}</div>
-          {countdownSub && <div style={{ fontSize: 7, color: C.textMuted, marginTop: 1 }}>{countdownSub}</div>}
+        <div
+          className={cn(
+            'min-w-[52px] shrink-0 rounded-[10px] px-2.5 py-1.5 text-center',
+            urgent
+              ? 'border border-gold/40 bg-gold/15'
+              : 'border border-black/8 bg-black/4 dark:border-white/10 dark:bg-white/5',
+          )}
+        >
+          <div
+            className={cn(
+              'leading-none font-black',
+              countdownLabel.length > 4 ? 'text-[11px]' : 'text-xl',
+              urgent ? 'text-gold' : 'bk-text-primary',
+            )}
+          >
+            {countdownLabel}
+          </div>
+          {countdownSub && <div className="mt-px text-[7px] text-dark-muted">{countdownSub}</div>}
         </div>
       </div>
-      <div style={{ marginTop: 10, height: 3, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: Math.max(5, Math.min(95, (1 - days / 14) * 100)) + '%', height: '100%', background: 'linear-gradient(90deg,#f5c200,#f5c20066)', borderRadius: 2 }} />
+      <div className="mt-2.5 h-[3px] overflow-hidden rounded-sm bg-black/6 dark:bg-white/6">
+        <div
+          className="h-full rounded-sm bg-gradient-to-r from-gold to-gold/40"
+          style={widgetProgressWidthStyle((1 - days / 14) * 100)}
+        />
       </div>
     </a>
   )
 }
 
-export function LastResultWidget({ isDark, C, data }: WProps) {
-  const m = data.myLastMatch
-  if (!m) return (
-    <div style={base(isDark)}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 8 }}>SENASTE MATCH</div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: C.textMuted }}>Inga resultat</div>
-    </div>
-  )
-  const isHome = m.home_team_id === data.myTeam?.id
-  const opp = isHome ? m.away : m.home
-  const myScore = isHome ? m.home_score : m.away_score
-  const oppScore = isHome ? m.away_score : m.home_score
+export function LastResultWidget({ isDark, data }: WProps) {
+  const m = data.myLastMatch as Record<string, unknown> | undefined
+  if (!m) {
+    return (
+      <div className={widgetShell()}>
+        <div className={cn(widgetEyebrowMuted, 'mb-2')}>SENASTE MATCH</div>
+        <div className={widgetEmpty}>Inga resultat</div>
+      </div>
+    )
+  }
+  const myTeam = data.myTeam as { id?: string } | undefined
+  const isHome = m.home_team_id === myTeam?.id
+  const opp = (isHome ? m.away : m.home) as { name?: string } | undefined
+  const myScore = (isHome ? m.home_score : m.away_score) as number
+  const oppScore = (isHome ? m.away_score : m.home_score) as number
   const won = myScore > oppScore
   const drew = myScore === oppScore
-  const rc = won ? '#1d9e75' : drew ? '#f5c200' : '#e24b4a'
   const rl = won ? 'V' : drew ? 'O' : 'F'
   const mDate = (m.date as string).slice(0, 10)
-  const dateStr = new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
+  const dateStr = new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
   return (
-    <a href={'/matches/' + m.id} style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>SENASTE MATCH</div>
-        <div style={{ fontSize: 9, color: C.textMuted }}>{isHome ? 'HEMMA' : 'BORTA'}</div>
+    <a href={'/matches/' + m.id} className={cn(widgetShell(), widgetLink)}>
+      <div className="mb-2 flex items-center justify-between">
+        <div className={widgetEyebrowMuted}>SENASTE MATCH</div>
+        <div className="text-[9px] text-dark-muted">{isHome ? 'HEMMA' : 'BORTA'}</div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: rc + '22', border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: rc, flexShrink: 0 }}>{rl}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 20, fontWeight: 900, color: C.text, lineHeight: 1 }}>{myScore} – {oppScore}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>vs {shortName(opp?.name || '')}</div>
-          <div style={{ fontSize: 9, color: C.textMuted, marginTop: 1 }}>{dateStr}</div>
+      <div className="flex flex-1 items-center gap-2">
+        <div
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-black',
+            widgetOutcomeBadgeClass(won, drew),
+          )}
+        >
+          {rl}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-xl leading-none font-black bk-text-primary">
+            {myScore} – {oppScore}
+          </div>
+          <div className="mt-0.5 truncate text-[10px] text-dark-muted">vs {shortName(opp?.name || '')}</div>
+          <div className="mt-px text-[9px] text-dark-muted">{dateStr}</div>
         </div>
       </div>
     </a>
   )
 }
 
-export function StandingsWidget({ isDark, C, data }: WProps) {
-  const myTeamId = data.myTeam?.id
-  const all = data.standings
-  const myPos = myTeamId ? all.findIndex((r: any) => r.team.id === myTeamId) : -1
+export function StandingsWidget({ data }: WProps) {
+  const myTeam = data.myTeam as { id?: string } | undefined
+  const myTeamId = myTeam?.id
+  const all = (data.standings as { team: { id: string; name: string }; points: number }[]) || []
+  const myPos = myTeamId ? all.findIndex(r => r.team.id === myTeamId) : -1
 
-  type RowEntry = { row: any; pos: number; ellipsis?: true }
+  type RowEntry = { row: (typeof all)[0] | null; pos: number; ellipsis?: true }
   let rows: RowEntry[]
   if (myPos >= 4) {
     rows = [
@@ -139,26 +211,62 @@ export function StandingsWidget({ isDark, C, data }: WProps) {
       { row: all[myPos], pos: myPos },
     ]
   } else {
-    rows = all.slice(0, 4).map((r: any, i: number) => ({ row: r, pos: i }))
+    rows = all.slice(0, 4).map((r, i) => ({ row: r, pos: i }))
   }
 
   return (
-    <a href="/league" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#4a90d9', letterSpacing: 1.5 }}>ELITSERIEN H</div>
-        <ChevronRight size={12} color={C.textMuted} />
+    <a href="/league" className={cn(widgetShell(), widgetLink)}>
+      <div className="mb-2 flex items-center justify-between">
+        <div className={widgetEyebrowBlue}>ELITSERIEN H</div>
+        <ChevronRight size={12} className={widgetIconMuted} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, justifyContent: 'center' }}>
+      <div className="flex flex-1 flex-col justify-center gap-1">
         {rows.map(({ row, pos, ellipsis }) => {
-          if (ellipsis) return (
-            <div key="ellipsis" style={{ textAlign: 'center', fontSize: 10, color: C.textMuted, letterSpacing: 3, lineHeight: 1 }}>···</div>
-          )
+          if (ellipsis) {
+            return (
+              <div key="ellipsis" className="text-center text-[10px] leading-none tracking-[3px] text-dark-muted">
+                ···
+              </div>
+            )
+          }
+          if (!row) return null
           const isMe = myTeamId && row.team.id === myTeamId
           return (
-            <div key={row.team.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: isMe ? 'rgba(245,194,0,0.09)' : 'transparent', borderRadius: 6, padding: isMe ? '3px 4px' : '1px 0', margin: isMe ? '0 -4px' : '0' }}>
-              <div style={{ width: 14, fontSize: 10, fontWeight: 700, color: pos < 2 ? '#f5c200' : C.textMuted }}>{pos + 1}</div>
-              <div style={{ flex: 1, fontSize: 11, color: isMe ? C.accent : pos === 0 ? C.text : C.textMuted, fontWeight: isMe ? 700 : pos === 0 ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(row.team.name)}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: isMe ? C.accent : pos < 2 ? '#f5c200' : C.textMuted }}>{row.points}p</div>
+            <div
+              key={row.team.id}
+              className={cn(
+                'flex items-center gap-1.5',
+                isMe && '-mx-1 rounded-md bg-gold/9 px-1 py-0.5',
+              )}
+            >
+              <div
+                className={cn(
+                  'w-3.5 text-[10px] font-bold',
+                  pos < 2 ? 'text-gold' : 'text-dark-muted',
+                )}
+              >
+                {pos + 1}
+              </div>
+              <div
+                className={cn(
+                  'min-w-0 flex-1 truncate text-[11px]',
+                  isMe && 'font-bold text-gold',
+                  !isMe && pos === 0 && 'font-semibold bk-text-primary',
+                  !isMe && pos !== 0 && 'text-dark-muted',
+                )}
+              >
+                {shortName(row.team.name)}
+              </div>
+              <div
+                className={cn(
+                  'text-[11px] font-bold',
+                  isMe && 'text-gold',
+                  !isMe && pos < 2 && 'text-gold',
+                  !isMe && pos >= 2 && 'text-dark-muted',
+                )}
+              >
+                {row.points}p
+              </div>
             </div>
           )
         })}
@@ -167,34 +275,52 @@ export function StandingsWidget({ isDark, C, data }: WProps) {
   )
 }
 
-export function MyStatsWidget({ isDark, C, data }: WProps) {
-  const stats = data.myStats
-  const player = data.myPlayer
-  if (!stats || !player) return (
-    <a href="/profile" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 8 }}>MIN STATISTIK</div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <User size={24} color={C.textMuted} />
-        <div style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>Claima din spelarprofil</div>
-      </div>
-    </a>
-  )
-  const rating = calcRating(stats.avg, stats.best, stats.over200)
-  const tc = getTierColor(rating)
+export function MyStatsWidget({ isDark, data }: WProps) {
+  const stats = data.myStats as { avg?: number; best?: number; over200?: number; matches?: number } | undefined
+  const player = data.myPlayer as { id: string } | undefined
+  if (!stats || !player) {
+    return (
+      <a href="/profile" className={cn(widgetShell(), widgetLink)}>
+        <div className={cn(widgetEyebrowMuted, 'mb-2')}>MIN STATISTIK</div>
+        <div className={cn(widgetEmpty, 'flex-col gap-1.5')}>
+          <User size={24} className={widgetIconMuted} />
+          <span>Claima din spelarprofil</span>
+        </div>
+      </a>
+    )
+  }
+  const rating = calcRating(stats.avg || 0, stats.best || 0, stats.over200 || 0)
   const tl = getTierLabel(rating)
+  const tierAccent = widgetTierAccentClass(rating)
   return (
-    <a href={'/players/' + player.id} style={{ ...base(isDark, isDark ? 'linear-gradient(135deg,#1c1640,#0d1520)' : '#ffffff', tc + '33'), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: tc, letterSpacing: 1.5 }}>MIN STATISTIK</div>
-        <div style={{ fontSize: 8, fontWeight: 700, color: tc, background: tc + '22', borderRadius: 6, padding: '2px 6px' }}>{tl}</div>
+    <a
+      href={'/players/' + player.id}
+      className={cn(widgetShell(), widgetLink, widgetTierBorderClass(rating))}
+    >
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className={cn(widgetEyebrow, tierAccent)}>MIN STATISTIK</div>
+        <div className={cn('rounded-md px-1.5 py-0.5 text-[8px] font-bold', widgetTierBadgeClass(rating))}>
+          {tl}
+        </div>
       </div>
-      <div style={{ fontSize: 30, fontWeight: 900, color: tc, lineHeight: 1, marginBottom: 4 }}>{stats.avg || '—'}</div>
-      <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 8 }}>SNITT · {stats.matches} MATCHER</div>
-      <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
-        {[{l:'BÄSTA',v:stats.best||'—'},{l:'200+',v:stats.over200}].map(s => (
-          <div key={s.l} style={{ flex: 1, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)', borderRadius: 8, padding: '5px 4px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{s.v}</div>
-            <div style={{ fontSize: 7, color: C.textMuted, marginTop: 1 }}>{s.l}</div>
+      <div className={cn('mb-1 text-[30px] leading-none font-black', tierAccent)}>
+        {stats.avg || '—'}
+      </div>
+      <div className="mb-2 text-[9px] text-dark-muted">SNITT · {stats.matches} MATCHER</div>
+      <div className="mt-auto flex gap-1.5">
+        {[
+          { l: 'BÄSTA', v: stats.best || '—' },
+          { l: '200+', v: stats.over200 },
+        ].map(s => (
+          <div
+            key={s.l}
+            className={cn(
+              'flex-1 rounded-lg px-1 py-1.25 text-center',
+              isDark ? 'bg-black/20' : 'bg-black/4',
+            )}
+          >
+            <div className="text-[13px] font-bold bk-text-primary">{s.v}</div>
+            <div className="mt-px text-[7px] text-dark-muted">{s.l}</div>
           </div>
         ))}
       </div>
@@ -202,63 +328,120 @@ export function MyStatsWidget({ isDark, C, data }: WProps) {
   )
 }
 
-export function AvailabilityWidget({ isDark, C, data, onRespond }: WProps & { onRespond: (r: string) => void }) {
-  const m = data.availabilityMatch
-  const myResponse = data.availabilityStatus
-  const teamId = data.myTeam?.id
-  if (!m || !teamId) return (
-    <div style={base(isDark)}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5, marginBottom: 8 }}>TILLGÄNGLIGHET</div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: C.textMuted }}>Inga matcher</div>
-    </div>
-  )
+export function AvailabilityWidget({
+  isDark,
+  data,
+  onRespond,
+}: WProps & { onRespond: (r: string) => void }) {
+  const m = data.availabilityMatch as Record<string, unknown> | undefined
+  const myResponse = data.availabilityStatus as string | undefined
+  const myTeam = data.myTeam as { id: string } | undefined
+  const teamId = myTeam?.id
+  if (!m || !teamId) {
+    return (
+      <div className={widgetShell()}>
+        <div className={cn(widgetEyebrowMuted, 'mb-2')}>TILLGÄNGLIGHET</div>
+        <div className={widgetEmpty}>Inga matcher</div>
+      </div>
+    )
+  }
   const isHome = m.home_team_id === teamId
-  const opp = isHome ? m.away : m.home
+  const opp = (isHome ? m.away : m.home) as { name?: string } | undefined
+  const counts = data.availabilityCounts as { yes: number; maybe: number; no: number } | undefined
+
   return (
-    <div style={{ ...base(isDark, isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.04)', isDark ? 'rgba(245,194,0,0.2)' : 'rgba(245,194,0,0.25)') }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#f5c200', letterSpacing: 1.5, marginBottom: 6 }}>TILLGÄNGLIGHET</div>
-      <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 2 }}>vs {shortName(opp?.name || '')}</div>
-      <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 10 }}>{new Date(m.date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
+    <div
+      className={cn(
+        widgetShell(),
+        'border-gold/25 bg-gold/4 dark:border-gold/20 dark:bg-gold/6',
+      )}
+    >
+      <div className={cn(widgetEyebrowGold, 'mb-1.5')}>TILLGÄNGLIGHET</div>
+      <div className="mb-0.5 text-xs font-semibold bk-text-primary">vs {shortName(opp?.name || '')}</div>
+      <div className="mb-2.5 text-[10px] text-dark-muted">
+        {new Date(m.date as string).toLocaleDateString('sv-SE', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+        })}
+      </div>
       {myResponse ? (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            {myResponse === 'yes' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.green + '22', border: '2px solid ' + C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Check size={16} color={C.green} /></div>}
-            {myResponse === 'maybe' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f5c20022', border: '2px solid #f5c200', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><HelpCircle size={16} color="#f5c200" /></div>}
-            {myResponse === 'no' && <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.red + '22', border: '2px solid ' + C.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} color={C.red} /></div>}
+          <div className="mb-2 flex items-center gap-2">
+            {myResponse === 'yes' && (
+              <div
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2',
+                  'border-[#3d6090] bg-[#3d6090]/13 dark:border-[#5a82b4] dark:bg-[#5a82b4]/13',
+                )}
+              >
+                <Check size={16} className={widgetYes} />
+              </div>
+            )}
+            {myResponse === 'maybe' && (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-gold bg-gold/13">
+                <HelpCircle size={16} className="text-gold" />
+              </div>
+            )}
+            {myResponse === 'no' && (
+              <div
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2',
+                  'border-[#d63b3b] bg-[#d63b3b]/13 dark:border-[#e05555] dark:bg-[#e05555]/13',
+                )}
+              >
+                <X size={16} className={widgetNo} />
+              </div>
+            )}
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: myResponse === 'yes' ? C.green : myResponse === 'maybe' ? '#f5c200' : C.red }}>
+              <div
+                className={cn(
+                  'text-xs font-semibold',
+                  myResponse === 'yes' && widgetYes,
+                  myResponse === 'maybe' && 'text-gold',
+                  myResponse === 'no' && widgetNo,
+                )}
+              >
                 {myResponse === 'yes' ? 'Du spelar!' : myResponse === 'maybe' ? 'Kanske' : 'Kan inte'}
               </div>
-              <a href={'/team/' + teamId + '/tillganglighet/' + m.id} style={{ fontSize: 10, color: C.textMuted, textDecoration: 'none' }}>Ändra →</a>
+              <a
+                href={'/team/' + teamId + '/tillganglighet/' + m.id}
+                className="text-[10px] text-dark-muted no-underline"
+              >
+                Ändra →
+              </a>
             </div>
           </div>
-          {data.availabilityCounts && (
-            <div style={{ fontSize: 10, color: C.textMuted, display: 'flex', gap: 6 }}>
-              <span style={{ color: C.green, fontWeight: 600 }}>{data.availabilityCounts.yes} ja</span>
+          {counts && (
+            <div className="flex gap-1.5 text-[10px] text-dark-muted">
+              <span className={cn('font-semibold', widgetYes)}>{counts.yes} ja</span>
               <span>·</span>
-              <span style={{ color: '#f5c200', fontWeight: 600 }}>{data.availabilityCounts.maybe} kanske</span>
+              <span className="font-semibold text-gold">{counts.maybe} kanske</span>
               <span>·</span>
-              <span style={{ color: C.red, fontWeight: 600 }}>{data.availabilityCounts.no} nej</span>
+              <span className={cn('font-semibold', widgetNo)}>{counts.no} nej</span>
             </div>
           )}
         </div>
       ) : (
         <div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-            {[{k:'yes',l:'Ja',c:C.green},{k:'maybe',l:'?',c:'#f5c200'},{k:'no',l:'Nej',c:C.red}].map(r => (
-              <button key={r.k} onClick={() => onRespond(r.k)}
-                style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: `1.5px solid ${r.c}44`, background: r.c + '18', color: r.c, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          <div className="mb-1.5 flex gap-1.5">
+            {[
+              { k: 'yes', l: 'Ja', btn: widgetAvailYesBtn },
+              { k: 'maybe', l: '?', btn: widgetAvailMaybeBtn },
+              { k: 'no', l: 'Nej', btn: widgetAvailNoBtn },
+            ].map(r => (
+              <button key={r.k} type="button" onClick={() => onRespond(r.k)} className={r.btn}>
                 {r.l}
               </button>
             ))}
           </div>
-          {data.availabilityCounts && (data.availabilityCounts.yes + data.availabilityCounts.maybe + data.availabilityCounts.no) > 0 && (
-            <div style={{ fontSize: 10, color: C.textMuted, display: 'flex', gap: 6 }}>
-              <span style={{ color: C.green, fontWeight: 600 }}>{data.availabilityCounts.yes} ja</span>
+          {counts && counts.yes + counts.maybe + counts.no > 0 && (
+            <div className="flex gap-1.5 text-[10px] text-dark-muted">
+              <span className={cn('font-semibold', widgetYes)}>{counts.yes} ja</span>
               <span>·</span>
-              <span style={{ color: '#f5c200', fontWeight: 600 }}>{data.availabilityCounts.maybe} kanske</span>
+              <span className="font-semibold text-gold">{counts.maybe} kanske</span>
               <span>·</span>
-              <span style={{ color: C.red, fontWeight: 600 }}>{data.availabilityCounts.no} nej</span>
+              <span className={cn('font-semibold', widgetNo)}>{counts.no} nej</span>
             </div>
           )}
         </div>
@@ -267,28 +450,37 @@ export function AvailabilityWidget({ isDark, C, data, onRespond }: WProps & { on
   )
 }
 
-export function TeamFeedWidget({ isDark, C, data }: WProps) {
-  const posts = data.teamPosts
-  const team = data.myTeam
+export function TeamFeedWidget({ isDark, data }: WProps) {
+  const posts = (data.teamPosts as { id: string; post_type: string; content: string }[]) || []
+  const team = data.myTeam as { id: string } | undefined
   if (!team) return null
   return (
-    <a href={'/team/' + team.id + '/intern'} style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>LAGFEED</div>
-        <ChevronRight size={12} color={C.textMuted} />
+    <a href={'/team/' + team.id + '/intern'} className={cn(widgetShell(), widgetLink)}>
+      <div className="mb-2 flex items-center justify-between">
+        <div className={widgetEyebrowMuted}>LAGFEED</div>
+        <ChevronRight size={12} className={widgetIconMuted} />
       </div>
       {posts.length === 0 ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: C.textMuted }}>Inga inlägg än</div>
+        <div className={widgetEmpty}>Inga inlägg än</div>
       ) : (
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          {posts.slice(0,2).map((p: any) => (
-            <div key={p.id} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: p.post_type === 'lineup' ? '#f5c200' : '#1d9e75', marginBottom: 3 }}>
+        <div className="flex-1 overflow-hidden">
+          {posts.slice(0, 2).map(p => (
+            <div
+              key={p.id}
+              className={cn(
+                'mb-2 border-b pb-2',
+                isDark ? 'border-white/6' : 'border-black/6',
+              )}
+            >
+              <div
+                className={cn(
+                  'mb-0.5 text-[9px] font-bold',
+                  p.post_type === 'lineup' ? 'text-gold' : 'text-[#1d9e75]',
+                )}
+              >
                 {p.post_type === 'lineup' ? 'LAGUTTAGNING' : 'NYHET'}
               </div>
-              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
-                {p.content}
-              </div>
+              <div className="line-clamp-2 text-xs leading-snug bk-text-primary">{p.content}</div>
             </div>
           ))}
         </div>
@@ -297,54 +489,37 @@ export function TeamFeedWidget({ isDark, C, data }: WProps) {
   )
 }
 
-export function UpcomingWidget({ isDark, C, data }: WProps) {
+export function UpcomingWidget({ isDark, data }: WProps) {
+  const upcoming = (data.upcoming as Record<string, unknown>[]) || []
   return (
-    <a href="/schema" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>KOMMANDE</div>
-        <ChevronRight size={12} color={C.textMuted} />
+    <a href="/schema" className={cn(widgetShell(), widgetLink)}>
+      <div className="mb-2 flex items-center justify-between">
+        <div className={widgetEyebrowMuted}>KOMMANDE</div>
+        <ChevronRight size={12} className={widgetIconMuted} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'center' }}>
-        {data.upcoming.slice(0,3).map((m: any) => {
-          const hc = teamColor(m.home?.name || '', isDark)
-          const ac = teamColor(m.away?.name || '', isDark)
+      <div className="flex flex-1 flex-col justify-center gap-1.5">
+        {upcoming.slice(0, 3).map(m => {
+          const home = m.home as { name?: string } | undefined
+          const away = m.away as { name?: string } | undefined
+          const hc = teamColor(home?.name || '', isDark)
+          const ac = teamColor(away?.name || '', isDark)
           return (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 18, height: 18, borderRadius: 4, background: hc.bg, border: `1px solid ${hc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, fontWeight: 800, color: hc.text, flexShrink: 0 }}>{teamInitials(m.home?.name||'')}</div>
-              <div style={{ flex: 1, fontSize: 10, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(m.home?.name||'')} – {shortName(m.away?.name||'')}</div>
-              <div style={{ width: 18, height: 18, borderRadius: 4, background: ac.bg, border: `1px solid ${ac.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, fontWeight: 800, color: ac.text, flexShrink: 0 }}>{teamInitials(m.away?.name||'')}</div>
-            </div>
-          )
-        })}
-      </div>
-    </a>
-  )
-}
-
-export function RecentResultsWidget({ isDark, C, data }: WProps) {
-  return (
-    <a href="/schema" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, letterSpacing: 1.5 }}>SENASTE RESULTAT</div>
-        <ChevronRight size={12} color={C.textMuted} />
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1, justifyContent: 'center' }}>
-        {data.recentResults.slice(0,4).map((m: any) => {
-          const hc = teamColor(m.home?.name || '', isDark)
-          const ac = teamColor(m.away?.name || '', isDark)
-          const hw = m.home_score > m.away_score
-          const aw = m.away_score > m.home_score
-          return (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 18, height: 18, borderRadius: 4, background: hc.bg, border: `1px solid ${hc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, fontWeight: 800, color: hc.text, flexShrink: 0 }}>{teamInitials(m.home?.name||'')}</div>
-              <div style={{ flex: 1, fontSize: 9, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(m.home?.name||'')}</div>
-              <div style={{ fontSize: 11, fontWeight: 800, minWidth: 32, textAlign: 'center' }}>
-                <span style={{ color: hw ? '#f5c200' : C.textMuted }}>{m.home_score}</span>
-                <span style={{ color: C.textMuted, fontSize: 9 }}>–</span>
-                <span style={{ color: aw ? '#f5c200' : C.textMuted }}>{m.away_score}</span>
+            <div key={m.id as string} className="flex items-center gap-1.25">
+              <div
+                className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
+                style={widgetTeamBadgeStyle(hc)}
+              >
+                {teamInitials(home?.name || '')}
               </div>
-              <div style={{ flex: 1, fontSize: 9, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{shortName(m.away?.name||'')}</div>
-              <div style={{ width: 18, height: 18, borderRadius: 4, background: ac.bg, border: `1px solid ${ac.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, fontWeight: 800, color: ac.text, flexShrink: 0 }}>{teamInitials(m.away?.name||'')}</div>
+              <div className="min-w-0 flex-1 truncate text-[10px] text-dark-muted">
+                {shortName(home?.name || '')} – {shortName(away?.name || '')}
+              </div>
+              <div
+                className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
+                style={widgetTeamBadgeStyle(ac)}
+              >
+                {teamInitials(away?.name || '')}
+              </div>
             </div>
           )
         })}
@@ -353,32 +528,99 @@ export function RecentResultsWidget({ isDark, C, data }: WProps) {
   )
 }
 
-export function FavTeamsWidget({ isDark, C, data }: WProps) {
-  const teams = data.favTeams
-  if (!teams.length) return (
-    <a href="/teams" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#e05555', letterSpacing: 1.5, marginBottom: 8 }}>FAVORITLAG</div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <Heart size={22} color={C.textMuted} />
-        <div style={{ fontSize: 11, color: C.textMuted }}>Följ lag för att se dem här</div>
+export function RecentResultsWidget({ isDark, data }: WProps) {
+  const recentResults = (data.recentResults as Record<string, unknown>[]) || []
+  return (
+    <a href="/schema" className={cn(widgetShell(), widgetLink)}>
+      <div className="mb-2 flex items-center justify-between">
+        <div className={widgetEyebrowMuted}>SENASTE RESULTAT</div>
+        <ChevronRight size={12} className={widgetIconMuted} />
+      </div>
+      <div className="flex flex-1 flex-col justify-center gap-1.25">
+        {recentResults.slice(0, 4).map(m => {
+          const home = m.home as { name?: string } | undefined
+          const away = m.away as { name?: string } | undefined
+          const hc = teamColor(home?.name || '', isDark)
+          const ac = teamColor(away?.name || '', isDark)
+          const hw = (m.home_score as number) > (m.away_score as number)
+          const aw = (m.away_score as number) > (m.home_score as number)
+          return (
+            <div key={m.id as string} className="flex items-center gap-1">
+              <div
+                className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
+                style={widgetTeamBadgeStyle(hc)}
+              >
+                {teamInitials(home?.name || '')}
+              </div>
+              <div className="min-w-0 flex-1 truncate text-[9px] text-dark-muted">
+                {shortName(home?.name || '')}
+              </div>
+              <div className="min-w-8 text-center text-[11px] font-extrabold">
+                <span className={hw ? 'text-gold' : 'text-dark-muted'}>{m.home_score as number}</span>
+                <span className="text-[9px] text-dark-muted">–</span>
+                <span className={aw ? 'text-gold' : 'text-dark-muted'}>{m.away_score as number}</span>
+              </div>
+              <div className="min-w-0 flex-1 truncate text-right text-[9px] text-dark-muted">
+                {shortName(away?.name || '')}
+              </div>
+              <div
+                className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
+                style={widgetTeamBadgeStyle(ac)}
+              >
+                {teamInitials(away?.name || '')}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </a>
   )
+}
+
+export function FavTeamsWidget({ isDark, data }: WProps) {
+  const teams = (data.favTeams as Record<string, unknown>[]) || []
+  if (!teams.length) {
+    return (
+      <a href="/teams" className={cn(widgetShell(), widgetLink)}>
+        <div className={cn(widgetEyebrowHeart, 'mb-2')}>FAVORITLAG</div>
+        <div className={cn(widgetEmpty, 'flex-col gap-1.5')}>
+          <Heart size={22} className={widgetIconMuted} />
+          <span>Följ lag för att se dem här</span>
+        </div>
+      </a>
+    )
+  }
   return (
-    <a href="/teams" style={{ ...base(isDark), textDecoration: 'none' }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: '#e05555', letterSpacing: 1.5, marginBottom: 8 }}>FAVORITLAG</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'center' }}>
-        {teams.slice(0,3).map((t: any) => {
-          const tc = teamColor(t.name, isDark)
-          const m = t.lastResult
+    <a href="/teams" className={cn(widgetShell(), widgetLink)}>
+      <div className={cn(widgetEyebrowHeart, 'mb-2')}>FAVORITLAG</div>
+      <div className="flex flex-1 flex-col justify-center gap-1.5">
+        {teams.slice(0, 3).map(t => {
+          const tc = teamColor(t.name as string, isDark)
+          const m = t.lastResult as Record<string, unknown> | undefined
           const isHome = m?.home_team_id === t.id
-          const myScore = isHome ? m?.home_score : m?.away_score
-          const oppScore = isHome ? m?.away_score : m?.home_score
+          const myScore = (isHome ? m?.home_score : m?.away_score) as number | undefined
+          const oppScore = (isHome ? m?.away_score : m?.home_score) as number | undefined
           return (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: tc.bg, border: `1.5px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 800, color: tc.text, flexShrink: 0 }}>{teamInitials(t.name)}</div>
-              <div style={{ flex: 1, fontSize: 11, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(t.name)}</div>
-              {m && <div style={{ fontSize: 11, fontWeight: 700, color: myScore > oppScore ? '#f5c200' : C.textMuted }}>{myScore}–{oppScore}</div>}
+            <div key={t.id as string} className="flex items-center gap-2">
+              <div
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[6px] font-extrabold"
+                style={widgetTeamBadgeBorder2(tc)}
+              >
+                {teamInitials(t.name as string)}
+              </div>
+              <div className="min-w-0 flex-1 truncate text-[11px] font-semibold bk-text-primary">
+                {shortName(t.name as string)}
+              </div>
+              {m && myScore != null && oppScore != null && (
+                <div
+                  className={cn(
+                    'text-[11px] font-bold',
+                    myScore > oppScore ? 'text-gold' : 'text-dark-muted',
+                  )}
+                >
+                  {myScore}–{oppScore}
+                </div>
+              )}
             </div>
           )
         })}

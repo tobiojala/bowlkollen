@@ -1,54 +1,42 @@
 'use client'
 
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { SectionHeader } from '@/components/ui'
 
 const YEAR = new Date().getFullYear()
 
-export default function LegalPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
-
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: C.accent, letterSpacing: 1.5, marginBottom: 10 }}>
-        {title}
-      </div>
-      <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.7 }}>
-        {children}
-      </div>
-    </div>
-  )
-
-  const P = ({ children }: { children: React.ReactNode }) => (
-    <p style={{ margin: '0 0 10px' }}>{children}</p>
-  )
-
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 20px 48px' }}>
+    <section className="mb-8">
+      <SectionHeader label={title} className="border-0 px-0 py-0 mb-2.5" />
+      <div className="text-sm leading-relaxed text-dark-muted">{children}</div>
+    </section>
+  )
+}
 
-        {/* Header */}
-        <div style={{ marginBottom: 36 }}>
-          <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>
-            Bowlkollen™
-          </div>
-          <div style={{ fontSize: 12, color: C.textMuted }}>
-            Juridisk information &amp; upphovsrätt
-          </div>
-          <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12,
-            background: isDark ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.08)',
-            border: '1px solid rgba(245,194,0,0.2)', fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+function P({ children }: { children: ReactNode }) {
+  return <p className="mb-2.5 last:mb-0">{children}</p>
+}
+
+export default function LegalPage() {
+  return (
+    <main className="min-h-screen bg-light-bg font-sans dark:bg-dark-bg">
+      <div className="mx-auto max-w-app px-5 py-6 pb-12">
+
+        <header className="mb-9">
+          <h1 className="mb-1.5 text-[22px] font-black bk-text-primary">Bowlkollen™</h1>
+          <p className="text-xs text-dark-muted">Juridisk information & upphovsrätt</p>
+          <div className="mt-4 rounded-xl border border-gold/20 bg-gold/[0.07] px-4 py-3 text-xs leading-relaxed text-dark-muted">
             © {YEAR} Tobias Ek-Ojala. Alla rättigheter förbehålls.
           </div>
-        </div>
+        </header>
 
         <Section title="UPPHOVSRÄTT">
           <P>
             Bowlkollen — inklusive all källkod, gränssnittdesign, layouter, animationer, logotyper
             och övriga kreativa verk — är upphovsskyddat material som tillhör{' '}
-            <strong style={{ color: C.text }}>Tobias Ek-Ojala</strong>, © {YEAR}.
+            <strong className="bk-text-primary">Tobias Ek-Ojala</strong>, © {YEAR}.
           </P>
           <P>
             Skyddet är automatiskt från och med skapandet och regleras av{' '}
@@ -67,7 +55,7 @@ export default function LegalPage() {
             färgsättning, typografi eller innehåll — får utan skriftligt tillstånd från
             rättighetsinnehavaren:
           </P>
-          <ul style={{ margin: '0 0 10px', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <ul className="mb-2.5 flex list-disc flex-col gap-1 pl-5">
             {[
               'reproduceras eller kopieras, helt eller delvis',
               'distribueras eller spridas vidare',
@@ -94,7 +82,7 @@ export default function LegalPage() {
 
         <Section title="VARUMÄRKE">
           <P>
-            Namnet <strong style={{ color: C.text }}>Bowlkollen™</strong> och
+            Namnet <strong className="bk-text-primary">Bowlkollen™</strong> och
             tillhörande logotyp är Tobias Ek-Ojalas egendom.
             Användning av namnet i kommersiella, vilseledande eller konkurrenssnedvridande
             syften är inte tillåten.
@@ -143,15 +131,16 @@ export default function LegalPage() {
             Frågor om licensiering, tillstånd, datakällor eller andra rättsliga frågor —
             kontakta rättighetsinnehavaren:
           </P>
-          <a href="mailto:tobias.bergmark@gmail.com"
-            style={{ color: C.accent, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
+          <Link
+            href="mailto:tobias.bergmark@gmail.com"
+            className="text-sm font-bold text-gold no-underline"
+          >
             tobias.bergmark@gmail.com
-          </a>
+          </Link>
         </Section>
 
-        {/* Divider */}
-        <div style={{ borderTop: '1px solid ' + C.border, paddingTop: 24, marginTop: 8 }}>
-          <p style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.6, margin: 0 }}>
+        <div className="mt-2 border-t border-light-border pt-6 dark:border-dark-border">
+          <p className="m-0 text-[11px] leading-relaxed text-dark-muted">
             <em>
               English summary: Bowlkollen is proprietary software. All source code, UI design,
               layout, and associated assets are copyright © {YEAR} Tobias Ek-Ojala.

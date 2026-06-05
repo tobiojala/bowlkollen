@@ -1,7 +1,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useTheme } from '@/components/ThemeProvider'
 
 const TITLES: Record<string, string> = {
   '/schema':       'Schema',
@@ -22,21 +21,12 @@ const TITLES: Record<string, string> = {
 
 export default function NavTitle() {
   const pathname = usePathname()
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-
   const title = TITLES[pathname]
   if (!title) return null
 
   return (
-    <div className="mobile-page-title" style={{ padding: '4px 20px 0' }}>
-      <h1 style={{
-        margin: 0,
-        fontSize: 30,
-        fontWeight: 800,
-        letterSpacing: -0.5,
-        color: isDark ? '#ffffff' : '#1a2535',
-      }}>
+    <div className="mobile-page-title px-5 pt-1">
+      <h1 className="m-0 text-[30px] font-extrabold tracking-tight bk-text-primary">
         {title}
       </h1>
     </div>

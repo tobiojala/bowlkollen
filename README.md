@@ -14,7 +14,26 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001) with your browser (Bowlkollen uses **3001** by default so port 3000 can stay free for other projects).
+
+```bash
+npm run dev
+# → http://localhost:3001
+```
+
+To run on port 3000 instead: `npm run dev:3000`
+
+### Everything 404?
+
+You are probably on the wrong port or the wrong project. Check the terminal after `npm run dev` — it prints the exact URL. Bowlkollen on 3001 should show `/` and `/login` working, not a blank 404 from another app on 3000.
+
+## Styling (Tailwind)
+
+The app is moving from inline `style={{}}` to **Tailwind CSS v4**. New UI should use Tailwind; convert old pages when you touch them.
+
+- **Migration guide:** [docs/TAILWIND_MIGRATION.md](docs/TAILWIND_MIGRATION.md)
+- **Reusable pieces:** `src/components/ui/` (`Card`, `Button`, `SectionHeader`, `GlassPill`)
+- **Design tokens:** `src/app/globals.css` (`@theme` colors, `dark:` variant)
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

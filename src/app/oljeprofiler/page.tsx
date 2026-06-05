@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
 import { FileText, ExternalLink } from 'lucide-react'
-
-const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+import { cn } from '@/lib/cn'
+import { FilterChip } from '@/components/ui'
+import {
+  oilCategoryDotStyle,
+  oilCategoryLabelStyle,
+  oilProfileAccentStyle,
+  oilProfileThumbStyle,
+} from '@/lib/oljeprofiler-ui'
 
 type Profile = {
   id: number
@@ -32,10 +35,6 @@ const CATEGORIES: { key: string; label: string; color: string; bg: string }[] = 
 ]
 
 function OljeprofilerarPageInner() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
-
   const searchParams = useSearchParams()
   const highlight = searchParams.get('q')?.toLowerCase() ?? null
   const highlightRef = useRef<HTMLDivElement | null>(null)
@@ -56,7 +55,6 @@ function OljeprofilerarPageInner() {
       })
   }, [])
 
-  // Scroll to and highlight the profile from ?q= param
   useEffect(() => {
     if (!highlight || loading) return
     setTimeout(() => {
@@ -74,158 +72,151 @@ function OljeprofilerarPageInner() {
   })).filter(g => g.profiles.length > 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, paddingBottom: 96 }}>
-      <div style={{ padding: '20px 20px 12px' }}>
-        <p style={{ margin: 0, fontSize: 13, color: C.textMuted }}>
+    <div className="min-h-screen bg-light-bg pb-24 dark:bg-dark-bg">
+      <div className="px-5 pt-5 pb-3">
+        <p className="m-0 text-[13px] text-dark-muted">
           {loading ? 'Laddar...' : `${profiles.length} profiler · säsong 2025/2026`}
         </p>
       </div>
 
-      {/* Category filter chips */}
-      <div style={{
-        display: 'flex', gap: 8, padding: '8px 16px 12px',
-        overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
-      }}>
-        <button
-          onClick={() => setActiveCategory(null)}
-          style={{
-            flexShrink: 0, padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            border: activeCategory === null ? '1px solid rgba(245,194,0,0.50)' : `1px solid ${C.border}`,
-            background: activeCategory === null ? 'rgba(245,194,0,0.12)' : C.card,
-            color: activeCategory === null ? '#f5c200' : C.textMuted,
-            cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-          }}
-        >
+      <div
+        className={cn(
+          'flex gap-2 overflow-x-auto px-4 py-2',
+          '[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+        )}
+      >
+        <FilterChip active={activeCategory === null} onClick={() => setActiveCategory(null)}>
           Alla
-        </button>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
-            style={{
-              flexShrink: 0, padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-              border: activeCategory === cat.key ? `1px solid ${cat.color}88` : `1px solid ${C.border}`,
-              background: activeCategory === cat.key ? cat.bg : C.card,
-              color: activeCategory === cat.key ? cat.color : C.textMuted,
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {cat.label}
-          </button>
-        ))}
+        </FilterChip>
+        {CATEGORIES.map(cat => {
+          const isActive = activeCategory === cat.key
+          return (
+            <button
+              key={cat.key}
+              type="button"
+              onClick={() => setActiveCategory(isActive ? null : cat.key)}
+              className={cn(
+                'shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold',
+                !isActive && 'border-light-border bg-light-card text-dark-muted dark:border-dark-border dark:bg-dark-card',
+              )}
+              style={
+                isActive
+                  ? { borderColor: `${cat.color}88`, background: cat.bg, color: cat.color }
+                  : undefined
+              }
+            >
+              {cat.label}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Profile groups */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '0 16px' }}>
-        {loading ? (
-          [...Array(3)].map((_, i) => (
-            <div key={i} style={{ height: 120, borderRadius: 16, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
-          ))
-        ) : grouped.map((group, gi) => (
-          <div key={group.key}>
-            {/* Group header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: 2, background: group.color, flexShrink: 0,
-              }} />
-              <span style={{ fontSize: 11, fontWeight: 800, color: group.color, letterSpacing: 1 }}>
-                {group.label.toUpperCase()}
-              </span>
-            </div>
-
-            {/* Profile cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {group.profiles.map((p, i) => (
-                <div key={p.id} ref={highlight && p.name.toLowerCase().includes(highlight) ? highlightRef : null}>
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ ...SPRING, delay: (gi * 0.05) + (i * 0.04) }}
-                  style={{
-                    background: highlight && p.name.toLowerCase().includes(highlight) ? 'rgba(245,194,0,0.07)' : C.card,
-                    border: highlight && p.name.toLowerCase().includes(highlight) ? '1.5px solid rgba(245,194,0,0.55)' : `1px solid ${C.border}`,
-                    borderRadius: 14,
-                    padding: '12px 14px',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    boxShadow: highlight && p.name.toLowerCase().includes(highlight) ? '0 0 0 3px rgba(245,194,0,0.10)' : 'none',
-                  }}
-                >
-                  {/* Length pill */}
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: group.bg,
-                    border: `1px solid ${group.color}44`,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span style={{ fontSize: 15, fontWeight: 900, color: group.color, lineHeight: 1 }}>
-                      {p.length_ft}
-                    </span>
-                    <span style={{ fontSize: 9, color: group.color, opacity: 0.7, fontWeight: 600 }}>fot</span>
-                  </div>
-
-                  {/* Name + info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2 }}>{p.name}</div>
-                    {p.ratio != null && (
-                      <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3 }}>
-                        Ratio {String(p.ratio).replace('.', ',')}
-                      </div>
-                    )}
-                    {p.description && (
-                      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{p.description}</div>
-                    )}
-                  </div>
-
-                  {/* PDF link */}
-                  {p.pdf_url && (
-                    <a
-                      href={p.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                      style={{
-                        flexShrink: 0,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                        textDecoration: 'none',
-                        padding: '6px 8px', borderRadius: 10,
-                        background: 'rgba(245,194,0,0.08)',
-                        border: '1px solid rgba(245,194,0,0.20)',
-                      }}
-                    >
-                      <FileText size={14} color="#f5c200" />
-                      <span style={{ fontSize: 9, fontWeight: 700, color: '#f5c200' }}>PDF</span>
-                    </a>
-                  )}
-                  {p.kosi_url && (
-                    <a
-                      href={p.kosi_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                      style={{
-                        flexShrink: 0,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                        textDecoration: 'none',
-                        padding: '6px 8px', borderRadius: 10,
-                        background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                        border: `1px solid ${C.border}`,
-                      }}
-                    >
-                      <ExternalLink size={14} color={C.textMuted} />
-                      <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted }}>KOSI</span>
-                    </a>
-                  )}
-                </motion.div>
+      <div className="flex flex-col gap-5 px-4">
+        {loading
+          ? [...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="h-[120px] animate-pulse rounded-2xl border border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card"
+              />
+            ))
+          : grouped.map(group => (
+              <section key={group.key}>
+                <div className="mb-2 flex items-center gap-2">
+                  <div
+                    className="h-2 w-2 shrink-0 rounded-sm"
+                    style={oilCategoryDotStyle(group.color)}
+                  />
+                  <span
+                    className="text-[11px] font-extrabold tracking-wide"
+                    style={oilCategoryLabelStyle(group.color)}
+                  >
+                    {group.label.toUpperCase()}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+
+                <div className="flex flex-col gap-2">
+                  {group.profiles.map(p => {
+                    const isHighlighted =
+                      !!highlight && p.name.toLowerCase().includes(highlight)
+
+                    return (
+                      <div
+                        key={p.id}
+                        ref={isHighlighted ? highlightRef : null}
+                        className={cn(
+                          'flex items-center gap-3 rounded-[14px] border p-3',
+                          'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+                          isHighlighted &&
+                            'border-gold/55 bg-gold/[0.07] shadow-[0_0_0_3px_rgba(245,194,0,0.10)]',
+                        )}
+                      >
+                        <div
+                          className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl border"
+                          style={oilProfileThumbStyle(group)}
+                        >
+                          <span
+                            className="text-[15px] leading-none font-black"
+                            style={oilProfileAccentStyle(group.color)}
+                          >
+                            {p.length_ft}
+                          </span>
+                          <span
+                            className="text-[9px] font-semibold opacity-70"
+                            style={oilProfileAccentStyle(group.color)}
+                          >
+                            fot
+                          </span>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm leading-tight font-bold bk-text-primary">{p.name}</div>
+                          {p.ratio != null && (
+                            <div className="mt-0.5 text-xs text-dark-muted">
+                              Ratio {String(p.ratio).replace('.', ',')}
+                            </div>
+                          )}
+                          {p.description && (
+                            <div className="mt-0.5 text-[11px] text-dark-muted">{p.description}</div>
+                          )}
+                        </div>
+
+                        {p.pdf_url && (
+                          <a
+                            href={p.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              'flex shrink-0 flex-col items-center gap-0.5 rounded-[10px] border px-2 py-1.5 no-underline',
+                              'border-gold/20 bg-gold/[0.08]',
+                            )}
+                          >
+                            <FileText size={14} className="text-gold" />
+                            <span className="text-[9px] font-bold text-gold">PDF</span>
+                          </a>
+                        )}
+                        {p.kosi_url && (
+                          <a
+                            href={p.kosi_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              'flex shrink-0 flex-col items-center gap-0.5 rounded-[10px] border px-2 py-1.5 no-underline',
+                              'border-light-border bg-black/5 dark:bg-white/6',
+                            )}
+                          >
+                            <ExternalLink size={14} className="text-dark-muted" />
+                            <span className="text-[9px] font-bold text-dark-muted">KOSI</span>
+                          </a>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
 
         {!loading && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: C.textMuted, padding: '48px 0', fontSize: 14 }}>
-            Inga profiler hittades
-          </div>
+          <p className="py-12 text-center text-sm text-dark-muted">Inga profiler hittades</p>
         )}
       </div>
     </div>
