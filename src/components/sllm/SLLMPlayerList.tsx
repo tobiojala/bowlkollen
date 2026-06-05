@@ -9,6 +9,7 @@ import {
   sllmPlayerInitials,
   type SllmPlayer,
 } from '@/lib/sllm-data'
+import { sllmPlayerAvatarStyle, sllmPlayerChipStyle } from '@/lib/sllm-ui'
 
 type PlayerFilter = 'all' | 'swe' | 'int'
 
@@ -168,11 +169,7 @@ function SLLMPlayerRow({
       >
         <div
           className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-          style={{
-            background: pc.bg,
-            border: `1.5px solid ${pc.border}`,
-            color: pc.text,
-          }}
+          style={sllmPlayerAvatarStyle(pc)}
         >
           {ini}
         </div>
@@ -189,11 +186,7 @@ function SLLMPlayerRow({
               !isSwe &&
                 'border border-light-border text-dark-muted dark:border-dark-border',
             )}
-            style={
-              isSwe
-                ? { color: pc.text, background: pc.bg, border: `1px solid ${pc.border}` }
-                : undefined
-            }
+            style={isSwe ? sllmPlayerChipStyle(pc) : undefined}
           >
             {p.country}
           </span>

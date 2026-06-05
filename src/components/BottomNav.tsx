@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Home, Calendar, Trophy, Users, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
+import { homeNoTapHighlight } from '@/lib/home-ui'
 
 const TABS = [
   { label: 'Hem',       icon: Home,     href: '/' },
@@ -73,8 +74,10 @@ export default function BottomNav() {
               onClick={() => router.push(tab.href)}
               whileTap={{ scale: 0.86 }}
               transition={SPRING}
-              className="relative flex h-[54px] w-14 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 border-0 bg-transparent"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className={cn(
+                'relative flex h-[54px] w-14 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 border-0 bg-transparent',
+                homeNoTapHighlight,
+              )}
             >
               {isActive && (
                 <motion.div layoutId="activeTabPill" transition={SPRING} className="bk-tab-active-pill" />

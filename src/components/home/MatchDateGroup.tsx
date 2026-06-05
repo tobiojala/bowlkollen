@@ -3,6 +3,7 @@
 import MatchRow from '@/components/home/MatchRow'
 import { cn } from '@/lib/cn'
 import { dayDotColor, dateLabel } from '@/lib/utils'
+import { homeNoTapHighlight, homeSolidBgStyle } from '@/lib/home-ui'
 
 type Match = {
   id: string
@@ -52,7 +53,7 @@ export function MatchDateGroup({
       >
         <div
           className={cn('h-1.5 w-1.5 shrink-0', squareDot ? 'rounded-sm' : 'rounded-full')}
-          style={{ background: dayDotColor(date) }}
+          style={homeSolidBgStyle(dayDotColor(date))}
         />
         <span className="text-[11px] font-bold bk-text-primary">{dateLabel(date)}</span>
         <span className="ml-0.5 text-[10px] text-dark-muted">· {matches.length} matcher</span>
@@ -77,8 +78,8 @@ export function MatchDateGroup({
             'flex w-full cursor-pointer items-center justify-center gap-1 border-0 border-t py-2.5',
             'border-light-border bg-transparent text-[11px] font-semibold text-dark-muted',
             'dark:border-dark-border',
+            homeNoTapHighlight,
           )}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           {isExpanded ? '↑ Visa färre' : `Visa alla ${matches.length} matcher ↓`}
         </button>

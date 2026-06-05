@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName, shortDiv, dateLabel, countdown } from '@/lib/utils'
 import { divisionAccentColor, formResultDotClass } from '@/lib/match-ui'
-import { homeDivisionChip, homeNoTapHighlight } from '@/lib/home-ui'
+import { homeDivisionChip, homeDivisionChipColorStyle, homeNoTapHighlight } from '@/lib/home-ui'
 import { StreamPills } from '@/components/home/StreamPills'
 import type { HeroMatch } from '@/components/home/HeroStrip'
 
@@ -50,7 +50,7 @@ export function MyNextMatchCard({
             <span className="flex-1 text-[9px] font-extrabold tracking-wide text-[#5a82b4]">
               DIN NÄSTA MATCH
             </span>
-            <span className={cn('mr-2', homeDivisionChip)} style={{ color: dc }}>
+            <span className={cn('mr-2', homeDivisionChip)} style={homeDivisionChipColorStyle(dc)}>
               {shortDiv(m.division)}
             </span>
             <button

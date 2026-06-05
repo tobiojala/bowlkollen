@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
-import { teamColors } from '@/lib/team-ui'
+import { teamAvatarStyle, teamColors } from '@/lib/team-ui'
 
 type Props = { teamId: string }
 
@@ -117,21 +117,13 @@ export default function TopPerformers({ teamId }: Props) {
               </div>
               <div
                 className="flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:hidden"
-                style={{
-                  background: light.bg,
-                  borderColor: light.accent,
-                  color: light.accent,
-                }}
+                style={teamAvatarStyle(light.accent, light.bg)}
               >
                 {ini}
               </div>
               <div
                 className="hidden h-9 w-9 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:flex"
-                style={{
-                  background: dark.bg,
-                  borderColor: dark.accent,
-                  color: dark.accent,
-                }}
+                style={teamAvatarStyle(dark.accent, dark.bg)}
               >
                 {ini}
               </div>

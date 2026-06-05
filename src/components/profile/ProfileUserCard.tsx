@@ -1,7 +1,7 @@
 'use client'
 
 import { useTheme } from '@/components/ThemeProvider'
-import { teamColors } from '@/lib/team-ui'
+import { teamAvatarStyle, teamColors } from '@/lib/team-ui'
 
 type Props = {
   name: string
@@ -26,11 +26,7 @@ export function ProfileUserCard({ name, email, avatarUrl }: Props) {
       ) : (
         <div
           className="flex size-12 shrink-0 items-center justify-center rounded-full text-base font-bold"
-          style={{
-            background: col.bg,
-            border: `2px solid ${col.accent}`,
-            color: col.accent,
-          }}
+          style={teamAvatarStyle(col.accent, col.bg, 2)}
         >
           {initials}
         </div>

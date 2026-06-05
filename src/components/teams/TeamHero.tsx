@@ -6,7 +6,7 @@ import FollowButton from '@/components/FollowButton'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { teamColors } from '@/lib/team-ui'
+import { divisionChipStyle, teamColors, teamLogoBoxStyle } from '@/lib/team-ui'
 
 type Team = {
   id: string
@@ -112,21 +112,12 @@ export function TeamHero({
         <div className="flex items-center gap-4">
           <div
             className="flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-lg font-black"
-            style={{
-              background:
-                clubLogoUrl && !logoFailed
-                  ? dark
-                    ? 'rgba(255,255,255,0.07)'
-                    : '#fff'
-                  : tclo,
-              border:
-                clubLogoUrl && !logoFailed
-                  ? dark
-                    ? '1px solid rgba(255,255,255,0.12)'
-                    : '1px solid rgba(0,0,0,0.10)'
-                  : `2.5px solid ${tc}`,
-              color: tc,
-            }}
+            style={teamLogoBoxStyle({
+              hasLogo: !!clubLogoUrl && !logoFailed,
+              dark,
+              accent: tc,
+              bg: tclo,
+            })}
           >
             {clubLogoUrl && !logoFailed ? (
               <img
@@ -148,7 +139,7 @@ export function TeamHero({
               {division && (
                 <span
                   className="rounded-md px-2 py-0.5 text-[10px] font-bold"
-                  style={{ color: divColor, background: `${divColor}22` }}
+                  style={divisionChipStyle(divColor)}
                 >
                   {division}
                 </span>

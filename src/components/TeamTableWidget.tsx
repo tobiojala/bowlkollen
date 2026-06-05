@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { shortName } from '@/lib/utils'
 import { cn } from '@/lib/cn'
+import { miniStandingsRankStyle, miniStandingsZoneBarStyle } from '@/lib/home-ui'
 
 type Props = {
   teamId: string
@@ -140,7 +141,7 @@ export default function TeamTableWidget({ teamId, division }: Props) {
         <div className="min-w-[52px] text-center">
           <div
             className={cn('text-[36px] leading-none font-black', !zone && 'text-gold')}
-            style={zone ? { color: zone.color } : undefined}
+            style={zone ? miniStandingsRankStyle(zone.color) : undefined}
           >
             {pos + 1}
           </div>
@@ -148,7 +149,7 @@ export default function TeamTableWidget({ teamId, division }: Props) {
         </div>
         <div className="flex-1">
           {zone ? (
-            <div className="mb-1 text-[11px] font-bold" style={{ color: zone.color }}>
+            <div className="mb-1 text-[11px] font-bold" style={miniStandingsRankStyle(zone.color)}>
               ● {zone.label}
             </div>
           ) : null}
@@ -202,7 +203,7 @@ export default function TeamTableWidget({ teamId, division }: Props) {
                 {z ? (
                   <div
                     className="h-[5px] w-[5px] shrink-0 rounded-full"
-                    style={{ background: z.color }}
+                    style={miniStandingsZoneBarStyle(z.color)}
                   />
                 ) : null}
                 <Link

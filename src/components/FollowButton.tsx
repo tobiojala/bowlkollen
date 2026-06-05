@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Heart } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { homeNoTapHighlight } from '@/lib/home-ui'
 
 type Props = {
   teamId?: string
@@ -72,8 +73,8 @@ export default function FollowButton({ teamId, playerId, type, size = 'md' }: Pr
         following
           ? 'border-red/40 bg-red/12'
           : 'border-light-border bg-black/4 dark:border-white/10 dark:bg-white/6',
+        homeNoTapHighlight,
       )}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <Heart
         size={isSmall ? 13 : 15}

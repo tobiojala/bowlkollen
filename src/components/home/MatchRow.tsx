@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName, shortDiv, countdown, dayDotColor } from '@/lib/utils'
+import { homeNoTapHighlight, homeSolidBgStyle } from '@/lib/home-ui'
 
 type Match = {
   id: string; date: string; status: string; division: string
@@ -25,10 +26,10 @@ export default function MatchRow({ m, now }: Props) {
       className={cn(
         'flex items-stretch overflow-hidden no-underline',
         'hover:bg-light-card dark:hover:bg-dark-card',
+        homeNoTapHighlight,
       )}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      <div className="w-[3px] shrink-0 opacity-70" style={{ background: dayColor }} />
+      <div className="w-[3px] shrink-0 opacity-70" style={homeSolidBgStyle(dayColor)} />
       <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-3.5">
         <div
           className={cn(

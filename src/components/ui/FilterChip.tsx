@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { homeNoTapHighlight } from '@/lib/home-ui'
 
 type Props = {
   active: boolean
@@ -18,8 +19,8 @@ export function FilterChip({ active, onClick, children }: Props) {
         active
           ? 'border-gold/50 bg-gold/10 text-gold'
           : 'border-light-border bg-light-card text-dark-muted dark:border-dark-border dark:bg-dark-card',
+        homeNoTapHighlight,
       )}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {children}
     </button>

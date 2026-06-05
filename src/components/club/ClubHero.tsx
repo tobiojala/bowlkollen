@@ -2,7 +2,7 @@
 
 import { useTheme } from '@/components/ThemeProvider'
 import { teamColors } from '@/lib/team-ui'
-import { clubHeroGradient, clubInitials } from '@/lib/club-ui'
+import { clubAvatarStyle, clubHeroBgStyle, clubInitials } from '@/lib/club-ui'
 
 type Props = {
   club: string
@@ -18,7 +18,7 @@ export function ClubHero({ club, city, clubSlug, teamCount }: Props) {
   const ini = clubInitials(club)
 
   return (
-    <div className="px-5 pt-6 pb-5" style={{ background: clubHeroGradient(dark) }}>
+    <div className="px-5 pt-6 pb-5" style={clubHeroBgStyle(dark)}>
       <a
         href="/teams"
         className="mb-5 inline-flex items-center gap-1 text-xs text-dark-muted no-underline"
@@ -28,11 +28,7 @@ export function ClubHero({ club, city, clubSlug, teamCount }: Props) {
       <div className="flex items-center gap-4">
         <div
           className="flex size-[68px] shrink-0 items-center justify-center rounded-2xl text-lg font-black"
-          style={{
-            background: col.bg,
-            border: `2.5px solid ${col.accent}`,
-            color: col.accent,
-          }}
+          style={clubAvatarStyle(col.accent, col.bg)}
         >
           {ini}
         </div>

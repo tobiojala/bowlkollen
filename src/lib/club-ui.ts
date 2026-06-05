@@ -1,5 +1,7 @@
 /** Club page display helpers. */
 
+import type { CSSProperties } from 'react'
+
 export type ClubTeam = {
   id: string
   name: string
@@ -37,4 +39,20 @@ export function clubInitials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+}
+
+export function clubHeroBgStyle(dark: boolean): CSSProperties {
+  return { background: clubHeroGradient(dark) }
+}
+
+export function clubAvatarStyle(accent: string, bg: string, borderWidth = 2.5): CSSProperties {
+  return {
+    background: bg,
+    border: `${borderWidth}px solid ${accent}`,
+    color: accent,
+  }
+}
+
+export function clubBadgeStyle(color: string): CSSProperties {
+  return { color, background: `${color}18` }
 }

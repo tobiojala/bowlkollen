@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Trophy } from 'lucide-react'
 import { shortName } from '@/lib/utils'
+import { divisionDotStyle } from '@/lib/match-ui'
 
 type Props = {
   playerName: string
@@ -14,7 +15,7 @@ export function MatchBestPlayer({ playerName, teamName, total, playerId, divisio
   return (
     <div className="border-t border-light-border dark:border-dark-border">
       <div className="flex items-center gap-2 border-b border-light-border px-4 py-3 pb-1 dark:border-dark-border">
-        <div className="h-2 w-2 rounded-sm" style={{ background: divisionColor }} />
+        <div className="h-2 w-2 rounded-sm" style={divisionDotStyle(divisionColor)} />
         <span className="text-[10px] font-extrabold tracking-widest text-dark-muted">BÄSTA SPELARE</span>
       </div>
       <div className="flex items-center gap-3 border-b border-light-border px-4 py-3 dark:border-dark-border">

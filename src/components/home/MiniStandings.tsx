@@ -3,6 +3,12 @@
 import Link from 'next/link'
 import { shortName } from '@/lib/utils'
 import { cn } from '@/lib/cn'
+import {
+  homeNoTapHighlight,
+  miniStandingsRankStyle,
+  miniStandingsZoneBarStyle,
+  miniStandingsZoneColor,
+} from '@/lib/home-ui'
 
 type TableRow = {
   rank: number
@@ -20,12 +26,6 @@ type Props = {
   tableDiv: 'Elitserien Herrar' | 'Elitserien Damer'
   setTableDiv: (d: 'Elitserien Herrar' | 'Elitserien Damer') => void
   followedIds: Set<string>
-}
-
-function zoneColor(rank: number): string {
-  if (rank <= 2) return '#f5c200'
-  if (rank <= 6) return '#38a088'
-  return 'rgba(0,0,0,0.1)'
 }
 
 export default function MiniStandings({ tableRows, tableDiv, setTableDiv, followedIds }: Props) {
@@ -47,8 +47,8 @@ export default function MiniStandings({ tableRows, tableDiv, setTableDiv, follow
                 isActive
                   ? 'bg-gold text-[#1a1400]'
                   : 'bg-black/6 text-dark-muted dark:bg-white/8',
+                homeNoTapHighlight,
               )}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {div === 'Elitserien Herrar' ? 'Elit H' : 'Elit D'}
             </button>
@@ -85,7 +85,7 @@ export default function MiniStandings({ tableRows, tableDiv, setTableDiv, follow
           </div>
 
           {tableRows.slice(0, 5).map((row, i) => {
-            const zc = zoneColor(row.rank)
+            const zc = miniStandingsZoneColor(row.rank)
             const isMyTeam = followedIds.has(row.teamId)
             const rankAccent = row.rank <= 6
 
@@ -98,15 +98,15 @@ export default function MiniStandings({ tableRows, tableDiv, setTableDiv, follow
                   'hover:bg-light-card dark:hover:bg-dark-card',
                   i > 0 && 'border-t border-light-border dark:border-dark-border',
                   isMyTeam && 'bg-gold/[0.05] dark:bg-gold/[0.06]',
+                  homeNoTapHighlight,
                 )}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <div
                   className={cn(
                     'w-[3px] shrink-0 self-stretch',
                     row.rank > 6 && 'bg-black/10 dark:bg-white/12',
                   )}
-                  style={row.rank <= 6 ? { background: zc } : undefined}
+                  style={row.rank <= 6 ? miniStandingsZoneBarStyle(zc) : undefined}
                 />
                 <div className="grid flex-1 grid-cols-[28px_1fr_26px_34px] items-center px-3 py-[9px]">
                   <span
@@ -114,7 +114,7 @@ export default function MiniStandings({ tableRows, tableDiv, setTableDiv, follow
                       'text-center text-[11px] font-bold',
                       !rankAccent && 'text-dark-muted',
                     )}
-                    style={rankAccent ? { color: zc } : undefined}
+                    style={rankAccent ? miniStandingsRankStyle(zc) : undefined}
                   >
                     {row.rank}
                   </span>
@@ -148,8 +148,8 @@ export default function MiniStandings({ tableRows, tableDiv, setTableDiv, follow
               'flex items-center justify-center border-t px-3 py-[9px] text-[11px] font-semibold no-underline',
               'border-light-border bg-black/[0.015] text-dark-muted',
               'dark:border-dark-border dark:bg-white/[0.015]',
+              homeNoTapHighlight,
             )}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             Visa hela tabellen →
           </Link>

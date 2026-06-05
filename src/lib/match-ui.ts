@@ -1,5 +1,7 @@
 /** Shared match display helpers (home hero, puls, etc.) */
 
+import type { CSSProperties } from 'react'
+
 export type MatchLike = {
   id: string
   date: string
@@ -103,4 +105,12 @@ export function tensionColor(score: number): string {
   if (score > 0.85) return '#f5c200'
   if (score > 0.6) return '#38a088'
   return 'var(--color-dark-muted, #6b7a99)'
+}
+
+export function divisionDotStyle(color: string): CSSProperties {
+  return { background: color }
+}
+
+export function divisionTextStyle(color: string): CSSProperties {
+  return { color }
 }

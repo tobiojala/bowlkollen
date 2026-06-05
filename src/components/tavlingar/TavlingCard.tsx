@@ -5,8 +5,14 @@ import { motion } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
 import { TAVLING_SPRING, type Tavling } from '@/lib/tavlingar-data'
-
-const GOLD = '#f5c200'
+import {
+  tavlingAccentBarStyle,
+  tavlingBannerOverlayStyle,
+  tavlingBodyBgStyle,
+  tavlingCardShellStyle,
+  tavlingCardTheme,
+  tavlingLiveDotGlowStyle,
+} from '@/lib/tavlingar-ui'
 
 type Props = {
   t: Tavling
@@ -24,31 +30,7 @@ export function TavlingCard({ t, isFavorite, onToggleFavorite }: Props) {
   const statusLabel = isPagaende ? 'PÅGÅENDE' : isDone ? 'AVSLUTAD' : 'KOMMANDE'
   const statusColor = isPagaende ? 'text-gold' : isDone ? 'text-dark-muted' : 'text-gold'
 
-  const accentBar = isPagaende
-    ? `linear-gradient(90deg,${GOLD},rgba(245,194,0,0.15))`
-    : isDone
-      ? `linear-gradient(90deg,${dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'},transparent)`
-      : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))'
-
-  const cardBg = isPagaende
-    ? dark
-      ? 'rgba(245,194,0,0.07)'
-      : 'rgba(245,194,0,0.04)'
-    : isDone
-      ? 'transparent'
-      : dark
-        ? 'rgba(245,194,0,0.05)'
-        : 'rgba(245,194,0,0.03)'
-
-  const cardBorder = isPagaende
-    ? 'rgba(245,194,0,0.25)'
-    : isDone
-      ? dark
-        ? 'rgba(255,255,255,0.07)'
-        : 'rgba(0,0,0,0.07)'
-      : dark
-        ? 'rgba(245,194,0,0.15)'
-        : 'rgba(245,194,0,0.2)'
+  const { accentBar, cardBg, cardBorder } = tavlingCardTheme(t.status, dark)
 
   return (
     <motion.div
@@ -57,10 +39,7 @@ export function TavlingCard({ t, isFavorite, onToggleFavorite }: Props) {
       animate={{ opacity: isDone ? 0.6 : 1, y: 0 }}
       transition={TAVLING_SPRING}
       className="mx-3 my-1.5 overflow-hidden rounded-2xl"
-      style={{
-        background: hasBanner ? 'transparent' : cardBg,
-        border: `1px solid ${cardBorder}`,
-      }}
+      style={tavlingCardShellStyle({ hasBanner, cardBg, cardBorder })}
     >
       {hasBanner ? (
         <div className="relative h-[136px] overflow-hidden">
@@ -71,10 +50,7 @@ export function TavlingCard({ t, isFavorite, onToggleFavorite }: Props) {
           />
           <div
             className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.75) 100%)',
-            }}
+            style={tavlingBannerOverlayStyle()}
           />
           <div className="absolute top-2.5 left-3 inline-flex items-center gap-1 rounded-[20px] border border-gold/40 bg-gold/20 px-2.5 py-0.5">
             <span className="text-[9px] text-gold">◆</span>
@@ -95,12 +71,12 @@ export function TavlingCard({ t, isFavorite, onToggleFavorite }: Props) {
           </div>
         </div>
       ) : (
-        <div className="h-0.5" style={{ background: accentBar }} />
+        <div className="h-0.5" style={tavlingAccentBarStyle(accentBar)} />
       )}
 
       <div
         className="px-3.5 py-3"
-        style={{ background: hasBanner ? cardBg : undefined }}
+        style={hasBanner ? tavlingBodyBgStyle(cardBg) : undefined}
       >
         {!hasBanner && (
           <div className="mb-2 flex items-start gap-2">
@@ -109,7 +85,7 @@ export function TavlingCard({ t, isFavorite, onToggleFavorite }: Props) {
                 {isPagaende && (
                   <div
                     className="size-1.5 shrink-0 rounded-full bg-gold"
-                    style={{ boxShadow: `0 0 5px ${GOLD}` }}
+                    style={tavlingLiveDotGlowStyle()}
                   />
                 )}
                 <span className={cn('text-[9px] font-extrabold tracking-wide', statusColor)}>

@@ -5,7 +5,7 @@ import { User } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
-import { teamColors } from '@/lib/team-ui'
+import { teamAvatarStyle, teamColors } from '@/lib/team-ui'
 import { sllmPlayerInitials } from '@/lib/sllm-data'
 
 type Player = { id: string; name: string; teamName?: string }
@@ -200,11 +200,7 @@ function SearchResultRow({
     <div className="mb-1.5 flex items-center gap-2.5 rounded-[10px] border border-light-border bg-light-surface p-2.5 dark:border-dark-border dark:bg-dark-surface">
       <div
         className="flex size-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-        style={{
-          background: col.bg,
-          border: `1.5px solid ${col.accent}`,
-          color: col.accent,
-        }}
+        style={teamAvatarStyle(col.accent, col.bg)}
       >
         {ini}
       </div>

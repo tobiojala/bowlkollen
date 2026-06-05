@@ -3,7 +3,13 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { teamColors, teamDivisionColor } from '@/lib/team-ui'
+import {
+  divisionChipStyle,
+  formResultBadgeStyle,
+  teamAvatarStyle,
+  teamColors,
+  teamDivisionColor,
+} from '@/lib/team-ui'
 
 type Match = {
   id: string
@@ -45,15 +51,7 @@ export function TeamMatchRow({ match: m, isHome: home, dark }: Props) {
           'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-extrabold',
           !resultLabel && 'border border-light-border bg-light-card text-dark-muted dark:border-dark-border dark:bg-dark-card',
         )}
-        style={
-          resultLabel
-            ? {
-                background: `${resultColor}22`,
-                border: `1.5px solid ${resultColor}`,
-                color: resultColor,
-              }
-            : undefined
-        }
+        style={resultLabel ? formResultBadgeStyle(resultColor) : undefined}
       >
         {isLive ? '●' : resultLabel || '—'}
       </div>
@@ -61,7 +59,7 @@ export function TeamMatchRow({ match: m, isHome: home, dark }: Props) {
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <div
           className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] text-[8px] font-extrabold"
-          style={{ background: oppTclo, border: `1.5px solid ${oppTc}`, color: oppTc }}
+          style={teamAvatarStyle(oppTc, oppTclo)}
         >
           {shortName(opp?.name || '')
             .split(' ')
@@ -79,7 +77,7 @@ export function TeamMatchRow({ match: m, isHome: home, dark }: Props) {
             {m.division && (
               <span
                 className="rounded px-[5px] py-px text-[9px] font-bold"
-                style={{ color: divC, background: `${divC}18` }}
+                style={divisionChipStyle(divC, '18')}
               >
                 {m.division.replace(' Herrar', ' H').replace(' Damer', ' D')}
               </span>

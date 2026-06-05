@@ -7,6 +7,7 @@ import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } fro
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
+import { hslNameBadgeStyle } from '@/lib/team-ui'
 import { GlassPill } from '@/components/ui'
 
 type NavConfig = { backHref: string | null }
@@ -255,9 +256,6 @@ export default function Nav() {
               <>
                 <div className="px-5 pt-2.5 pb-1 text-[10px] font-bold tracking-widest bk-text-muted">SPELARE</div>
                 {players.map((p, i) => {
-                  const hue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                  const tc  = `hsl(${hue},50%,45%)`
-                  const bg  = `hsl(${hue},40%,15%)`
                   return (
                     <Link
                       key={p.id}
@@ -270,7 +268,7 @@ export default function Nav() {
                     >
                       <div
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
-                        style={{ background: bg, border: `1.5px solid ${tc}`, color: tc }}
+                        style={hslNameBadgeStyle(p.name)}
                       >
                         {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
@@ -296,9 +294,6 @@ export default function Nav() {
                   LAG & KLUBBAR
                 </div>
                 {teams.map((t, i) => {
-                  const hue = t.club.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-                  const tc  = `hsl(${hue},50%,45%)`
-                  const bg  = `hsl(${hue},40%,15%)`
                   const ini = t.club.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
                   return (
                     <Link
@@ -312,7 +307,7 @@ export default function Nav() {
                     >
                       <div
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
-                        style={{ background: bg, border: `1.5px solid ${tc}`, color: tc }}
+                        style={hslNameBadgeStyle(t.club)}
                       >
                         {ini}
                       </div>

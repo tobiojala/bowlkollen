@@ -1,7 +1,30 @@
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/cn'
 
+/** Shared tap-highlight reset — use on links/buttons across the app. */
 export const homeNoTapHighlight = '[-webkit-tap-highlight-color:transparent]'
+
+export function homeSolidBgStyle(color: string): CSSProperties {
+  return { background: color }
+}
+
+export function homeDivisionChipColorStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function miniStandingsZoneColor(rank: number): string {
+  if (rank <= 2) return '#f5c200'
+  if (rank <= 6) return '#38a088'
+  return 'rgba(0,0,0,0.1)'
+}
+
+export function miniStandingsZoneBarStyle(color: string): CSSProperties {
+  return { background: color }
+}
+
+export function miniStandingsRankStyle(color: string): CSSProperties {
+  return { color }
+}
 
 export const homeDivisionChip = cn(
   'ml-auto rounded px-2 py-0.75 text-[9px] font-bold tracking-wide bg-black/6',

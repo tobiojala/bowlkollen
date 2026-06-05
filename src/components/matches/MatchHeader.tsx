@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
+import { divisionDotStyle, divisionTextStyle } from '@/lib/match-ui'
 import LiveLaneViewer from '@/components/LiveLaneViewer'
 
 type Team = { id: string; name: string }
@@ -52,8 +53,8 @@ export function MatchHeader({
   return (
     <>
       <div className="flex items-center gap-2 border-b border-light-border px-4 py-3 dark:border-dark-border">
-        <div className="h-2 w-2 shrink-0 rounded-sm" style={{ background: divColor }} />
-        <span className="text-[11px] font-bold" style={{ color: divColor }}>
+        <div className="h-2 w-2 shrink-0 rounded-sm" style={divisionDotStyle(divColor)} />
+        <span className="text-[11px] font-bold" style={divisionTextStyle(divColor)}>
           {division || 'Match'}
         </span>
         {round != null && round > 0 && (

@@ -1,5 +1,7 @@
 /** Team page display helpers (avatars, division badges). */
 
+import type { CSSProperties } from 'react'
+
 export function teamHue(name: string): number {
   return name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
 }
@@ -64,5 +66,56 @@ export function seasonResultTone(result: SeasonMatchResult) {
         bg: 'bg-light-card dark:bg-dark-card',
         badgeBg: 'bg-light-card dark:bg-dark-card',
       }
+  }
+}
+
+export function teamAvatarStyle(
+  accent: string,
+  bg: string,
+  borderWidth = 1.5,
+): CSSProperties {
+  return {
+    background: bg,
+    border: `${borderWidth}px solid ${accent}`,
+    color: accent,
+  }
+}
+
+/** Nav search / list rows — HSL badge from display name. */
+export function hslNameBadgeStyle(name: string, dark = true): CSSProperties {
+  const { accent, bg } = teamColors(name, dark)
+  return teamAvatarStyle(accent, bg)
+}
+
+export function divisionChipStyle(color: string, alpha = '22'): CSSProperties {
+  return { color, background: `${color}${alpha}` }
+}
+
+export function formResultBadgeStyle(color: string): CSSProperties {
+  return {
+    background: `${color}22`,
+    border: `1.5px solid ${color}`,
+    color,
+  }
+}
+
+export function teamLogoBoxStyle(opts: {
+  hasLogo: boolean
+  dark: boolean
+  accent: string
+  bg: string
+}): CSSProperties {
+  const { hasLogo, dark, accent, bg } = opts
+  if (hasLogo) {
+    return {
+      background: dark ? 'rgba(255,255,255,0.07)' : '#fff',
+      border: dark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)',
+      color: accent,
+    }
+  }
+  return {
+    background: bg,
+    border: `2.5px solid ${accent}`,
+    color: accent,
   }
 }

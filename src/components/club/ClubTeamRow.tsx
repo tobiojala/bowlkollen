@@ -3,9 +3,9 @@
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { teamColors } from '@/lib/team-ui'
+import { teamAvatarStyle, teamColors } from '@/lib/team-ui'
 import { teamInitials } from '@/lib/compare-ui'
-import { clubTeamBadgeColor, clubTeamPathLabel, type ClubTeam } from '@/lib/club-ui'
+import { clubBadgeStyle, clubTeamBadgeColor, clubTeamPathLabel, type ClubTeam } from '@/lib/club-ui'
 
 type Props = {
   team: ClubTeam
@@ -19,11 +19,7 @@ function TeamAvatar({ name, dark }: { name: string; dark: boolean }) {
   return (
     <div
       className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-[10px] font-extrabold"
-      style={{
-        background: col.bg,
-        border: `1.5px solid ${col.accent}`,
-        color: col.accent,
-      }}
+      style={teamAvatarStyle(col.accent, col.bg)}
     >
       {ini}
     </div>
@@ -60,7 +56,7 @@ export function ClubTeamRow({ team, clubSlug }: Props) {
       </div>
       <span
         className="shrink-0 rounded-md px-2.5 py-0.5 text-[11px] font-bold"
-        style={{ color: badgeColor, background: `${badgeColor}18` }}
+        style={clubBadgeStyle(badgeColor)}
       >
         {label}
       </span>
