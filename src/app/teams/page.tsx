@@ -33,6 +33,9 @@ const TIER_ORDER = ['Elitserien', 'Allsvenskan', 'Division 1', 'Division 2+', 'Ã
 const DIV_FILTERS = ['Alla', 'Elitserien', 'Allsvenskan', 'Division 1', 'Division 2+']
 const BITS_LOGO_BASE = 'https://bits.swebowl.se/images/ClubLogo'
 
+const SKEL_CHIP_WIDTHS = ['w-14', 'w-16', 'w-[4.5rem]', 'w-14', 'w-[4.25rem]'] as const
+const skelBarWidth = (i: number) => (['w-[45%]', 'w-[57%]', 'w-[69%]', 'w-[81%]'] as const)[i % 4]
+
 function divTier(div: string | null): string {
   if (!div) return 'Ã–vrigt'
   if (div.includes('Elitserien')) return 'Elitserien'
@@ -258,11 +261,10 @@ export default function TeamsPage() {
           <div className="h-11 animate-pulse rounded-[14px] bg-black/7 dark:bg-white/7" />
         </div>
         <div className={cn(chipScroll, 'pt-2.5')}>
-          {[56, 64, 72, 56, 68].map((w, i) => (
+          {SKEL_CHIP_WIDTHS.map((w, i) => (
             <div
               key={i}
-              className="h-7 shrink-0 animate-pulse rounded-full bg-black/7 dark:bg-white/7"
-              style={{ width: w }}
+              className={cn('h-7 shrink-0 animate-pulse rounded-full bg-black/7 dark:bg-white/7', w)}
             />
           ))}
         </div>
@@ -278,8 +280,7 @@ export default function TeamsPage() {
               <div className="h-[42px] w-[42px] shrink-0 animate-pulse rounded-[11px] bg-black/7 dark:bg-white/7" />
               <div className="flex flex-1 flex-col gap-[7px]">
                 <div
-                  className="h-3 animate-pulse rounded bg-black/7 dark:bg-white/7"
-                  style={{ width: `${45 + (i % 4) * 12}%` }}
+                  className={cn('h-3 animate-pulse rounded bg-black/7 dark:bg-white/7', skelBarWidth(i))}
                 />
                 <div className="h-2 w-[35%] animate-pulse rounded bg-black/7 dark:bg-white/7" />
               </div>
@@ -387,8 +388,7 @@ export default function TeamsPage() {
               <button
                 type="button"
                 onClick={() => toggle(club.bits_id)}
-                className="flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent p-3.5 text-left"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className="flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent p-3.5 text-left [-webkit-tap-highlight-color:transparent]"
               >
                 <div className="dark:hidden">
                   <ClubAvatar
@@ -482,9 +482,9 @@ export default function TeamsPage() {
                             'flex w-full cursor-pointer items-center gap-2.5 border-0 px-4 py-2.75 text-left',
                             'bg-black/[0.03] transition-colors hover:bg-black/5',
                             'dark:bg-black/25 dark:hover:bg-white/4',
+                            '[-webkit-tap-highlight-color:transparent]',
                             i > 0 && 'border-t border-light-border dark:border-dark-border',
                           )}
-                          style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
                           <div
                             className="h-8 w-[3px] shrink-0 rounded-sm"
@@ -516,8 +516,8 @@ export default function TeamsPage() {
                       'flex w-full cursor-pointer items-center justify-center gap-1 border-0 border-t py-2.5',
                       'border-light-border bg-transparent text-[11px] font-bold text-dark-muted',
                       'dark:border-dark-border',
+                      '[-webkit-tap-highlight-color:transparent]',
                     )}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     Klubbsida
                     <ChevronRight size={11} strokeWidth={2.5} />

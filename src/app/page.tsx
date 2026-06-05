@@ -445,11 +445,11 @@ export default function Home() {
                 onClick={() => setTab(t)}
                 className={cn(
                   'cursor-pointer border-0 bg-transparent px-3.5 pt-2.5 pb-2 text-[11px] font-bold tracking-wide',
+                  '[-webkit-tap-highlight-color:transparent]',
                   tab === t
                     ? 'border-b-2 border-gold text-gold'
                     : 'border-b-2 border-transparent text-dark-muted',
                 )}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 {t === 'alla' ? 'ALLA' : 'FÖLJER'}
               </button>

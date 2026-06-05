@@ -265,11 +265,11 @@ export default function LeaguePage() {
                 onClick={() => setDivision(group.divisions[0])}
                 className={cn(
                   'shrink-0 cursor-pointer rounded-full border px-3.5 py-[5px] text-xs font-bold whitespace-nowrap',
+                  '[-webkit-tap-highlight-color:transparent]',
                   isActive
                     ? 'border-gold bg-gold text-[#1a1400]'
                     : 'border-light-border bg-transparent text-dark-muted dark:border-dark-border',
                 )}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 {group.label}
               </button>
@@ -303,8 +303,10 @@ export default function LeaguePage() {
               <div key={i} className={cn(TABLE_GRID)}>
                 <div className="h-[11px] w-4 animate-pulse rounded bg-black/7 dark:bg-white/7" />
                 <div
-                  className="h-[11px] animate-pulse rounded bg-black/7 dark:bg-white/7"
-                  style={{ width: `${50 + (i % 4) * 10}%` }}
+                  className={cn(
+                    'h-[11px] animate-pulse rounded bg-black/7 dark:bg-white/7',
+                    (['w-1/2', 'w-[60%]', 'w-[70%]', 'w-[80%]'] as const)[i % 4],
+                  )}
                 />
                 <div className="h-[11px] w-[22px] animate-pulse rounded bg-black/7 dark:bg-white/7" />
                 <div className="h-[11px] w-[52px] animate-pulse rounded bg-black/7 dark:bg-white/7" />

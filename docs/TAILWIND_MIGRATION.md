@@ -96,7 +96,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
 | Files importing `@/lib/colors` | **5** (team tool content + legacy widgets) |
 | `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
-| `style={{}}` on app `page.tsx` files only | **24** (list pages + home tap highlight) |
+| `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
 ### Phase 0 + 1 — shell (done)
 
@@ -143,7 +143,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `league` | 5 | [x] | |
 | `oljeprofiler` | 5 | [x] | |
 | `klotshopar` | 1 | [x] | |
-| `teams/page` | 8 | [x] | |
+| `teams/page` | 3 | [x] | division colors dynamic |
 | `clubs/[bitsId]` | 1 | [x] | |
 | `players/page` | 2 | [x] | |
 | `teams/[id]` | 0 | [x] | |

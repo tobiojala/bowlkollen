@@ -151,8 +151,7 @@ export default function KlotshoparPage() {
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : shop.id)}
-                    className="w-full cursor-pointer border-0 bg-transparent p-4 text-left"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    className="w-full cursor-pointer border-0 bg-transparent p-4 text-left [-webkit-tap-highlight-color:transparent]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
