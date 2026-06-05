@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { cn } from '@/lib/cn'
 
 type Slide = {
   id: string
@@ -39,15 +40,16 @@ const SLIDES: Slide[] = [
     title: 'Storm Lucky Larsen Masters 2026',
     subtitle: 'Det enda internationella PBA Tour-evenemanget 2026',
     meta: ['22-30 aug 2026', 'Lucky Bowl, Helsingborg', 'PBA Tour'],
-    image: 'https://www.luckylarsen.se/wp-content/uploads/2026/02/SLLM26-WEB-HEADER-1440-x-600-px-4.png',
+    image:
+      'https://www.luckylarsen.se/wp-content/uploads/2026/02/SLLM26-WEB-HEADER-1440-x-600-px-4.png',
     href: '/sllm',
     buttonLabel: 'Se tavling',
     buttonHref: '/sllm',
   },
 ]
 
-const YELLOW = '#f5c200'
-const GOLD = '#e8a000'
+const carouselNavBtn =
+  'absolute top-1/2 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/35 text-lg text-white [-webkit-tap-highlight-color:transparent]'
 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0)
@@ -65,40 +67,62 @@ export default function HeroCarousel() {
 
   return (
     <div
-      style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 32, height: 280, cursor: slide.href ? 'pointer' : 'default' }}
+      className={cn(
+        'relative mb-8 h-[280px] overflow-hidden rounded-2xl',
+        slide.href ? 'cursor-pointer' : 'cursor-default',
+      )}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onClick={() => { if (slide.href) window.location.href = slide.href }}
+      onClick={() => {
+        if (slide.href) window.location.href = slide.href
+      }}
     >
-      {/* Background */}
       {slide.image ? (
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <img src={slide.image} alt={slide.title} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(10,16,30,0.95) 100%)' }} />
+        <div className="absolute inset-0">
+          <img
+            src={slide.image}
+            alt={slide.title}
+            className="block h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-[rgba(10,16,30,0.95)]" />
         </div>
       ) : slide.bg ? (
-        <div style={{ position: 'absolute', inset: 0, background: slide.bg }}>
-          {/* SM trophy decoration */}
-          <div style={{ position: 'absolute', right: 40, top: '50%', transform: 'translateY(-50%)', fontSize: 120, opacity: 0.08 }}>🏆</div>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.3) 0%, transparent 60%)' }} />
+        <div className="absolute inset-0" style={{ background: slide.bg }}>
+          <div className="absolute top-1/2 right-10 -translate-y-1/2 text-[120px] opacity-[0.08]">
+            🏆
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
         </div>
       ) : (
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0a5c8a 0%, #1278b0 100%)' }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a5c8a] to-[#1278b0]" />
       )}
 
-      {/* Content */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '24px 28px' }}>
+      <div className="absolute inset-0 flex flex-col justify-end px-7 py-6">
         {slide.type === 'welcome' && (
           <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, marginBottom: 8 }}>VALKOMMEN TILL</div>
-            <div style={{ fontSize: 36, fontWeight: 900, color: '#ffffff', marginBottom: 6, lineHeight: 1 }}>
-              Bowl<span style={{ color: YELLOW }}>kollen</span>
+            <div className="mb-2 text-[11px] font-bold tracking-[2px] text-white/60">
+              VALKOMMEN TILL
             </div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: 20 }}>{slide.subtitle}</div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <a href="/schema" onClick={e => e.stopPropagation()} style={{ background: YELLOW, color: '#1a1400', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>Schema</a>
-              <a href="/league" onClick={e => e.stopPropagation()} style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}>Serietabell</a>
+            <div className="mb-1.5 text-4xl leading-none font-black text-white">
+              Bowl<span className="text-gold">kollen</span>
+            </div>
+            <div className="mb-5 text-sm text-white/75">{slide.subtitle}</div>
+            <div className="flex gap-2.5">
+              <a
+                href="/schema"
+                onClick={e => e.stopPropagation()}
+                className="rounded-lg bg-gold px-4 py-2 text-[13px] font-extrabold text-[#1a1400] no-underline"
+              >
+                Schema
+              </a>
+              <a
+                href="/league"
+                onClick={e => e.stopPropagation()}
+                className="rounded-lg border border-white/20 bg-white/15 px-4 py-2 text-[13px] font-bold text-white no-underline"
+              >
+                Serietabell
+              </a>
             </div>
           </>
         )}
@@ -106,30 +130,49 @@ export default function HeroCarousel() {
         {slide.type === 'tournament' && (
           <>
             {slide.id === 'sm' && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(232,160,0,0.2)', border: '1px solid rgba(232,160,0,0.4)', borderRadius: 20, padding: '3px 10px', marginBottom: 10, width: 'fit-content' }}>
-                <span style={{ fontSize: 10 }}>🏆</span>
-                <span style={{ fontSize: 10, fontWeight: 800, color: GOLD, letterSpacing: 1.5 }}>PAGAENDE NU</span>
+              <div className="mb-2.5 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#e8a000]/40 bg-[#e8a000]/20 px-2.5 py-0.5">
+                <span className="text-[10px]">🏆</span>
+                <span className="text-[10px] font-extrabold tracking-[1.5px] text-[#e8a000]">
+                  PAGAENDE NU
+                </span>
               </div>
             )}
             {slide.id === 'sllm' && (
-              <div style={{ fontSize: 10, fontWeight: 700, color: YELLOW, letterSpacing: 2, marginBottom: 8 }}>KOMMANDE TAVLING · PBA TOUR</div>
+              <div className="mb-2 text-[10px] font-bold tracking-[2px] text-gold">
+                KOMMANDE TAVLING · PBA TOUR
+              </div>
             )}
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'white', marginBottom: 6, lineHeight: 1.2 }}>
-              {slide.id === 'sm'
-                ? <><span style={{ color: GOLD }}>SM</span>-slutspel 2026</>
-                : slide.title
-              }
+            <div className="mb-1.5 text-2xl leading-tight font-black text-white">
+              {slide.id === 'sm' ? (
+                <>
+                  <span className="text-[#e8a000]">SM</span>-slutspel 2026
+                </>
+              ) : (
+                slide.title
+              )}
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 12 }}>{slide.subtitle}</div>
+            <div className="mb-3 text-[13px] text-white/75">{slide.subtitle}</div>
             {slide.meta && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+              <div className="mb-4 flex flex-wrap gap-2">
                 {slide.meta.map((m, i) => (
-                  <span key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: 'rgba(255,255,255,0.9)' }}>{m}</span>
+                  <span
+                    key={i}
+                    className="rounded-md bg-white/12 px-2.5 py-0.5 text-[11px] text-white/90"
+                  >
+                    {m}
+                  </span>
                 ))}
               </div>
             )}
             {slide.buttonHref && (
-              <a href={slide.buttonHref} onClick={e => e.stopPropagation()} style={{ background: slide.id === 'sm' ? GOLD : YELLOW, color: '#1a1400', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 800, textDecoration: 'none', display: 'inline-block' }}>
+              <a
+                href={slide.buttonHref}
+                onClick={e => e.stopPropagation()}
+                className={cn(
+                  'inline-block rounded-lg px-4 py-2 text-[13px] font-extrabold text-[#1a1400] no-underline',
+                  slide.id === 'sm' ? 'bg-[#e8a000]' : 'bg-gold',
+                )}
+              >
                 {slide.buttonLabel}
               </a>
             )}
@@ -137,27 +180,54 @@ export default function HeroCarousel() {
         )}
       </div>
 
-      {/* Dots */}
-      <div style={{ position: 'absolute', bottom: 14, right: 50, display: 'flex', gap: 6, alignItems: 'center' }}>
+      <div className="absolute right-[50px] bottom-3.5 flex items-center gap-1.5">
         {SLIDES.map((_, i) => (
-          <button key={i} onClick={e => { e.stopPropagation(); setCurrent(i); setPaused(true) }} style={{ width: i === current ? 20 : 7, height: 7, borderRadius: 4, background: i === current ? YELLOW : 'rgba(255,255,255,0.4)', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s' }} />
+          <button
+            key={i}
+            type="button"
+            onClick={e => {
+              e.stopPropagation()
+              setCurrent(i)
+              setPaused(true)
+            }}
+            className={cn(
+              'h-[7px] cursor-pointer rounded border-0 p-0 transition-all duration-300',
+              '[-webkit-tap-highlight-color:transparent]',
+              i === current ? 'w-5 bg-gold' : 'w-[7px] bg-white/40',
+            )}
+            aria-label={`Gå till slide ${i + 1}`}
+          />
         ))}
       </div>
 
-      {/* Arrows */}
-      <button onClick={e => { e.stopPropagation(); setCurrent(c => (c - 1 + SLIDES.length) % SLIDES.length); setPaused(true) }} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: 32, height: 32, color: 'white', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <button
+        type="button"
+        className={cn(carouselNavBtn, 'left-2.5')}
+        onClick={e => {
+          e.stopPropagation()
+          setCurrent(c => (c - 1 + SLIDES.length) % SLIDES.length)
+          setPaused(true)
+        }}
+        aria-label="Föregående slide"
+      >
         &#8249;
       </button>
-      <button onClick={e => { e.stopPropagation(); setCurrent(c => (c + 1) % SLIDES.length); setPaused(true) }} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: 32, height: 32, color: 'white', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <button
+        type="button"
+        className={cn(carouselNavBtn, 'right-2.5')}
+        onClick={e => {
+          e.stopPropagation()
+          setCurrent(c => (c + 1) % SLIDES.length)
+          setPaused(true)
+        }}
+        aria-label="Nästa slide"
+      >
         &#8250;
       </button>
 
-      {/* Progress bar */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.1)' }}>
-        {!paused && <div key={current} style={{ height: '100%', background: YELLOW, animation: 'carouselprogress 5s linear', width: '0%' }} />}
+      <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-white/10">
+        {!paused && <div key={current} className="bk-carousel-progress w-0" />}
       </div>
-
-      <style>{`@keyframes carouselprogress { from { width: 0% } to { width: 100% } }`}</style>
     </div>
   )
 }

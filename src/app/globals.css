@@ -34,6 +34,26 @@
   }
 }
 
+/* Hero carousel slide timer */
+@keyframes bk-carousel-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.bk-carousel-progress {
+  height: 100%;
+  background: #f5c200;
+  animation: bk-carousel-progress 5s linear;
+}
+
+/* Live scoring indicator */
+@keyframes bk-scoring-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.bk-scoring-pulse {
+  animation: bk-scoring-pulse 1.5s infinite;
+}
+
 /* ── Trading card effects ─────────────────────────────────────────────────── */
 @keyframes shimmerSweep {
   0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }

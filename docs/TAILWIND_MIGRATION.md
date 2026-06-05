@@ -81,7 +81,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after profile `WidgetGrid` + `Widgets.tsx` migration. Regenerate counts with:_
+_Last updated: after `SeasonTimeline` + `TopPerformers`. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -124,12 +124,12 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
 | `compare/*` (hero, search, results) | low | [x] team + player compare |
 | `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
-| `SeasonTimeline` | 24 | [ ] |
-| `TopPerformers` | 9 | [ ] |
+| `SeasonTimeline` | 2 | [x] | `seasonResultTone` in `team-ui.ts`; opponent HSL dynamic |
+| `TopPerformers` | 2 | [x] | player avatar HSL dynamic |
 | `widgets/Widgets.tsx` | ~15 | [x] | `lib/widget-ui.ts`; team/tier colors dynamic |
 | `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
-| `HeroCarousel` | 33 | [ ] |
-| `LiveLaneViewer` | 19 | [ ] |
+| `HeroCarousel` | 1 | [x] | SM slide `bg` gradient dynamic; progress in `globals.css` |
+| `LiveLaneViewer` | 0 | [x] | used on live match pages |
 | `RemotionPlayerEmbed` | 5 | [ ] |
 
 ### Phase 3 — app pages
@@ -177,7 +177,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 5. [ ] Chip list pages: `teams/page`, `league`, `oljeprofiler` (dynamic colors OK inline)
 6. [x] `Widgets.tsx` + `WidgetGrid` on profile
 7. [x] `SeasonTimeline`, `TopPerformers`
-8. [ ] `HeroCarousel`, `LiveLaneViewer`
+8. [x] `HeroCarousel`, `LiveLaneViewer`
+9. [ ] `TeamInternPageContent` + deep content in `puls` / `schema` / `admin`
 
 ### Do not migrate (yet)
 

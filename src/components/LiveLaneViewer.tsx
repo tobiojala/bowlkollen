@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import React, { useState, useEffect } from 'react'
+import { cn } from '@/lib/cn'
 
 type Props = {
   streamUrl: string
@@ -20,24 +19,21 @@ function buildImageUrl(alleyID: string, folder: string, lane: number, bust: numb
   return `https://scoring.se/${alleyID}/${folder}/${lane}_small.jpg?nocache=${bust}`
 }
 
-export default function LiveLaneViewer({ streamUrl, matchName }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+function getMobileUrl(url: string) {
+  const alleyMatch = url.match(/alley=(\d+)/)
+  if (alleyMatch) {
+    return `https://scoring.se/mobile/scoring.asp?alley=${alleyMatch[1]}`
+  }
+  return url
+}
+
+export default function LiveLaneViewer({ streamUrl }: Props) {
   const [data, setData] = useState<ScoringData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [bust, setBust] = useState(Math.floor(Math.random() * 99999))
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [activeLanes, setActiveLanes] = useState<number | null>(null)
-
-  // Convert stream URL to mobile URL
-  const getMobileUrl = (url: string) => {
-    const alleyMatch = url.match(/alley=(\d+)/)
-    if (alleyMatch) {
-      return `https://scoring.se/mobile/scoring.asp?alley=${alleyMatch[1]}`
-    }
-    return url
-  }
 
   useEffect(() => {
     const mobileUrl = getMobileUrl(streamUrl)
@@ -48,10 +44,12 @@ export default function LiveLaneViewer({ streamUrl, matchName }: Props) {
         else setData(d)
         setLoading(false)
       })
-      .catch(e => { setError(String(e)); setLoading(false) })
+      .catch(e => {
+        setError(String(e))
+        setLoading(false)
+      })
   }, [streamUrl])
 
-  // Auto-refresh images every 3 seconds
   useEffect(() => {
     if (!data) return
     const interval = setInterval(() => {
@@ -63,19 +61,20 @@ export default function LiveLaneViewer({ streamUrl, matchName }: Props) {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
-        Ansluter till live scoring...
-      </div>
+      <div className="p-6 text-center text-[13px] text-dark-muted">Ansluter till live scoring...</div>
     )
   }
 
   if (error || !data) {
     return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
-        <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 12 }}>
-          Kunde inte ansluta till scoring.se
-        </div>
-        <a href={streamUrl} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+      <div className="p-6 text-center">
+        <div className="mb-3 text-[13px] text-dark-muted">Kunde inte ansluta till scoring.se</div>
+        <a
+          href={streamUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[13px] font-bold text-gold no-underline"
+        >
           Oppna i scoring.se istallet &#8599;
         </a>
       </div>
@@ -85,66 +84,90 @@ export default function LiveLaneViewer({ streamUrl, matchName }: Props) {
   const totalLanes = data.lanes
   const displayLanes = activeLanes || totalLanes
 
+  const laneOptions = [4, 8, totalLanes].filter(
+    (v, i, a) => a.indexOf(v) === i && v <= totalLanes,
+  )
+
+  const isLaneActive = (n: number) =>
+    activeLanes === n || (activeLanes === null && n === totalLanes)
+
   return (
     <div>
-      {/* Header */}
-      <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid ' + C.border }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#e05555', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Live Scoring</span>
+      <div className="flex items-center justify-between border-b border-light-border px-4 py-3 dark:border-dark-border">
+        <div className="flex items-center gap-2">
+          <span className="bk-scoring-pulse inline-block h-2 w-2 rounded-full bg-[#e05555]" />
+          <span className="text-[13px] font-bold bk-text-primary">Live Scoring</span>
           {lastUpdate && (
-            <span style={{ fontSize: 10, color: C.textMuted }}>
-              Uppdaterad {lastUpdate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            <span className="text-[10px] text-dark-muted">
+              Uppdaterad{' '}
+              {lastUpdate.toLocaleTimeString('sv-SE', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: C.textMuted }}>Visa banor:</span>
-          {[4, 8, totalLanes].filter((v, i, a) => a.indexOf(v) === i && v <= totalLanes).map(n => (
-            <button key={n} onClick={() => setActiveLanes(n === totalLanes && activeLanes === null ? null : n)} style={{ background: (activeLanes === n || (activeLanes === null && n === totalLanes)) ? C.accent : C.card, color: (activeLanes === n || (activeLanes === null && n === totalLanes)) ? '#1a1400' : C.textMuted, border: '1px solid ' + C.border, borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-dark-muted">Visa banor:</span>
+          {laneOptions.map(n => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setActiveLanes(n === totalLanes && activeLanes === null ? null : n)}
+              className={cn(
+                'cursor-pointer rounded-md border px-2 py-0.5 text-[11px] font-bold',
+                '[-webkit-tap-highlight-color:transparent]',
+                isLaneActive(n)
+                  ? 'border-gold/30 bg-gold text-[#1a1400]'
+                  : 'border-light-border bg-light-card text-dark-muted dark:border-dark-border dark:bg-dark-card',
+              )}
+            >
               {n}
             </button>
           ))}
-          <a href={streamUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: C.accent, fontWeight: 700, textDecoration: 'none', marginLeft: 4 }}>
+          <a
+            href={streamUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-1 text-[11px] font-bold text-gold no-underline"
+          >
             Fullskarm &#8599;
           </a>
         </div>
       </div>
 
-      {/* Lane grid */}
-      <div style={{ padding: 12 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+      <div className="p-3">
+        <div className="grid grid-cols-2 gap-2">
           {Array.from({ length: displayLanes }, (_, i) => i + 1).map(lane => {
             const folder = data.screenfolders[lane]
             if (!folder) return null
             const imgUrl = buildImageUrl(data.alleyID, folder, lane, bust)
             return (
-              <div key={lane} style={{ borderRadius: 8, overflow: 'hidden', background: '#000', position: 'relative', border: '1px solid ' + C.border }}>
-                <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.7)', borderRadius: 4, padding: '2px 6px', fontSize: 10, fontWeight: 700, color: 'white', zIndex: 1 }}>
+              <div
+                key={lane}
+                className="relative overflow-hidden rounded-lg border border-light-border bg-black dark:border-dark-border"
+              >
+                <div className="absolute top-1 left-1 z-[1] rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   Bana {lane}
                 </div>
                 <img
                   src={imgUrl}
                   alt={'Bana ' + lane}
-                  style={{ width: '100%', display: 'block' }}
-                  onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3' }}
+                  className="block w-full"
+                  onError={e => {
+                    e.currentTarget.classList.add('opacity-30')
+                  }}
                 />
               </div>
             )
           })}
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 10, color: C.textMuted, textAlign: 'center' }}>
+        <div className="mt-2.5 text-center text-[10px] text-dark-muted">
           Bilder fran scoring.se &middot; Uppdateras var 3:e sekund &middot; {totalLanes} banor totalt
         </div>
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-      `}</style>
     </div>
   )
 }
