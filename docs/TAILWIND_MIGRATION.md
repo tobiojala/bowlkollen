@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `profile` migration. Regenerate counts with:_
+_Last updated: after `puls`, `schema`, `admin`, and team tool routes (thin `page.tsx`). Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,10 +93,10 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **22** (~71%) |
-| Files importing `@/lib/colors` | **16** |
-| `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
-| `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
+| Files importing `@/lib/colors` | **5** (team tool content + legacy widgets) |
+| `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
+| `style={{}}` on app `page.tsx` files only | **24** (list pages + home tap highlight) |
 
 ### Phase 0 + 1 — shell (done)
 
@@ -155,15 +155,15 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
 | `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` still legacy |
-| `puls` | 65 | [ ] | |
-| `schema` | 79 | [ ] | |
+| `puls` | 0 | [x] | `components/puls/*`, `lib/puls-ui.ts`; UI still inline in content |
+| `schema` | 0 | [x] | `components/schema/SchemaPageContent.tsx` |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
 | `sllm` | 0 | [x] | `components/sllm/*`, `lib/sllm-data.ts` |
 | `reset-password` | 0 | [x] | matches `login` patterns |
-| `admin` | 74 | [ ] | |
-| `team/[id]/intern` | 69 | [ ] | |
-| `team/.../laguttagning/[matchid]` | 99 | [ ] | |
-| `team/.../tillganglighet/[matchid]` | 58 | [ ] | |
+| `admin` | 0 | [x] | `components/admin/*`, `lib/admin-ui.ts` |
+| `team/[id]/intern` | 0 | [x] | `TeamInternPageContent` |
+| `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` |
+| `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` |
 | `[slug]/page` | 0 | n/a | redirect only |
 | `[slug]/intern` | — | [ ] | not audited |
 
@@ -172,8 +172,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 1. [x] `matches/[id]`, [x] `players/[id]`
 2. [x] `compare/*` — all compare routes migrated
 3. [x] `club/[club_slug]`
-4. [ ] `puls`, `schema` (large; Widgets.tsx debt remains)
-5. [ ] `admin`, team intern / laguttagning / tillgänglighet
+4. [x] `puls`, `schema`, `admin`, team intern / laguttagning / tillgänglighet (thin pages; content components still inline)
+5. [ ] Chip list pages: `teams/page`, `league`, `oljeprofiler` (dynamic colors OK inline)
 6. [ ] `Widgets.tsx` + embeds on migrated pages
 
 ### Do not migrate (yet)
