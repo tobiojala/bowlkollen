@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
+import { seasonResultTone, teamColors, type SeasonMatchResult } from '@/lib/team-ui'
 
 type Props = { teamId: string }
 
@@ -22,18 +22,18 @@ type Match = {
   away: { id: string; name: string }
 }
 
-
 export default function SeasonTimeline({ teamId }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedRound, setExpandedRound] = useState<number | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('matches')
-      .select('id, date, round, status, home_score, away_score, home_team_id, away_team_id, venue, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
+    supabase
+      .from('matches')
+      .select(
+        'id, date, round, status, home_score, away_score, home_team_id, away_team_id, venue, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)',
+      )
       .or('home_team_id.eq.' + teamId + ',away_team_id.eq.' + teamId)
       .not('round', 'is', null)
       .order('round')
@@ -47,7 +47,7 @@ export default function SeasonTimeline({ teamId }: Props) {
 
   const isHome = (m: Match) => m.home_team_id === teamId
 
-  const getResult = (m: Match) => {
+  const getResult = (m: Match): SeasonMatchResult => {
     if (m.home_score === null) return 'upcoming'
     const my = isHome(m) ? m.home_score : m.away_score!
     const opp = isHome(m) ? m.away_score! : m.home_score
@@ -56,28 +56,6 @@ export default function SeasonTimeline({ teamId }: Props) {
     return 'draw'
   }
 
-  const resultColor = (result: string) => {
-    if (result === 'win') return C.green
-    if (result === 'loss') return '#e05555'
-    if (result === 'draw') return C.textMuted
-    return C.border
-  }
-
-  const resultBg = (result: string) => {
-    if (result === 'win') return theme === 'dark' ? 'rgba(91,130,180,0.15)' : 'rgba(160,112,48,0.1)'
-    if (result === 'loss') return theme === 'dark' ? 'rgba(224,85,85,0.15)' : 'rgba(192,57,43,0.1)'
-    if (result === 'draw') return theme === 'dark' ? 'rgba(107,122,153,0.15)' : 'rgba(107,122,141,0.1)'
-    return C.card
-  }
-
-  const resultLabel = (result: string) => {
-    if (result === 'win') return 'V'
-    if (result === 'loss') return 'F'
-    if (result === 'draw') return 'O'
-    return '·'
-  }
-
-  // Group by round
   const rounds = [...new Set(matches.map(m => m.round))].sort((a, b) => a - b)
   const byRound: Record<number, Match[]> = {}
   matches.forEach(m => {
@@ -85,109 +63,154 @@ export default function SeasonTimeline({ teamId }: Props) {
     byRound[m.round].push(m)
   })
 
-  // Stats
   const played = matches.filter(m => m.home_score !== null)
   const wins = played.filter(m => getResult(m) === 'win').length
   const losses = played.filter(m => getResult(m) === 'loss').length
   const draws = played.filter(m => getResult(m) === 'draw').length
 
   return (
-    <div style={{ borderTop: '1px solid ' + C.border }}>
-      <div style={{ padding: '14px 20px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>SASONGSÖVERSIKT</div>
-        <div style={{ fontSize: 11, color: C.textMuted }}>
-          <span style={{ color: C.green, fontWeight: 700 }}>{wins}V</span>
-          {' '}<span style={{ color: C.textMuted }}>{draws}O</span>
-          {' '}<span style={{ color: '#e05555', fontWeight: 700 }}>{losses}F</span>
+    <div className="border-t border-light-border dark:border-dark-border">
+      <div className="flex items-center justify-between px-5 pt-3.5 pb-2.5">
+        <div className="text-[10px] font-extrabold tracking-[2px] text-dark-muted">SASONGSÖVERSIKT</div>
+        <div className="text-[11px] text-dark-muted">
+          <span className="font-bold text-[#3d6090] dark:text-[#5a82b4]">{wins}V</span>{' '}
+          <span>{draws}O</span>{' '}
+          <span className="font-bold text-[#d63b3b] dark:text-[#e05555]">{losses}F</span>
         </div>
       </div>
 
-      {/* Round dots overview */}
-      <div style={{ padding: '0 20px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div className="flex flex-wrap gap-1.5 px-5 pb-3.5">
         {rounds.map(round => {
           const roundMatches = byRound[round]
           const results = roundMatches.map(getResult)
-          const mainResult = results.includes('win') ? 'win' : results.includes('draw') ? 'draw' : results.includes('loss') ? 'loss' : 'upcoming'
+          const mainResult: SeasonMatchResult = results.includes('win')
+            ? 'win'
+            : results.includes('draw')
+              ? 'draw'
+              : results.includes('loss')
+                ? 'loss'
+                : 'upcoming'
+          const tone = seasonResultTone(mainResult)
           const isExpanded = expandedRound === round
           const hasMultiple = roundMatches.length > 1
 
           return (
-            <button key={round}
+            <button
+              key={round}
+              type="button"
               onClick={() => setExpandedRound(isExpanded ? null : round)}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                background: isExpanded ? resultBg(mainResult) : 'transparent',
-                border: '1px solid ' + (isExpanded ? resultColor(mainResult) : C.border),
-                borderRadius: 8, padding: '6px 8px', cursor: 'pointer',
-                minWidth: 36, WebkitTapHighlightColor: 'transparent'
-              }}
+              className={cn(
+                'flex min-w-9 cursor-pointer flex-col items-center gap-0.5 rounded-lg border px-2 py-1.5',
+                '[-webkit-tap-highlight-color:transparent]',
+                isExpanded ? cn(tone.bg, tone.border) : 'border-light-border bg-transparent dark:border-dark-border',
+              )}
             >
-              <div style={{ fontSize: 9, color: C.textMuted, fontWeight: 600 }}>O{round}</div>
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: resultBg(mainResult),
-                border: '1.5px solid ' + resultColor(mainResult),
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 9, fontWeight: 800, color: resultColor(mainResult)
-              }}>
-                {hasMultiple ? roundMatches.length : resultLabel(mainResult)}
+              <div className="text-[9px] font-semibold text-dark-muted">O{round}</div>
+              <div
+                className={cn(
+                  'flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] text-[9px] font-extrabold',
+                  tone.bg,
+                  tone.border,
+                  tone.text,
+                )}
+              >
+                {hasMultiple ? roundMatches.length : tone.label}
               </div>
             </button>
           )
         })}
       </div>
 
-      {/* Expanded round detail */}
       {expandedRound !== null && byRound[expandedRound] && (
-        <div style={{ borderTop: '1px solid ' + C.border }}>
-          <div style={{ padding: '10px 20px 6px', fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1 }}>
+        <div className="border-t border-light-border dark:border-dark-border">
+          <div className="px-5 pt-2.5 pb-1.5 text-[11px] font-bold tracking-wide text-dark-muted">
             OMGANG {expandedRound}
           </div>
           {byRound[expandedRound].map(m => {
             const result = getResult(m)
+            const tone = seasonResultTone(result)
             const opp = isHome(m) ? m.away : m.home
             const myScore = isHome(m) ? m.home_score : m.away_score
             const oppScore = isHome(m) ? m.away_score : m.home_score
-            const oppHue = (opp?.name || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-            const oppTc = 'hsl(' + oppHue + ',50%,45%)'
-            const oppTclo = theme === 'dark' ? 'hsl(' + oppHue + ',40%,15%)' : 'hsl(' + oppHue + ',40%,92%)'
+            const oppStyle = teamColors(opp?.name || '', false)
+            const oppStyleDark = teamColors(opp?.name || '', true)
 
             return (
-              <a key={m.id} href={'/matches/' + m.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none', background: resultBg(result) }}
+              <a
+                key={m.id}
+                href={'/matches/' + m.id}
+                className={cn(
+                  'flex items-center gap-3 border-b px-5 py-2.75 no-underline',
+                  'border-light-border dark:border-dark-border',
+                  tone.bg,
+                )}
               >
-                {/* Result badge */}
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: resultColor(result) + '22', border: '1.5px solid ' + resultColor(result), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: resultColor(result), flexShrink: 0 }}>
-                  {resultLabel(result)}
+                <div
+                  className={cn(
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[1.5px] text-[11px] font-extrabold',
+                    tone.badgeBg,
+                    tone.border,
+                    tone.text,
+                  )}
+                >
+                  {tone.label}
                 </div>
 
-                {/* Opponent */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: oppTclo, border: '1.5px solid ' + oppTc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: oppTc, flexShrink: 0 }}>
-                    {shortName(opp?.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase()}
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <div
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-[8px] font-extrabold dark:hidden"
+                    style={{
+                      background: oppStyle.bg,
+                      borderColor: oppStyle.accent,
+                      color: oppStyle.accent,
+                    }}
+                  >
+                    {shortName(opp?.name || '')
+                      .split(' ')
+                      .map((w: string) => w[0])
+                      .join('')
+                      .slice(0, 3)
+                      .toUpperCase()}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div
+                    className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-[8px] font-extrabold dark:flex"
+                    style={{
+                      background: oppStyleDark.bg,
+                      borderColor: oppStyleDark.accent,
+                      color: oppStyleDark.accent,
+                    }}
+                  >
+                    {shortName(opp?.name || '')
+                      .split(' ')
+                      .map((w: string) => w[0])
+                      .join('')
+                      .slice(0, 3)
+                      .toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-semibold bk-text-primary">
                       {shortName(opp?.name || '')}
                     </div>
-                    <div style={{ fontSize: 10, color: C.textMuted }}>
+                    <div className="text-[10px] text-dark-muted">
                       {isHome(m) ? 'Hemma' : 'Borta'} · {m.date?.slice(0, 10)}
                     </div>
                   </div>
                 </div>
 
-                {/* Score */}
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div className="shrink-0 text-right">
                   {myScore !== null ? (
                     <>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: resultColor(result) }}>
+                      <div className={cn('text-base font-extrabold', tone.text)}>
                         {myScore} - {oppScore}
                       </div>
-                      <div style={{ fontSize: 9, color: C.textMuted }}>MP</div>
+                      <div className="text-[9px] text-dark-muted">MP</div>
                     </>
                   ) : (
-                    <div style={{ fontSize: 11, color: C.textMuted }}>
-                      {new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                    <div className="text-[11px] text-dark-muted">
+                      {new Date(m.date).toLocaleTimeString('sv-SE', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </div>
                   )}
                 </div>

@@ -95,7 +95,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
-| Files importing `@/lib/colors` | **4** (team tools + shared components) |
+| Files importing `@/lib/colors` | **2** (`TeamInternPageContent`, `LiveLaneViewer`) |
 | `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
@@ -176,7 +176,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 4. [x] `puls`, `schema`, `admin`, team intern / laguttagning / tillgänglighet (thin pages; content components still inline)
 5. [ ] Chip list pages: `teams/page`, `league`, `oljeprofiler` (dynamic colors OK inline)
 6. [x] `Widgets.tsx` + `WidgetGrid` on profile
-7. [ ] `SeasonTimeline`, `HeroCarousel`, `LiveLaneViewer`, `TopPerformers`
+7. [x] `SeasonTimeline`, `TopPerformers`
+8. [ ] `HeroCarousel`, `LiveLaneViewer`
 
 ### Do not migrate (yet)
 

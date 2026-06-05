@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
-import { shortName } from '@/lib/utils'
+import { cn } from '@/lib/cn'
+import { teamColors } from '@/lib/team-ui'
 
 type Props = { teamId: string }
 
@@ -18,25 +17,28 @@ type PlayerStat = {
   over200: number
 }
 
-
 export default function TopPerformers({ teamId }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
   const [stats, setStats] = useState<PlayerStat[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('match_results')
+    supabase
+      .from('match_results')
       .select('player_id, games, players:player_id(id, name)')
       .eq('team_id', teamId)
       .not('games', 'is', null)
       .then(({ data }) => {
-        if (!data) { setLoading(false); return }
+        if (!data) {
+          setLoading(false)
+          return
+        }
 
-        // Group by player
+        type ResultRow = { player_id: string; games: number[]; players?: { name: string } }
+        const rows = data as unknown as ResultRow[]
+
         const byPlayer: Record<string, { name: string; allGames: number[] }> = {}
-        data.forEach((r: any) => {
+        rows.forEach(r => {
           const pid = r.player_id
           if (!pid || !r.players) return
           if (!byPlayer[pid]) byPlayer[pid] = { name: r.players.name, allGames: [] }
@@ -51,12 +53,13 @@ export default function TopPerformers({ teamId }: Props) {
             const totalGames = allGames.length
             const avg = Math.round(allGames.reduce((a, b) => a + b, 0) / totalGames)
 
-            // Best series = best 4-game block
             const seriesList: number[] = []
-            data.filter((r: any) => r.player_id === pid).forEach((r: any) => {
-              const games = (r.games || []).filter((g: number) => g > 0)
-              if (games.length > 0) seriesList.push(games.reduce((a: number, b: number) => a + b, 0))
-            })
+            rows
+              .filter(r => r.player_id === pid)
+              .forEach(r => {
+                const games = (r.games || []).filter((g: number) => g > 0)
+                if (games.length > 0) seriesList.push(games.reduce((a, b) => a + b, 0))
+              })
             const bestSeries = seriesList.length > 0 ? Math.max(...seriesList) : 0
             const over200 = allGames.filter(g => g >= 200).length
 
@@ -82,36 +85,62 @@ export default function TopPerformers({ teamId }: Props) {
   ]
 
   return (
-    <div style={{ borderTop: '1px solid ' + C.border }}>
-      <div style={{ padding: '14px 20px 10px', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
+    <div className="border-t border-light-border dark:border-dark-border">
+      <div className="px-5 pt-3.5 pb-2.5 text-[10px] font-extrabold tracking-[2px] text-dark-muted">
         TOPPRESTATIONER
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 20px 16px' }}>
+      <div className="grid grid-cols-3 gap-2 px-5 pb-4">
         {cards.map(card => {
           if (!card.player) return null
-          const hue = card.player.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-          const tc = 'hsl(' + hue + ',50%,45%)'
-          const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
-          const ini = card.player.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+          const light = teamColors(card.player.name, false)
+          const dark = teamColors(card.player.name, true)
+          const ini = card.player.name
+            .split(' ')
+            .map((w: string) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
 
           return (
-            <a key={card.label} href={'/players/' + card.player.playerId}
-              style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: '12px 10px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.surface)}
-              onMouseLeave={e => (e.currentTarget.style.background = C.card)}
+            <a
+              key={card.label}
+              href={'/players/' + card.player.playerId}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-xl border p-2.5 text-center no-underline',
+                'border-light-border bg-light-card transition-colors',
+                'hover:bg-light-surface dark:border-dark-border dark:bg-dark-card dark:hover:bg-dark-surface',
+                '[-webkit-tap-highlight-color:transparent]',
+              )}
             >
-              <div style={{ fontSize: 9, fontWeight: 800, color: C.textMuted, letterSpacing: 1 }}>
+              <div className="text-[9px] font-extrabold tracking-wide text-dark-muted">
                 {card.label.toUpperCase()}
               </div>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc }}>
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:hidden"
+                style={{
+                  background: light.bg,
+                  borderColor: light.accent,
+                  color: light.accent,
+                }}
+              >
                 {ini}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: C.text, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+              <div
+                className="hidden h-9 w-9 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:flex"
+                style={{
+                  background: dark.bg,
+                  borderColor: dark.accent,
+                  color: dark.accent,
+                }}
+              >
+                {ini}
+              </div>
+              <div className="w-full truncate text-[11px] leading-tight font-semibold bk-text-primary">
                 {card.player.name.split(' ')[0]}
               </div>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: C.accent, lineHeight: 1 }}>{card.value}</div>
-                <div style={{ fontSize: 9, color: C.textMuted, marginTop: 2 }}>{card.unit.toUpperCase()}</div>
+                <div className="text-xl leading-none font-black text-gold">{card.value}</div>
+                <div className="mt-0.5 text-[9px] text-dark-muted">{card.unit.toUpperCase()}</div>
               </div>
             </a>
           )
