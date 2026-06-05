@@ -1,6 +1,9 @@
 'use client'
 
+import { useRef, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { shortName, shortDiv, countdown, dayDotColor } from '@/lib/utils'
+import { prefetchMatch } from '@/lib/prefetch'
 
 type Match = {
   id: string; date: string; status: string; division: string
@@ -11,14 +14,24 @@ type Match = {
 type Props = { m: Match; C: any; now: number }
 
 export default function MatchRow({ m, C, now }: Props) {
+  const qc      = useQueryClient()
+  const pending = useRef(false)
+  const fire    = useCallback(() => {
+    if (pending.current) return
+    pending.current = true
+    prefetchMatch(qc, m.id).finally(() => { pending.current = false })
+  }, [qc, m.id])
+
   const dayColor = dayDotColor(m.date.slice(0, 10))
   const hasScore = m.home_score !== null
   const homeWin  = hasScore && m.home_score! > m.away_score!
   const awayWin  = hasScore && m.away_score! > m.home_score!
+
   return (
     <a href={'/matches/' + m.id}
+      onMouseEnter={e => { fire(); (e.currentTarget as HTMLAnchorElement).style.background = C.card }}
+      onTouchStart={fire}
       style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none', borderRadius: 0, margin: 0, overflow: 'hidden', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
-      onMouseEnter={e => (e.currentTarget.style.background = C.card)}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       <div style={{ width: 3, flexShrink: 0, background: dayColor, opacity: 0.7 }} />
@@ -57,5 +70,3 @@ export default function MatchRow({ m, C, now }: Props) {
     </a>
   )
 }
-
-import React from 'react'

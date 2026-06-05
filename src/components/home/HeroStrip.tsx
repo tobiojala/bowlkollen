@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { shortName } from '@/lib/utils'
 import { dark } from '@/lib/colors'
 import type { Match } from '@/app/home/types'
 import { divColor, shortDiv, countdown, dateLabel, streamStyle } from '@/app/home/helpers'
+import { prefetchMatch } from '@/lib/prefetch'
 
 type StripMatch = { kind: 'match'; match: Match }
 type StripTav   = {
@@ -18,6 +20,14 @@ export default function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: 
   liveItems: StripItem[]; upcomingItems: StripItem[]
   C: typeof dark; isDark: boolean; now: number
 }) {
+  const qc      = useQueryClient()
+  const pending = useRef<Record<string, boolean>>({})
+  const fireMatch = useCallback((id: string) => {
+    if (pending.current[id]) return
+    pending.current[id] = true
+    prefetchMatch(qc, id).finally(() => { pending.current[id] = false })
+  }, [qc])
+
   const hasLive = liveItems.length > 0
   const hasUp   = upcomingItems.length > 0
   const [mode, setMode]         = useState<'live' | 'upcoming'>(hasLive ? 'live' : 'upcoming')
@@ -98,14 +108,16 @@ export default function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: 
                 ? (isDark ? 'rgba(245,194,0,0.3)' : 'rgba(245,194,0,0.35)')
                 : (isDark ? 'rgba(91,130,180,0.25)' : 'rgba(91,130,180,0.3)')
               return (
-                <a href={'/matches/' + m.id} style={{
-                  display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
-                  background: isDark
-                    ? `linear-gradient(145deg,${bgFrom} 0%,rgba(11,21,40,0.98) 100%)`
-                    : `linear-gradient(145deg,${bgFrom} 0%,rgba(248,248,252,1) 100%)`,
-                  border: `1px solid ${edgeClr}`,
-                  WebkitTapHighlightColor: 'transparent',
-                } as any}>
+                <a href={'/matches/' + m.id}
+                  onMouseEnter={() => fireMatch(m.id)} onTouchStart={() => fireMatch(m.id)}
+                  style={{
+                    display: 'block', borderRadius: 16, textDecoration: 'none', overflow: 'hidden',
+                    background: isDark
+                      ? `linear-gradient(145deg,${bgFrom} 0%,rgba(11,21,40,0.98) 100%)`
+                      : `linear-gradient(145deg,${bgFrom} 0%,rgba(248,248,252,1) 100%)`,
+                    border: `1px solid ${edgeClr}`,
+                    WebkitTapHighlightColor: 'transparent',
+                  } as any}>
                   <div style={{ height: 3, background: `linear-gradient(90deg,${topClr},${topClr}40)` }} />
                   <div style={{ padding: '14px 16px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>

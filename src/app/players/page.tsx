@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { ChevronRight, Users } from 'lucide-react'
 import { shortName } from '@/lib/utils'
+import { prefetchPlayer } from '@/lib/prefetch'
 
 type Player = { id: string; name: string; team_id: string; teamName?: string }
 
@@ -14,6 +16,13 @@ export default function PlayersPage() {
   const C = theme === 'dark' ? dark : light
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
+  const qc = useQueryClient()
+  const pending = useRef<Record<string, boolean>>({})
+  const firePlayer = useCallback((id: string) => {
+    if (pending.current[id]) return
+    pending.current[id] = true
+    prefetchPlayer(qc, id).finally(() => { pending.current[id] = false })
+  }, [qc])
 
   useEffect(() => {
     const supabase = createClient()
@@ -58,7 +67,8 @@ export default function PlayersPage() {
               return (
                 <a key={p.id} href={'/players/' + p.id}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+                  onMouseEnter={e => { firePlayer(p.id); e.currentTarget.style.background = C.card }}
+                  onTouchStart={() => firePlayer(p.id)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div style={{ width: 34, height: 34, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
