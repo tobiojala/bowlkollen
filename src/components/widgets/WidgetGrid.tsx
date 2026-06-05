@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useTheme } from '@/components/ThemeProvider'
+import { dark, light } from '@/lib/colors'
 import { Plus, X, Check } from 'lucide-react'
 import { useWidgetData } from './useWidgetData'
 import {
@@ -43,7 +45,10 @@ function smartLayout(data: any): Zone[] {
   return zones.map((z, i) => ({ ...z, id: 'z' + i }))
 }
 
-export default function WidgetGrid({ isDark, C }: { isDark: boolean; C: any }) {
+export default function WidgetGrid() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const C = theme === 'dark' ? dark : light
   const data = useWidgetData()
   const [editing, setEditing] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])

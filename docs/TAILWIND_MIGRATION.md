@@ -80,7 +80,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `sllm` migration. Regenerate counts with:_
+_Last updated: after `profile` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -93,7 +93,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | Metric | Value |
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
-| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **21** (~68%) |
+| Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **22** (~71%) |
 | Files importing `@/lib/colors` | **16** |
 | `style={{}}` in all `src/**/*.tsx` | **~1,370** (55 files; includes dynamic + remotion) |
 | `style={{}}` on app `page.tsx` files only | **~980** (unmigrated routes) |
@@ -154,11 +154,11 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/[id1]/[id2]` | 0 | [x] | `PlayerCompareHero`, `PlayerCompareResults` |
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
-| `profile` | 66 | [ ] | uses `Widgets` |
+| `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` still legacy |
 | `puls` | 65 | [ ] | |
 | `schema` | 79 | [ ] | |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
-| `sllm` | 44 | [ ] | |
+| `sllm` | 0 | [x] | `components/sllm/*`, `lib/sllm-data.ts` |
 | `reset-password` | 0 | [x] | matches `login` patterns |
 | `admin` | 74 | [ ] | |
 | `team/[id]/intern` | 69 | [ ] | |
@@ -172,7 +172,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 1. [x] `matches/[id]`, [x] `players/[id]`
 2. [x] `compare/*` — all compare routes migrated
 3. [x] `club/[club_slug]`
-4. [ ] `profile`, `puls`, `schema` (large; use Widgets last)
+4. [ ] `puls`, `schema` (large; Widgets.tsx debt remains)
 5. [ ] `admin`, team intern / laguttagning / tillgänglighet
 6. [ ] `Widgets.tsx` + embeds on migrated pages
 
