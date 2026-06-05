@@ -2,60 +2,96 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { adminInputClass, adminLabelClass } from '@/lib/admin-ui'
+import {
+  adminCardClass,
+  adminFlashClass,
+  adminGhostBtnClass,
+  adminIconBtnClass,
+  adminInputClass,
+  adminLabelClass,
+  adminMatchStatusBadge,
+  adminPrimaryBtnClass,
+  adminSectionTitleClass,
+  adminStatusChipClass,
+  adminSurfaceCardClass,
+  adminTabClass,
+} from '@/lib/admin-ui'
 
 type Team = { id: string; name: string }
-type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home: { name: string }; away: { name: string } }
+type Match = {
+  id: string
+  home_team_id: string
+  away_team_id: string
+  date: string
+  status: string
+  home: { name: string }
+  away: { name: string }
+}
 type Lineup = { id: string; team_id: string; player_name: string; bord: number; position: number }
-type MatchResult = { id: string; player_id: string; team_id: string; games: number[]; bord: number; position: number }
+type MatchResult = {
+  id: string
+  player_id: string
+  team_id: string
+  games: number[]
+  bord: number
+  position: number
+}
 
+const TABS = [
+  { id: 'live', label: '● Live Scoring' },
+  { id: 'matches', label: 'Matcher' },
+  { id: 'teams', label: 'Lag' },
+] as const
 
 export function AdminPageContent() {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-  const C = {
-    bg: isDark ? '#0B1528' : '#f5f2ec',
-    text: isDark ? '#e8edf5' : '#1a2535',
-    textMuted: '#6b7a99',
-    accent: '#f5c200',
-    border: isDark ? '#2a3858' : '#e0e0e0',
-    card: isDark ? '#172030' : '#ffffff',
-    surface: isDark ? '#1a2840' : '#f8f8fc',
-    green: '#4caf7d',
-    red: '#e05555',
-  }
-
-  const [tab, setTab] = useState('live')
+  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('live')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [teams, setTeams] = useState<Team[]>([])
   const [matches, setMatches] = useState<Match[]>([])
 
-  // Live scoring state
   const [liveMatch, setLiveMatch] = useState('')
   const [lineup, setLineup] = useState<Lineup[]>([])
   const [results, setResults] = useState<MatchResult[]>([])
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
 
-  // New match state
   const [mHome, setMHome] = useState('')
   const [mAway, setMAway] = useState('')
   const [mDate, setMDate] = useState(new Date().toISOString().slice(0, 10))
   const [mStatus, setMStatus] = useState('upcoming')
   const [mVenue, setMVenue] = useState('')
 
-  const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 4000) }
+  const flash = (m: string) => {
+    setMsg(m)
+    setTimeout(() => setMsg(''), 4000)
+  }
 
   const loadData = () => {
     const supabase = createClient()
-    supabase.from('teams').select('id, name').order('name').then(({ data }) => { if (data) setTeams(data) })
-    supabase.from('matches').select('id, home_team_id, away_team_id, date, status, home:teams!home_team_id(name), away:teams!away_team_id(name)').order('date', { ascending: false }).limit(30).then(({ data }) => { if (data) setMatches(data as unknown as Match[]) })
+    supabase
+      .from('teams')
+      .select('id, name')
+      .order('name')
+      .then(({ data }) => {
+        if (data) setTeams(data)
+      })
+    supabase
+      .from('matches')
+      .select(
+        'id, home_team_id, away_team_id, date, status, home:teams!home_team_id(name), away:teams!away_team_id(name)',
+      )
+      .order('date', { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        if (data) setMatches(data as unknown as Match[])
+      })
   }
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const loadLiveData = async (matchId: string) => {
     const supabase = createClient()
@@ -69,7 +105,7 @@ export function AdminPageContent() {
 
   const selectLiveMatch = async (matchId: string) => {
     setLiveMatch(matchId)
-    const m = matches.find(m => m.id === matchId) || null
+    const m = matches.find(x => x.id === matchId) || null
     setSelectedMatch(m)
     if (matchId) await loadLiveData(matchId)
   }
@@ -79,7 +115,13 @@ export function AdminPageContent() {
     const already = lineup.find(l => l.team_id === teamId && l.bord === bord && l.position === position)
     if (already) return flash(`Bord ${bord} pos ${position} har redan ${already.player_name}`)
     const supabase = createClient()
-    const { error } = await supabase.from('match_lineups').insert({ match_id: liveMatch, team_id: teamId, player_name: name.trim(), bord, position })
+    const { error } = await supabase.from('match_lineups').insert({
+      match_id: liveMatch,
+      team_id: teamId,
+      player_name: name.trim(),
+      bord,
+      position,
+    })
     if (error) flash('Fel: ' + error.message)
     else await loadLiveData(liveMatch)
   }
@@ -94,15 +136,24 @@ export function AdminPageContent() {
       const games = [...(existing.games || [0, 0, 0, 0])]
       while (games.length <= gameIndex) games.push(0)
       games[gameIndex] = score
-      await supabase.from('match_results').update({ games, total: games.reduce((a, b) => a + b, 0) }).eq('id', existing.id)
+      await supabase
+        .from('match_results')
+        .update({ games, total: games.reduce((a, b) => a + b, 0) })
+        .eq('id', existing.id)
     } else {
       const games = [0, 0, 0, 0]
       games[gameIndex] = score
-      await supabase.from('match_results').insert({ match_id: liveMatch, team_id: teamId, bord, position, games, total: score, type: 'league' })
+      await supabase.from('match_results').insert({
+        match_id: liveMatch,
+        team_id: teamId,
+        bord,
+        position,
+        games,
+        total: score,
+        type: 'league',
+      })
     }
     await loadLiveData(liveMatch)
-
-    // Auto-update match score based on series wins
     await updateMatchScore()
   }
 
@@ -111,8 +162,8 @@ export function AdminPageContent() {
     const supabase = createClient()
     const homeResults = results.filter(r => r.team_id === selectedMatch.home_team_id)
     const awayResults = results.filter(r => r.team_id === selectedMatch.away_team_id)
-    // Count banp (wins per game per pair)
-    let homeScore = 0, awayScore = 0
+    let homeScore = 0
+    let awayScore = 0
     for (let bord = 1; bord <= 4; bord++) {
       for (let pos = 1; pos <= 2; pos++) {
         const hr = homeResults.find(r => r.bord === bord && r.position === pos)
@@ -126,7 +177,10 @@ export function AdminPageContent() {
         }
       }
     }
-    await supabase.from('matches').update({ home_score: homeScore, away_score: awayScore, status: 'live' }).eq('id', liveMatch)
+    await supabase
+      .from('matches')
+      .update({ home_score: homeScore, away_score: awayScore, status: 'live' })
+      .eq('id', liveMatch)
   }
 
   const setMatchStatus = async (id: string, status: string) => {
@@ -141,9 +195,21 @@ export function AdminPageContent() {
     if (mHome === mAway) return flash('Lagen maste vara olika')
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.from('matches').insert({ home_team_id: mHome, away_team_id: mAway, date: mDate, status: mStatus, venue: mVenue || null })
+    const { error } = await supabase.from('matches').insert({
+      home_team_id: mHome,
+      away_team_id: mAway,
+      date: mDate,
+      status: mStatus,
+      venue: mVenue || null,
+    })
     if (error) flash('Fel: ' + error.message)
-    else { flash('Match skapad!'); setMHome(''); setMAway(''); setMVenue(''); loadData() }
+    else {
+      flash('Match skapad!')
+      setMHome('')
+      setMAway('')
+      setMVenue('')
+      loadData()
+    }
     setLoading(false)
   }
 
@@ -153,93 +219,103 @@ export function AdminPageContent() {
     window.location.href = '/login'
   }
 
-  const tabs = [
-    { id: 'live', label: '● Live Scoring' },
-    { id: 'matches', label: 'Matcher' },
-    { id: 'teams', label: 'Lag' },
-  ]
-
   const homeTeam = selectedMatch ? teams.find(t => t.id === selectedMatch.home_team_id) : null
   const awayTeam = selectedMatch ? teams.find(t => t.id === selectedMatch.away_team_id) : null
 
   return (
     <div className="text-light-text dark:text-dark-text">
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>
-          Bowl<span style={{ color: '#f5c200' }}>kollen</span>
-          <span style={{ fontSize: 13, color: C.textMuted, fontWeight: 400, marginLeft: 10 }}>Admin</span>
+      <div className="mx-auto mb-4 flex max-w-[1000px] items-center justify-between px-6 pt-6">
+        <div className="text-lg font-extrabold">
+          Bowl<span className="text-gold">kollen</span>
+          <span className="ml-2.5 text-[13px] font-normal text-dark-muted">Admin</span>
         </div>
-        <button onClick={logout} style={{ background: C.surface, border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', fontSize: 12, color: C.textMuted, cursor: 'pointer' }}>
+        <button type="button" onClick={logout} className={adminGhostBtnClass}>
           Logga ut
         </button>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px 60px' }}>
-        {msg && (
-          <div style={{ background: msg.includes('Fel') ? (isDark ? '#2a1212' : '#fff0f0') : (isDark ? '#122a1a' : '#f0fff4'), border: '1px solid ' + (msg.includes('Fel') ? '#ffaaaa' : '#aaffcc'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? C.red : C.green }}>
-            {msg}
-          </div>
-        )}
+      <div className="mx-auto max-w-[1000px] px-6 pb-15">
+        {msg && <div className={adminFlashClass(msg.includes('Fel'))}>{msg}</div>}
 
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.surface, borderRadius: 10, padding: 4, border: '1px solid ' + C.border }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? C.card : 'transparent', border: tab === t.id ? '1px solid ' + C.border : '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: tab === t.id ? (t.id === 'live' ? '#e05555' : C.accent) : C.textMuted, cursor: 'pointer' }}>
+        <div className="mb-6 flex gap-1 rounded-[10px] border border-light-border bg-light-surface p-1 dark:border-dark-border dark:bg-dark-surface">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={adminTabClass(tab === t.id, t.id === 'live')}
+            >
               {t.label}
             </button>
           ))}
         </div>
 
-        {/* LIVE SCORING TAB */}
         {tab === 'live' && (
           <div>
-            <div style={{ marginBottom: 20 }}>
+            <div className="mb-5">
               <label className={adminLabelClass}>VALJ MATCH ATT SCORA</label>
               <select className={adminInputClass} value={liveMatch} onChange={e => selectLiveMatch(e.target.value)}>
                 <option value="">-- Valj match --</option>
-                {matches.filter(m => m.status !== 'completed').map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.home?.name ? shortName(m.home.name) : ''} vs {m.away?.name ? shortName(m.away.name) : ''} — {m.date?.slice(0, 10)} ({m.status})
-                  </option>
-                ))}
+                {matches
+                  .filter(m => m.status !== 'completed')
+                  .map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.home?.name ? shortName(m.home.name) : ''} vs{' '}
+                      {m.away?.name ? shortName(m.away.name) : ''} — {m.date?.slice(0, 10)} ({m.status})
+                    </option>
+                  ))}
               </select>
             </div>
 
             {liveMatch && selectedMatch && (
               <div>
-                {/* Match header */}
-                <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 16, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
-                    {shortName(selectedMatch.home?.name || '')} vs {shortName(selectedMatch.away?.name || '')}
+                <div
+                  className={cn(
+                    adminCardClass,
+                    'mb-5 flex items-center justify-between py-4',
+                  )}
+                >
+                  <div className="text-base font-extrabold bk-text-primary">
+                    {shortName(selectedMatch.home?.name || '')} vs{' '}
+                    {shortName(selectedMatch.away?.name || '')}
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {['upcoming', 'live', 'completed'].map(s => (
-                      <button key={s} onClick={() => setMatchStatus(liveMatch, s)} style={{ background: selectedMatch.status === s ? C.accent : C.surface, color: selectedMatch.status === s ? '#1a1400' : C.textMuted, border: '1px solid ' + C.border, borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <div className="flex gap-2">
+                    {(['upcoming', 'live', 'completed'] as const).map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setMatchStatus(liveMatch, s)}
+                        className={adminStatusChipClass(s, selectedMatch.status === s)}
+                      >
                         {s === 'upcoming' ? 'Kommande' : s === 'live' ? '● Live' : 'Avslutad'}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Lineup entry — 4 bord, 2 players each team */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {[
                     { team: homeTeam, teamId: selectedMatch.home_team_id, label: 'HEMMALAG' },
                     { team: awayTeam, teamId: selectedMatch.away_team_id, label: 'BORTALAG' },
                   ].map(({ team, teamId, label }) => (
-                    <div key={teamId} style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, padding: 16 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>
+                    <div key={teamId} className={cn(adminCardClass, 'p-4')}>
+                      <div className="mb-3 text-[11px] font-bold tracking-wide text-gold">
                         {label} — {team ? shortName(team.name) : ''}
                       </div>
                       {[1, 2, 3, 4].map(bord => (
-                        <div key={bord} style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 10, color: C.textMuted, fontWeight: 700, marginBottom: 6 }}>BORD {bord}</div>
+                        <div key={bord} className="mb-3">
+                          <div className="mb-1.5 text-[10px] font-bold text-dark-muted">BORD {bord}</div>
                           {[1, 2].map(pos => {
-                            const existing = lineup.find(l => l.team_id === teamId && l.bord === bord && l.position === pos)
-                            const result = results.find(r => r.team_id === teamId && r.bord === bord && r.position === pos)
+                            const existing = lineup.find(
+                              l => l.team_id === teamId && l.bord === bord && l.position === pos,
+                            )
+                            const result = results.find(
+                              r => r.team_id === teamId && r.bord === bord && r.position === pos,
+                            )
                             return (
-                              <div key={pos} style={{ marginBottom: 8 }}>
+                              <div key={pos} className="mb-2">
                                 {!existing ? (
-                                  <div style={{ display: 'flex', gap: 6 }}>
+                                  <div className="flex gap-1.5">
                                     <input
                                       className={cn(adminInputClass, 'py-[7px] text-xs')}
                                       placeholder={'Spelare ' + pos}
@@ -252,50 +328,58 @@ export function AdminPageContent() {
                                       }}
                                     />
                                     <button
+                                      type="button"
                                       onClick={e => {
-                                        const input = (e.currentTarget.previousSibling as HTMLInputElement)
+                                        const input = e.currentTarget.previousSibling as HTMLInputElement
                                         addPlayer(teamId, input.value, bord, pos)
                                         input.value = ''
                                       }}
-                                      style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                      className={adminIconBtnClass}
                                     >
                                       +
                                     </button>
                                   </div>
                                 ) : (
                                   <div>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 4 }}>
+                                    <div className="mb-1 text-xs font-bold bk-text-primary">
                                       {existing.player_name}
                                     </div>
-                                    <div style={{ display: 'flex', gap: 4 }}>
+                                    <div className="flex gap-1">
                                       {[0, 1, 2, 3].map(gi => {
                                         const currentVal = (result?.games || [])[gi] || 0
                                         return (
-                                          <div key={gi} style={{ flex: 1, textAlign: 'center' }}>
-                                            <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2 }}>S{gi + 1}</div>
+                                          <div key={gi} className="flex-1 text-center">
+                                            <div className="mb-0.5 text-[9px] text-dark-muted">
+                                              S{gi + 1}
+                                            </div>
                                             <input
                                               type="number"
-                                              min="0"
-                                              max="300"
+                                              min={0}
+                                              max={300}
                                               defaultValue={currentVal || ''}
-                                              className={cn(adminInputClass, 'px-0.5 py-1.5 text-center text-base font-extrabold')}
-                      style={{ color: currentVal > 0 ? C.accent : C.textMuted }}
+                                              className={cn(
+                                                adminInputClass,
+                                                'px-0.5 py-1.5 text-center text-base font-extrabold',
+                                                currentVal > 0 ? 'text-gold' : 'text-dark-muted',
+                                              )}
                                               onBlur={e => {
-                                                const val = parseInt(e.target.value)
+                                                const val = parseInt(e.target.value, 10)
                                                 if (!isNaN(val) && val >= 0 && val <= 300) {
                                                   saveScore(teamId, bord, pos, gi, val)
                                                 }
                                               }}
                                               onKeyDown={e => {
-                                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                                                if (e.key === 'Enter') {
+                                                  (e.target as HTMLInputElement).blur()
+                                                }
                                               }}
                                             />
                                           </div>
                                         )
                                       })}
-                                      <div style={{ flex: 1, textAlign: 'center' }}>
-                                        <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2 }}>TOT</div>
-                                        <div style={{ background: C.surface, borderRadius: 8, padding: '6px 2px', fontSize: 16, fontWeight: 900, color: C.accent, border: '1px solid ' + C.border, textAlign: 'center' }}>
+                                      <div className="flex-1 text-center">
+                                        <div className="mb-0.5 text-[9px] text-dark-muted">TOT</div>
+                                        <div className="rounded-lg border border-light-border bg-light-surface py-1.5 text-center text-base font-black text-gold dark:border-dark-border dark:bg-dark-surface">
                                           {(result?.games || []).reduce((a, b) => a + b, 0) || '—'}
                                         </div>
                                       </div>
@@ -311,65 +395,107 @@ export function AdminPageContent() {
                   ))}
                 </div>
 
-                {/* Live scorecard preview */}
                 {lineup.length > 0 && (
-                  <div style={{ background: C.card, borderRadius: 12, border: '1px solid ' + C.border, overflow: 'hidden' }}>
-                    <div style={{ padding: '12px 16px', background: C.surface, borderBottom: '1px solid ' + C.border, fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: 1 }}>
+                  <div className="overflow-hidden rounded-xl border border-light-border dark:border-dark-border">
+                    <div className="border-b border-light-border bg-light-surface px-4 py-3 text-xs font-bold tracking-wide text-dark-muted dark:border-dark-border dark:bg-dark-surface">
                       LIVE SCORECARD FORHANSVISNING
                     </div>
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <div className="overflow-x-auto bg-light-card dark:bg-dark-card">
+                      <table className="w-full border-collapse text-xs">
                         <thead>
-                          <tr style={{ background: C.surface }}>
-                            <th style={{ padding: '8px 12px', textAlign: 'left', color: C.textMuted, fontWeight: 700, fontSize: 10, letterSpacing: 1, borderBottom: '1px solid ' + C.border }}>SPELARE</th>
-                            <th style={{ padding: '8px 8px', textAlign: 'center', color: C.textMuted, fontWeight: 700, fontSize: 10, borderBottom: '1px solid ' + C.border }}>S1</th>
-                            <th style={{ padding: '8px 8px', textAlign: 'center', color: C.textMuted, fontWeight: 700, fontSize: 10, borderBottom: '1px solid ' + C.border }}>S2</th>
-                            <th style={{ padding: '8px 8px', textAlign: 'center', color: C.textMuted, fontWeight: 700, fontSize: 10, borderBottom: '1px solid ' + C.border }}>S3</th>
-                            <th style={{ padding: '8px 8px', textAlign: 'center', color: C.textMuted, fontWeight: 700, fontSize: 10, borderBottom: '1px solid ' + C.border }}>S4</th>
-                            <th style={{ padding: '8px 12px', textAlign: 'center', color: C.accent, fontWeight: 700, fontSize: 10, borderBottom: '1px solid ' + C.border }}>TOT</th>
+                          <tr className="bg-light-surface dark:bg-dark-surface">
+                            <th className="border-b border-light-border px-3 py-2 text-left text-[10px] font-bold tracking-wide text-dark-muted dark:border-dark-border">
+                              SPELARE
+                            </th>
+                            {['S1', 'S2', 'S3', 'S4'].map(h => (
+                              <th
+                                key={h}
+                                className="border-b border-light-border px-2 py-2 text-center text-[10px] font-bold text-dark-muted dark:border-dark-border"
+                              >
+                                {h}
+                              </th>
+                            ))}
+                            <th className="border-b border-light-border px-3 py-2 text-center text-[10px] font-bold text-gold dark:border-dark-border">
+                              TOT
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {[selectedMatch.home_team_id, selectedMatch.away_team_id].map((teamId, ti) => {
-                            const teamLineup = lineup.filter(l => l.team_id === teamId).sort((a, b) => a.bord - b.bord || a.position - b.position)
-                            const teamName = ti === 0 ? shortName(selectedMatch.home?.name || '') : shortName(selectedMatch.away?.name || '')
+                            const teamLineup = lineup
+                              .filter(l => l.team_id === teamId)
+                              .sort((a, b) => a.bord - b.bord || a.position - b.position)
+                            const teamName =
+                              ti === 0
+                                ? shortName(selectedMatch.home?.name || '')
+                                : shortName(selectedMatch.away?.name || '')
                             const teamResults = results.filter(r => r.team_id === teamId)
-                            const serTotals = [0, 1, 2, 3].map(gi => teamResults.reduce((sum, r) => sum + ((r.games || [])[gi] || 0), 0))
+                            const serTotals = [0, 1, 2, 3].map(gi =>
+                              teamResults.reduce((sum, r) => sum + ((r.games || [])[gi] || 0), 0),
+                            )
                             const grandTotal = serTotals.reduce((a, b) => a + b, 0)
                             return (
                               <React.Fragment key={teamId}>
                                 <tr>
-                                  <td colSpan={6} style={{ padding: '8px 12px', background: C.surface, fontSize: 11, fontWeight: 800, color: C.accent, letterSpacing: 1 }}>
+                                  <td
+                                    colSpan={6}
+                                    className="bg-light-surface px-3 py-2 text-[11px] font-extrabold tracking-wide text-gold dark:bg-dark-surface"
+                                  >
                                     {teamName.toUpperCase()}
                                   </td>
                                 </tr>
                                 {teamLineup.map(p => {
-                                  const r = results.find(r => r.team_id === teamId && r.bord === p.bord && r.position === p.position)
+                                  const r = results.find(
+                                    x =>
+                                      x.team_id === teamId &&
+                                      x.bord === p.bord &&
+                                      x.position === p.position,
+                                  )
                                   const games = r?.games || []
                                   const total = games.reduce((a, b) => a + b, 0)
                                   return (
-                                    <tr key={p.id} style={{ borderBottom: '1px solid ' + C.border }}>
-                                      <td style={{ padding: '8px 12px', color: C.text, fontWeight: 500 }}>
+                                    <tr
+                                      key={p.id}
+                                      className="border-b border-light-border dark:border-dark-border"
+                                    >
+                                      <td className="px-3 py-2 font-medium bk-text-primary">
                                         {p.player_name}
-                                        <span style={{ fontSize: 9, color: C.textMuted, marginLeft: 6 }}>B{p.bord}</span>
+                                        <span className="ml-1.5 text-[9px] text-dark-muted">B{p.bord}</span>
                                       </td>
-                                      {[0, 1, 2, 3].map(gi => (
-                                        <td key={gi} style={{ padding: '8px', textAlign: 'center', color: (games[gi] || 0) >= 200 ? C.green : C.text, fontWeight: (games[gi] || 0) >= 200 ? 700 : 400 }}>
-                                          {games[gi] || '—'}
-                                        </td>
-                                      ))}
-                                      <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 800, color: C.accent }}>
+                                      {[0, 1, 2, 3].map(gi => {
+                                        const g = games[gi] || 0
+                                        return (
+                                          <td
+                                            key={gi}
+                                            className={cn(
+                                              'px-2 py-2 text-center',
+                                              g >= 200
+                                                ? 'font-bold text-[#4caf7d]'
+                                                : 'font-normal bk-text-primary',
+                                            )}
+                                          >
+                                            {games[gi] || '—'}
+                                          </td>
+                                        )
+                                      })}
+                                      <td className="px-3 py-2 text-center font-extrabold text-gold">
                                         {total || '—'}
                                       </td>
                                     </tr>
                                   )
                                 })}
-                                <tr style={{ background: C.surface, borderBottom: '2px solid ' + C.border }}>
-                                  <td style={{ padding: '8px 12px', fontWeight: 800, color: C.textMuted, fontSize: 11 }}>LAGTOTAL</td>
+                                <tr className="border-b-2 border-light-border bg-light-surface dark:border-dark-border dark:bg-dark-surface">
+                                  <td className="px-3 py-2 text-[11px] font-extrabold text-dark-muted">
+                                    LAGTOTAL
+                                  </td>
                                   {serTotals.map((t, i) => (
-                                    <td key={i} style={{ padding: '8px', textAlign: 'center', fontWeight: 800, color: C.text }}>{t || '—'}</td>
+                                    <td key={i} className="px-2 py-2 text-center font-extrabold bk-text-primary">
+                                      {t || '—'}
+                                    </td>
                                   ))}
-                                  <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 900, fontSize: 15, color: C.accent }}>{grandTotal || '—'}</td>
+                                  <td className="px-3 py-2 text-center text-[15px] font-black text-gold">
+                                    {grandTotal || '—'}
+                                  </td>
                                 </tr>
                               </React.Fragment>
                             )
@@ -384,29 +510,41 @@ export function AdminPageContent() {
           </div>
         )}
 
-        {/* MATCHES TAB */}
         {tab === 'matches' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 20 }}>SKAPA MATCH</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="flex flex-col gap-4">
+            <div className={adminCardClass}>
+              <div className={adminSectionTitleClass}>SKAPA MATCH</div>
+              <div className="mb-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <div>
                   <label className={adminLabelClass}>HEMMALAG</label>
                   <select className={adminInputClass} value={mHome} onChange={e => setMHome(e.target.value)}>
                     <option value="">-- Valj lag --</option>
-                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {teams.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className={adminLabelClass}>BORTALAG</label>
                   <select className={adminInputClass} value={mAway} onChange={e => setMAway(e.target.value)}>
                     <option value="">-- Valj lag --</option>
-                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {teams.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className={adminLabelClass}>DATUM</label>
-                  <input className={adminInputClass} type="date" value={mDate} onChange={e => setMDate(e.target.value)} />
+                  <input
+                    className={adminInputClass}
+                    type="date"
+                    value={mDate}
+                    onChange={e => setMDate(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className={adminLabelClass}>STATUS</label>
@@ -416,34 +554,55 @@ export function AdminPageContent() {
                     <option value="completed">Avslutad</option>
                   </select>
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
+                <div className="sm:col-span-2">
                   <label className={adminLabelClass}>ARENA / VENUE</label>
-                  <input className={adminInputClass} value={mVenue} onChange={e => setMVenue(e.target.value)} placeholder="t.ex. RC Bowl Arena, Jonkoping" />
+                  <input
+                    className={adminInputClass}
+                    value={mVenue}
+                    onChange={e => setMVenue(e.target.value)}
+                    placeholder="t.ex. RC Bowl Arena, Jonkoping"
+                  />
                 </div>
               </div>
-              <button onClick={addMatch} disabled={loading} style={{ background: C.accent, color: '#1a1400', border: 'none', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              <button type="button" onClick={addMatch} disabled={loading} className={adminPrimaryBtnClass}>
                 + Skapa match
               </button>
             </div>
 
             {matches.length > 0 && (
-              <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 16 }}>MATCHER</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className={adminCardClass}>
+                <div className={adminSectionTitleClass}>MATCHER</div>
+                <div className="flex flex-col gap-2">
                   {matches.map(m => (
-                    <div key={m.id} style={{ background: C.surface, borderRadius: 10, padding: '12px 14px', border: '1px solid ' + C.border }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
-                          {m.home?.name ? shortName(m.home.name) : ''} <span style={{ color: C.textMuted, fontWeight: 400 }}>vs</span> {m.away?.name ? shortName(m.away.name) : ''}
+                    <div key={m.id} className={adminSurfaceCardClass}>
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-sm font-bold bk-text-primary">
+                          {m.home?.name ? shortName(m.home.name) : ''}{' '}
+                          <span className="font-normal text-dark-muted">vs</span>{' '}
+                          {m.away?.name ? shortName(m.away.name) : ''}
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: m.status === 'live' ? (theme === 'dark' ? '#0a3a1a' : '#e8f5ee') : (theme === 'dark' ? '#1a1a2a' : '#f0f2f5'), color: m.status === 'live' ? C.green : C.textMuted }}>
-                          {m.status === 'live' ? 'LIVE' : m.status === 'completed' ? 'AVSLUTAD' : 'KOMMANDE'}
+                        <span className={adminMatchStatusBadge(m.status)}>
+                          {m.status === 'live'
+                            ? 'LIVE'
+                            : m.status === 'completed'
+                              ? 'AVSLUTAD'
+                              : 'KOMMANDE'}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 8 }}>{m.date?.slice(0, 10)}</div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {['upcoming', 'live', 'completed'].map(s => (
-                          <button key={s} onClick={() => setMatchStatus(m.id, s)} style={{ background: m.status === s ? C.accent : C.card, color: m.status === s ? '#1a1400' : C.textMuted, border: '1px solid ' + C.border, borderRadius: 6, padding: '3px 10px', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+                      <div className="mb-2 text-[11px] text-dark-muted">{m.date?.slice(0, 10)}</div>
+                      <div className="flex gap-1.5">
+                        {(['upcoming', 'live', 'completed'] as const).map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setMatchStatus(m.id, s)}
+                            className={cn(
+                              'cursor-pointer rounded-md border px-2.5 py-0.5 text-[10px] font-bold',
+                              m.status === s
+                                ? 'border-gold/30 bg-gold text-[#1a1400]'
+                                : 'border-light-border bg-light-card text-dark-muted dark:border-dark-border dark:bg-dark-card',
+                            )}
+                          >
                             {s === 'upcoming' ? 'Kommande' : s === 'live' ? 'Live' : 'Avslutad'}
                           </button>
                         ))}
@@ -456,13 +615,12 @@ export function AdminPageContent() {
           </div>
         )}
 
-        {/* TEAMS TAB */}
         {tab === 'teams' && (
-          <div style={{ background: C.card, borderRadius: 14, border: '1px solid ' + C.border, padding: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 16 }}>LAG I DATABASEN</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className={adminCardClass}>
+            <div className={adminSectionTitleClass}>LAG I DATABASEN</div>
+            <div className="flex flex-col gap-1.5">
               {teams.map(t => (
-                <div key={t.id} style={{ background: C.surface, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: C.text, border: '1px solid ' + C.border }}>
+                <div key={t.id} className={cn(adminSurfaceCardClass, 'text-[13px] bk-text-primary')}>
                   {t.name}
                 </div>
               ))}

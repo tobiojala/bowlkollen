@@ -18,7 +18,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
-| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts` |
+| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts`, `src/lib/team-intern-ui.ts` |
 | Profile widgets | `src/lib/widget-ui.ts` |
 
 ## Copy-paste patterns
@@ -81,7 +81,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `HeroCarousel` + `LiveLaneViewer`. Regenerate counts with:_
+_Last updated: after `TeamInternPageContent` (no more `lib/colors` imports). Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -161,8 +161,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
 | `sllm` | 0 | [x] | `components/sllm/*`, `lib/sllm-data.ts` |
 | `reset-password` | 0 | [x] | matches `login` patterns |
-| `admin` | 0 | [x] | `components/admin/*`, `lib/admin-ui.ts` |
-| `team/[id]/intern` | 0 | [x] | `TeamInternPageContent` |
+| `admin` | 0 | [x] | `AdminPageContent` fully Tailwind; `lib/admin-ui.ts` |
+| `team/[id]/intern` | 0 | [x] | `TeamInternPageContent` + `team-intern-ui.ts` |
 | `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` |
 | `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` |
 | `[slug]/page` | 0 | n/a | redirect only |
@@ -178,11 +178,14 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 6. [x] `Widgets.tsx` + `WidgetGrid` on profile
 7. [x] `SeasonTimeline`, `TopPerformers`
 8. [x] `HeroCarousel`, `LiveLaneViewer`
-9. [ ] `TeamInternPageContent` + deep content in `puls` / `schema` / `admin`
+9. [x] `TeamInternPageContent`
+10. [ ] Deep content in `puls` / `schema` (+ `laguttagning` / `tillganglighet` page content)
+11. [ ] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — dynamic colors OK inline
 
 ### Do not migrate (yet)
 
 - `remotion/*` — separate animation styling (~32 inline)
+- **Live scoring** (`LiveLaneViewer`, match stream embeds) — leave as-is unless explicitly requested
 - Highly dynamic tier colors — `style={{ color: … }}` or `match-ui` / `team-ui` helpers
 
 ---
