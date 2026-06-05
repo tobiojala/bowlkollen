@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
+import { schemaDivider, schemaGhostPillClass, schemaPillClass } from '@/lib/schema-ui'
 import { shortName } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { SchemaTavCard } from '@/components/schema/SchemaTavCard'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Team = { id: string; name: string }
@@ -179,17 +181,8 @@ const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
 export function SchemaPageContent() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const C = {
-    text: isDark ? '#e8edf5' : '#1a2535',
-    textMuted: '#6b7a99',
-    accent: '#f5c200',
-    border: isDark ? '#2a3858' : '#e0e0e0',
-    card: isDark ? '#172030' : '#ffffff',
-    surface: isDark ? '#1a2840' : '#f8f8fc',
-    bg: isDark ? '#0B1528' : '#f5f2ec',
-  }
 
-  const [matches, setMatches]       = useState<Match[]>([])
+  const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading]       = useState(true)
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [filter, setFilter]         = useState<'all' | 'elite' | 'allsvenskan' | 'div1'>('all')
@@ -298,140 +291,71 @@ export function SchemaPageContent() {
     )
   }
 
-  // ── Tävling card ─────────────────────────────────────────────────────────────
-  const GREEN = '#f5c200'
-
-  const TavCard = ({ t }: { t: Tavling }) => {
-    const isLive  = t.status === 'pagaende'
-    const dc      = isLive ? GREEN : t.status === 'kommande' ? C.accent : C.textMuted
-
-    // Multi-day: compute "Dag X av Y"
-    let dayInfo: string | null = null
-    if (t.dateFrom && t.dateTo && activeDate) {
-      const totalDays = Math.round(
-        (new Date(t.dateTo + 'T12:00:00').getTime() - new Date(t.dateFrom + 'T12:00:00').getTime()) / 86400000
-      ) + 1
-      if (totalDays > 1) {
-        const dayNum = Math.round(
-          (new Date(activeDate + 'T12:00:00').getTime() - new Date(t.dateFrom + 'T12:00:00').getTime()) / 86400000
-        ) + 1
-        dayInfo = `Dag ${dayNum} av ${totalDays}`
-      }
-    }
-
-    return (
-      <div style={{ margin: '8px 8px 4px', borderRadius: 14, overflow: 'hidden',
-        background: isDark
-          ? isLive ? 'rgba(245,194,0,0.07)' : 'rgba(245,194,0,0.05)'
-          : isLive ? 'rgba(245,194,0,0.04)' : 'rgba(245,194,0,0.03)',
-        border: `1px solid ${isLive ? 'rgba(245,194,0,0.25)' : isDark ? 'rgba(245,194,0,0.15)' : 'rgba(245,194,0,0.2)'}` }}>
-        <div style={{ height: 2, background: isLive
-          ? `linear-gradient(90deg,${GREEN},rgba(245,194,0,0.2))`
-          : 'linear-gradient(90deg,#f5c200,rgba(245,194,0,0.15))' }} />
-        <div style={{ padding: '12px 14px' }}>
-          {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              {isLive && <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN,
-                boxShadow: `0 0 5px ${GREEN}` }} />}
-              <span style={{ fontSize: 9, fontWeight: 800, color: dc, letterSpacing: 1 }}>
-                {isLive ? 'PÅGÅENDE' : t.status === 'kommande' ? 'KOMMANDE' : 'AVSLUTAD'}
-              </span>
-            </div>
-            {dayInfo && (
-              <span style={{ fontSize: 9, fontWeight: 700, color: C.textMuted,
-                background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                padding: '2px 7px', borderRadius: 4, marginLeft: 'auto' }}>
-                {dayInfo}
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 3 }}>{t.name}</div>
-          <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 6 }}>{t.subtitle}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 12 }}>
-            {t.dateLabel} · {t.venue}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-            <a href={t.href}
-              style={{ fontSize: 11, fontWeight: 700, color: '#1a1400', background: C.accent,
-                borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
-              {t.buttonLabel}
-            </a>
-            {t.officialHref && t.officialHref !== t.href && (
-              <a href={t.officialHref} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
-                Officiell sida ↗
-              </a>
-            )}
-            {t.extraButtons?.map(b => (
-              <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 11, fontWeight: 700, color: C.textMuted,
-                  border: '1px solid ' + C.border, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
-                {b.label} ↗
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="text-light-text dark:text-dark-text">
-
-      {/* ── Sticky header ─────────────────────────────────────────────────────── */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30,
-        borderBottom: '1px solid ' + C.border }}>
-
-        {/* Unified date strip */}
-        <div ref={scrollRef} style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex', alignItems: 'stretch' } as any}>
-
+      <div className="sticky top-14 z-30 border-b border-light-border bg-light-bg dark:border-dark-border dark:bg-dark-bg">
+        <div
+          ref={scrollRef}
+          className="flex items-stretch overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
           {visibleDates.map(dateKey => {
-            const d        = new Date(dateKey + 'T12:00:00')
+            const d = new Date(dateKey + 'T12:00:00')
             const isActive = dateKey === activeDate
-            const isToday  = dateKey === today
-            const isPast   = dateKey < today
-            const hasLiga  = ligaDateSet.has(dateKey)
-            const hasTav   = TAV_MAP.has(dateKey)
+            const isToday = dateKey === today
+            const isPast = dateKey < today
+            const hasLiga = ligaDateSet.has(dateKey)
+            const hasTav = TAV_MAP.has(dateKey)
+            const count = ligaCountByDate.get(dateKey) ?? 0
             return (
-              <button key={dateKey} ref={isActive ? activeDateRef : null}
+              <button
+                key={dateKey}
+                ref={isActive ? activeDateRef : null}
+                type="button"
                 onClick={() => setActiveDate(dateKey)}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  padding: '7px 12px 5px', border: 'none',
-                  borderBottom: '2px solid ' + (isActive ? C.accent : 'transparent'),
-                  background: isToday && !isActive
-                    ? (isDark ? 'rgba(245,194,0,0.04)' : 'rgba(245,194,0,0.06)')
-                    : 'transparent',
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                  opacity: isPast && !isActive ? 0.32 : 1, gap: 1,
-                  WebkitTapHighlightColor: 'transparent' } as any}>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1,
-                  color: isActive ? C.accent : isToday ? C.accent : C.textMuted }}>
+                className={cn(
+                  'flex cursor-pointer flex-col items-center gap-px border-0 border-b-2 px-3 pt-1.75 pb-1.25',
+                  'whitespace-nowrap [-webkit-tap-highlight-color:transparent]',
+                  isActive ? 'border-gold' : 'border-transparent',
+                  isToday && !isActive && 'bg-gold/5 dark:bg-gold/4',
+                  isPast && !isActive && 'opacity-[0.32]',
+                )}
+              >
+                <span
+                  className={cn(
+                    'text-[9px] font-bold tracking-wide',
+                    isActive || isToday ? 'text-gold' : 'text-dark-muted',
+                  )}
+                >
                   {isToday ? 'IDAG' : days[d.getDay()].toUpperCase()}
                 </span>
-                <span style={{ fontSize: 14, fontWeight: isActive || isToday ? 700 : 400,
-                  color: isActive ? C.accent : C.text }}>
+                <span
+                  className={cn(
+                    'text-sm',
+                    isActive || isToday ? 'font-bold text-gold' : 'font-normal bk-text-primary',
+                  )}
+                >
                   {d.getDate()} {months[d.getMonth()]}
                 </span>
-                {/* Content indicators */}
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center', minHeight: 14, marginTop: 2 }}>
-                  {hasLiga && contentFilter !== 'tavlingar' && (() => {
-                    const count = ligaCountByDate.get(dateKey) ?? 0
-                    return (
-                      <div style={{ fontSize: 8, fontWeight: 800, lineHeight: '13px',
-                        minWidth: 14, textAlign: 'center', padding: '0 3px', borderRadius: 3,
-                        color: isActive ? '#1a1400' : isDark ? 'hsl(210,50%,75%)' : 'hsl(210,40%,35%)',
-                        background: isActive ? C.accent : isDark ? 'hsl(210,30%,22%)' : 'hsl(210,40%,88%)' }}>
-                        {count}
-                      </div>
-                    )
-                  })()}
+                <div className="mt-0.5 flex min-h-3.5 items-center gap-0.75">
+                  {hasLiga && contentFilter !== 'tavlingar' && count > 0 && (
+                    <div
+                      className={cn(
+                        'min-w-3.5 rounded px-0.75 text-center text-[8px] leading-[13px] font-extrabold',
+                        isActive
+                          ? 'bg-gold text-[#1a1400]'
+                          : 'bg-[hsl(210,40%,88%)] text-[hsl(210,40%,35%)] dark:bg-[hsl(210,30%,22%)] dark:text-[hsl(210,50%,75%)]',
+                      )}
+                    >
+                      {count}
+                    </div>
+                  )}
                   {hasTav && contentFilter !== 'liga' && (
-                    <div style={{ width: 5, height: 5, borderRadius: 1, transform: 'rotate(45deg)',
-                      background: isActive ? C.accent : '#f5c200',
-                      boxShadow: isActive ? 'none' : '0 0 3px rgba(245,194,0,0.4)' }} />
+                    <div
+                      className={cn(
+                        'h-[5px] w-[5px] rotate-45 rounded-[1px] bg-gold',
+                        !isActive && 'shadow-[0_0_3px_rgba(245,194,0,0.4)]',
+                      )}
+                    />
                   )}
                 </div>
               </button>
@@ -439,65 +363,56 @@ export function SchemaPageContent() {
           })}
         </div>
 
-        {/* Combined controls row: Historik · content type · division pills */}
-        <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex',
-          alignItems: 'center', gap: 6, padding: '7px 12px 7px 12px',
-          borderTop: '1px solid ' + C.border } as any}>
-
-          {/* Historik toggle */}
-          <button onClick={() => setShowPast(p => !p)}
-            style={{ border: '1px solid ' + C.border, background: showPast ? C.card : 'transparent',
-              borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 700,
-              color: C.textMuted, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-              WebkitTapHighlightColor: 'transparent' } as any}>
+        <div className="flex items-center gap-1.5 overflow-x-auto border-t border-light-border px-3 py-1.75 [scrollbar-width:none] dark:border-dark-border [&::-webkit-scrollbar]:hidden">
+          <button
+            type="button"
+            onClick={() => setShowPast(p => !p)}
+            className={cn(
+              schemaGhostPillClass,
+              showPast && 'border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card',
+            )}
+          >
             {showPast ? '✕ Historik' : '← Historik'}
           </button>
-
-          {/* Separator */}
-          <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
-
-          {/* Content type pills */}
-          {([
-            { key: 'all',       label: 'Allt' },
-            { key: 'liga',      label: 'Liga' },
-            { key: 'tavlingar', label: 'Tävlingar' },
-          ] as const).map(f => {
-            const isActive = contentFilter === f.key
-            return (
-              <button key={f.key} onClick={() => setContentFilter(f.key)}
-                style={{ background: isActive ? C.accent : 'transparent',
-                  border: '1px solid ' + (isActive ? C.accent : C.border),
-                  borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700,
-                  color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                  WebkitTapHighlightColor: 'transparent' } as any}>
-                {f.label}
-              </button>
-            )
-          })}
-
-          {/* Division pills — only when liga content is visible and there are matches */}
+          <div className={schemaDivider} />
+          {(
+            [
+              { key: 'all' as const, label: 'Allt' },
+              { key: 'liga' as const, label: 'Liga' },
+              { key: 'tavlingar' as const, label: 'Tävlingar' },
+            ] as const
+          ).map(f => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setContentFilter(f.key)}
+              className={schemaPillClass(contentFilter === f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
           {contentFilter !== 'tavlingar' && dayLigaMatches.length > 0 && (
             <>
-              <div style={{ width: 1, height: 16, background: C.border, flexShrink: 0 }} />
-              {([
-                { key: 'all',         label: 'Alla' },
-                { key: 'elite',       label: 'Elitserien' },
-                { key: 'allsvenskan', label: 'Allsvenskan' },
-                { key: 'div1',        label: 'Division 1' },
-              ] as const).map(f => {
-                const isActive = filter === f.key
-                const count    = activeDate ? countOnDate(activeDate, f.key) : 0
+              <div className={schemaDivider} />
+              {(
+                [
+                  { key: 'all' as const, label: 'Alla' },
+                  { key: 'elite' as const, label: 'Elitserien' },
+                  { key: 'allsvenskan' as const, label: 'Allsvenskan' },
+                  { key: 'div1' as const, label: 'Division 1' },
+                ] as const
+              ).map(f => {
+                const count = activeDate ? countOnDate(activeDate, f.key) : 0
                 if (f.key !== 'all' && count === 0) return null
                 return (
-                  <button key={f.key} onClick={() => setFilter(f.key)}
-                    style={{ background: isActive ? C.accent : 'transparent',
-                      border: '1px solid ' + (isActive ? C.accent : C.border),
-                      borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700,
-                      color: isActive ? '#1a1400' : C.textMuted, cursor: 'pointer',
-                      whiteSpace: 'nowrap', flexShrink: 0,
-                      WebkitTapHighlightColor: 'transparent' } as any}>
-                    {f.label}{count > 0 ? ` · ${count}` : ''}
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setFilter(f.key)}
+                    className={schemaPillClass(filter === f.key)}
+                  >
+                    {f.label}
+                    {count > 0 ? ` · ${count}` : ''}
                   </button>
                 )
               })}
@@ -506,8 +421,7 @@ export function SchemaPageContent() {
         </div>
       </div>
 
-      {/* ── Day content — animates on date change ─────────────────────────────── */}
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
+      <div className="mx-auto max-w-app pb-12">
         <AnimatePresence mode="wait">
           <motion.div key={activeDate ?? 'empty'}
             initial={{ opacity: 0, y: 8 }}
@@ -515,28 +429,28 @@ export function SchemaPageContent() {
             exit={{ opacity: 0 }}
             transition={SPRING}>
 
-            {/* Jump back chip when on a past date */}
             {activeDate && activeDate < today && nextDate && (
-              <div style={{ padding: '10px 16px' }}>
-                <button onClick={() => setActiveDate(nextDate)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent',
-                    border: '1px solid ' + C.border, borderRadius: 20, padding: '6px 14px',
-                    cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as any}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.accent }}>Nästa omgång</span>
-                  <span style={{ fontSize: 11, color: C.textMuted }}>{fmtDate(nextDate)} →</span>
+              <div className="px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveDate(nextDate)}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-light-border bg-transparent px-3.5 py-1.5 [-webkit-tap-highlight-color:transparent] dark:border-dark-border"
+                >
+                  <span className="text-[11px] font-bold text-gold">Nästa omgång</span>
+                  <span className="text-[11px] text-dark-muted">{fmtDate(nextDate)} →</span>
                 </button>
               </div>
             )}
 
-            {/* Tävlingar on this day */}
-            {dayTavlingar.map(t => <TavCard key={t.id} t={t} />)}
+            {dayTavlingar.map(t => (
+              <SchemaTavCard key={t.id} t={t} activeDate={activeDate} />
+            ))}
 
-            {/* Divider between tävlingar and liga when both exist */}
             {dayTavlingar.length > 0 && dayLigaMatches.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 4px' }}>
-                <div style={{ flex: 1, height: 1, background: C.border }} />
-                <span style={{ fontSize: 9, fontWeight: 800, color: C.textMuted, letterSpacing: 1 }}>LIGAMATCHER</span>
-                <div style={{ flex: 1, height: 1, background: C.border }} />
+              <div className="flex items-center gap-2.5 px-4 pt-3 pb-1">
+                <div className="h-px flex-1 bg-light-border dark:bg-dark-border" />
+                <span className="text-[9px] font-extrabold tracking-wide text-dark-muted">LIGAMATCHER</span>
+                <div className="h-px flex-1 bg-light-border dark:bg-dark-border" />
               </div>
             )}
 
@@ -548,36 +462,36 @@ export function SchemaPageContent() {
               return (
                 <div key={div}>
                   {getTier(div) === 1 ? (
-                    <div style={{
-                      background: `linear-gradient(90deg, ${divColorAlpha(div, isDark ? 0.14 : 0.08)} 0%, transparent 75%)`,
-                      borderBottom: '1px solid ' + C.border,
-                      borderLeft: `4px solid ${dc}`,
-                      padding: '14px 14px 10px',
-                      marginTop: 4,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 900, color: dc, letterSpacing: 1.5 }}>
+                    <div
+                      className="mt-1 border-b border-light-border py-3.5 pr-3.5 pl-3 dark:border-dark-border"
+                      style={{
+                        borderLeft: `4px solid ${dc}`,
+                        background: `linear-gradient(90deg, ${divColorAlpha(div, isDark ? 0.14 : 0.08)} 0%, transparent 75%)`,
+                      }}
+                    >
+                      <div className="flex items-baseline gap-2">
+                        <span
+                          className="text-xs font-black tracking-widest"
+                          style={{ color: dc }}
+                        >
                           {div.toUpperCase()}
                         </span>
                         {round != null && (
-                          <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted }}>
-                            Omgång {round}
-                          </span>
+                          <span className="text-[10px] font-semibold text-dark-muted">Omgång {round}</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 10, color: C.textMuted, marginTop: 3 }}>
+                      <div className="mt-0.5 text-[10px] text-dark-muted">
                         {divMatches.length} {divMatches.length === 1 ? 'match' : 'matcher'}
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '14px 16px 6px', borderBottom: '1px solid ' + C.border }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: dc, flexShrink: 0 }} />
-                      <div style={{ fontSize: 10, fontWeight: 800, color: dc, letterSpacing: 1.5, flex: 1 }}>
+                    <div className="flex items-center gap-2 border-b border-light-border px-4 pt-3.5 pb-1.5 dark:border-dark-border">
+                      <div className="h-2 w-2 shrink-0 rounded-sm" style={{ background: dc }} />
+                      <div className="flex-1 text-[10px] font-extrabold tracking-widest" style={{ color: dc }}>
                         {div.toUpperCase()}
                       </div>
                       {round != null && (
-                        <div style={{ fontSize: 9, fontWeight: 600, color: C.textMuted, letterSpacing: 0.3 }}>
+                        <div className="text-[9px] font-semibold tracking-wide text-dark-muted">
                           Omgång {round}
                         </div>
                       )}
@@ -595,68 +509,110 @@ export function SchemaPageContent() {
                     const tier        = getTier(m.division)
 
                     // Tier-based sizing
-                    const nameFontSize  = tier === 1 ? 15 : tier === 3 ? 13 : 14
-                    const nameWeight    = tier === 1 ? 600 : 400
-                    const winWeight     = tier === 1 ? 800 : 700
-                    const scoreFontSize = tier === 1 ? 20 : tier === 3 ? 14 : 16
-                    const rowPadding    = tier === 1 ? '13px 8px' : tier === 3 ? '7px 8px' : '10px 8px'
-                    const borderWidth   = tier === 1 ? 4 : tier === 3 ? 2 : 3
-                    const rowMargin     = tier === 1 ? '3px 6px' : tier === 3 ? '1px 10px' : '2px 8px'
-                    const rowBg         = tier === 1 ? divColorAlpha(m.division, isDark ? 0.06 : 0.03) : 'transparent'
+                    const nameSize =
+                      tier === 1 ? 'text-[15px]' : tier === 3 ? 'text-[13px]' : 'text-sm'
+                    const scoreSize =
+                      tier === 1 ? 'text-xl' : tier === 3 ? 'text-sm' : 'text-base'
+                    const rowPad =
+                      tier === 1 ? 'px-2 py-3.25' : tier === 3 ? 'px-2 py-1.75' : 'px-2 py-2.5'
+                    const barW = tier === 1 ? 'w-1' : tier === 3 ? 'w-0.5' : 'w-[3px]'
+                    const rowMargin =
+                      tier === 1 ? 'mx-1.5 my-0.75' : tier === 3 ? 'mx-2.5 my-px' : 'mx-2 my-0.5'
+                    const rowBg =
+                      tier === 1 ? divColorAlpha(m.division, isDark ? 0.06 : 0.03) : undefined
 
                     return (
-                      <a key={m.id} href={'/matches/' + m.id}
-                        style={{ display: 'flex', alignItems: 'stretch', textDecoration: 'none',
-                          borderRadius: tier === 1 ? 10 : 8, margin: rowMargin, overflow: 'hidden',
-                          background: rowBg,
-                          WebkitTapHighlightColor: 'transparent' } as any}
-                        onMouseEnter={e => (e.currentTarget.style.background = C.card)}
-                        onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
+                      <a
+                        key={m.id}
+                        href={'/matches/' + m.id}
+                        className={cn(
+                          'flex items-stretch overflow-hidden no-underline',
+                          '[-webkit-tap-highlight-color:transparent]',
+                          'transition-colors hover:bg-light-card dark:hover:bg-dark-card',
+                          tier === 1 ? 'rounded-[10px]' : 'rounded-lg',
+                          rowMargin,
+                        )}
+                        style={{ background: rowBg }}
                       >
-                        <div style={{ width: borderWidth, flexShrink: 0, background: dc }} />
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', padding: rowPadding, gap: 8 }}>
-                            <div style={{ flex: 1, minWidth: 0, fontSize: nameFontSize,
-                              fontWeight: homeWin ? winWeight : nameWeight,
-                              color: isCompleted ? (homeWin ? C.text : C.textMuted) : C.text,
-                              textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div className={cn('shrink-0', barW)} style={{ background: dc }} />
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <div className={cn('flex items-center gap-2', rowPad)}>
+                            <div
+                              className={cn(
+                                'min-w-0 flex-1 truncate text-right',
+                                nameSize,
+                                homeWin ? 'font-extrabold' : tier === 1 ? 'font-semibold' : 'font-normal',
+                                isCompleted && !homeWin ? 'text-dark-muted' : 'bk-text-primary',
+                              )}
+                            >
                               {shortName(m.home?.name || '')}
                             </div>
-                            <div style={{ flexShrink: 0, width: 68, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="flex w-[68px] shrink-0 flex-col items-center">
                               {isLive && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-                                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#e05555',
-                                    display: 'inline-block', boxShadow: '0 0 4px #e05555' }} />
-                                  <span style={{ fontSize: 8, fontWeight: 800, color: '#e05555', letterSpacing: 0.5 }}>LIVE</span>
+                                <div className="mb-0.5 flex items-center gap-0.75">
+                                  <span className="inline-block h-[5px] w-[5px] rounded-full bg-[#e05555] shadow-[0_0_4px_#e05555]" />
+                                  <span className="text-[8px] font-extrabold tracking-wide text-[#e05555]">
+                                    LIVE
+                                  </span>
                                 </div>
                               )}
                               {isCompleted || isLive ? (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                  <span style={{ fontSize: scoreFontSize, fontWeight: 900, lineHeight: 1,
-                                    color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                                  <span style={{ fontSize: scoreFontSize - 5, color: C.textMuted, fontWeight: 300 }}>–</span>
-                                  <span style={{ fontSize: scoreFontSize, fontWeight: 900, lineHeight: 1,
-                                    color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span
+                                    className={cn(
+                                      'leading-none font-black',
+                                      scoreSize,
+                                      homeWin ? 'text-gold' : 'text-dark-muted',
+                                    )}
+                                  >
+                                    {m.home_score}
+                                  </span>
+                                  <span className={cn('font-light text-dark-muted', tier === 1 ? 'text-[15px]' : 'text-[11px]')}>
+                                    –
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      'leading-none font-black',
+                                      scoreSize,
+                                      awayWin ? 'text-gold' : 'text-dark-muted',
+                                    )}
+                                  >
+                                    {m.away_score}
+                                  </span>
                                 </div>
                               ) : cd ? (
-                                <div style={{ fontSize: tier === 1 ? 13 : 12, fontWeight: 800, color: C.accent,
-                                  fontVariantNumeric: 'tabular-nums' }}>{cd}</div>
+                                <div
+                                  className={cn(
+                                    'font-extrabold text-gold tabular-nums',
+                                    tier === 1 ? 'text-[13px]' : 'text-xs',
+                                  )}
+                                >
+                                  {cd}
+                                </div>
                               ) : (
-                                <div style={{ fontSize: tier === 3 ? 11 : 12, fontWeight: 600, color: C.textMuted }}>{time}</div>
+                                <div
+                                  className={cn(
+                                    'font-semibold text-dark-muted',
+                                    tier === 3 ? 'text-[11px]' : 'text-xs',
+                                  )}
+                                >
+                                  {time}
+                                </div>
                               )}
                             </div>
-                            <div style={{ flex: 1, minWidth: 0, fontSize: nameFontSize,
-                              fontWeight: awayWin ? winWeight : nameWeight,
-                              color: isCompleted ? (awayWin ? C.text : C.textMuted) : C.text,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div
+                              className={cn(
+                                'min-w-0 flex-1 truncate',
+                                nameSize,
+                                awayWin ? 'font-extrabold' : tier === 1 ? 'font-semibold' : 'font-normal',
+                                isCompleted && !awayWin ? 'text-dark-muted' : 'bk-text-primary',
+                              )}
+                            >
                               {shortName(m.away?.name || '')}
                             </div>
                           </div>
                           {m.venue ? (
-                            <div style={{ fontSize: 9, color: C.textMuted, padding: '0 8px 7px',
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {m.venue}
-                            </div>
+                            <div className="truncate px-2 pb-1.75 text-[9px] text-dark-muted">{m.venue}</div>
                           ) : null}
                         </div>
                       </a>
@@ -666,16 +622,15 @@ export function SchemaPageContent() {
               )
             })}
 
-            {/* Empty state */}
             {isEmpty && (
-              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 6 }}>
-                  Inga matcher den här dagen
-                </div>
+              <div className="px-6 py-12 text-center">
+                <div className="mb-1.5 text-sm font-bold bk-text-primary">Inga matcher den här dagen</div>
                 {nextDate && activeDate !== nextDate && (
-                  <button onClick={() => setActiveDate(nextDate)}
-                    style={{ fontSize: 12, fontWeight: 700, color: C.accent,
-                      background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 } as any}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveDate(nextDate)}
+                    className="cursor-pointer border-0 bg-transparent p-0 text-xs font-bold text-gold"
+                  >
                     Nästa: {fmtDate(nextDate)} →
                   </button>
                 )}
@@ -683,9 +638,13 @@ export function SchemaPageContent() {
             )}
 
             {activeMatches.length > 0 && (
-              <div style={{ padding: '16px 20px' }}>
-                <a href="https://bits.swebowl.se" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 11, color: C.textMuted, textDecoration: 'none' }}>
+              <div className="px-5 py-4">
+                <a
+                  href="https://bits.swebowl.se"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-dark-muted no-underline"
+                >
                   Fullständig info på BITS ↗
                 </a>
               </div>
@@ -693,32 +652,25 @@ export function SchemaPageContent() {
           </motion.div>
         </AnimatePresence>
 
-        {/* ── Kommande tävlingar — always visible, fuzzy-dated events ──────────── */}
         {FUZZY_TAV.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8,
-              padding: '14px 16px 6px', borderBottom: '1px solid ' + C.border }}>
-              <div style={{ width: 5, height: 5, borderRadius: 1, transform: 'rotate(45deg)',
-                background: '#f5c200', flexShrink: 0 }} />
-              <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5 }}>
+          <div className="mt-2">
+            <div className="flex items-center gap-2 border-b border-light-border px-4 pt-3.5 pb-1.5 dark:border-dark-border">
+              <div className="h-[5px] w-[5px] shrink-0 rotate-45 rounded-[1px] bg-gold" />
+              <span className="text-[10px] font-extrabold tracking-widest text-dark-muted">
                 KOMMANDE TÄVLINGAR
               </span>
             </div>
             {(showAllFuzzy ? FUZZY_TAV : FUZZY_TAV.slice(0, 2)).map(t => (
-              <TavCard key={t.id} t={t} />
+              <SchemaTavCard key={t.id} t={t} activeDate={activeDate} />
             ))}
             {!showAllFuzzy && FUZZY_TAV.length > 2 && (
-              <button onClick={() => setShowAllFuzzy(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%',
-                  padding: '12px 16px', border: 'none', background: 'transparent',
-                  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                  borderTop: '1px solid ' + C.border } as any}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>
-                  Visa alla tävlingar
-                </span>
-                <span style={{ fontSize: 12, color: C.textMuted }}>
-                  +{FUZZY_TAV.length - 2} till →
-                </span>
+              <button
+                type="button"
+                onClick={() => setShowAllFuzzy(true)}
+                className="flex w-full cursor-pointer items-center gap-1 border-0 border-t border-light-border bg-transparent px-4 py-3 [-webkit-tap-highlight-color:transparent] dark:border-dark-border"
+              >
+                <span className="text-xs font-bold text-gold">Visa alla tävlingar</span>
+                <span className="text-xs text-dark-muted">+{FUZZY_TAV.length - 2} till →</span>
               </button>
             )}
           </div>

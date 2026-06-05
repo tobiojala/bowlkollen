@@ -20,6 +20,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Class name helper | `src/lib/cn.ts` |
 | Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts`, `src/lib/team-intern-ui.ts` |
 | Profile widgets | `src/lib/widget-ui.ts` |
+| Schedule page | `src/lib/schema-ui.ts`, `SchemaTavCard` |
 
 ## Copy-paste patterns
 
@@ -81,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `TeamInternPageContent` (no more `lib/colors` imports). Regenerate counts with:_
+_Last updated: after `AdminPageContent` Tailwind migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -157,7 +158,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
 | `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` + widgets migrated |
 | `puls` | 0 | [x] | `components/puls/*`, `lib/puls-ui.ts`; UI still inline in content |
-| `schema` | 0 | [x] | `components/schema/SchemaPageContent.tsx` |
+| `schema` | 0 | [x] | `SchemaPageContent`, `SchemaTavCard`, `lib/schema-ui.ts` |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
 | `sllm` | 0 | [x] | `components/sllm/*`, `lib/sllm-data.ts` |
 | `reset-password` | 0 | [x] | matches `login` patterns |
