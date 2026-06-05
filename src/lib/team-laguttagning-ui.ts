@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/cn'
 
 export type LineupTier = {
@@ -217,3 +218,51 @@ export const laguttagningDialFooter = cn(
 )
 
 export const laguttagningDialAnalysis = 'text-xs text-[#534ab7] dark:text-[#afa9ec]'
+
+export function lineupTierAvatarStyle(tier: LineupTier, compact?: boolean): CSSProperties {
+  return {
+    width: compact ? 26 : 32,
+    height: compact ? 26 : 32,
+    background: tier.bg,
+    border: `2px solid ${tier.border}`,
+    color: tier.color,
+    fontSize: compact ? 8 : 10,
+  }
+}
+
+export function lineupTierTextStyle(tier: LineupTier): CSSProperties {
+  return { color: tier.color }
+}
+
+export function lineupAvailChipStyle(avColor: string): CSSProperties {
+  return {
+    background: `${avColor}15`,
+    border: `1px solid ${avColor}44`,
+  }
+}
+
+export function lineupAvailMiniAvatarStyle(tier: LineupTier): CSSProperties {
+  return {
+    background: tier.bg,
+    border: `1.5px solid ${tier.border}`,
+    color: tier.color,
+  }
+}
+
+export function lineupPickerCardStyle(tier: LineupTier, isUsed: boolean): CSSProperties {
+  return {
+    background: tier.cardBg,
+    ...(isUsed ? {} : { borderColor: tier.border }),
+  }
+}
+
+export function lineupPickerHeaderStyle(tier: LineupTier): CSSProperties {
+  return {
+    background: tier.bg,
+    borderColor: `${tier.border}44`,
+  }
+}
+
+export function lineupPickerAvatarStyle(tier: LineupTier): CSSProperties {
+  return { border: `2px solid ${tier.border}`, color: tier.color }
+}

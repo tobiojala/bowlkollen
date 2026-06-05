@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after player/team tabs, list pages, HeroCarousel, SeasonTimeline. Regenerate counts with:_
+_Last updated: app migration complete — only `remotion/PlayerShareCard` keeps literal `style={{`. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -97,8 +97,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
 | Files importing `@/lib/colors` | **0** (`lib/colors.ts` removed) |
-| `style={{}}` in all `src/**/*.tsx` | **~87** (32 in `remotion/PlayerShareCard`) |
-| `style={{}}` outside remotion | **~55** |
+| `style={{}}` in all `src/**/*.tsx` | **32** (all in `remotion/PlayerShareCard`) |
+| `style={{}}` outside remotion | **0** |
 | `style={{}}` on app `page.tsx` files only | **0** (list pages use `*-ui.ts` helpers) |
 
 ### Phase 0 + 1 — shell (done)

@@ -43,9 +43,15 @@ import {
   laguttagningSplitRight,
   laguttagningSplitRoot,
   laguttagningTitle,
+  lineupAvailChipStyle,
+  lineupAvailMiniAvatarStyle,
   lineupAvailabilityColor,
   lineupFormDotClass,
-  type LineupTier,
+  lineupPickerAvatarStyle,
+  lineupPickerCardStyle,
+  lineupPickerHeaderStyle,
+  lineupTierAvatarStyle,
+  lineupTierTextStyle,
 } from '@/lib/team-laguttagning-ui'
 
 type Props = { params: Promise<{ id: string; matchid: string }> }
@@ -82,17 +88,6 @@ function initials(n: string) {
 function stars(rating: number) {
   const s = Math.round(rating / 20)
   return { filled: s, empty: 5 - s }
-}
-
-function tierAvatarStyle(tier: LineupTier, compact?: boolean) {
-  return {
-    width: compact ? 26 : 32,
-    height: compact ? 26 : 32,
-    background: tier.bg,
-    border: `2px solid ${tier.border}`,
-    color: tier.color,
-    fontSize: compact ? 8 : 10,
-  } as React.CSSProperties
 }
 
 function MatchupDials({ teamId, oppId }: { teamId: string; oppId: string }) {
@@ -683,7 +678,7 @@ export function TeamLaguttagningPageContent({ params }: Props) {
           <>
             <div
               className="flex shrink-0 items-center justify-center rounded-full font-extrabold"
-              style={tierAvatarStyle(tier, compact)}
+              style={lineupTierAvatarStyle(tier, compact)}
             >
               {initials(p.name)}
             </div>
@@ -696,7 +691,7 @@ export function TeamLaguttagningPageContent({ params }: Props) {
               >
                 {p.name.split(' ')[0]}
               </div>
-              <div className="text-[9px] font-semibold" style={{ color: tier.color }}>
+              <div className="text-[9px] font-semibold" style={lineupTierTextStyle(tier)}>
                 {tier.label}
               </div>
             </div>
@@ -778,18 +773,11 @@ export function TeamLaguttagningPageContent({ params }: Props) {
                   key={p.id}
                   title={note || ''}
                   className="flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5"
-                  style={{
-                    background: `${avColor}15`,
-                    border: `1px solid ${avColor}44`,
-                  }}
+                  style={lineupAvailChipStyle(avColor)}
                 >
                   <div
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[7px] font-extrabold"
-                    style={{
-                      background: tier.bg,
-                      border: `1.5px solid ${tier.border}`,
-                      color: tier.color,
-                    }}
+                    style={lineupAvailMiniAvatarStyle(tier)}
                   >
                     {initials(p.name)}
                   </div>
@@ -932,21 +920,15 @@ export function TeamLaguttagningPageContent({ params }: Props) {
                       isUsed && laguttagningPlayerCardUsed,
                       isUsed && 'border-light-border dark:border-dark-border',
                     )}
-                    style={{
-                      background: tier.cardBg,
-                      ...(isUsed ? {} : { borderColor: tier.border }),
-                    }}
+                    style={lineupPickerCardStyle(tier, isUsed)}
                   >
                     <div
                       className="relative border-b px-2 pb-1.5 pt-2.5 text-center"
-                      style={{
-                        background: tier.bg,
-                        borderColor: `${tier.border}44`,
-                      }}
+                      style={lineupPickerHeaderStyle(tier)}
                     >
                       <div
                         className="absolute right-1.5 top-1.5 rounded-md px-1 py-0.5 text-[8px] font-bold dark:bg-black/30 bg-white/50"
-                        style={{ color: tier.color }}
+                        style={lineupTierTextStyle(tier)}
                       >
                         {tier.label}
                       </div>
@@ -961,7 +943,7 @@ export function TeamLaguttagningPageContent({ params }: Props) {
                       )}
                       <div
                         className="mx-auto mb-1.5 flex h-11 w-11 items-center justify-center rounded-full text-sm font-extrabold dark:bg-black/30 bg-white/40"
-                        style={{ border: `2px solid ${tier.border}`, color: tier.color }}
+                        style={lineupPickerAvatarStyle(tier)}
                       >
                         {initials(p.name)}
                       </div>
@@ -985,7 +967,7 @@ export function TeamLaguttagningPageContent({ params }: Props) {
                         >
                           <div
                             className="text-[13px] font-extrabold leading-none"
-                            style={{ color: tier.color }}
+                            style={lineupTierTextStyle(tier)}
                           >
                             {s.value}
                           </div>

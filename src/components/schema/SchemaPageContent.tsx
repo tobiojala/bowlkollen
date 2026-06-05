@@ -4,7 +4,19 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
-import { schemaDivider, schemaGhostPillClass, schemaPillClass } from '@/lib/schema-ui'
+import {
+  schemaDivColor,
+  schemaDivColorAlpha,
+  schemaDivDotStyle,
+  schemaDivLabelStyle,
+  schemaDivider,
+  schemaDivisionTier,
+  schemaGhostPillClass,
+  schemaMatchBarStyle,
+  schemaMatchRowBg,
+  schemaPillClass,
+  schemaTierHeaderStyle,
+} from '@/lib/schema-ui'
 import { shortName } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SchemaTavCard } from '@/components/schema/SchemaTavCard'
@@ -143,25 +155,6 @@ const TAV_MAP   = buildTavMap()
 const FUZZY_TAV = TAVLINGAR.filter(t => !t.dateFrom && t.status !== 'avslutad')
 
 // ── Division helpers ──────────────────────────────────────────────────────────
-const DIVISION_TIERS: Record<string, number> = {
-  'Elitserien Herrar': 1, 'Elitserien Damer': 1,
-  'SM-slutspel Herrar': 1, 'SM-slutspel Damer': 1,
-  'Mellanallsvenskan Herrar': 2, 'Nordallsvenskan Herrar': 2,
-  'Sydallsvenskan Herrar': 2, 'Norra Allsvenskan Herrar': 2,
-  'Södra Allsvenskan Herrar': 2,
-}
-function getTier(d: string) { return DIVISION_TIERS[d] || 3 }
-function getDivColor(d: string): string {
-  if (d.includes('SM'))                                    return 'hsl(44, 50%, 52%)'
-  if (d.includes('Elitserien') && d.includes('Damer'))    return 'hsl(320, 30%, 58%)'
-  if (d.includes('Elitserien'))                           return 'hsl(210, 35%, 55%)'
-  if (getTier(d) === 2)                                   return 'hsl(130, 22%, 50%)'
-  return 'hsl(35, 12%, 52%)'
-}
-function divColorAlpha(d: string, alpha: number): string {
-  return getDivColor(d).replace('hsl(', 'hsla(').replace(')', `, ${alpha})`)
-}
-
 function matchTime(d: string) {
   return new Date(d).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
 }
@@ -252,19 +245,19 @@ export function SchemaPageContent() {
   }
 
   const filterMatches = (ms: Match[]) => {
-    if (filter === 'elite')       return ms.filter(m => getTier(m.division) === 1)
-    if (filter === 'allsvenskan') return ms.filter(m => getTier(m.division) === 2)
-    if (filter === 'div1')        return ms.filter(m => getTier(m.division) === 3)
+    if (filter === 'elite')       return ms.filter(m => schemaDivisionTier(m.division) === 1)
+    if (filter === 'allsvenskan') return ms.filter(m => schemaDivisionTier(m.division) === 2)
+    if (filter === 'div1')        return ms.filter(m => schemaDivisionTier(m.division) === 3)
     return ms
   }
 
   const dayLigaMatches = activeDate
     ? matches.filter(m => m.date.slice(0, 10) === activeDate)
-        .sort((a, b) => getTier(a.division) - getTier(b.division))
+        .sort((a, b) => schemaDivisionTier(a.division) - schemaDivisionTier(b.division))
     : []
   const activeMatches = contentFilter !== 'tavlingar' ? filterMatches(dayLigaMatches) : []
   const divisions     = [...new Set(activeMatches.map(m => m.division))]
-    .sort((a, b) => getTier(a) - getTier(b))
+    .sort((a, b) => schemaDivisionTier(a) - schemaDivisionTier(b))
   const dayTavlingar  = activeDate && contentFilter !== 'liga' ? (TAV_MAP.get(activeDate) ?? []) : []
 
   const ligaCountByDate = new Map<string, number>()
@@ -275,9 +268,9 @@ export function SchemaPageContent() {
 
   const countOnDate = (dateKey: string, f: typeof filter) => {
     const ms = matches.filter(m => m.date.slice(0, 10) === dateKey)
-    if (f === 'elite')       return ms.filter(m => getTier(m.division) === 1).length
-    if (f === 'allsvenskan') return ms.filter(m => getTier(m.division) === 2).length
-    if (f === 'div1')        return ms.filter(m => getTier(m.division) === 3).length
+    if (f === 'elite')       return ms.filter(m => schemaDivisionTier(m.division) === 1).length
+    if (f === 'allsvenskan') return ms.filter(m => schemaDivisionTier(m.division) === 2).length
+    if (f === 'div1')        return ms.filter(m => schemaDivisionTier(m.division) === 3).length
     return ms.length
   }
 
@@ -457,22 +450,19 @@ export function SchemaPageContent() {
             {/* Liga matches grouped by division */}
             {divisions.map(div => {
               const divMatches = activeMatches.filter(m => m.division === div)
-              const dc         = getDivColor(div)
+              const dc         = schemaDivColor(div)
               const round      = divMatches[0]?.round
               return (
                 <div key={div}>
-                  {getTier(div) === 1 ? (
+                  {schemaDivisionTier(div) === 1 ? (
                     <div
                       className="mt-1 border-b border-light-border py-3.5 pr-3.5 pl-3 dark:border-dark-border"
-                      style={{
-                        borderLeft: `4px solid ${dc}`,
-                        background: `linear-gradient(90deg, ${divColorAlpha(div, isDark ? 0.14 : 0.08)} 0%, transparent 75%)`,
-                      }}
+                      style={schemaTierHeaderStyle(div, isDark)}
                     >
                       <div className="flex items-baseline gap-2">
                         <span
                           className="text-xs font-black tracking-widest"
-                          style={{ color: dc }}
+                          style={schemaDivLabelStyle(dc)}
                         >
                           {div.toUpperCase()}
                         </span>
@@ -486,8 +476,8 @@ export function SchemaPageContent() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 border-b border-light-border px-4 pt-3.5 pb-1.5 dark:border-dark-border">
-                      <div className="h-2 w-2 shrink-0 rounded-sm" style={{ background: dc }} />
-                      <div className="flex-1 text-[10px] font-extrabold tracking-widest" style={{ color: dc }}>
+                      <div className="h-2 w-2 shrink-0 rounded-sm" style={schemaDivDotStyle(dc)} />
+                      <div className="flex-1 text-[10px] font-extrabold tracking-widest" style={schemaDivLabelStyle(dc)}>
                         {div.toUpperCase()}
                       </div>
                       {round != null && (
@@ -506,7 +496,7 @@ export function SchemaPageContent() {
                     const isToday     = m.date.slice(0, 10) === today
                     const cd          = !isCompleted && !isLive && isToday ? cdStr(m.date, now) : null
                     const time        = matchTime(m.date)
-                    const tier        = getTier(m.division)
+                    const tier        = schemaDivisionTier(m.division)
 
                     // Tier-based sizing
                     const nameSize =
@@ -519,7 +509,7 @@ export function SchemaPageContent() {
                     const rowMargin =
                       tier === 1 ? 'mx-1.5 my-0.75' : tier === 3 ? 'mx-2.5 my-px' : 'mx-2 my-0.5'
                     const rowBg =
-                      tier === 1 ? divColorAlpha(m.division, isDark ? 0.06 : 0.03) : undefined
+                      tier === 1 ? schemaDivColorAlpha(m.division, isDark ? 0.06 : 0.03) : undefined
 
                     return (
                       <a
@@ -532,9 +522,9 @@ export function SchemaPageContent() {
                           tier === 1 ? 'rounded-[10px]' : 'rounded-lg',
                           rowMargin,
                         )}
-                        style={{ background: rowBg }}
+                        style={schemaMatchRowBg(rowBg)}
                       >
-                        <div className={cn('shrink-0', barW)} style={{ background: dc }} />
+                        <div className={cn('shrink-0', barW)} style={schemaMatchBarStyle(dc)} />
                         <div className="flex min-w-0 flex-1 flex-col">
                           <div className={cn('flex items-center gap-2', rowPad)}>
                             <div

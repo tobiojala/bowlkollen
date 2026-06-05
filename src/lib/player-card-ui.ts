@@ -261,6 +261,124 @@ export const playerCardFaceBack = cn(playerCardFaceHidden, '[transform:rotateY(1
 
 export const playerCardExportHost = 'pointer-events-none absolute top-[-9999px] left-[-9999px]'
 
+export function playerCardBgStyle(background: string): CSSProperties {
+  return { background }
+}
+
+export function playerCardInitialsStyle(tier: PlayerCardTier): CSSProperties {
+  const hc = tier.holoColors
+  return {
+    background: `rgba(${hc[0]}, 0.12)`,
+    border: `2px solid ${tier.borderColor}`,
+    color: tier.accent,
+  }
+}
+
+export function playerCardShimmerGradientStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    background: `linear-gradient(90deg, transparent 0%, ${tier.shimmerColor} 50%, transparent 100%)`,
+  }
+}
+
+export function playerCardInsetBorderStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    border: `1.5px solid ${tier.borderColor}`,
+    boxShadow: `inset 0 0 28px ${tier.glowColor}, inset 0 1.5px 0 rgba(255,255,255,0.22)`,
+  }
+}
+
+export function playerCardTierBadgeStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    background: tier.tierGradient,
+    textShadow: '0 1px 3px rgba(0,0,0,0.6)',
+    boxShadow: `0 2px 8px ${tier.glowColor}`,
+  }
+}
+
+type LegendParticle = { left: string; bottom: string; delay: string; size: number }
+
+export function playerCardParticleStyle(
+  tier: PlayerCardTier,
+  p: LegendParticle,
+  i: number,
+): CSSProperties {
+  return {
+    left: p.left,
+    bottom: p.bottom,
+    width: p.size,
+    height: p.size,
+    background: tier.accent,
+    animation: `${i % 2 === 0 ? 'particleRise' : 'particleRise2'} ${2 + i * 0.4}s ease-out infinite`,
+    animationDelay: p.delay,
+    boxShadow: `0 0 4px ${tier.accent}`,
+  }
+}
+
+export function playerCardAccentStyle(tier: PlayerCardTier): CSSProperties {
+  return { color: tier.accent }
+}
+
+export function playerCardPanelBgStyle(background: string): CSSProperties {
+  return { background }
+}
+
+export function playerCardBackHeaderStyle(topBg: string): CSSProperties {
+  return { background: topBg }
+}
+
+export function playerCardBackStripeStyle(borderColor: string): CSSProperties {
+  return { background: borderColor }
+}
+
+export function playerCardBackSectionStyle(tier: PlayerCardTier): CSSProperties {
+  return { background: tier.bg, borderColor: `${tier.borderColor}55` }
+}
+
+export function playerCardBackAchStyle(tier: PlayerCardTier): CSSProperties {
+  return { background: tier.bg, color: tier.accent }
+}
+
+export function playerCardBackInsetStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    border: `1.5px solid ${tier.borderColor}`,
+    boxShadow: `inset 0 0 25px ${tier.glowColor}`,
+  }
+}
+
+export function playerCardDropShadowStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    filter: `drop-shadow(0 20px 36px rgba(0,0,0,0.55)) drop-shadow(0 4px 12px ${tier.glowColor})`,
+  }
+}
+
+export function playerCardPerspectiveInlineStyle(): CSSProperties {
+  return { perspective: 900 }
+}
+
+export function playerCardFlipTransformStyle(
+  tx: number,
+  ty: number,
+  baseRotY: number,
+  transition: string,
+): CSSProperties {
+  return {
+    transform: `rotateX(${tx}deg) rotateY(${baseRotY + ty}deg)`,
+    transition,
+  }
+}
+
+export function playerCardSummaryStyle(tier: PlayerCardTier): CSSProperties {
+  return { background: tier.bg, borderColor: `${tier.borderColor}44` }
+}
+
+export function playerCardShareBtnStyle(tier: PlayerCardTier): CSSProperties {
+  return {
+    background: tier.bg,
+    borderColor: `${tier.borderColor}66`,
+    color: tier.accent,
+  }
+}
+
 export const LEGEND_PARTICLES = [
   { left: '14%', bottom: '42%', delay: '0s', size: 4 },
   { left: '78%', bottom: '56%', delay: '0.7s', size: 3 },

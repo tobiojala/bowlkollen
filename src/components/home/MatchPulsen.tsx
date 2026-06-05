@@ -9,9 +9,15 @@ import {
   tensionScore,
   tensionInsight,
   tensionColor,
+  accentBgStyle,
+  accentTextStyle,
+  gaugeStrokeGlow,
+  gaugeTransformOrigin,
+  tensionBarStyle,
   type MatchLike,
 } from '@/lib/match-ui'
 import {
+  homeDivisionChipColorStyle,
   homeNoTapHighlight,
   homePulsDivisionChip,
   homePulsTopBarStyle,
@@ -64,7 +70,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
         <div className="h-[3px]" style={homePulsTopBarStyle(needleClr)} />
         <div className="px-4 py-3 pb-4">
           <div className="mb-3 flex items-center gap-1.5">
-            <span className="flex-1 text-[9px] font-extrabold tracking-wide" style={{ color: needleClr }}>
+            <span className="flex-1 text-[9px] font-extrabold tracking-wide" style={accentTextStyle(needleClr)}>
               MATCHPULSEN
             </span>
             {isFollowed && (
@@ -74,7 +80,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
             )}
             <span
               className={homePulsDivisionChip}
-              style={{ color: divisionAccentColor(hot.division) }}
+              style={homeDivisionChipColorStyle(divisionAccentColor(hot.division))}
             >
               {shortDiv(hot.division)}
             </span>
@@ -134,7 +140,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
                   initial={{ strokeDashoffset: arcLen }}
                   animate={{ strokeDashoffset: dashOffset }}
                   transition={{ duration: 1, ease: 'easeOut' }}
-                  style={isTied ? { filter: `drop-shadow(0 0 4px ${needleClr})` } : {}}
+                  style={isTied ? gaugeStrokeGlow(needleClr) : {}}
                 />
                 {[0.25, 0.5, 0.75].map(t => {
                   const ta = Math.PI * (1 - t)
@@ -158,7 +164,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
                   initial={{ rotate: 0 }}
                   animate={{ rotate: needleDeg }}
                   transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1] }}
-                  style={{ transformOrigin: `${cx}px ${cy}px` }}
+                  style={gaugeTransformOrigin(cx, cy)}
                 >
                   <line
                     x1={cx}
@@ -197,7 +203,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
           </Link>
 
           {insight ? (
-            <p className="mt-2 text-center text-[10px] font-bold tracking-wide" style={{ color: needleClr }}>
+            <p className="mt-2 text-center text-[10px] font-bold tracking-wide" style={accentTextStyle(needleClr)}>
               {insight}
             </p>
           ) : null}
@@ -223,7 +229,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
                       !isLast && 'border-b border-light-border dark:border-dark-border',
                     )}
                   >
-                    <div className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: dotClr }} />
+                    <div className="h-1.5 w-1.5 shrink-0 rounded-full" style={accentBgStyle(dotClr)} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[11px] font-bold bk-text-primary">
                         {shortName(m.home.name)} – {shortName(m.away.name)}
@@ -241,7 +247,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
                     <div className="h-[3px] w-7 shrink-0 overflow-hidden rounded-sm bg-black/8 dark:bg-white/8">
                       <div
                         className="h-full rounded-sm"
-                        style={{ width: `${ms * 100}%`, background: dotClr }}
+                        style={tensionBarStyle(ms, dotClr)}
                       />
                     </div>
                   </Link>
@@ -254,7 +260,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
             <Link
               href="/puls"
               className="text-[9px] font-extrabold tracking-wide no-underline"
-              style={{ color: needleClr }}
+              style={accentTextStyle(needleClr)}
             >
               SE MATCHPULSEN →
             </Link>

@@ -1,6 +1,8 @@
 /** Matchpulsen page helpers and demo data. */
 
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/cn'
+import { streamDotStyle, streamPillStyle } from '@/lib/match-ui'
 
 export type PulsMatch = {
   id: string
@@ -152,6 +154,56 @@ export function pulsDivColor(d: string): string {
   if (d.includes('Elitserien')) return 'hsl(210, 35%, 55%)'
   if (d.includes('Allsvenskan')) return 'hsl(130, 22%, 50%)'
   return 'hsl(35, 12%, 52%)'
+}
+
+export function pulsGaugeTransformOrigin(cx: number, cy: number): CSSProperties {
+  return { transformOrigin: `${cx}px ${cy}px` }
+}
+
+export function pulsGameBarHeight(px: number): CSSProperties {
+  return { height: px }
+}
+
+export function pulsTopBarStyle(needleClr: string): CSSProperties {
+  return { background: `linear-gradient(90deg,${needleClr},${needleClr}20)` }
+}
+
+export function pulsCardBgStyle(isTied: boolean, isDark: boolean): CSSProperties {
+  if (isTied) {
+    return {
+      background: isDark
+        ? 'linear-gradient(145deg,rgba(245,194,0,0.08) 0%,rgba(11,21,40,0.98) 100%)'
+        : 'linear-gradient(145deg,rgba(245,194,0,0.04) 0%,rgba(248,248,252,1) 100%)',
+    }
+  }
+  return {
+    background: isDark
+      ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)'
+      : 'linear-gradient(145deg,rgba(0,0,0,0.015) 0%,rgba(248,248,252,1) 100%)',
+  }
+}
+
+export function pulsDivTextStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function pulsInsightTextStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function pulsStreamPillStyle(ss: {
+  color: string
+  bg: string
+  border: string
+}): CSSProperties {
+  return {
+    ...streamPillStyle(ss),
+    border: `1px solid ${ss.border}`,
+  }
+}
+
+export function pulsStreamDotStyle(color: string): CSSProperties {
+  return streamDotStyle(color)
 }
 
 export function pulsStreamStyle(url: string) {

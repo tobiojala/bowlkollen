@@ -9,12 +9,20 @@ import {
   PULS_BASELINE,
   PULS_DEMO,
   PULS_MOCK_LIVE,
+  pulsCardBgStyle,
   pulsDivColor,
+  pulsDivTextStyle,
   pulsGameBarClass,
+  pulsGameBarHeight,
   pulsGameScoreClass,
+  pulsGaugeTransformOrigin,
   pulsHighSeriesChipClass,
+  pulsInsightTextStyle,
   pulsSectionDivider,
+  pulsStreamDotStyle,
+  pulsStreamPillStyle,
   pulsStreamStyle,
+  pulsTopBarStyle,
   tensionColor,
   tensionInsight,
   tensionScore,
@@ -93,7 +101,7 @@ function PulsGauge({
         initial={{ rotate: 0 }}
         animate={{ rotate: needleDeg }}
         transition={{ duration: 1.4, ease: [0.34, 1.56, 0.64, 1] }}
-        style={{ transformOrigin: `${cx}px ${cy}px` }}
+        style={pulsGaugeTransformOrigin(cx, cy)}
       >
         <line x1={cx} y1={cy} x2={cx - needleLen} y2={cy} stroke={needleClr} strokeWidth={2.5} strokeLinecap="round" />
       </motion.g>
@@ -160,7 +168,7 @@ function GameStrip({
           return (
             <div key={i} className="flex flex-col items-center gap-0.5">
               {isGold && <div className="text-[7px] leading-none font-black text-gold">★</div>}
-              <div className={pulsGameBarClass(g, isLatest)} style={{ height: barPx }} />
+              <div className={pulsGameBarClass(g, isLatest)} style={pulsGameBarHeight(barPx)} />
               <div className={pulsGameScoreClass(g, isLatest)}>{g}</div>
             </div>
           )
@@ -272,19 +280,11 @@ export function PulsPageContent() {
                   rank !== 0 &&
                   'border border-black/8 dark:border-white/8',
               )}
-              style={{
-                background: isTied
-                  ? isDark
-                    ? 'linear-gradient(145deg,rgba(245,194,0,0.08) 0%,rgba(11,21,40,0.98) 100%)'
-                    : 'linear-gradient(145deg,rgba(245,194,0,0.04) 0%,rgba(248,248,252,1) 100%)'
-                  : isDark
-                    ? 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(11,21,40,0.98) 100%)'
-                    : 'linear-gradient(145deg,rgba(0,0,0,0.015) 0%,rgba(248,248,252,1) 100%)',
-              }}
+              style={pulsCardBgStyle(isTied, isDark)}
             >
               <div
                 className={cn(rank === 0 ? 'h-1' : 'h-[3px]')}
-                style={{ background: `linear-gradient(90deg,${needleClr},${needleClr}20)` }}
+                style={pulsTopBarStyle(needleClr)}
               />
 
               <div className="px-4 pt-3.5 pb-4">
@@ -312,7 +312,7 @@ export function PulsPageContent() {
                   <span className="flex-1" />
                   <span
                     className="rounded bg-black/6 px-2.25 py-0.5 text-[9px] font-bold tracking-wide dark:bg-white/7"
-                    style={{ color: pulsDivColor(m.division) }}
+                    style={pulsDivTextStyle(pulsDivColor(m.division))}
                   >
                     {shortDiv(m.division)}
                   </span>
@@ -370,7 +370,7 @@ export function PulsPageContent() {
                 {insight && (
                   <div
                     className="mt-2.5 text-center text-[11px] font-bold tracking-wide"
-                    style={{ color: needleClr }}
+                    style={pulsInsightTextStyle(needleClr)}
                   >
                     {insight}
                   </div>
@@ -430,15 +430,11 @@ export function PulsPageContent() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.25 rounded-lg px-3 py-1.5 text-[10px] font-bold no-underline [-webkit-tap-highlight-color:transparent]"
-                          style={{
-                            color: ss.color,
-                            background: ss.bg,
-                            border: `1px solid ${ss.border}`,
-                          }}
+                          style={pulsStreamPillStyle(ss)}
                         >
                           <span
                             className="inline-block size-[5px] shrink-0 rounded-full"
-                            style={{ background: ss.color }}
+                            style={pulsStreamDotStyle(ss.color)}
                           />
                           {ss.label}
                         </a>

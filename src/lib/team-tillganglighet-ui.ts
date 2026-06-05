@@ -158,3 +158,41 @@ export const tillganglighetMemberName = 'text-[13px] font-semibold text-light-te
 export const tillganglighetMemberNote = 'mt-px text-[11px] italic text-dark-muted'
 
 export const tillganglighetAvatarImg = 'h-7 w-7 shrink-0 rounded-full object-cover'
+
+export function tillganglighetOpponentHeroStyle(
+  accent: string,
+  bg: string,
+  hue: number,
+): import('react').CSSProperties {
+  return {
+    '--opp-h': hue,
+    background: bg,
+    border: `2.5px solid ${accent}`,
+    color: accent,
+  } as import('react').CSSProperties
+}
+
+export function tillganglighetToggleActiveStyle(color: string): import('react').CSSProperties {
+  return {
+    borderColor: color,
+    background: `${color}22`,
+    color,
+  }
+}
+
+export function tillganglighetProgressWidth(pct: number): import('react').CSSProperties {
+  return { width: `${pct}%` }
+}
+
+export function tillganglighetMemberAvatarStyle(
+  hue: number,
+  accent: string,
+  bg: string,
+): import('react').CSSProperties {
+  return {
+    '--m-h': hue,
+    background: bg,
+    border: `1.5px solid ${accent}`,
+    color: accent,
+  } as import('react').CSSProperties
+}

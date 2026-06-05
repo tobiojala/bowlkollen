@@ -8,6 +8,24 @@ import {
   buildPlayerCardHoloStyle,
   calcPlayerCardRating,
   getPlayerCardTier,
+  playerCardAccentStyle,
+  playerCardBackAchStyle,
+  playerCardBackHeaderStyle,
+  playerCardBackInsetStyle,
+  playerCardBackSectionStyle,
+  playerCardBackStripeStyle,
+  playerCardBgStyle,
+  playerCardDropShadowStyle,
+  playerCardFlipTransformStyle,
+  playerCardInitialsStyle,
+  playerCardInsetBorderStyle,
+  playerCardPanelBgStyle,
+  playerCardParticleStyle,
+  playerCardPerspectiveInlineStyle,
+  playerCardShareBtnStyle,
+  playerCardShimmerGradientStyle,
+  playerCardSummaryStyle,
+  playerCardTierBadgeStyle,
   playerCardBack,
   playerCardBackBody,
   playerCardBackFooter,
@@ -105,21 +123,16 @@ function CardFront({
   shimmerKey,
 }: FrontProps) {
   const st = playerCardStarDisplay(rating)
-  const hc = tier.holoColors
 
   return (
-    <div className={playerCardFace} style={{ background: tier.cardBg }}>
+    <div className={playerCardFace} style={playerCardBgStyle(tier.cardBg)}>
       {avatarUrl ? (
         <img src={avatarUrl} alt={name} crossOrigin="anonymous" className={playerCardPhoto} />
       ) : (
         <div className={playerCardPhotoPlaceholder}>
           <div
             className="flex h-[90px] w-[90px] items-center justify-center rounded-full text-[30px] font-black tracking-tight"
-            style={{
-              background: `rgba(${hc[0]}, 0.12)`,
-              border: `2px solid ${tier.borderColor}`,
-              color: tier.accent,
-            }}
+            style={playerCardInitialsStyle(tier)}
           >
             {initials(name)}
           </div>
@@ -131,26 +144,17 @@ function CardFront({
       <div
         key={shimmerKey}
         className={playerCardShimmer}
-        style={{
-          background: `linear-gradient(90deg, transparent 0%, ${tier.shimmerColor} 50%, transparent 100%)`,
-        }}
+        style={playerCardShimmerGradientStyle(tier)}
       />
       <div
         className="pointer-events-none absolute inset-0 rounded-[18px]"
-        style={{
-          border: `1.5px solid ${tier.borderColor}`,
-          boxShadow: `inset 0 0 28px ${tier.glowColor}, inset 0 1.5px 0 rgba(255,255,255,0.22)`,
-        }}
+        style={playerCardInsetBorderStyle(tier)}
       />
 
       <div className={playerCardTopRow}>
         <div
           className="rounded-full px-2.5 py-[3px] text-[7.5px] font-extrabold tracking-wide text-white"
-          style={{
-            background: tier.tierGradient,
-            textShadow: '0 1px 3px rgba(0,0,0,0.6)',
-            boxShadow: `0 2px 8px ${tier.glowColor}`,
-          }}
+          style={playerCardTierBadgeStyle(tier)}
         >
           {tier.label}
         </div>
@@ -162,22 +166,13 @@ function CardFront({
           <div
             key={i}
             className="pointer-events-none absolute rounded-full"
-            style={{
-              left: p.left,
-              bottom: p.bottom,
-              width: p.size,
-              height: p.size,
-              background: tier.accent,
-              animation: `${i % 2 === 0 ? 'particleRise' : 'particleRise2'} ${2 + i * 0.4}s ease-out infinite`,
-              animationDelay: p.delay,
-              boxShadow: `0 0 4px ${tier.accent}`,
-            }}
+            style={playerCardParticleStyle(tier, p, i)}
           />
         ))}
 
-      <div className={playerCardBottomPanel} style={{ background: tier.panelBg }}>
+      <div className={playerCardBottomPanel} style={playerCardPanelBgStyle(tier.panelBg)}>
         <div className={playerCardName}>{name}</div>
-        <div className={playerCardTeam} style={{ color: tier.accent }}>
+        <div className={playerCardTeam} style={playerCardAccentStyle(tier)}>
           {teamName}
         </div>
 
@@ -197,10 +192,10 @@ function CardFront({
         <div className={playerCardFooterRow}>
           <div>
             <div className={playerCardStars}>
-              <span style={{ color: tier.accent }}>{'★'.repeat(st.filled)}</span>
+              <span style={playerCardAccentStyle(tier)}>{'★'.repeat(st.filled)}</span>
               <span className={playerCardEmptyStars}>{'★'.repeat(st.empty)}</span>
             </div>
-            <div className={playerCardRatingLabel} style={{ color: tier.accent }}>
+            <div className={playerCardRatingLabel} style={playerCardAccentStyle(tier)}>
               BK RATING {rating}
             </div>
           </div>
@@ -244,11 +239,11 @@ function CardBack({
 }: BackProps) {
   return (
     <div className={playerCardBack}>
-      <div className={playerCardBackHeader} style={{ background: tier.topBg }}>
+      <div className={playerCardBackHeader} style={playerCardBackHeaderStyle(tier.topBg)}>
         <div className={playerCardBackStripe} />
         <div
           className="absolute right-0 bottom-0 left-0 h-px opacity-40"
-          style={{ background: tier.borderColor }}
+          style={playerCardBackStripeStyle(tier.borderColor)}
         />
         <div className="z-[2] text-[22px] font-black tracking-tight text-white">
           Bowl<span className="text-gold">kollen</span>
@@ -258,9 +253,9 @@ function CardBack({
       <div className={playerCardBackBody}>
         <div
           className="rounded-[10px] border px-2.5 py-[7px]"
-          style={{ background: tier.bg, borderColor: `${tier.borderColor}55` }}
+          style={playerCardBackSectionStyle(tier)}
         >
-          <div className={playerCardBackSectionTitle} style={{ color: tier.accent }}>
+          <div className={playerCardBackSectionTitle} style={playerCardAccentStyle(tier)}>
             SÄSONGSSTATISTIK 2025/26
           </div>
           {(
@@ -281,7 +276,7 @@ function CardBack({
 
         {achievements.length > 0 && (
           <div className="rounded-[10px] border border-white/8 bg-white/[0.03] px-2.5 py-[7px]">
-            <div className={playerCardBackSectionTitle} style={{ color: tier.accent }}>
+            <div className={playerCardBackSectionTitle} style={playerCardAccentStyle(tier)}>
               MERITER
             </div>
             <div className="flex flex-wrap gap-[3px]">
@@ -289,7 +284,7 @@ function CardBack({
                 <span
                   key={a}
                   className="rounded-full px-1.5 py-0.5 text-[7px] font-semibold"
-                  style={{ background: tier.bg, color: tier.accent }}
+                  style={playerCardBackAchStyle(tier)}
                 >
                   {a}
                 </span>
@@ -324,10 +319,7 @@ function CardBack({
 
       <div
         className="pointer-events-none absolute inset-0 rounded-[18px]"
-        style={{
-          border: `1.5px solid ${tier.borderColor}`,
-          boxShadow: `inset 0 0 25px ${tier.glowColor}`,
-        }}
+        style={playerCardBackInsetStyle(tier)}
       />
     </div>
   )
@@ -520,9 +512,7 @@ export default function PlayerCard({
 
       <div className="flex flex-col items-center gap-3.5 px-5 pt-7 pb-4">
         <div
-          style={{
-            filter: `drop-shadow(0 20px 36px rgba(0,0,0,0.55)) drop-shadow(0 4px 12px ${tier.glowColor})`,
-          }}
+          style={playerCardDropShadowStyle(tier)}
         >
           <div
             ref={cardRef}
@@ -531,14 +521,11 @@ export default function PlayerCard({
             onMouseLeave={handleMouseLeave}
             onClick={handleFlip}
             className={playerCardPerspective}
-            style={{ perspective: 900 }}
+            style={playerCardPerspectiveInlineStyle()}
           >
             <div
               className={playerCardFlipInner}
-              style={{
-                transform: `rotateX(${tx}deg) rotateY(${baseRotY + ty}deg)`,
-                transition: cardTransition,
-              }}
+              style={playerCardFlipTransformStyle(tx, ty, baseRotY, cardTransition)}
             >
               <div className={playerCardFaceHidden}>
                 <CardFront
@@ -562,11 +549,11 @@ export default function PlayerCard({
 
       <div
         className="mx-5 mb-4 rounded-xl border p-3.5"
-        style={{ background: tier.bg, borderColor: `${tier.borderColor}44` }}
+        style={playerCardSummaryStyle(tier)}
       >
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[13px] font-bold" style={{ color: tier.accent }}>
+            <div className="text-[13px] font-bold" style={playerCardAccentStyle(tier)}>
               {tier.label} tier
             </div>
             <div className="mt-0.5 text-[11px] text-dark-muted">BK Rating {rating} / 99</div>
@@ -584,11 +571,7 @@ export default function PlayerCard({
             type="button"
             onClick={() => setShareOpen(s => !s)}
             className="w-full cursor-pointer rounded-xl border px-3 py-3.25 text-[13px] font-bold"
-            style={{
-              background: tier.bg,
-              borderColor: `${tier.borderColor}66`,
-              color: tier.accent,
-            }}
+            style={playerCardShareBtnStyle(tier)}
           >
             Dela kortet
           </button>

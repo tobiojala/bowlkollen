@@ -114,3 +114,23 @@ export function divisionDotStyle(color: string): CSSProperties {
 export function divisionTextStyle(color: string): CSSProperties {
   return { color }
 }
+
+export function accentTextStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function accentBgStyle(color: string): CSSProperties {
+  return { background: color }
+}
+
+export function tensionBarStyle(score: number, color: string): CSSProperties {
+  return { width: `${score * 100}%`, background: color }
+}
+
+export function gaugeTransformOrigin(cx: number, cy: number): CSSProperties {
+  return { transformOrigin: `${cx}px ${cy}px` }
+}
+
+export function gaugeStrokeGlow(color: string): CSSProperties {
+  return { filter: `drop-shadow(0 0 4px ${color})` }
+}

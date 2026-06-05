@@ -37,6 +37,10 @@ import {
   tillganglighetStatsCard,
   tillganglighetStatsSection,
   tillganglighetTitle,
+  tillganglighetMemberAvatarStyle,
+  tillganglighetOpponentHeroStyle,
+  tillganglighetProgressWidth,
+  tillganglighetToggleActiveStyle,
   tillganglighetYesBtn,
   tillganglighetYesLabel,
 } from '@/lib/team-tillganglighet-ui'
@@ -236,14 +240,7 @@ export function TeamTillganglighetPageContent({ params }: Props) {
           <div className={tillganglighetHero}>
             <div
               className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-black dark:bg-[hsl(var(--opp-h),40%,15%)]"
-              style={
-                {
-                  '--opp-h': oppHue,
-                  background: oppTclo,
-                  border: `2.5px solid ${oppTc}`,
-                  color: oppTc,
-                } as React.CSSProperties
-              }
+              style={tillganglighetOpponentHeroStyle(oppTc, oppTclo, oppHue)}
             >
               {oppName
                 .split(' ')
@@ -313,15 +310,7 @@ export function TeamTillganglighetPageContent({ params }: Props) {
                           !active &&
                             'border-light-border bg-transparent text-dark-muted dark:border-dark-border',
                         )}
-                        style={
-                          active
-                            ? {
-                                borderColor: r.color,
-                                background: `${r.color}22`,
-                                color: r.color,
-                              }
-                            : undefined
-                        }
+                        style={active ? tillganglighetToggleActiveStyle(r.color) : undefined}
                       >
                         {r.label}
                       </button>
@@ -412,13 +401,13 @@ export function TeamTillganglighetPageContent({ params }: Props) {
               </div>
               <div className={tillganglighetProgressTrack}>
                 {yesGroup.length > 0 && (
-                  <div className="bg-[#1d9e75]" style={{ width: `${(yesGroup.length / total) * 100}%` }} />
+                  <div className="bg-[#1d9e75]" style={tillganglighetProgressWidth((yesGroup.length / total) * 100)} />
                 )}
                 {maybeGroup.length > 0 && (
-                  <div className="bg-gold" style={{ width: `${(maybeGroup.length / total) * 100}%` }} />
+                  <div className="bg-gold" style={tillganglighetProgressWidth((maybeGroup.length / total) * 100)} />
                 )}
                 {noGroup.length > 0 && (
-                  <div className="bg-[#e24b4a]" style={{ width: `${(noGroup.length / total) * 100}%` }} />
+                  <div className="bg-[#e24b4a]" style={tillganglighetProgressWidth((noGroup.length / total) * 100)} />
                 )}
               </div>
             </div>
@@ -450,14 +439,7 @@ export function TeamTillganglighetPageContent({ params }: Props) {
                           ) : (
                             <div
                               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-bold dark:bg-[hsl(var(--m-h),40%,15%)]"
-                              style={
-                                {
-                                  '--m-h': hue,
-                                  background: tclo,
-                                  border: `1.5px solid ${tc}`,
-                                  color: tc,
-                                } as React.CSSProperties
-                              }
+                              style={tillganglighetMemberAvatarStyle(hue, tc, tclo)}
                             >
                               {name
                                 .split(' ')
