@@ -6,6 +6,7 @@ import BottomNav from '@/components/BottomNav'
 import Footer from '@/components/Footer'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthRedirect from '@/components/AuthRedirect'
+import QueryProvider from '@/components/QueryProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="sv">
       <body style={{ margin: 0, padding: 0 }}>
+        <QueryProvider>
         <ThemeProvider>
           <AuthRedirect />
           <Nav />
@@ -27,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <BottomNav />
         </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   )
