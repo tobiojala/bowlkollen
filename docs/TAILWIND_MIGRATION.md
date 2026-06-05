@@ -18,7 +18,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
-| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts`, `src/lib/team-intern-ui.ts` |
+| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts`, `src/lib/team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts` |
 | Profile widgets | `src/lib/widget-ui.ts` |
 | Schedule page | `src/lib/schema-ui.ts`, `SchemaTavCard` |
 
@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `SchemaPageContent` Tailwind migration. Regenerate counts with:_
+_Last updated: after `TeamLaguttagningPageContent` + `TeamTillganglighetPageContent` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -96,8 +96,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
-| Files importing `@/lib/colors` | **0** (ready to delete `lib/colors.ts` when verified) |
-| `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
+| Files importing `@/lib/colors` | **0** (`lib/colors.ts` removed) |
+| `style={{}}` in all `src/**/*.tsx` | **~271** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
 ### Phase 0 + 1 — shell (done)
@@ -131,6 +131,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
 | `HeroCarousel` | 1 | [x] | SM slide `bg` gradient dynamic; progress in `globals.css` |
 | `LiveLaneViewer` | 0 | [x] | used on live match pages |
+| `team/TeamLaguttagningPageContent` | 8 | [x] | `team-laguttagning-ui.ts`; tier card gradients dynamic |
+| `team/TeamTillganglighetPageContent` | 3 | [x] | `team-tillganglighet-ui.ts`; HSL avatars + poll bar widths |
 | `RemotionPlayerEmbed` | 5 | [ ] |
 
 ### Phase 3 — app pages
@@ -164,8 +166,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `reset-password` | 0 | [x] | matches `login` patterns |
 | `admin` | 0 | [x] | `AdminPageContent` fully Tailwind; `lib/admin-ui.ts` |
 | `team/[id]/intern` | 0 | [x] | `TeamInternPageContent` + `team-intern-ui.ts` |
-| `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` |
-| `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` |
+| `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` (~8 inline tier/HSL) |
+| `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` (~3 inline HSL/width) |
 | `[slug]/page` | 0 | n/a | redirect only |
 | `[slug]/intern` | — | [ ] | not audited |
 
@@ -174,15 +176,16 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 1. [x] `matches/[id]`, [x] `players/[id]`
 2. [x] `compare/*` — all compare routes migrated
 3. [x] `club/[club_slug]`
-4. [x] `puls`, `schema`, `admin`, team intern / laguttagning / tillgänglighet (thin pages; content components still inline)
+4. [x] `puls`, `schema`, `admin`, team intern / laguttagning / tillgänglighet
 5. [ ] Chip list pages: `teams/page`, `league`, `oljeprofiler` (dynamic colors OK inline)
 6. [x] `Widgets.tsx` + `WidgetGrid` on profile
 7. [x] `SeasonTimeline`, `TopPerformers`
 8. [x] `HeroCarousel`, `LiveLaneViewer`
 9. [x] `TeamInternPageContent`
-10. [ ] `TeamLaguttagningPageContent` / `TeamTillganglighetPageContent`
-11. [ ] Delete unused `lib/colors.ts`
-11. [ ] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — dynamic colors OK inline
+10. [x] `TeamLaguttagningPageContent` / `TeamTillganglighetPageContent`
+11. [x] Delete unused `lib/colors.ts`
+12. [ ] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — dynamic colors OK inline
+13. [ ] `PlayerCard` (~61 inline) — large shared debt
 
 ### Do not migrate (yet)
 
@@ -201,9 +204,9 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 5. Run `npm run dev` and click through the page.
 6. Commit: `style: migrate matches/[id] to Tailwind`
 
-## Deprecating `lib/colors.ts`
+## `lib/colors.ts`
 
-Keep it until no file imports `dark` / `light` for layout. Tier colors in `utils.ts` (`divTierColor`) can stay forever.
+Removed — no remaining imports. Tier colors in `utils.ts` (`divTierColor`) and per-page HSL helpers remain for dynamic data.
 
 ## When you are stuck
 
