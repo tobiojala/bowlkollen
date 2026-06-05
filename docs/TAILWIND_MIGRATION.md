@@ -18,7 +18,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
-| Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts`, `src/lib/team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts` |
+| Match / team / card helpers | `match-ui.ts`, `team-ui.ts`, `team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts`, `player-card-ui.ts` |
 | Profile widgets | `src/lib/widget-ui.ts` |
 | Schedule page | `src/lib/schema-ui.ts`, `SchemaTavCard` |
 
@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `TeamLaguttagningPageContent` + `TeamTillganglighetPageContent` migration. Regenerate counts with:_
+_Last updated: after `PlayerCard` Tailwind migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -97,7 +97,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
 | Files importing `@/lib/colors` | **0** (`lib/colors.ts` removed) |
-| `style={{}}` in all `src/**/*.tsx` | **~271** (includes components + remotion) |
+| `style={{}}` in all `src/**/*.tsx` | **~233** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
 ### Phase 0 + 1 — shell (done)
@@ -120,7 +120,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `FollowButton` | 1 | [x] |
 | `NextMatchPreview` | 0 | [x] |
 | `TeamTableWidget` | 2 | [x] |
-| `PlayerCard` | 61 | [~] chrome done; card face animation inline |
+| `PlayerCard` | 23 | [x] | `player-card-ui.ts`; holo/tilt/tier gradients stay inline |
 | `teams/*` (hero, tabs, H2H, …) | low | [x] |
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
 | `compare/*` (hero, search, results) | low | [x] team + player compare |
@@ -184,8 +184,10 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 9. [x] `TeamInternPageContent`
 10. [x] `TeamLaguttagningPageContent` / `TeamTillganglighetPageContent`
 11. [x] Delete unused `lib/colors.ts`
-12. [ ] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — dynamic colors OK inline
-13. [ ] `PlayerCard` (~61 inline) — large shared debt
+12. [x] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — shells + Tailwind; division/zone colors inline only
+13. [x] `PlayerCard` — drawer chrome + card layout in Tailwind; holo/3D/tier dynamic inline
+14. [ ] `[slug]/intern` — not audited
+15. [ ] `RemotionPlayerEmbed` / `remotion/*`
 
 ### Do not migrate (yet)
 
