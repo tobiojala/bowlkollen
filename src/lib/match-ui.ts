@@ -33,6 +33,28 @@ export function divisionAccentColor(d: string): string {
   return 'hsl(35, 12%, 52%)'
 }
 
+export function formResultDotClass(result: 'W' | 'L' | 'D'): string {
+  if (result === 'W') return 'bg-[#5a82b4]'
+  if (result === 'L') return 'bg-red'
+  return 'bg-dark-muted'
+}
+
+export function streamPillStyle(ss: {
+  color: string
+  bg: string
+  border: string
+}): import('react').CSSProperties {
+  return {
+    color: ss.color,
+    background: ss.bg,
+    borderColor: ss.border,
+  }
+}
+
+export function streamDotStyle(color: string): import('react').CSSProperties {
+  return { background: color }
+}
+
 export function streamStyle(url: string): { label: string; color: string; bg: string; border: string } {
   const u = url.toLowerCase()
   if (u.includes('youtube') || u.includes('youtu.be')) {

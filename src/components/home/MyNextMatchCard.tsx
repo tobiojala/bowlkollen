@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName, shortDiv, dateLabel, countdown } from '@/lib/utils'
-import { divisionAccentColor } from '@/lib/match-ui'
+import { divisionAccentColor, formResultDotClass } from '@/lib/match-ui'
+import { homeDivisionChip, homeNoTapHighlight } from '@/lib/home-ui'
 import { StreamPills } from '@/components/home/StreamPills'
 import type { HeroMatch } from '@/components/home/HeroStrip'
 
@@ -16,12 +17,6 @@ type Props = {
   homeForm?: FormResult[]
   awayForm?: FormResult[]
   onHide: () => void
-}
-
-function formDotColor(r: FormResult) {
-  if (r === 'W') return '#5a82b4'
-  if (r === 'L') return '#e05555'
-  return undefined
 }
 
 export function MyNextMatchCard({
@@ -44,10 +39,10 @@ export function MyNextMatchCard({
         href={`/matches/${m.id}`}
         className={cn(
           'block overflow-hidden rounded-2xl border no-underline',
+          homeNoTapHighlight,
           'border-[#5a82b4]/35 bg-linear-to-br from-[#5a82b4]/10 via-transparent to-light-bg',
           'dark:from-[#5a82b4]/13 dark:to-dark-bg',
         )}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <div className="h-[3px] bg-linear-to-r from-[#5a82b4] to-[#5a82b4]/15" />
         <div className="px-4 py-3.5 pb-4">
@@ -55,10 +50,7 @@ export function MyNextMatchCard({
             <span className="flex-1 text-[9px] font-extrabold tracking-wide text-[#5a82b4]">
               DIN NÄSTA MATCH
             </span>
-            <span
-              className="mr-2 rounded px-2 py-[3px] text-[9px] font-bold tracking-wide"
-              style={{ color: dc, background: 'rgba(0,0,0,0.06)' }}
-            >
+            <span className={cn('mr-2', homeDivisionChip)} style={{ color: dc }}>
               {shortDiv(m.division)}
             </span>
             <button
@@ -94,11 +86,7 @@ export function MyNextMatchCard({
                   </div>
                   <div className="mt-0.75 flex justify-end gap-0.75">
                     {homeForm.map((r, i) => (
-                      <div
-                        key={i}
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: formDotColor(r) ?? 'currentColor' }}
-                      />
+                      <div key={i} className={cn('h-1.5 w-1.5 rounded-full', formResultDotClass(r))} />
                     ))}
                   </div>
                 </>
@@ -138,11 +126,7 @@ export function MyNextMatchCard({
                   <div className="mt-1.5 text-[7px] font-semibold tracking-wide text-dark-muted">FORM</div>
                   <div className="mt-0.75 flex gap-0.75">
                     {awayForm.map((r, i) => (
-                      <div
-                        key={i}
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: formDotColor(r) ?? 'currentColor' }}
-                      />
+                      <div key={i} className={cn('h-1.5 w-1.5 rounded-full', formResultDotClass(r))} />
                     ))}
                   </div>
                 </>

@@ -2,6 +2,16 @@
 
 import { cn } from '@/lib/cn'
 import { shortDiv, shortName } from '@/lib/utils'
+import {
+  teamZoneAccent,
+  teamZoneAccentStyle,
+  teamZoneDotStyle,
+  teamZoneGradientBarStyle,
+  teamZoneProgressWidth,
+  teamZoneRelegationBarStyle,
+  teamZoneTone,
+  teamZoneTopBarStyle,
+} from '@/lib/home-ui'
 
 export type ZoneTableRow = {
   rank: number
@@ -49,6 +59,8 @@ export function TeamZoneCard({
   const botZoneRank = total - zones.relegationRanks + 1
   const inTopZone = rank <= topZoneRank
   const inBotZone = rank >= botZoneRank
+  const tone = teamZoneTone(inTopZone, inBotZone)
+  const accentClr = teamZoneAccent(tone)
 
   const topBoundaryPts = topZoneRank > 0 ? (table[topZoneRank - 1]?.points ?? points) : points
   const botBoundaryPts = table[botZoneRank - 1]?.points ?? 0
@@ -62,17 +74,17 @@ export function TeamZoneCard({
 
   const dotPct = total > 1 ? ((rank - 1) / (total - 1)) * 100 : 50
 
-  const accentClr = inTopZone ? '#f5c200' : inBotZone ? '#e05555' : '#38a088'
-  const borderClr = inTopZone
-    ? 'border-gold/30'
-    : inBotZone
-      ? 'border-red/30'
-      : 'border-[#38a088]/30'
-  const bgGradient = inTopZone
-    ? 'from-gold/7 via-transparent'
-    : inBotZone
-      ? 'from-red/8 via-transparent'
-      : 'from-[#38a088]/8 via-transparent'
+  const borderClr =
+    tone === 'top' ? 'border-gold/30' : tone === 'bot' ? 'border-red/30' : 'border-[#38a088]/30'
+  const bgGradient =
+    tone === 'top'
+      ? 'from-gold/7 via-transparent'
+      : tone === 'bot'
+        ? 'from-red/8 via-transparent'
+        : 'from-[#38a088]/8 via-transparent'
+
+  const topProgressPct = Math.max(5, 100 - (toTopZone / Math.max(gamesLeft * 2, 1)) * 100)
+  const botProgressPct = Math.min(100, (toBotZone / Math.max(gamesLeft * 2, 1)) * 100)
 
   return (
     <div className="px-4 pt-4">
@@ -83,10 +95,10 @@ export function TeamZoneCard({
           bgGradient,
         )}
       >
-        <div className="h-[3px]" style={{ background: `linear-gradient(90deg,${accentClr},${accentClr}20)` }} />
+        <div className="h-[3px]" style={teamZoneTopBarStyle(accentClr)} />
         <div className="px-4 py-3.5 pb-4">
           <div className="mb-3.5 flex items-center gap-1.5">
-            <span className="flex-1 text-[9px] font-extrabold tracking-wide" style={{ color: accentClr }}>
+            <span className="flex-1 text-[9px] font-extrabold tracking-wide" style={teamZoneAccentStyle(accentClr)}>
               VAD BEHÖVER MITT LAG
             </span>
             <span className="rounded bg-black/6 px-2 py-[3px] text-[9px] font-bold tracking-wide text-dark-muted dark:bg-white/7">
@@ -105,7 +117,7 @@ export function TeamZoneCard({
               <div className="text-[9px] tracking-wide text-dark-muted">PLATS</div>
               <div
                 className="text-[32px] leading-none font-black tabular-nums"
-                style={{ color: accentClr }}
+                style={teamZoneAccentStyle(accentClr)}
               >
                 {rank}
               </div>
@@ -116,18 +128,12 @@ export function TeamZoneCard({
           <div className="mb-3.5">
             <div
               className="h-2.5 rounded-full opacity-35"
-              style={{
-                background: `linear-gradient(90deg, #f5c200 0%, #f5c200 ${(topZoneRank / total) * 100}%, #38a088 ${(topZoneRank / total) * 100}%, #38a088 ${((botZoneRank - 1) / total) * 100}%, #e05555 ${((botZoneRank - 1) / total) * 100}%, #e05555 100%)`,
-              }}
+              style={teamZoneGradientBarStyle(topZoneRank, total, botZoneRank)}
             />
             <div className="relative -mt-2.5 h-2.5">
               <div
                 className="absolute top-[-3px] h-3.5 w-3.5 rounded-full border-2 border-light-bg dark:border-dark-bg"
-                style={{
-                  left: `calc(${dotPct}% - 7px)`,
-                  background: accentClr,
-                  boxShadow: `0 0 8px ${accentClr}60`,
-                }}
+                style={teamZoneDotStyle(accentClr, dotPct)}
               />
             </div>
             <div className="mt-2.5 flex justify-between">
@@ -144,12 +150,7 @@ export function TeamZoneCard({
                   {toTopZone}p till {topLabel.toLowerCase()}
                 </span>
                 <div className="h-[3px] flex-1 overflow-hidden rounded-sm bg-black/8 dark:bg-white/8">
-                  <div
-                    className="h-full rounded-sm bg-gold"
-                    style={{
-                      width: `${Math.max(5, 100 - (toTopZone / Math.max(gamesLeft * 2, 1)) * 100)}%`,
-                    }}
-                  />
+                  <div className="h-full rounded-sm bg-gold" style={teamZoneProgressWidth(topProgressPct)} />
                 </div>
               </div>
             )}
@@ -175,11 +176,8 @@ export function TeamZoneCard({
                 </span>
                 <div className="h-[3px] flex-1 overflow-hidden rounded-sm bg-black/8 dark:bg-white/8">
                   <div
-                    className="h-full rounded-sm"
-                    style={{
-                      background: toBotZone <= 3 ? '#e05555' : undefined,
-                      width: `${Math.min(100, (toBotZone / Math.max(gamesLeft * 2, 1)) * 100)}%`,
-                    }}
+                    className={cn('h-full rounded-sm', toBotZone > 3 && 'bg-dark-muted/30')}
+                    style={teamZoneRelegationBarStyle(toBotZone, botProgressPct)}
                   />
                 </div>
               </div>
@@ -199,7 +197,7 @@ export function TeamZoneCard({
 
           {nextOpponentName && gamesLeft > 0 && (
             <p className="mt-3 border-t border-light-border pt-3 text-[10px] leading-snug text-dark-muted dark:border-dark-border">
-              <span className="font-bold" style={{ color: accentClr }}>
+              <span className="font-bold" style={teamZoneAccentStyle(accentClr)}>
                 Nästa match
               </span>{' '}
               mot {shortName(nextOpponentName)} — vinst ger 2p

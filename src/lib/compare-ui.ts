@@ -1,5 +1,7 @@
 /** Compare pages: team colors, motion, initials. */
 
+import type { CSSProperties } from 'react'
+import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
 import { teamHue } from '@/lib/team-ui'
 
@@ -173,4 +175,63 @@ export function teamInitials(name: string): string {
     .join('')
     .slice(0, 3)
     .toUpperCase()
+}
+
+export const COMPARE_GOLD_GLOW = 'rgba(245,194,0,0.40)'
+
+export function compareWinnerGlowStyle(active: boolean): CSSProperties | undefined {
+  return active ? { textShadow: `0 0 16px ${COMPARE_GOLD_GLOW}` } : undefined
+}
+
+export function compareMetricWinGlowStyle(active: boolean): CSSProperties | undefined {
+  return active ? { textShadow: `0 0 14px ${COMPARE_GOLD_GLOW}` } : undefined
+}
+
+export const compareVsLabel = cn(
+  'pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 select-none',
+  'text-center text-xl font-black tracking-[3px] text-gold',
+  'drop-shadow-[0_0_12px_rgba(245,194,0,0.9)] drop-shadow-[0_0_32px_rgba(245,194,0,0.45)]',
+)
+
+export function compareColorStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function compareHeroSideStyle(
+  teamBg: string,
+  dark: boolean,
+  align: 'left' | 'right',
+): CSSProperties {
+  return { background: compareHeroGradient(teamBg, dark, align) }
+}
+
+export function compareTeamBadgeStyle(
+  col: { bg: string; border: string },
+  size: 'sm' | 'md' | 'lg' = 'md',
+): CSSProperties {
+  const borderW = size === 'lg' ? 2.5 : size === 'sm' ? 1.5 : 1.5
+  return {
+    background: col.bg,
+    border: `${borderW}px solid ${col.border}`,
+    color: col.border,
+  }
+}
+
+export function comparePlayerAvatarBorder(borderColor: string): CSSProperties {
+  return { border: `2.5px solid ${borderColor}` }
+}
+
+export function comparePlayerAvatarStyle(
+  borderColor: string,
+  bgColor: string,
+): CSSProperties {
+  return {
+    background: bgColor,
+    border: `2.5px solid ${borderColor}`,
+    color: borderColor,
+  }
+}
+
+export function compareProbBarStyle(color: string): CSSProperties {
+  return { background: color }
 }

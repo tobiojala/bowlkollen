@@ -1,4 +1,5 @@
-import { streamStyle } from '@/lib/match-ui'
+import { streamDotStyle, streamPillStyle, streamStyle } from '@/lib/match-ui'
+import { homeNoTapHighlight } from '@/lib/home-ui'
 import { cn } from '@/lib/cn'
 
 type Props = {
@@ -19,17 +20,15 @@ export function StreamPills({ streams, className }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            className="flex items-center gap-1.25 rounded-lg border px-2.5 py-1.25 text-[10px] font-bold no-underline"
-            style={{
-              color: ss.color,
-              background: ss.bg,
-              borderColor: ss.border,
-              WebkitTapHighlightColor: 'transparent',
-            }}
+            className={cn(
+              'flex items-center gap-1.25 rounded-lg border px-2.5 py-1.25 text-[10px] font-bold no-underline',
+              homeNoTapHighlight,
+            )}
+            style={streamPillStyle(ss)}
           >
             <span
               className="inline-block h-[5px] w-[5px] shrink-0 rounded-full"
-              style={{ background: ss.color }}
+              style={streamDotStyle(ss.color)}
             />
             {ss.label}
           </a>

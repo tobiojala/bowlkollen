@@ -48,3 +48,59 @@ export const homePulsDivisionChip = cn(
 export function homePulsTopBarStyle(color: string): CSSProperties {
   return { background: `linear-gradient(90deg,${color},${color}30)` }
 }
+
+export type ZoneTone = 'top' | 'mid' | 'bot'
+
+export function teamZoneTone(inTopZone: boolean, inBotZone: boolean): ZoneTone {
+  if (inTopZone) return 'top'
+  if (inBotZone) return 'bot'
+  return 'mid'
+}
+
+export function teamZoneAccent(tone: ZoneTone): string {
+  if (tone === 'top') return '#f5c200'
+  if (tone === 'bot') return '#e05555'
+  return '#38a088'
+}
+
+export function teamZoneTopBarStyle(accent: string): CSSProperties {
+  return { background: `linear-gradient(90deg,${accent},${accent}20)` }
+}
+
+export function teamZoneAccentStyle(accent: string): CSSProperties {
+  return { color: accent }
+}
+
+export function teamZoneGradientBarStyle(
+  topZoneRank: number,
+  total: number,
+  botZoneRank: number,
+): CSSProperties {
+  const topPct = (topZoneRank / total) * 100
+  const botPct = ((botZoneRank - 1) / total) * 100
+  return {
+    background: `linear-gradient(90deg, #f5c200 0%, #f5c200 ${topPct}%, #38a088 ${topPct}%, #38a088 ${botPct}%, #e05555 ${botPct}%, #e05555 100%)`,
+  }
+}
+
+export function teamZoneDotStyle(accent: string, dotPct: number): CSSProperties {
+  return {
+    left: `calc(${dotPct}% - 7px)`,
+    background: accent,
+    boxShadow: `0 0 8px ${accent}60`,
+  }
+}
+
+export function teamZoneProgressWidth(pct: number): CSSProperties {
+  return { width: `${pct}%` }
+}
+
+export function teamZoneRelegationBarStyle(
+  toBotZone: number,
+  widthPct: number,
+): CSSProperties {
+  return {
+    width: `${widthPct}%`,
+    ...(toBotZone <= 3 ? { background: '#e05555' } : {}),
+  }
+}

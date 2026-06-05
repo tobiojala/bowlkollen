@@ -6,8 +6,12 @@ import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
 import {
   COMPARE_SPRING,
+  compareColorStyle,
   compareHeroGradient,
+  compareHeroSideStyle,
+  compareTeamBadgeStyle,
   compareTeamColors,
+  compareVsLabel,
   teamInitials,
 } from '@/lib/compare-ui'
 
@@ -43,7 +47,7 @@ function TeamAvatar({
         'flex shrink-0 items-center justify-center rounded-2xl font-black',
         lg ? 'size-16 text-[17px]' : 'size-10 rounded-[10px] text-[11px]',
       )}
-      style={{ background: col.bg, border: `${lg ? 2.5 : 1.5}px solid ${col.border}`, color: col.border }}
+      style={compareTeamBadgeStyle(col, lg ? 'lg' : 'sm')}
     >
       {ini}
     </div>
@@ -77,7 +81,7 @@ function TeamNameBlock({
       <div className="text-[13px] font-black leading-tight text-light-text dark:text-dark-text">
         {head}
       </div>
-      <div className="text-xs font-bold" style={{ color: accentColor }}>
+      <div className="text-xs font-bold" style={compareColorStyle(accentColor)}>
         {tail}
       </div>
     </div>
@@ -119,11 +123,7 @@ function TeamSide({
         'flex flex-1 flex-col items-center justify-center gap-2.5',
         align === 'left' ? 'pr-10 pl-5 pt-10 pb-5' : 'pl-10 pr-5 pt-10 pb-5',
       )}
-      style={
-        filled
-          ? { background: compareHeroGradient(col.bg, dark, align) }
-          : undefined
-      }
+      style={filled ? compareHeroSideStyle(col.bg, dark, align) : undefined}
     >
       {filled ? (
         <>
@@ -216,10 +216,7 @@ export function CompareSplitHero({ team1, team2, nameLayout = 'compact' }: Props
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ ...COMPARE_SPRING, delay: 0.18 }}
-        className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 select-none text-center text-xl font-black tracking-[3px] text-gold"
-        style={{
-          textShadow: '0 0 12px rgba(245,194,0,0.9), 0 0 32px rgba(245,194,0,0.45)',
-        }}
+        className={compareVsLabel}
       >
         VS
       </motion.div>

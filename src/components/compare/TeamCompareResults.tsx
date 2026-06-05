@@ -8,14 +8,16 @@ import { shortName } from '@/lib/utils'
 import {
   COMPARE_SPRING,
   TEAM_COMPARE_METRICS,
+  compareColorStyle,
+  compareProbBarStyle,
   compareTeamColors,
   compareWinProbability,
+  compareMetricWinGlowStyle,
+  compareWinnerGlowStyle,
   countMetricWins,
   type TeamCompareMatch,
   type TeamCompareStats,
 } from '@/lib/compare-ui'
-
-const GOLD_GLOW = 'rgba(245,194,0,0.40)'
 
 type Team = { id: string; name: string; city: string | null }
 
@@ -79,7 +81,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
               'text-[28px] font-black',
               overall === 1 ? 'text-gold' : 'text-dark-muted',
             )}
-            style={overall === 1 ? { textShadow: `0 0 16px ${GOLD_GLOW}` } : undefined}
+            style={compareWinnerGlowStyle(overall === 1)}
           >
             {t1Wins}
           </span>
@@ -95,7 +97,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
               'text-[28px] font-black',
               overall === 2 ? 'text-gold' : 'text-dark-muted',
             )}
-            style={overall === 2 ? { textShadow: `0 0 16px ${GOLD_GLOW}` } : undefined}
+            style={compareWinnerGlowStyle(overall === 2)}
           >
             {t2Wins}
           </span>
@@ -114,7 +116,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
         <div className="flex items-center gap-2.5">
           <span
             className="min-w-9 text-right text-[13px] font-extrabold"
-            style={{ color: col1.border }}
+            style={compareColorStyle(col1.border)}
           >
             {prob1}%
           </span>
@@ -129,10 +131,10 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
               animate={{ width: `${prob1}%` }}
               transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
               className="absolute top-0 left-0 h-full rounded-lg"
-              style={{ background: col1.border }}
+              style={compareProbBarStyle(col1.border)}
             />
           </div>
-          <span className="min-w-9 text-[13px] font-extrabold" style={{ color: col2.border }}>
+          <span className="min-w-9 text-[13px] font-extrabold" style={compareColorStyle(col2.border)}>
             {prob2}%
           </span>
         </div>
@@ -150,12 +152,12 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
       >
         <div
           className="truncate text-right text-[11px] font-bold"
-          style={{ color: col1.border }}
+          style={compareColorStyle(col1.border)}
         >
           {shortName(t1.name)}
         </div>
         <div />
-        <div className="truncate text-[11px] font-bold" style={{ color: col2.border }}>
+        <div className="truncate text-[11px] font-bold" style={compareColorStyle(col2.border)}>
           {shortName(t2.name)}
         </div>
       </motion.div>
@@ -184,7 +186,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
                   'leading-none',
                   s1wins ? 'text-[28px] font-black text-gold' : 'text-[22px] font-normal text-dark-muted',
                 )}
-                style={s1wins ? { textShadow: `0 0 14px ${GOLD_GLOW}` } : undefined}
+                style={compareMetricWinGlowStyle(s1wins)}
               >
                 {v1 > 0 ? fmt(v1) : '—'}
               </motion.span>
@@ -218,7 +220,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
                   'leading-none',
                   s2wins ? 'text-[28px] font-black text-gold' : 'text-[22px] font-normal text-dark-muted',
                 )}
-                style={s2wins ? { textShadow: `0 0 14px ${GOLD_GLOW}` } : undefined}
+                style={compareMetricWinGlowStyle(s2wins)}
               >
                 {v2 > 0 ? fmt(v2) : '—'}
               </motion.span>
@@ -244,7 +246,7 @@ export function TeamCompareResults({ t1, t2, stats1, stats2, h2h, id1, id2 }: Pr
           <>
             <div
               className="text-[19px] font-black"
-              style={{ color: overall === 1 ? col1.border : col2.border }}
+              style={compareColorStyle(overall === 1 ? col1.border : col2.border)}
             >
               {shortName(overall === 1 ? t1.name : t2.name)}
             </div>

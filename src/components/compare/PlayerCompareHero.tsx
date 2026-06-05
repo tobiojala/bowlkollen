@@ -6,8 +6,12 @@ import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
 import {
   COMPARE_SPRING,
-  compareHeroGradient,
+  compareColorStyle,
+  compareHeroSideStyle,
+  comparePlayerAvatarBorder,
+  comparePlayerAvatarStyle,
   compareTeamColors,
+  compareVsLabel,
 } from '@/lib/compare-ui'
 
 export type PlayerCompareHeroPlayer = {
@@ -50,7 +54,7 @@ function PlayerAvatar({
         src={player.avatar_url}
         alt={player.name}
         className="size-[68px] rounded-full object-cover"
-        style={{ border: `2.5px solid ${borderColor}` }}
+        style={comparePlayerAvatarBorder(borderColor)}
       />
     )
   }
@@ -58,11 +62,7 @@ function PlayerAvatar({
   return (
     <div
       className="flex size-[68px] items-center justify-center rounded-full text-xl font-black"
-      style={{
-        background: bgColor,
-        border: `2.5px solid ${borderColor}`,
-        color: borderColor,
-      }}
+      style={comparePlayerAvatarStyle(borderColor, bgColor)}
     >
       {ini}
     </div>
@@ -93,7 +93,7 @@ function PlayerSide({
           {first}
         </div>
         {rest && (
-          <div className="text-xs font-bold leading-snug" style={{ color: col.border }}>
+          <div className="text-xs font-bold leading-snug" style={compareColorStyle(col.border)}>
             {rest}
           </div>
         )}
@@ -113,7 +113,7 @@ function PlayerSide({
         'flex flex-1 flex-col items-center justify-center gap-2.5',
         align === 'left' ? 'pr-10 pl-5 pt-10 pb-5' : 'pl-10 pr-5 pt-10 pb-5',
       )}
-      style={{ background: compareHeroGradient(col.bg, dark, align) }}
+      style={compareHeroSideStyle(col.bg, dark, align)}
     >
       {side.href ? (
         <a href={side.href} className="flex flex-col items-center gap-2.5 no-underline">
@@ -149,10 +149,7 @@ export function PlayerCompareHero({ player1, player2 }: Props) {
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ ...COMPARE_SPRING, delay: 0.18 }}
-        className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 select-none text-center text-xl font-black tracking-[3px] text-gold"
-        style={{
-          textShadow: '0 0 12px rgba(245,194,0,0.9), 0 0 32px rgba(245,194,0,0.45)',
-        }}
+        className={compareVsLabel}
       >
         VS
       </motion.div>

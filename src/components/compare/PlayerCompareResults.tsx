@@ -7,12 +7,13 @@ import { cn } from '@/lib/cn'
 import {
   COMPARE_SPRING,
   PLAYER_COMPARE_METRICS,
+  compareColorStyle,
   compareTeamColors,
+  compareMetricWinGlowStyle,
+  compareWinnerGlowStyle,
   countPlayerMetricWins,
   type PlayerCompareStats,
 } from '@/lib/compare-ui'
-
-const GOLD_GLOW = 'rgba(245,194,0,0.40)'
 
 type Player = { id: string; name: string }
 
@@ -60,7 +61,7 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
               'text-[28px] font-black',
               overall === 1 ? 'text-gold' : 'text-dark-muted',
             )}
-            style={overall === 1 ? { textShadow: `0 0 16px ${GOLD_GLOW}` } : undefined}
+            style={compareWinnerGlowStyle(overall === 1)}
           >
             {p1Wins}
           </span>
@@ -76,7 +77,7 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
               'text-[28px] font-black',
               overall === 2 ? 'text-gold' : 'text-dark-muted',
             )}
-            style={overall === 2 ? { textShadow: `0 0 16px ${GOLD_GLOW}` } : undefined}
+            style={compareWinnerGlowStyle(overall === 2)}
           >
             {p2Wins}
           </span>
@@ -91,12 +92,12 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
       >
         <div
           className="truncate text-right text-[11px] font-bold"
-          style={{ color: col1.border }}
+          style={compareColorStyle(col1.border)}
         >
           {p1.name.split(' ')[0]}
         </div>
         <div />
-        <div className="truncate text-[11px] font-bold" style={{ color: col2.border }}>
+        <div className="truncate text-[11px] font-bold" style={compareColorStyle(col2.border)}>
           {p2.name.split(' ')[0]}
         </div>
       </motion.div>
@@ -128,7 +129,7 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
                   'leading-none',
                   s1wins ? 'text-[28px] font-black text-gold' : 'text-[22px] font-normal text-dark-muted',
                 )}
-                style={s1wins ? { textShadow: `0 0 14px ${GOLD_GLOW}` } : undefined}
+                style={compareMetricWinGlowStyle(s1wins)}
               >
                 {v1 > 0 ? v1 : '—'}
               </motion.span>
@@ -162,7 +163,7 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
                   'leading-none',
                   s2wins ? 'text-[28px] font-black text-gold' : 'text-[22px] font-normal text-dark-muted',
                 )}
-                style={s2wins ? { textShadow: `0 0 14px ${GOLD_GLOW}` } : undefined}
+                style={compareMetricWinGlowStyle(s2wins)}
               >
                 {v2 > 0 ? v2 : '—'}
               </motion.span>
@@ -195,7 +196,7 @@ export function PlayerCompareResults({ p1, p2, stats1, stats2 }: Props) {
           <>
             <div
               className="text-[19px] font-black"
-              style={{ color: overall === 1 ? col1.border : col2.border }}
+              style={compareColorStyle(overall === 1 ? col1.border : col2.border)}
             >
               {overall === 1 ? p1.name : p2.name}
             </div>

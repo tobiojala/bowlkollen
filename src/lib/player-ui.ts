@@ -1,5 +1,7 @@
 /** Player profile display helpers (rating tiers, stats). */
 
+import type { CSSProperties } from 'react'
+
 export type PlayerTier = {
   label: string
   accent: string
@@ -68,4 +70,48 @@ export function scoreGameColor(score: number): string {
   if (score >= 250) return '#5a82b4'
   if (score >= 200) return '#f5c200'
   return 'rgba(160,175,200,0.32)'
+}
+
+export function playerTierBannerStyle(tier: PlayerTier, dark: boolean): CSSProperties {
+  return {
+    background: dark
+      ? `linear-gradient(135deg, color-mix(in srgb, ${tier.accent} 14%, transparent) 0%, transparent 100%)`
+      : `linear-gradient(135deg, ${tier.bg} 0%, transparent 100%)`,
+    borderColor: tier.border,
+  }
+}
+
+export function playerAvatarRingStyle(tier: PlayerTier): CSSProperties {
+  return {
+    border: `3px solid ${tier.accent}`,
+    boxShadow: `0 0 0 3px var(--color-light-bg, #f5f2ec), 0 0 20px ${tier.glow}`,
+  }
+}
+
+export function playerInitialsAvatarStyle(
+  tier: PlayerTier,
+  teamBg: string,
+  teamColor: string,
+): CSSProperties {
+  return {
+    background: teamBg,
+    ...playerAvatarRingStyle(tier),
+    color: teamColor,
+  }
+}
+
+export function playerTierChipStyle(tier: PlayerTier): CSSProperties {
+  return { background: tier.bg, borderColor: tier.border, color: tier.accent }
+}
+
+export function playerTierAccentStyle(tier: PlayerTier): CSSProperties {
+  return { color: tier.accent }
+}
+
+export function playerTierFilledStyle(tier: PlayerTier): CSSProperties {
+  return { background: tier.accent }
+}
+
+export function playerTrendStyle(color: string): CSSProperties {
+  return { color }
 }

@@ -18,7 +18,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
-| Match / team / card helpers | `match-ui.ts`, `team-ui.ts`, `team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts`, `player-card-ui.ts` |
+| Match / team / card / home helpers | `match-ui.ts`, `home-ui.ts`, `team-ui.ts`, `team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts`, `player-card-ui.ts` |
 | Profile widgets | `src/lib/widget-ui.ts` |
 | Schedule page | `src/lib/schema-ui.ts`, `SchemaTavCard` |
 
@@ -97,7 +97,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
 | Files importing `@/lib/colors` | **0** (`lib/colors.ts` removed) |
-| `style={{}}` in all `src/**/*.tsx` | **~233** (includes components + remotion) |
+| `style={{}}` in all `src/**/*.tsx` | **~175** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
 ### Phase 0 + 1 — shell (done)
@@ -113,8 +113,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `home/MatchRow` | 2 | [x] template |
 | `home/MiniStandings` | 3 | [x] |
 | `home/HonorRoll` | 0 | [x] |
-| `home/HeroStrip` | 9 | [x] dynamic |
-| `home/MatchPulsen` | 11 | [x] SVG |
+| `home/HeroStrip` | 1 | [x] | `home-ui.ts`; division color dynamic |
+| `home/MatchPulsen` | 7 | [x] | `home-ui.ts`; gauge SVG + tension colors dynamic |
 | `home/TeamZoneCard` | 8 | [x] dynamic bar |
 | `home/*` skeleton, profile, streams | low | [x] |
 | `FollowButton` | 1 | [x] |
@@ -124,7 +124,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `teams/*` (hero, tabs, H2H, …) | low | [x] |
 | `matches/*` (header, scorecard, …) | 1 | [x] elite score glow |
 | `compare/*` (hero, search, results) | low | [x] team + player compare |
-| `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
+| `players/PlayerHero` | 0 | [x] | `player-ui.ts` tier/avatar style helpers |
+| `players/*` (tabs, overview, …) | low | [x] |
 | `SeasonTimeline` | 2 | [x] | `seasonResultTone` in `team-ui.ts`; opponent HSL dynamic |
 | `TopPerformers` | 2 | [x] | player avatar HSL dynamic |
 | `widgets/Widgets.tsx` | 1 | [x] | `widget-ui.ts`; progress width dynamic |
@@ -133,7 +134,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `LiveLaneViewer` | 0 | [x] | used on live match pages |
 | `team/TeamLaguttagningPageContent` | 8 | [x] | `team-laguttagning-ui.ts`; tier card gradients dynamic |
 | `team/TeamTillganglighetPageContent` | 3 | [x] | `team-tillganglighet-ui.ts`; HSL avatars + poll bar widths |
-| `RemotionPlayerEmbed` | 5 | [ ] |
+| `RemotionPlayerEmbed` | 0 | [x] | Tailwind shell; `remotion/PlayerShareCard` stays inline |
 
 ### Phase 3 — app pages
 
@@ -169,7 +170,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` (~8 inline tier/HSL) |
 | `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` (~3 inline HSL/width) |
 | `[slug]/page` | 0 | n/a | redirect only |
-| `[slug]/intern` | — | [ ] | not audited |
+| `[slug]/intern` | 0 | n/a | redirect → `/team/[id]/intern` |
 
 ### Suggested order (remaining)
 
@@ -186,8 +187,10 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 11. [x] Delete unused `lib/colors.ts`
 12. [x] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — shells + Tailwind; division/zone colors inline only
 13. [x] `PlayerCard` — drawer chrome + card layout in Tailwind; holo/3D/tier dynamic inline
-14. [ ] `[slug]/intern` — not audited
-15. [ ] `RemotionPlayerEmbed` / `remotion/*`
+14. [x] `[slug]/intern` — redirect only
+15. [x] `RemotionPlayerEmbed` shell
+16. [ ] `remotion/PlayerShareCard` (~32 inline) — video composition; keep inline for Remotion
+17. [ ] Chip remaining low-count components (`TeamZoneCard`, `players/PlayerHero`, compare heroes, …)
 
 ### Do not migrate (yet)
 

@@ -5,7 +5,7 @@ import { Search } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { compareTeamColors, teamInitials } from '@/lib/compare-ui'
+import { compareTeamBadgeStyle, compareTeamColors, teamInitials } from '@/lib/compare-ui'
 
 export type CompareSearchTeam = { id: string; name: string; city: string | null }
 
@@ -54,11 +54,7 @@ export function TeamCompareSearch({ id1, query, onQueryChange, results }: Props)
               >
                 <div
                   className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-extrabold"
-                  style={{
-                    background: col.bg,
-                    border: `1.5px solid ${col.border}`,
-                    color: col.border,
-                  }}
+                  style={compareTeamBadgeStyle(col, 'sm')}
                 >
                   {ini}
                 </div>

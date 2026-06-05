@@ -7,6 +7,15 @@ import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
 import { teamColors } from '@/lib/team-ui'
 import type { PlayerTier } from '@/lib/player-ui'
+import {
+  playerAvatarRingStyle,
+  playerInitialsAvatarStyle,
+  playerTierAccentStyle,
+  playerTierBannerStyle,
+  playerTierChipStyle,
+  playerTierFilledStyle,
+  playerTrendStyle,
+} from '@/lib/player-ui'
 
 type Player = {
   id: string
@@ -64,13 +73,9 @@ export function PlayerHero({
     .slice(0, 2)
     .toUpperCase()
 
-  const bannerBg = dark
-    ? `linear-gradient(135deg, color-mix(in srgb, ${tier.accent} 14%, transparent) 0%, transparent 100%)`
-    : `linear-gradient(135deg, ${tier.bg} 0%, transparent 100%)`
-
   return (
     <div className="relative">
-      <div className="h-[100px] border-b" style={{ background: bannerBg, borderColor: tier.border }} />
+      <div className="h-[100px] border-b" style={playerTierBannerStyle(tier, dark)} />
 
       <div className="-mt-7 px-5">
         <div className="flex items-end justify-between">
@@ -80,20 +85,12 @@ export function PlayerHero({
                 src={player.avatar_url}
                 alt={player.name}
                 className="h-[88px] w-[88px] rounded-full object-cover"
-                style={{
-                  border: `3px solid ${tier.accent}`,
-                  boxShadow: `0 0 0 3px var(--color-light-bg, #f5f2ec), 0 0 20px ${tier.glow}`,
-                }}
+                style={playerAvatarRingStyle(tier)}
               />
             ) : (
               <div
                 className="flex h-[88px] w-[88px] items-center justify-center rounded-full text-[26px] font-black"
-                style={{
-                  background: tclo,
-                  border: `3px solid ${tier.accent}`,
-                  color: tc,
-                  boxShadow: `0 0 0 3px var(--color-light-bg, #f5f2ec), 0 0 20px ${tier.glow}`,
-                }}
+                style={playerInitialsAvatarStyle(tier, tclo, tc)}
               >
                 {initials}
               </div>
@@ -101,7 +98,7 @@ export function PlayerHero({
             {isOwner && (
               <label
                 className="absolute right-0.5 bottom-0.5 flex h-[26px] w-[26px] cursor-pointer items-center justify-center rounded-full shadow-md"
-                style={{ background: tier.accent }}
+                style={playerTierFilledStyle(tier)}
               >
                 {uploadingAvatar ? (
                   <Loader2 className="h-[13px] w-[13px] animate-spin text-[#1a1400]" />
@@ -147,15 +144,15 @@ export function PlayerHero({
             <div className="mt-1.5 flex items-center gap-1.5">
               <span
                 className="rounded-full border px-[9px] py-[3px] text-[10px] font-extrabold tracking-wide"
-                style={{ background: tier.bg, borderColor: tier.border, color: tier.accent }}
+                style={playerTierChipStyle(tier)}
               >
                 {tier.label}
               </span>
-              <span className="text-xs font-bold" style={{ color: tier.accent }}>
+              <span className="text-xs font-bold" style={playerTierAccentStyle(tier)}>
                 BK Rating {rating}
               </span>
               {formTrend && (
-                <span className="text-[13px]" style={{ color: trendColor }}>
+                <span className="text-[13px]" style={playerTrendStyle(trendColor)}>
                   {formTrend === 'up' ? '↑' : formTrend === 'down' ? '↓' : '→'}
                 </span>
               )}
@@ -223,7 +220,7 @@ export function PlayerHero({
             type="button"
             onClick={onOpenCard}
             className="flex flex-1 cursor-pointer items-center justify-center gap-1.25 rounded-full border py-2 text-[13px] font-bold"
-            style={{ borderColor: tier.border, background: tier.bg, color: tier.accent }}
+            style={playerTierChipStyle(tier)}
           >
             🃏 Spelarkort
           </button>
