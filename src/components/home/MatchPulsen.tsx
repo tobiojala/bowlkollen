@@ -11,6 +11,11 @@ import {
   tensionColor,
   type MatchLike,
 } from '@/lib/match-ui'
+import {
+  homeNoTapHighlight,
+  homePulsDivisionChip,
+  homePulsTopBarStyle,
+} from '@/lib/home-ui'
 import { StreamPills } from '@/components/home/StreamPills'
 
 type Props = {
@@ -49,14 +54,14 @@ export function MatchPulsen({ matches, followedIds }: Props) {
       <div
         className={cn(
           'overflow-hidden rounded-2xl border',
-          isFollowed && 'shadow-[0_0_0_3px_rgba(245,194,0,0.12),0_0_28px_rgba(245,194,0,0.1)]',
+          isFollowed &&
+            'border-gold/50 shadow-[0_0_0_3px_rgba(245,194,0,0.12),0_0_28px_rgba(245,194,0,0.1)]',
           isTied
             ? 'border-gold/35 bg-linear-to-br from-gold/8 to-light-bg dark:to-dark-bg'
             : 'border-light-border bg-linear-to-br from-black/2 to-light-bg dark:border-dark-border dark:from-white/3 dark:to-dark-bg',
         )}
-        style={{ borderColor: isFollowed ? 'rgba(245,194,0,0.5)' : undefined }}
       >
-        <div className="h-[3px]" style={{ background: `linear-gradient(90deg,${needleClr},${needleClr}30)` }} />
+        <div className="h-[3px]" style={homePulsTopBarStyle(needleClr)} />
         <div className="px-4 py-3 pb-4">
           <div className="mb-3 flex items-center gap-1.5">
             <span className="flex-1 text-[9px] font-extrabold tracking-wide" style={{ color: needleClr }}>
@@ -68,11 +73,8 @@ export function MatchPulsen({ matches, followedIds }: Props) {
               </span>
             )}
             <span
-              className="rounded px-2 py-0.75 text-[9px] font-bold tracking-wide"
-              style={{
-                color: divisionAccentColor(hot.division),
-                background: 'rgba(0,0,0,0.06)',
-              }}
+              className={homePulsDivisionChip}
+              style={{ color: divisionAccentColor(hot.division) }}
             >
               {shortDiv(hot.division)}
             </span>
@@ -80,8 +82,7 @@ export function MatchPulsen({ matches, followedIds }: Props) {
 
           <Link
             href={`/matches/${hot.id}`}
-            className="flex items-center gap-2 no-underline"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={cn('flex items-center gap-2 no-underline', homeNoTapHighlight)}
           >
             <div className="min-w-0 flex-1 text-right">
               <div className="mb-0.5 text-[9px] tracking-wide text-dark-muted">HEMMA</div>
@@ -218,9 +219,9 @@ export function MatchPulsen({ matches, followedIds }: Props) {
                     href={`/matches/${m.id}`}
                     className={cn(
                       'flex items-center gap-2 py-1.75 no-underline',
+                      homeNoTapHighlight,
                       !isLast && 'border-b border-light-border dark:border-dark-border',
                     )}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <div className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: dotClr }} />
                     <div className="min-w-0 flex-1">

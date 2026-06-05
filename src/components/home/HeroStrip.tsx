@@ -6,6 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/cn'
 import { shortName, shortDiv, dateLabel, countdown } from '@/lib/utils'
 import { divisionAccentColor } from '@/lib/match-ui'
+import {
+  homeDivisionChip,
+  homeHeroModeCountClass,
+  homeHeroModeLabelClass,
+  homeHeroModeTabClass,
+  homeHeroTopBarLive,
+  homeHeroTopBarUpcoming,
+  homeNoTapHighlight,
+} from '@/lib/home-ui'
 import { StreamPills } from '@/components/home/StreamPills'
 
 export type HeroMatch = {
@@ -62,48 +71,21 @@ export function HeroStrip({ liveItems, upcomingItems, now }: Props) {
         <div className="flex gap-2 px-4 pt-3">
           {(
             [
-              ['live', 'PÅGÅENDE', liveItems.length, '#f5c200'],
-              ['upcoming', 'KOMMANDE', upcomingItems.length, '#5a82b4'],
+              ['live', 'PÅGÅENDE', liveItems.length],
+              ['upcoming', 'KOMMANDE', upcomingItems.length],
             ] as const
-          ).map(([m, label, count, clr]) => {
+          ).map(([m, label, count]) => {
             const isAct = mode === m
+            const tabMode = m as 'live' | 'upcoming'
             return (
               <button
                 key={m}
                 type="button"
-                onClick={() => switchMode(m)}
-                className={cn(
-                  'flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5',
-                  !isAct && 'border-light-border bg-black/4 dark:border-dark-border dark:bg-white/5',
-                )}
-                style={
-                  isAct
-                    ? {
-                        outline: `1px solid ${clr}66`,
-                        background: m === 'live' ? 'rgba(245,194,0,0.12)' : 'rgba(91,130,180,0.12)',
-                      }
-                    : undefined
-                }
+                onClick={() => switchMode(tabMode)}
+                className={homeHeroModeTabClass(isAct, tabMode)}
               >
-                <span
-                  className="text-[10px] font-extrabold tracking-wide"
-                  style={{ color: isAct ? clr : undefined }}
-                >
-                  <span className={!isAct ? 'text-dark-muted' : undefined}>{label}</span>
-                </span>
-                <span
-                  className="rounded-lg px-1.5 py-px text-[9px] font-bold"
-                  style={{
-                    color: isAct ? clr : undefined,
-                    background: isAct
-                      ? m === 'live'
-                        ? 'rgba(245,194,0,0.18)'
-                        : 'rgba(91,130,180,0.18)'
-                      : undefined,
-                  }}
-                >
-                  <span className={!isAct ? 'text-dark-muted' : undefined}>{count}</span>
-                </span>
+                <span className={homeHeroModeLabelClass(isAct, tabMode)}>{label}</span>
+                <span className={homeHeroModeCountClass(isAct, tabMode)}>{count}</span>
               </button>
             )
           })}
@@ -169,20 +151,18 @@ function HeroMatchCard({
   const dateStr = m.date.slice(0, 10)
   const streams = isLive ? (m.streams ?? []) : []
   const isStream = streams.length > 0
-  const topClr = isLive ? '#f5c200' : '#5a82b4'
-
   return (
     <Link
       href={`/matches/${m.id}`}
       className={cn(
         'block overflow-hidden rounded-2xl border no-underline',
+        homeNoTapHighlight,
         isLive
           ? 'border-gold/30 bg-linear-to-br from-gold/10 via-transparent to-light-bg dark:from-gold/10 dark:to-dark-bg'
           : 'border-[#5a82b4]/30 bg-linear-to-br from-[#5a82b4]/10 via-transparent to-light-bg dark:from-[#5a82b4]/10 dark:to-dark-bg',
       )}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      <div className="h-[3px]" style={{ background: `linear-gradient(90deg,${topClr},${topClr}40)` }} />
+      <div className={isLive ? homeHeroTopBarLive : homeHeroTopBarUpcoming} />
       <div className="px-4 py-3.5 pb-4">
         <div className="mb-4 flex items-center gap-2">
           {isLive ? (
@@ -201,10 +181,7 @@ function HeroMatchCard({
           ) : (
             <span className="text-[10px] font-extrabold tracking-widest text-[#5a82b4]">KOMMANDE</span>
           )}
-          <span
-            className="ml-auto rounded px-2 py-0.75 text-[9px] font-bold tracking-wide"
-            style={{ color: dc, background: 'rgba(0,0,0,0.06)' }}
-          >
+          <span className={homeDivisionChip} style={{ color: dc }}>
             {shortDiv(m.division)}
           </span>
         </div>
@@ -279,8 +256,10 @@ function HeroTavlingCard({ item }: { item: StripTav }) {
   return (
     <Link
       href={item.href}
-      className="block overflow-hidden rounded-2xl border border-gold/25 bg-linear-to-br from-gold/7 via-transparent to-light-bg no-underline dark:from-gold/10 dark:to-dark-bg"
-      style={{ WebkitTapHighlightColor: 'transparent' }}
+      className={cn(
+        'block overflow-hidden rounded-2xl border border-gold/25 bg-linear-to-br from-gold/7 via-transparent to-light-bg no-underline dark:from-gold/10 dark:to-dark-bg',
+        homeNoTapHighlight,
+      )}
     >
       <div className="h-[3px] bg-linear-to-r from-gold to-gold/20" />
       <div className="px-4 py-3.5 pb-4">
@@ -331,20 +310,23 @@ function HeroStripThumb({
         onClick={onSelect}
         className={cn(
           'flex w-[82px] shrink-0 cursor-pointer flex-col items-center gap-[3px] overflow-hidden rounded-xl border px-1.5 py-2',
+          homeNoTapHighlight,
           isActive
             ? isLiveM
               ? 'border-gold/55 bg-gold/10 dark:bg-gold/14'
               : 'border-[#5a82b4]/55 bg-[#5a82b4]/10 dark:bg-[#5a82b4]/14'
             : 'border-light-border bg-black/3 dark:border-dark-border dark:bg-white/4',
         )}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         {isStreamM ? (
           <span className="mt-0.5 animate-pulse text-[8px] font-extrabold tracking-wide text-red">● LIVE</span>
         ) : (
           <div
-            className="mt-0.5 max-w-[72px] truncate text-[8.5px] font-bold"
-            style={{ color: isLiveM ? '#f5c200' : dc }}
+            className={cn(
+              'mt-0.5 max-w-[72px] truncate text-[8.5px] font-bold',
+              isLiveM ? 'text-gold' : undefined,
+            )}
+            style={isLiveM ? undefined : { color: dc }}
           >
             {shortDiv(m.division)}
           </div>
@@ -383,11 +365,11 @@ function HeroStripThumb({
       onClick={onSelect}
       className={cn(
         'flex w-[82px] shrink-0 cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border px-1.5 py-2',
+        homeNoTapHighlight,
         isActive
           ? 'border-gold/55 bg-gold/10 dark:bg-gold/14'
           : 'border-light-border bg-black/3 dark:border-dark-border dark:bg-white/4',
       )}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <span className="text-[15px] leading-none text-gold">◆</span>
       <div className="max-w-[70px] truncate text-center text-[9px] font-bold text-gold">{item.name}</div>

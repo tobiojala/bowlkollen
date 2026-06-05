@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `PlayerCard` Tailwind migration. Regenerate counts with:_
+_Last updated: after home hero/puls, widgets, and `RemotionPlayerEmbed` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -127,7 +127,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
 | `SeasonTimeline` | 2 | [x] | `seasonResultTone` in `team-ui.ts`; opponent HSL dynamic |
 | `TopPerformers` | 2 | [x] | player avatar HSL dynamic |
-| `widgets/Widgets.tsx` | ~15 | [x] | `lib/widget-ui.ts`; team/tier colors dynamic |
+| `widgets/Widgets.tsx` | 1 | [x] | `widget-ui.ts`; progress width dynamic |
 | `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
 | `HeroCarousel` | 1 | [x] | SM slide `bg` gradient dynamic; progress in `globals.css` |
 | `LiveLaneViewer` | 0 | [x] | used on live match pages |

@@ -28,6 +28,15 @@ import {
   widgetYes,
   widgetNo,
   widgetIconMuted,
+  widgetAvailMaybeBtn,
+  widgetAvailNoBtn,
+  widgetAvailYesBtn,
+  widgetOutcomeBadgeClass,
+  widgetTeamBadgeBorder2,
+  widgetTeamBadgeStyle,
+  widgetTierAccentClass,
+  widgetTierBadgeClass,
+  widgetTierBorderClass,
 } from '@/lib/widget-ui'
 
 function localDate(d: Date) {
@@ -36,13 +45,6 @@ function localDate(d: Date) {
 function calcRating(avg: number, best: number, over200: number) {
   if (!avg) return 0
   return Math.min(99, Math.round(avg * 0.4 + (best / 4 / 10) * 0.4 + over200 * 1.5))
-}
-function getTierColor(r: number) {
-  if (r >= 95) return '#f5c200'
-  if (r >= 85) return '#afa9ec'
-  if (r >= 75) return '#5dcaa5'
-  if (r >= 60) return '#ef9f27'
-  return '#8899aa'
 }
 function getTierLabel(r: number) {
   if (r >= 95) return 'LEGEND'
@@ -94,7 +96,7 @@ export function NextMatchWidget({ isDark, data }: WProps) {
       <div className="flex flex-1 items-center gap-2.5">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[9px] font-extrabold"
-          style={{ background: tc.bg, border: `2px solid ${tc.border}`, color: tc.text }}
+          style={widgetTeamBadgeBorder2(tc)}
         >
           {teamInitials(opp?.name || '')}
         </div>
@@ -158,7 +160,6 @@ export function LastResultWidget({ isDark, data }: WProps) {
   const oppScore = (isHome ? m.away_score : m.home_score) as number
   const won = myScore > oppScore
   const drew = myScore === oppScore
-  const rc = won ? '#1d9e75' : drew ? '#f5c200' : '#e24b4a'
   const rl = won ? 'V' : drew ? 'O' : 'F'
   const mDate = (m.date as string).slice(0, 10)
   const dateStr = new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', {
@@ -174,8 +175,10 @@ export function LastResultWidget({ isDark, data }: WProps) {
       </div>
       <div className="flex flex-1 items-center gap-2">
         <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black"
-          style={{ background: rc + '22', border: `2px solid ${rc}`, color: rc }}
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-black',
+            widgetOutcomeBadgeClass(won, drew),
+          )}
         >
           {rl}
         </div>
@@ -286,26 +289,20 @@ export function MyStatsWidget({ isDark, data }: WProps) {
     )
   }
   const rating = calcRating(stats.avg || 0, stats.best || 0, stats.over200 || 0)
-  const tc = getTierColor(rating)
   const tl = getTierLabel(rating)
+  const tierAccent = widgetTierAccentClass(rating)
   return (
     <a
       href={'/players/' + player.id}
-      className={cn(widgetShell(), widgetLink)}
-      style={{ borderColor: tc + '33' }}
+      className={cn(widgetShell(), widgetLink, widgetTierBorderClass(rating))}
     >
       <div className="mb-1.5 flex items-center justify-between">
-        <div className={widgetEyebrow} style={{ color: tc }}>
-          MIN STATISTIK
-        </div>
-        <div
-          className="rounded-md px-1.5 py-0.5 text-[8px] font-bold"
-          style={{ color: tc, background: tc + '22' }}
-        >
+        <div className={cn(widgetEyebrow, tierAccent)}>MIN STATISTIK</div>
+        <div className={cn('rounded-md px-1.5 py-0.5 text-[8px] font-bold', widgetTierBadgeClass(rating))}>
           {tl}
         </div>
       </div>
-      <div className="mb-1 text-[30px] leading-none font-black" style={{ color: tc }}>
+      <div className={cn('mb-1 text-[30px] leading-none font-black', tierAccent)}>
         {stats.avg || '—'}
       </div>
       <div className="mb-2 text-[9px] text-dark-muted">SNITT · {stats.matches} MATCHER</div>
@@ -428,21 +425,11 @@ export function AvailabilityWidget({
         <div>
           <div className="mb-1.5 flex gap-1.5">
             {[
-              { k: 'yes', l: 'Ja', c: isDark ? '#5a82b4' : '#3d6090' },
-              { k: 'maybe', l: '?', c: '#f5c200' },
-              { k: 'no', l: 'Nej', c: isDark ? '#e05555' : '#d63b3b' },
+              { k: 'yes', l: 'Ja', btn: widgetAvailYesBtn },
+              { k: 'maybe', l: '?', btn: widgetAvailMaybeBtn },
+              { k: 'no', l: 'Nej', btn: widgetAvailNoBtn },
             ].map(r => (
-              <button
-                key={r.k}
-                type="button"
-                onClick={() => onRespond(r.k)}
-                className="flex-1 cursor-pointer rounded-[10px] border-[1.5px] py-2 text-xs font-bold [-webkit-tap-highlight-color:transparent]"
-                style={{
-                  borderColor: `${r.c}44`,
-                  background: `${r.c}18`,
-                  color: r.c,
-                }}
-              >
+              <button key={r.k} type="button" onClick={() => onRespond(r.k)} className={r.btn}>
                 {r.l}
               </button>
             ))}
@@ -519,7 +506,7 @@ export function UpcomingWidget({ isDark, data }: WProps) {
             <div key={m.id as string} className="flex items-center gap-1.25">
               <div
                 className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
-                style={{ background: hc.bg, border: `1px solid ${hc.border}`, color: hc.text }}
+                style={widgetTeamBadgeStyle(hc)}
               >
                 {teamInitials(home?.name || '')}
               </div>
@@ -528,7 +515,7 @@ export function UpcomingWidget({ isDark, data }: WProps) {
               </div>
               <div
                 className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
-                style={{ background: ac.bg, border: `1px solid ${ac.border}`, color: ac.text }}
+                style={widgetTeamBadgeStyle(ac)}
               >
                 {teamInitials(away?.name || '')}
               </div>
@@ -560,7 +547,7 @@ export function RecentResultsWidget({ isDark, data }: WProps) {
             <div key={m.id as string} className="flex items-center gap-1">
               <div
                 className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
-                style={{ background: hc.bg, border: `1px solid ${hc.border}`, color: hc.text }}
+                style={widgetTeamBadgeStyle(hc)}
               >
                 {teamInitials(home?.name || '')}
               </div>
@@ -577,7 +564,7 @@ export function RecentResultsWidget({ isDark, data }: WProps) {
               </div>
               <div
                 className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded text-[5px] font-extrabold"
-                style={{ background: ac.bg, border: `1px solid ${ac.border}`, color: ac.text }}
+                style={widgetTeamBadgeStyle(ac)}
               >
                 {teamInitials(away?.name || '')}
               </div>
@@ -616,7 +603,7 @@ export function FavTeamsWidget({ isDark, data }: WProps) {
             <div key={t.id as string} className="flex items-center gap-2">
               <div
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[6px] font-extrabold"
-                style={{ background: tc.bg, border: `1.5px solid ${tc.border}`, color: tc.text }}
+                style={widgetTeamBadgeBorder2(tc)}
               >
                 {teamInitials(t.name as string)}
               </div>
