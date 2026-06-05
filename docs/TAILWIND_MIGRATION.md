@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `AdminPageContent` Tailwind migration. Regenerate counts with:_
+_Last updated: after `SchemaPageContent` Tailwind migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -157,7 +157,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
 | `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` + widgets migrated |
-| `puls` | 0 | [x] | `components/puls/*`, `lib/puls-ui.ts`; UI still inline in content |
+| `puls` | 0 | [x] | `PulsPageContent`, `lib/puls-ui.ts`; card gradients/stream colors dynamic |
 | `schema` | 0 | [x] | `SchemaPageContent`, `SchemaTavCard`, `lib/schema-ui.ts` |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
 | `sllm` | 0 | [x] | `components/sllm/*`, `lib/sllm-data.ts` |
@@ -180,7 +180,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 7. [x] `SeasonTimeline`, `TopPerformers`
 8. [x] `HeroCarousel`, `LiveLaneViewer`
 9. [x] `TeamInternPageContent`
-10. [ ] Deep content in `puls` / `schema` (+ `laguttagning` / `tillganglighet` page content)
+10. [ ] `TeamLaguttagningPageContent` / `TeamTillganglighetPageContent`
+11. [ ] Delete unused `lib/colors.ts`
 11. [ ] Chip list pages (`teams/page`, `league`, `oljeprofiler`) — dynamic colors OK inline
 
 ### Do not migrate (yet)

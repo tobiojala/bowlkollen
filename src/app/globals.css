@@ -54,6 +54,21 @@
   animation: bk-scoring-pulse 1.5s infinite;
 }
 
+@keyframes puls-skel-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+@keyframes puls-live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.puls-skel-wrap > * {
+  animation: puls-skel-pulse 1.6s ease-in-out infinite;
+}
+.puls-live-dot {
+  animation: puls-live-blink 1.2s ease-in-out infinite;
+}
+
 /* ── Trading card effects ─────────────────────────────────────────────────── */
 @keyframes shimmerSweep {
   0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }

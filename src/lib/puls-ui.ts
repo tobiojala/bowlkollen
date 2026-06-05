@@ -1,5 +1,7 @@
 /** Matchpulsen page helpers and demo data. */
 
+import { cn } from '@/lib/cn'
+
 export type PulsMatch = {
   id: string
   date: string
@@ -73,12 +75,40 @@ export const PULS_MOCK_LIVE: PulsMatch[] = [
 
 export const PULS_BASELINE = 185
 
-export const PULS_STYLES = `
-  @keyframes skel-pulse{0%,100%{opacity:.45}50%{opacity:1}}
-  @keyframes live-blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .skel-wrap>*{animation:skel-pulse 1.6s ease-in-out infinite}
-  .live-dot{animation:live-blink 1.2s ease-in-out infinite}
-`
+export const pulsSectionDivider = 'border-t border-black/6 pt-3 dark:border-white/6'
+
+export function pulsGameBarClass(g: number, isLatest: boolean) {
+  const isGold = g >= 250
+  const isGood = g >= PULS_BASELINE
+  return cn(
+    'w-4 rounded-[3px]',
+    isGold && 'bg-gold shadow-[0_0_6px_rgba(245,194,0,0.5)]',
+    !isGold && isGood && 'bg-[#38a088]',
+    !isGold && !isGood && 'bg-dark-muted',
+    isLatest ? 'opacity-100' : 'opacity-60',
+  )
+}
+
+export function pulsGameScoreClass(g: number, isLatest: boolean) {
+  const isGold = g >= 250
+  const isGood = g >= PULS_BASELINE
+  return cn(
+    'text-[8px] tabular-nums',
+    isLatest ? 'font-extrabold' : 'font-semibold',
+    isGold && 'text-gold',
+    !isGold && isGood && 'text-[#38a088]',
+    !isGold && !isGood && 'text-dark-muted',
+  )
+}
+
+export function pulsHighSeriesChipClass(score: number) {
+  return cn(
+    'flex items-center gap-1.5 rounded-md border px-2.5 py-1.25 text-[10px] font-bold',
+    score >= 250
+      ? 'border-gold/28 bg-gold/10 text-gold'
+      : 'border-[#38a088]/28 bg-[#38a088]/10 text-[#38a088]',
+  )
+}
 
 export function tensionScore(m: PulsMatch): number {
   if (m.home_score === null) return 0
