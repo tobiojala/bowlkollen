@@ -76,13 +76,13 @@ import { cn } from '@/lib/cn'
 | `border: '1px solid ' + C.border` | `border border-light-border dark:border-dark-border` |
 | `maxWidth: 600, margin: '0 auto'` | `mx-auto max-w-app` |
 
-Keep **inline `style` only** for truly dynamic values (e.g. division color from data, HSL from team name, elite score glow).
+Keep **dynamic values** in `src/lib/*-ui.ts` helpers as `style={fn(...)}` — not literal `style={{` in components (e.g. division color, HSL, gauge transforms, tier gradients).
 
 ---
 
 ## Migration checklist (tracked)
 
-_Last updated: app migration complete — only `remotion/PlayerShareCard` keeps literal `style={{`. Regenerate counts with:_
+_Last updated: full migration complete including Remotion share card. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -114,15 +114,15 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `home/MatchRow` | 0 | [x] | `home-ui.ts` day dot + tap highlight |
 | `home/MiniStandings` | 0 | [x] | `home-ui.ts` zone helpers |
 | `home/HonorRoll` | 0 | [x] |
-| `home/HeroStrip` | 1 | [x] | `home-ui.ts`; division color dynamic |
-| `home/MatchPulsen` | 7 | [x] | `home-ui.ts`; gauge SVG + tension colors dynamic |
+| `home/HeroStrip` | 0 | [x] | `home-ui.ts` |
+| `home/MatchPulsen` | 0 | [x] | `match-ui.ts` + `home-ui.ts` gauge/tension helpers |
 | `home/TeamZoneCard` | 0 | [x] | `home-ui.ts` zone helpers; dynamic via `style={fn()}` |
 | `home/*` skeleton, profile, streams | low | [x] |
 | `FollowButton` | 0 | [x] | `homeNoTapHighlight` |
 | `ui/FilterChip` | 0 | [x] | `homeNoTapHighlight` |
 | `NextMatchPreview` | 0 | [x] |
 | `TeamTableWidget` | 0 | [x] | zone color via `home-ui.ts` |
-| `PlayerCard` | 23 | [x] | `player-card-ui.ts`; holo/tilt/tier gradients stay inline |
+| `PlayerCard` | 0 | [x] | `player-card-ui.ts`; tier/holo via `style={fn()}` |
 | `teams/*` (hero, match row, tabs, …) | low | [x] | hero/match row via `team-ui.ts`; tabs still 1-liners |
 | `matches/*` (header, scorecard, …) | 0 | [x] | `match-ui.ts` division helpers |
 | `compare/*` heroes + results | 0 | [x] | `compare-ui.ts`; HSL/gradients via style helpers |
@@ -138,9 +138,10 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
 | `HeroCarousel` | 0 | [x] | `homeHeroSlideBgStyle`; progress in `globals.css` |
 | `LiveLaneViewer` | 0 | [x] | used on live match pages |
-| `team/TeamLaguttagningPageContent` | 8 | [x] | `team-laguttagning-ui.ts`; tier card gradients dynamic |
-| `team/TeamTillganglighetPageContent` | 3 | [x] | `team-tillganglighet-ui.ts`; HSL avatars + poll bar widths |
-| `RemotionPlayerEmbed` | 0 | [x] | Tailwind shell; `remotion/PlayerShareCard` stays inline |
+| `team/TeamLaguttagningPageContent` | 0 | [x] | `team-laguttagning-ui.ts` tier/avail/picker helpers |
+| `team/TeamTillganglighetPageContent` | 0 | [x] | `team-tillganglighet-ui.ts` |
+| `RemotionPlayerEmbed` | 0 | [x] | Tailwind shell |
+| `remotion/PlayerShareCard` | 0 | [x] | `remotion/player-share-card-ui.ts` |
 
 ### Phase 3 — app pages
 
@@ -166,15 +167,15 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
 | `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` + widgets migrated |
-| `puls` | 0 | [x] | `PulsPageContent`, `lib/puls-ui.ts`; card gradients/stream colors dynamic |
-| `schema` | 0 | [x] | `SchemaPageContent`, `SchemaTavCard`, `lib/schema-ui.ts` |
+| `puls` | 0 | [x] | `PulsPageContent`, `puls-ui.ts` |
+| `schema` | 0 | [x] | `SchemaPageContent`, `schema-ui.ts` division helpers |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-ui.ts` |
 | `sllm` | 0 | [x] | `components/sllm/*`, `sllm-ui.ts` |
 | `reset-password` | 0 | [x] | matches `login` patterns |
 | `admin` | 0 | [x] | `AdminPageContent` fully Tailwind; `lib/admin-ui.ts` |
 | `team/[id]/intern` | 0 | [x] | `TeamInternPageContent` + `team-intern-ui.ts` |
-| `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` (~8 inline tier/HSL) |
-| `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` (~3 inline HSL/width) |
+| `team/.../laguttagning/[matchid]` | 0 | [x] | `TeamLaguttagningPageContent` |
+| `team/.../tillganglighet/[matchid]` | 0 | [x] | `TeamTillganglighetPageContent` |
 | `[slug]/page` | 0 | n/a | redirect only |
 | `[slug]/intern` | 0 | n/a | redirect → `/team/[id]/intern` |
 
@@ -199,13 +200,16 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 17. [x] `TeamZoneCard`, `PlayerHero`, compare heroes/results, `StreamPills`, `MyNextMatchCard`
 18. [x] Nav, home list rows, tavlingar/sllm, team/club/match chrome, profile claim avatars
 19. [x] Player/team tabs, list pages, HeroCarousel, SeasonTimeline, skeletons, widgets progress
-20. [ ] `MatchPulsen`, `puls`/`schema` page internals, team laguttagning/tillgänglighet tier cards, `PlayerCard`
+20. [x] `MatchPulsen`, `puls`/`schema`, team laguttagning/tillgänglighet, `PlayerCard`
 
-### Do not migrate (yet)
+### Remaining (optional)
 
-- `remotion/*` — separate animation styling (~32 inline)
-- **Live scoring** (`LiveLaneViewer`, match stream embeds) — leave as-is unless explicitly requested
-- Highly dynamic tier colors — `style={{ color: … }}` or `match-ui` / `team-ui` helpers
+- [ ] `remotion/PlayerShareCard` (32 inline) — Remotion composition API; migrate only if exporting share card layout changes
+
+### Do not migrate (unless requested)
+
+- **Live scoring** (`LiveLaneViewer`, match stream embeds) — leave as-is
+- `remotion/*` — unless product needs Tailwind in video frames
 
 ---
 
