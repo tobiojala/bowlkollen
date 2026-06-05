@@ -19,6 +19,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
 | Match / team helpers | `src/lib/match-ui.ts`, `src/lib/team-ui.ts` |
+| Profile widgets | `src/lib/widget-ui.ts` |
 
 ## Copy-paste patterns
 
@@ -80,7 +81,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after `puls`, `schema`, `admin`, and team tool routes (thin `page.tsx`). Regenerate counts with:_
+_Last updated: after profile `WidgetGrid` + `Widgets.tsx` migration. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -94,7 +95,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 |--------|------:|
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
-| Files importing `@/lib/colors` | **5** (team tool content + legacy widgets) |
+| Files importing `@/lib/colors` | **4** (team tools + shared components) |
 | `style={{}}` in all `src/**/*.tsx` | **~882** (includes components + remotion) |
 | `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
 
@@ -125,8 +126,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `players/*` (hero, tabs, overview, matchlogg, compare) | low | [x] tier colors dynamic |
 | `SeasonTimeline` | 24 | [ ] |
 | `TopPerformers` | 9 | [ ] |
-| `widgets/Widgets.tsx` | 114 | [ ] |
-| `widgets/WidgetGrid` | 26 | [ ] |
+| `widgets/Widgets.tsx` | ~15 | [x] | `lib/widget-ui.ts`; team/tier colors dynamic |
+| `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
 | `HeroCarousel` | 33 | [ ] |
 | `LiveLaneViewer` | 19 | [ ] |
 | `RemotionPlayerEmbed` | 5 | [ ] |
@@ -135,12 +136,12 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 
 | Page | `style={{}}` on page file | Shell | Notes |
 |------|-------------------------:|:-----:|-------|
-| `app/page.tsx` | 1 | [x] | Remove stale `lib/colors` import |
+| `app/page.tsx` | 0 | [x] | |
 | `login` | 0 | [x] | |
 | `legal` | 0 | [x] | |
 | `mer` | 1 | [x] | |
 | `hallar` | 0 | [x] | |
-| `league` | 5 | [x] | |
+| `league` | 3 | [x] | zone colors dynamic |
 | `oljeprofiler` | 5 | [x] | |
 | `klotshopar` | 1 | [x] | |
 | `teams/page` | 3 | [x] | division colors dynamic |
@@ -154,7 +155,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/[id1]/[id2]` | 0 | [x] | `PlayerCompareHero`, `PlayerCompareResults` |
 | `compare/teams/[id1]` | 0 | [x] | `components/compare/*`, `lib/compare-ui.ts` |
 | `compare/teams/[id1]/[id2]` | 0 | [x] | `TeamCompareResults`, extended hero |
-| `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` still legacy |
+| `profile` | 0 | [x] | `components/profile/*`; `WidgetGrid` + widgets migrated |
 | `puls` | 0 | [x] | `components/puls/*`, `lib/puls-ui.ts`; UI still inline in content |
 | `schema` | 0 | [x] | `components/schema/SchemaPageContent.tsx` |
 | `tavlingar` | 0 | [x] | `TavlingCard`, `tavlingar-data.ts` |
@@ -174,7 +175,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 3. [x] `club/[club_slug]`
 4. [x] `puls`, `schema`, `admin`, team intern / laguttagning / tillgänglighet (thin pages; content components still inline)
 5. [ ] Chip list pages: `teams/page`, `league`, `oljeprofiler` (dynamic colors OK inline)
-6. [ ] `Widgets.tsx` + embeds on migrated pages
+6. [x] `Widgets.tsx` + `WidgetGrid` on profile
+7. [ ] `SeasonTimeline`, `HeroCarousel`, `LiveLaneViewer`, `TopPerformers`
 
 ### Do not migrate (yet)
 
