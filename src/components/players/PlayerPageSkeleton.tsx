@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { skeletonOverlapStyle } from '@/lib/layout-ui'
 
 function Bone({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-md bg-black/7 dark:bg-white/7', className)} />
@@ -10,7 +11,7 @@ export function PlayerPageSkeleton() {
     <main className="min-h-screen bg-light-bg font-sans dark:bg-dark-bg">
       <div className="mx-auto max-w-app">
         <Bone className="h-[100px] w-full rounded-none" />
-        <div className="px-5 pt-0 pb-4" style={{ marginTop: -28 }}>
+        <div className="px-5 pt-0 pb-4" style={skeletonOverlapStyle(-28)}>
           <div className="flex items-end justify-between">
             <Bone className="h-[88px] w-[88px] rounded-full" />
             <Bone className="mb-2 h-9 w-24 rounded-full" />

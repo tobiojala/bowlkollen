@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { seasonResultTone, teamColors, type SeasonMatchResult } from '@/lib/team-ui'
+import { seasonResultTone, teamAvatarStyle, teamColors, type SeasonMatchResult } from '@/lib/team-ui'
 
 type Props = { teamId: string }
 
@@ -159,11 +159,7 @@ export default function SeasonTimeline({ teamId }: Props) {
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <div
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-[8px] font-extrabold dark:hidden"
-                    style={{
-                      background: oppStyle.bg,
-                      borderColor: oppStyle.accent,
-                      color: oppStyle.accent,
-                    }}
+                    style={teamAvatarStyle(oppStyle.accent, oppStyle.bg)}
                   >
                     {shortName(opp?.name || '')
                       .split(' ')
@@ -174,11 +170,7 @@ export default function SeasonTimeline({ teamId }: Props) {
                   </div>
                   <div
                     className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-[7px] border-[1.5px] text-[8px] font-extrabold dark:flex"
-                    style={{
-                      background: oppStyleDark.bg,
-                      borderColor: oppStyleDark.accent,
-                      color: oppStyleDark.accent,
-                    }}
+                    style={teamAvatarStyle(oppStyleDark.accent, oppStyleDark.bg)}
                   >
                     {shortName(opp?.name || '')
                       .split(' ')

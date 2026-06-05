@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn'
-import type { PlayerTier } from '@/lib/player-ui'
+import { playerStatHighlightBg, playerStatValueStyle, type PlayerTier } from '@/lib/player-ui'
 
 type Stat = { label: string; value: number; color: string }
 
@@ -19,14 +19,14 @@ export function PlayerStatsBar({ stats, tier }: Props) {
             i < 3 && 'border-r border-light-border dark:border-dark-border',
             i === 3 && 'bg-transparent',
           )}
-          style={i === 3 ? { background: tier.bg } : undefined}
+          style={i === 3 ? playerStatHighlightBg(tier) : undefined}
         >
           <div
             className={cn(
               'font-black leading-none tabular-nums',
               i === 3 ? 'text-xl' : 'text-[22px]',
             )}
-            style={{ color: s.color }}
+            style={playerStatValueStyle(s.color)}
           >
             {s.value || '—'}
           </div>

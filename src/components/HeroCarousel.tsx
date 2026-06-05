@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { cn } from '@/lib/cn'
+import { homeHeroSlideBgStyle } from '@/lib/home-ui'
 
 type Slide = {
   id: string
@@ -88,7 +89,7 @@ export default function HeroCarousel() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-[rgba(10,16,30,0.95)]" />
         </div>
       ) : slide.bg ? (
-        <div className="absolute inset-0" style={{ background: slide.bg }}>
+        <div className="absolute inset-0" style={homeHeroSlideBgStyle(slide.bg)}>
           <div className="absolute top-1/2 right-10 -translate-y-1/2 text-[120px] opacity-[0.08]">
             🏆
           </div>

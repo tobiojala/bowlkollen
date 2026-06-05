@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Search, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import {
+  divisionAccentBarStyle,
+  divisionBadgeStyle,
+  divisionTextOptionalStyle,
+} from '@/lib/team-ui'
 import { FilterChip } from '@/components/ui'
 
 type Club = {
@@ -431,11 +436,7 @@ export default function TeamsPage() {
                           <span
                             key={t.id}
                             className="rounded-[5px] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide whitespace-nowrap"
-                            style={{
-                              color: clr,
-                              background: `${clr}1a`,
-                              border: `1px solid ${clr}44`,
-                            }}
+                            style={divisionBadgeStyle(clr)}
                           >
                             {divLabel(t.division)}
                           </span>
@@ -488,7 +489,7 @@ export default function TeamsPage() {
                         >
                           <div
                             className="h-8 w-[3px] shrink-0 rounded-sm"
-                            style={{ background: clr }}
+                            style={divisionAccentBarStyle(clr)}
                           />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-[13px] font-semibold bk-text-primary">
@@ -496,7 +497,7 @@ export default function TeamsPage() {
                             </div>
                             <div
                               className="mt-px text-[11px] font-bold"
-                              style={{ color: t.division ? clr : undefined }}
+                              style={divisionTextOptionalStyle(t.division ? clr : undefined)}
                             >
                               <span className={!t.division ? 'font-normal text-dark-muted' : undefined}>
                                 {t.division ?? 'Inga matcher registrerade'}

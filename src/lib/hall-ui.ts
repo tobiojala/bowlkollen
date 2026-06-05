@@ -1,11 +1,17 @@
 /** Hall detail page helpers. */
 
+import type { CSSProperties } from 'react'
+
 export const HALL_SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
 export function hallHeroGradient(dark: boolean): string {
   return dark
     ? 'linear-gradient(160deg, rgba(245,194,0,0.10) 0%, #0B1528 60%)'
     : 'linear-gradient(160deg, rgba(245,194,0,0.07) 0%, #f5f2ec 60%)'
+}
+
+export function hallHeroBgStyle(dark: boolean): CSSProperties {
+  return { background: hallHeroGradient(dark) }
 }
 
 export type HallDetail = {

@@ -115,3 +115,27 @@ export function playerTierFilledStyle(tier: PlayerTier): CSSProperties {
 export function playerTrendStyle(color: string): CSSProperties {
   return { color }
 }
+
+export function playerStatValueStyle(color: string): CSSProperties {
+  return { color }
+}
+
+export function playerStatHighlightBg(tier: PlayerTier): CSSProperties {
+  return { background: tier.bg }
+}
+
+export function playerSparkBarStyle(height: number, color: string): CSSProperties {
+  return { height, background: color }
+}
+
+export function playerMatchTotalStyle(total: number, tier: PlayerTier): CSSProperties {
+  return { color: total >= 800 ? '#5a82b4' : tier.accent }
+}
+
+export function playerAchievementChipStyle(tier: PlayerTier): CSSProperties {
+  return {
+    color: tier.accent,
+    background: tier.bg,
+    borderColor: tier.border,
+  }
+}

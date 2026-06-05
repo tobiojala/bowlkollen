@@ -6,6 +6,12 @@ import { createClient } from '@/lib/supabase'
 import { FileText, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { FilterChip } from '@/components/ui'
+import {
+  oilCategoryDotStyle,
+  oilCategoryLabelStyle,
+  oilProfileAccentStyle,
+  oilProfileThumbStyle,
+} from '@/lib/oljeprofiler-ui'
 
 type Profile = {
   id: number
@@ -118,11 +124,11 @@ function OljeprofilerarPageInner() {
                 <div className="mb-2 flex items-center gap-2">
                   <div
                     className="h-2 w-2 shrink-0 rounded-sm"
-                    style={{ background: group.color }}
+                    style={oilCategoryDotStyle(group.color)}
                   />
                   <span
                     className="text-[11px] font-extrabold tracking-wide"
-                    style={{ color: group.color }}
+                    style={oilCategoryLabelStyle(group.color)}
                   >
                     {group.label.toUpperCase()}
                   </span>
@@ -146,20 +152,17 @@ function OljeprofilerarPageInner() {
                       >
                         <div
                           className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl border"
-                          style={{
-                            background: group.bg,
-                            borderColor: `${group.color}44`,
-                          }}
+                          style={oilProfileThumbStyle(group)}
                         >
                           <span
                             className="text-[15px] leading-none font-black"
-                            style={{ color: group.color }}
+                            style={oilProfileAccentStyle(group.color)}
                           >
                             {p.length_ft}
                           </span>
                           <span
                             className="text-[9px] font-semibold opacity-70"
-                            style={{ color: group.color }}
+                            style={oilProfileAccentStyle(group.color)}
                           >
                             fot
                           </span>

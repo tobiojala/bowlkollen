@@ -1,4 +1,4 @@
-import { scoreGameColor } from '@/lib/player-ui'
+import { playerSparkBarStyle, scoreGameColor } from '@/lib/player-ui'
 
 export function PlayerSparkline({ games }: { games: number[] }) {
   const last = games.slice(-10)
@@ -12,7 +12,7 @@ export function PlayerSparkline({ games }: { games: number[] }) {
           <div
             key={i}
             className="min-w-2 flex-1 rounded-sm"
-            style={{ height: h, background: scoreGameColor(g) }}
+            style={playerSparkBarStyle(h, scoreGameColor(g))}
             title={String(g)}
           />
         )

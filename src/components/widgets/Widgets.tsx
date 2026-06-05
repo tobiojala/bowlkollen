@@ -37,6 +37,7 @@ import {
   widgetTierAccentClass,
   widgetTierBadgeClass,
   widgetTierBorderClass,
+  widgetProgressWidthStyle,
 } from '@/lib/widget-ui'
 
 function localDate(d: Date) {
@@ -136,7 +137,7 @@ export function NextMatchWidget({ isDark, data }: WProps) {
       <div className="mt-2.5 h-[3px] overflow-hidden rounded-sm bg-black/6 dark:bg-white/6">
         <div
           className="h-full rounded-sm bg-gradient-to-r from-gold to-gold/40"
-          style={{ width: `${Math.max(5, Math.min(95, (1 - days / 14) * 100))}%` }}
+          style={widgetProgressWidthStyle((1 - days / 14) * 100)}
         />
       </div>
     </a>

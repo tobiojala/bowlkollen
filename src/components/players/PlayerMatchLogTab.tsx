@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import type { PlayerTier } from '@/lib/player-ui'
+import { playerMatchTotalStyle, type PlayerTier } from '@/lib/player-ui'
 
 type Result = {
   id: string
@@ -73,7 +73,7 @@ export function PlayerMatchLogTab({ results, tier }: Props) {
             <div className="shrink-0 text-right">
               <div
                 className="text-[22px] font-black leading-none tabular-nums"
-                style={{ color: total >= 800 ? '#5a82b4' : tier.accent }}
+                style={playerMatchTotalStyle(total, tier)}
               >
                 {total}
               </div>

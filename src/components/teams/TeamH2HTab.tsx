@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
 import { shortName } from '@/lib/utils'
-import { teamColors, formResultColor } from '@/lib/team-ui'
+import { formResultColor, teamAvatarStyle, teamColors } from '@/lib/team-ui'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
@@ -82,7 +82,7 @@ export function TeamH2HTab({
               >
                 <div
                   className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] text-[10px] font-extrabold"
-                  style={{ background: oppTclo, border: `1.5px solid ${oppTc}`, color: oppTc }}
+                  style={teamAvatarStyle(oppTc, oppTclo)}
                 >
                   {oppIni}
                 </div>

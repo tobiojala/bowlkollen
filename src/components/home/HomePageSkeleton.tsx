@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn'
+import { homeSkeletonMaxWidthStyle } from '@/lib/home-ui'
 
 function Bone({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return <div className={cn('animate-pulse rounded-md bg-black/7 dark:bg-white/7', className)} style={style} />
@@ -74,7 +75,7 @@ export function HomePageSkeleton() {
                 )}
               >
                 <Bone className="h-2.5 w-4 rounded-sm" />
-                <Bone className="h-2.5 flex-1" style={{ maxWidth: `${55 + (i % 3) * 15}%` }} />
+                <Bone className="h-2.5 flex-1" style={homeSkeletonMaxWidthStyle(55 + (i % 3) * 15)} />
                 <Bone className="h-2.5 w-5" />
                 <Bone className="h-2.5 w-6" />
               </div>

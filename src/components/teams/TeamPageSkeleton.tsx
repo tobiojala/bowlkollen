@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn'
+import { skeletonBoneWidthStyle } from '@/lib/layout-ui'
 
 function Bone({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return <div className={cn('animate-pulse rounded-md bg-black/7 dark:bg-white/7', className)} style={style} />
@@ -46,7 +47,7 @@ export function TeamPageSkeleton() {
             >
               <Bone className="h-7 w-7 shrink-0 rounded-lg" />
               <div className="flex flex-1 flex-col gap-1.5">
-                <Bone className="h-3 rounded" style={{ width: `${50 + (i % 3) * 12}%` }} />
+                <Bone className="h-3 rounded" style={skeletonBoneWidthStyle(50 + (i % 3) * 12)} />
                 <Bone className="h-2 w-[35%] rounded-sm" />
               </div>
               <Bone className="h-5 w-[52px] rounded-md" />

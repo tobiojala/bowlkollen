@@ -8,6 +8,7 @@ import { shortName, shortDiv, dateLabel, countdown } from '@/lib/utils'
 import { divisionAccentColor } from '@/lib/match-ui'
 import {
   homeDivisionChip,
+  homeDivisionChipColorStyle,
   homeHeroModeCountClass,
   homeHeroModeLabelClass,
   homeHeroModeTabClass,
@@ -181,7 +182,7 @@ function HeroMatchCard({
           ) : (
             <span className="text-[10px] font-extrabold tracking-widest text-[#5a82b4]">KOMMANDE</span>
           )}
-          <span className={homeDivisionChip} style={{ color: dc }}>
+          <span className={homeDivisionChip} style={homeDivisionChipColorStyle(dc)}>
             {shortDiv(m.division)}
           </span>
         </div>

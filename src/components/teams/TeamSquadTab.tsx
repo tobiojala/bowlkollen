@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { User } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
-import { teamColors } from '@/lib/team-ui'
+import { teamAvatarStyle, teamColors } from '@/lib/team-ui'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
@@ -58,7 +58,7 @@ export function TeamSquadTab({ players, playerStats, dark }: Props) {
             >
               <div
                 className="mb-1 flex h-[54px] w-[54px] items-center justify-center rounded-full text-[15px] font-extrabold"
-                style={{ background: ptclo, border: `2px solid ${ptc}`, color: ptc }}
+                style={teamAvatarStyle(ptc, ptclo, 2)}
               >
                 {ini}
               </div>

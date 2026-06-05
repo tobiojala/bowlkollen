@@ -4,7 +4,7 @@ import { MapPin, Hand } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { PlayerSparkline } from '@/components/players/PlayerSparkline'
-import type { PlayerTier } from '@/lib/player-ui'
+import { playerAchievementChipStyle, type PlayerTier } from '@/lib/player-ui'
 
 type Player = {
   bio: string | null
@@ -312,11 +312,7 @@ export function PlayerOverviewTab({
               <span
                 key={i}
                 className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                style={{
-                  color: tier.accent,
-                  background: tier.bg,
-                  borderColor: tier.border,
-                }}
+                style={playerAchievementChipStyle(tier)}
               >
                 {a}
               </span>

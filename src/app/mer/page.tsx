@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { MapPin, ShoppingBag, Droplets } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { homeNoTapHighlight, homeStaggerDelayStyle } from '@/lib/home-ui'
 
 const ITEMS: {
   href: string
@@ -45,12 +46,13 @@ export default function MerPage() {
           <Link
             key={href}
             href={href}
-            style={{ animationDelay: `${i * 35}ms` }}
+            style={homeStaggerDelayStyle(i)}
             className={cn(
               'bk-stagger-item flex items-center gap-4 rounded-[18px] border p-4 no-underline',
               'border-light-border bg-light-card',
               'dark:border-dark-border dark:bg-dark-card',
               'transition-transform duration-150 active:scale-[0.98]',
+              homeNoTapHighlight,
             )}
           >
             <div

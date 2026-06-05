@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/cn'
+import { homeProfileScoreBarStyle } from '@/lib/home-ui'
 import { shortDiv } from '@/lib/utils'
 
 type Props = {
@@ -60,11 +61,11 @@ export function MyProfileCard({ name, team, division, average, lastScores }: Pro
                             'w-full rounded',
                             !barClr && 'bg-dark-muted',
                           )}
-                          style={{
-                            height: barH,
-                            background: barClr,
-                            opacity: i === lastScores.length - 1 ? 1 : 0.7,
-                          }}
+                          style={homeProfileScoreBarStyle(
+                            barH,
+                            barClr,
+                            i !== lastScores.length - 1,
+                          )}
                         />
                       </div>
                       <span

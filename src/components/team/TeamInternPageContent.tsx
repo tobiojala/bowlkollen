@@ -10,6 +10,7 @@ import {
   teamInternSelectClass,
   teamInternTextareaClass,
 } from '@/lib/team-intern-ui'
+import { teamAvatarBorderStyle, teamAvatarStyle } from '@/lib/team-ui'
 import { widgetNo, widgetYes } from '@/lib/widget-ui'
 
 type Props = { params: Promise<{ id: string }> }
@@ -538,12 +539,12 @@ export function TeamInternPageContent({ params }: Props) {
                         src={profile.avatar_url}
                         alt=""
                         className="h-9 w-9 shrink-0 rounded-full border-[1.5px] object-cover dark:hidden"
-                        style={{ borderColor: tc }}
+                        style={teamAvatarBorderStyle(tc)}
                       />
                     ) : (
                       <div
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1.5px] text-xs font-bold dark:hidden"
-                        style={{ background: tclo, borderColor: tc, color: tc }}
+                        style={teamAvatarStyle(tc, tclo)}
                       >
                         {(profile?.full_name || profile?.email || '?')[0].toUpperCase()}
                       </div>
@@ -553,12 +554,12 @@ export function TeamInternPageContent({ params }: Props) {
                         src={profile.avatar_url}
                         alt=""
                         className="hidden h-9 w-9 shrink-0 rounded-full border-[1.5px] object-cover dark:block"
-                        style={{ borderColor: tc }}
+                        style={teamAvatarBorderStyle(tc)}
                       />
                     ) : (
                       <div
                         className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1.5px] text-xs font-bold dark:flex"
-                        style={{ background: tcloDark, borderColor: tc, color: tc }}
+                        style={teamAvatarStyle(tc, tcloDark)}
                       >
                         {(profile?.full_name || profile?.email || '?')[0].toUpperCase()}
                       </div>

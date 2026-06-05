@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { ChevronRight, Users } from 'lucide-react'
 import { shortName } from '@/lib/utils'
 import { cn } from '@/lib/cn'
+import { teamAvatarStyle } from '@/lib/team-ui'
 
 type Player = { id: string; name: string; team_id: string; teamName?: string }
 
@@ -79,13 +80,13 @@ export default function PlayersPage() {
                   >
                     <div
                       className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:hidden"
-                      style={{ background: tclo, borderColor: tc, color: tc }}
+                      style={teamAvatarStyle(tc, tclo)}
                     >
                       {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div
                       className="hidden h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold dark:flex"
-                      style={{ background: tcloDark, borderColor: tc, color: tc }}
+                      style={teamAvatarStyle(tc, tcloDark)}
                     >
                       {p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>

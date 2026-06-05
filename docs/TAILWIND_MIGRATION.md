@@ -18,7 +18,7 @@ Never try to convert a large page in a single sitting. Extract one section per c
 | Layout spacing | `.main-content`, `.mobile-page-title` in `globals.css` |
 | UI building blocks | `src/components/ui/*` |
 | Class name helper | `src/lib/cn.ts` |
-| Match / team / card / home helpers | `match-ui.ts`, `home-ui.ts`, `team-ui.ts`, `team-intern-ui.ts`, `team-laguttagning-ui.ts`, `team-tillganglighet-ui.ts`, `player-card-ui.ts`, `tavlingar-ui.ts`, `sllm-ui.ts` |
+| Match / team / card / home helpers | `match-ui.ts`, `home-ui.ts`, `team-ui.ts`, `league-ui.ts`, `oljeprofiler-ui.ts`, `layout-ui.ts`, … |
 | Profile widgets | `src/lib/widget-ui.ts` |
 | Schedule page | `src/lib/schema-ui.ts`, `SchemaTavCard` |
 
@@ -82,7 +82,7 @@ Keep **inline `style` only** for truly dynamic values (e.g. division color from 
 
 ## Migration checklist (tracked)
 
-_Last updated: after Nav, home lists, tavlingar/sllm cards, team/club/match chrome. Regenerate counts with:_
+_Last updated: after player/team tabs, list pages, HeroCarousel, SeasonTimeline. Regenerate counts with:_
 
 ```bash
 rg -c 'style=\{\{' src/app --glob '**/page.tsx' | sort -t: -k2 -nr
@@ -97,9 +97,9 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | App routes (`page.tsx`) | 31 |
 | Routes with Tailwind shell (`min-h-screen bg-light-bg`) | **27** (~87%) |
 | Files importing `@/lib/colors` | **0** (`lib/colors.ts` removed) |
-| `style={{}}` in all `src/**/*.tsx` | **~123** (32 in `remotion/PlayerShareCard`) |
-| `style={{}}` outside remotion | **~91** |
-| `style={{}}` on app `page.tsx` files only | **15** (dynamic division/zone colors on list pages) |
+| `style={{}}` in all `src/**/*.tsx` | **~87** (32 in `remotion/PlayerShareCard`) |
+| `style={{}}` outside remotion | **~55** |
+| `style={{}}` on app `page.tsx` files only | **0** (list pages use `*-ui.ts` helpers) |
 
 ### Phase 0 + 1 — shell (done)
 
@@ -128,7 +128,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `compare/*` heroes + results | 0 | [x] | `compare-ui.ts`; HSL/gradients via style helpers |
 | `players/PlayerHero` | 0 | [x] | `player-ui.ts` tier/avatar style helpers |
 | `players/*` (tabs, overview, …) | low | [x] |
-| `SeasonTimeline` | 2 | [x] | `seasonResultTone` in `team-ui.ts`; opponent HSL dynamic |
+| `SeasonTimeline` | 0 | [x] | `teamAvatarStyle` for opponent badges |
 | `TopPerformers` | 0 | [x] | `teamAvatarStyle` |
 | `tavlingar/TavlingCard` | 0 | [x] | `tavlingar-ui.ts` |
 | `sllm/SLLMHero` + player list | 0 | [x] | `sllm-ui.ts` |
@@ -136,7 +136,7 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `profile/*` claim cards | 0 | [x] | `teamAvatarStyle` |
 | `widgets/Widgets.tsx` | 1 | [x] | `widget-ui.ts`; progress width dynamic |
 | `widgets/WidgetGrid` | 0 | [x] | no `lib/colors` |
-| `HeroCarousel` | 1 | [x] | SM slide `bg` gradient dynamic; progress in `globals.css` |
+| `HeroCarousel` | 0 | [x] | `homeHeroSlideBgStyle`; progress in `globals.css` |
 | `LiveLaneViewer` | 0 | [x] | used on live match pages |
 | `team/TeamLaguttagningPageContent` | 8 | [x] | `team-laguttagning-ui.ts`; tier card gradients dynamic |
 | `team/TeamTillganglighetPageContent` | 3 | [x] | `team-tillganglighet-ui.ts`; HSL avatars + poll bar widths |
@@ -149,14 +149,14 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 | `app/page.tsx` | 0 | [x] | |
 | `login` | 0 | [x] | |
 | `legal` | 0 | [x] | |
-| `mer` | 1 | [x] | |
+| `mer` | 0 | [x] | `homeStaggerDelayStyle` |
 | `hallar` | 0 | [x] | |
-| `league` | 3 | [x] | zone colors dynamic |
-| `oljeprofiler` | 5 | [x] | |
+| `league` | 0 | [x] | `league-ui.ts` zone row helpers |
+| `oljeprofiler` | 0 | [x] | `oljeprofiler-ui.ts` |
 | `klotshopar` | 1 | [x] | |
-| `teams/page` | 3 | [x] | division colors dynamic |
-| `clubs/[bitsId]` | 1 | [x] | |
-| `players/page` | 2 | [x] | |
+| `teams/page` | 0 | [x] | `divisionBadgeStyle` in `team-ui.ts` |
+| `clubs/[bitsId]` | 0 | [x] | `divisionFillChipStyle` |
+| `players/page` | 0 | [x] | `teamAvatarStyle` |
 | `teams/[id]` | 0 | [x] | |
 | **`matches/[id]`** | **0** | **[x]** | `components/matches/*` |
 | **`players/[id]`** | **0** | **[x]** | `components/players/*`; `PlayerCard` drawer still legacy |
@@ -198,7 +198,8 @@ rg -l "from '@/lib/colors'" src --glob '*.tsx'
 16. [ ] `remotion/PlayerShareCard` (~32 inline) — video composition; keep inline for Remotion
 17. [x] `TeamZoneCard`, `PlayerHero`, compare heroes/results, `StreamPills`, `MyNextMatchCard`
 18. [x] Nav, home list rows, tavlingar/sllm, team/club/match chrome, profile claim avatars
-19. [ ] Player tab 1-liners, `HeroCarousel`, `SeasonTimeline`, puls/schema internals, list pages
+19. [x] Player/team tabs, list pages, HeroCarousel, SeasonTimeline, skeletons, widgets progress
+20. [ ] `MatchPulsen`, `puls`/`schema` page internals, team laguttagning/tillgänglighet tier cards, `PlayerCard`
 
 ### Do not migrate (yet)
 

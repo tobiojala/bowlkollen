@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Users } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { divisionFillChipStyle } from '@/lib/team-ui'
 
 type Club = {
   bits_id: number
@@ -281,10 +282,7 @@ export default function ClubPage({ params }: Props) {
                           {ourTeam?.division && divClr ? (
                             <span
                               className="rounded-[5px] px-[7px] py-0.5 text-[10px] font-extrabold"
-                              style={{
-                                color: divClr,
-                                background: `${divClr}20`,
-                              }}
+                              style={divisionFillChipStyle(divClr)}
                             >
                               {ourTeam.division}
                             </span>

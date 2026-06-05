@@ -6,6 +6,15 @@ import { createClient } from '@/lib/supabase'
 import { shortName, shortDiv } from '@/lib/utils'
 import { cn } from '@/lib/cn'
 import { FilterChip } from '@/components/ui'
+import {
+  leagueLegendDotStyle,
+  leagueRankStyle,
+  leagueRowBorderStyle,
+  leagueShowZoneDivider,
+  leagueZoneColor,
+  leagueZoneDividerStyle,
+  type LeagueZone,
+} from '@/lib/league-ui'
 
 const DEMO = false
 
@@ -25,9 +34,7 @@ type Standing = {
 // ─── Zone config per §D 109, §D 102–104 ───
 // Ranking: 1) matchpoäng 2) bp-differens 3) inbördes möten (approx: bpFor) 4-6) h2h/lottning
 // maxRank is 1-indexed inclusive; 'transparent' = mid-table / no movement
-type Zone = { maxRank: number; color: string; label: string }
-
-function getZones(division: string, total: number): Zone[] {
+function getZones(division: string, total: number): LeagueZone[] {
   switch (division) {
     case 'Elitserien Herrar': return [
       { maxRank: 2,       color: '#f5c200', label: 'SM-slutspel' },
@@ -82,20 +89,6 @@ function getZones(division: string, total: number): Zone[] {
         { maxRank: total,     color: '#666',    label: 'Nedflyttning' },
       ]
   }
-}
-
-function zoneColor(rank1: number, zones: Zone[]): string {
-  for (const z of zones) {
-    if (rank1 <= z.maxRank) return z.color
-  }
-  return 'transparent'
-}
-
-function showDivider(rank1: number, zones: Zone[]): boolean {
-  for (let i = 1; i < zones.length; i++) {
-    if (rank1 === zones[i - 1].maxRank + 1) return true
-  }
-  return false
 }
 
 // ─── Mock standings (swap for real API data when ready) ───
@@ -343,18 +336,16 @@ export default function LeaguePage() {
 
             {standings.map((s, i) => {
               const rank = i + 1
-              const zc = zoneColor(rank, zones)
+              const zc = leagueZoneColor(rank, zones)
               const dl = s.diff > 0 ? '+' + s.diff : String(s.diff)
               const followed = followedIds.has(s.teamId)
 
               return (
                 <div key={s.teamId}>
-                  {showDivider(rank, zones) && (
+                  {leagueShowZoneDivider(rank, zones) && (
                     <div
                       className="my-0.5 h-0.5 rounded-sm opacity-30"
-                      style={{
-                        background: zc !== 'transparent' ? zc : '#444',
-                      }}
+                      style={leagueZoneDividerStyle(zc)}
                     />
                   )}
                   <Link
@@ -365,18 +356,14 @@ export default function LeaguePage() {
                       'hover:bg-light-card dark:hover:bg-dark-card',
                       followed && 'bg-[rgba(91,130,180,0.07)] dark:bg-[rgba(91,130,180,0.10)]',
                     )}
-                    style={{
-                      borderLeftWidth: 3,
-                      borderLeftStyle: 'solid',
-                      borderLeftColor: zc !== 'transparent' ? zc : 'transparent',
-                    }}
+                    style={leagueRowBorderStyle(zc)}
                   >
                     <div
                       className={cn(
                         'text-center text-xs font-bold',
                         zc === 'transparent' && 'text-dark-muted',
                       )}
-                      style={zc !== 'transparent' ? { color: zc } : undefined}
+                      style={leagueRankStyle(zc)}
                     >
                       {rank}
                     </div>
@@ -433,7 +420,7 @@ export default function LeaguePage() {
               >
                 <div
                   className="h-2 w-2 rounded-sm"
-                  style={{ background: z.color }}
+                  style={leagueLegendDotStyle(z.color)}
                 />
                 {z.label}
               </div>

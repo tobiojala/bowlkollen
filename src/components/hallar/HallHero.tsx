@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, MapPin, CalendarCheck, Monitor } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 import { cn } from '@/lib/cn'
-import { hallHeroGradient, type HallDetail } from '@/lib/hall-ui'
+import { hallHeroBgStyle, type HallDetail } from '@/lib/hall-ui'
 
 type Props = {
   hall: HallDetail
@@ -16,7 +16,7 @@ export function HallHero({ hall, onBack }: Props) {
   const dark = theme === 'dark'
 
   return (
-    <div className="relative pb-6" style={{ background: hallHeroGradient(dark) }}>
+    <div className="relative pb-6" style={hallHeroBgStyle(dark)}>
       <button
         type="button"
         onClick={onBack}

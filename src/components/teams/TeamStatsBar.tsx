@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
-import { formResultColor } from '@/lib/team-ui'
+import { formResultBadgeStyle, formResultColor } from '@/lib/team-ui'
 import SeasonTimeline from '@/components/SeasonTimeline'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -84,11 +84,7 @@ export function TeamStatsBar({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ ...SPRING, delay: i * 0.05 }}
                   className="rounded-full border px-[9px] py-[3px] text-[10px] font-extrabold tracking-wide"
-                  style={{
-                    color: fc,
-                    background: `${fc}20`,
-                    borderColor: `${fc}55`,
-                  }}
+                  style={formResultBadgeStyle(fc)}
                 >
                   {f}
                 </motion.span>

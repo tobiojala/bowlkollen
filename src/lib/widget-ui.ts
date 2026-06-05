@@ -27,6 +27,10 @@ export const widgetIconMuted = 'text-dark-muted'
 
 export const widgetNoTapHighlight = '[-webkit-tap-highlight-color:transparent]'
 
+export function widgetProgressWidthStyle(pct: number): import('react').CSSProperties {
+  return { width: `${Math.max(5, Math.min(95, pct))}%` }
+}
+
 export function widgetOutcomeBadgeClass(won: boolean, drew: boolean) {
   if (won) return 'border-[#1d9e75] bg-[#1d9e75]/13 text-[#1d9e75]'
   if (drew) return 'border-gold bg-gold/13 text-gold'

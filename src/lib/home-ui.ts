@@ -26,6 +26,30 @@ export function miniStandingsRankStyle(color: string): CSSProperties {
   return { color }
 }
 
+export function homeHeroSlideBgStyle(bg: string): CSSProperties {
+  return { background: bg }
+}
+
+export function homeStaggerDelayStyle(index: number, stepMs = 35): CSSProperties {
+  return { animationDelay: `${index * stepMs}ms` }
+}
+
+export function homeProfileScoreBarStyle(
+  height: number,
+  barColor: string | undefined,
+  dimmed: boolean,
+): CSSProperties {
+  return {
+    height,
+    background: barColor,
+    opacity: dimmed ? 0.7 : 1,
+  }
+}
+
+export function homeSkeletonMaxWidthStyle(pct: number): CSSProperties {
+  return { maxWidth: `${pct}%` }
+}
+
 export const homeDivisionChip = cn(
   'ml-auto rounded px-2 py-0.75 text-[9px] font-bold tracking-wide bg-black/6',
 )

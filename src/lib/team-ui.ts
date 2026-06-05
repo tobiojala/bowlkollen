@@ -91,6 +91,31 @@ export function divisionChipStyle(color: string, alpha = '22'): CSSProperties {
   return { color, background: `${color}${alpha}` }
 }
 
+/** Teams/clubs list division badge (border + light fill). */
+export function divisionBadgeStyle(color: string): CSSProperties {
+  return {
+    color,
+    background: `${color}1a`,
+    border: `1px solid ${color}44`,
+  }
+}
+
+export function divisionAccentBarStyle(color: string): CSSProperties {
+  return { background: color }
+}
+
+export function divisionTextOptionalStyle(color?: string): CSSProperties | undefined {
+  return color ? { color } : undefined
+}
+
+export function divisionFillChipStyle(color: string, alpha = '20'): CSSProperties {
+  return { color, background: `${color}${alpha}` }
+}
+
+export function teamAvatarBorderStyle(accent: string): CSSProperties {
+  return { borderColor: accent }
+}
+
 export function formResultBadgeStyle(color: string): CSSProperties {
   return {
     background: `${color}22`,
