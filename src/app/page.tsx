@@ -1,17 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
 
 import type { Match, HonorEntry, TableRow, StandingsMatch } from './home/types'
 import { group, countdown, calcHomeStandings } from './home/helpers'
-import {
-  MOCK_LIVE, MOCK_UPCOMING, MOCK_RECENT, MOCK_HONOR, MOCK_TABLES,
-  MOCK_MY_PLAYER, DIVISION_ZONES,
-} from './home/demoData'
+import { MOCK_LIVE, MOCK_UPCOMING, MOCK_RECENT, MOCK_HONOR, MOCK_TABLES, MOCK_MY_PLAYER, DIVISION_ZONES } from './home/demoData'
+import { useHomeMatches, useHonorRoll, useStandings, useSession } from '@/lib/queries'
 
 import HomeSkeleton from '@/components/home/HomeSkeleton'
 import HeroStrip, { type StripItem } from '@/components/home/HeroStrip'
@@ -22,6 +19,7 @@ import TeamNeeds from '@/components/home/TeamNeeds'
 import MatchDateGroup from '@/components/home/MatchDateGroup'
 import HonorRoll from '@/components/home/HonorRoll'
 import MiniStandings from '@/components/home/MiniStandings'
+import { createClient } from '@/lib/supabase'
 
 const DEMO = false
 
@@ -30,18 +28,28 @@ export default function Home() {
   const C      = theme === 'dark' ? dark : light
   const isDark = theme === 'dark'
 
-  const [live, setLive]         = useState<Match[]>([])
-  const [recent, setRecent]     = useState<Match[]>([])
-  const [upcoming, setUpcoming] = useState<Match[]>([])
-  const [honor, setHonor]       = useState<HonorEntry[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [tab, setTab]           = useState<'alla' | 'foljer'>('alla')
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
-  const [session, setSession]   = useState<any>(null)
-  const [now, setNow]           = useState(Date.now())
+  // ── React Query data ───────────────────────────────────────────────────────
+  const { data: session }                        = useSession()
+  const { data: matchData, isLoading: matchesLoading } = useHomeMatches()
+  const recentLiveRaw = (matchData?.recentLive ?? []) as unknown as Match[]
+  const live   = recentLiveRaw.filter(m => m.status === 'live')
+  const recent = recentLiveRaw.filter(m => m.status === 'completed')
+  const upcoming = (matchData?.upcoming ?? []) as unknown as Match[]
+  const matchIds = recentLiveRaw.map(m => m.id)
+
+  const { data: honorRaw = [], isLoading: honorLoading } = useHonorRoll(matchIds)
+  const honor = honorRaw as HonorEntry[]
+
+  const { data: eliteMatches = [], isLoading: standingsLoading } = useStandings()
+
+  const loading = DEMO ? false : matchesLoading
+
+  // ── UI state ───────────────────────────────────────────────────────────────
+  const [tab, setTab]                     = useState<'alla' | 'foljer'>('alla')
+  const [followedIds, setFollowedIds]     = useState<Set<string>>(new Set())
+  const [now, setNow]                     = useState(Date.now())
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
-  const [tableDiv, setTableDiv] = useState<'Elitserien Herrar' | 'Elitserien Damer'>('Elitserien Herrar')
-  const [standingsMap, setStandingsMap] = useState<Record<string, TableRow[]>>({})
+  const [tableDiv, setTableDiv]           = useState<'Elitserien Herrar' | 'Elitserien Damer'>('Elitserien Herrar')
   const [nextMatchHidden, setNextMatchHidden] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('nextMatchHidden') === '1'
@@ -56,96 +64,36 @@ export default function Home() {
   const toggleDate = (key: string) =>
     setExpandedDates(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s })
 
+  // Clock tick
   useEffect(() => {
     const ticker = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(ticker)
   }, [])
 
+  // Load followed teams when session arrives
   useEffect(() => {
-    if (DEMO) {
-      setLive(MOCK_LIVE); setRecent(MOCK_RECENT); setUpcoming(MOCK_UPCOMING)
-      setHonor(MOCK_HONOR); setLoading(false)
-      return
-    }
-
-    const supabase       = createClient()
-    const sevenDaysAgo   = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
-    const today          = new Date().toISOString().slice(0, 10)
-
+    if (!session) return
+    const supabase = createClient()
     Promise.all([
-      supabase.from('matches')
-        .select('id,date,status,division,home_score,away_score,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)')
-        .in('status', ['live', 'completed'])
-        .gte('date', sevenDaysAgo)
-        .order('date', { ascending: false })
-        .limit(40),
-      supabase.from('matches')
-        .select('id,date,status,division,home_score,away_score,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)')
-        .eq('status', 'upcoming')
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .limit(15),
-      supabase.auth.getSession(),
-    ]).then(async ([{ data: recentLive }, { data: upcomingData }, { data: { session: sess } }]) => {
-      const all = (recentLive || []) as unknown as Match[]
-      setLive(all.filter(m => m.status === 'live'))
-      setRecent(all.filter(m => m.status === 'completed'))
-      setUpcoming((upcomingData || []) as unknown as Match[])
-      setSession(sess)
-
-      const matchIds = all.map(m => m.id)
-      if (matchIds.length > 0) {
-        const { data: results } = await supabase
-          .from('match_results')
-          .select('games, player_id, match_id, player:players!player_id(id, name)')
-          .in('match_id', matchIds)
-          .not('player_id', 'is', null)
-
-        const entries: HonorEntry[] = []
-        const seen = new Set<string>()
-        results?.forEach((r: any) => {
-          const player = r.player
-          if (!player) return
-          const games: number[] = r.games || []
-          const best = games.length > 0 ? Math.max(...games) : 0
-          if (best >= 220) {
-            const key = `${r.player_id}_${r.match_id}`
-            if (!seen.has(key)) { seen.add(key); entries.push({ playerName: player.name, score: best, matchId: r.match_id }) }
-          }
-        })
-        setHonor(entries.sort((a, b) => b.score - a.score).slice(0, 12))
-      }
-
-      if (sess) {
-        const [{ data: favs }, { data: claim }] = await Promise.all([
-          supabase.from('favorites').select('team_id').eq('user_id', sess.user.id).eq('type', 'team'),
-          supabase.from('club_claims').select('team_id').eq('user_id', sess.user.id).single(),
-        ])
-        const ids = new Set<string>()
-        favs?.forEach((f: any) => ids.add(f.team_id))
-        if ((claim as any)?.team_id) ids.add((claim as any).team_id)
-        setFollowedIds(ids)
-      }
-
-      const { data: eliteMatches } = await supabase
-        .from('matches')
-        .select('home_team_id,away_team_id,home_score,away_score,division,home:teams!home_team_id(id,name),away:teams!away_team_id(id,name)')
-        .eq('status', 'completed')
-        .in('division', ['Elitserien Herrar', 'Elitserien Damer'])
-        .not('home_score', 'is', null)
-      if (eliteMatches) {
-        const sMap: Record<string, TableRow[]> = {}
-        for (const div of ['Elitserien Herrar', 'Elitserien Damer'] as const) {
-          sMap[div] = calcHomeStandings(eliteMatches as unknown as StandingsMatch[], div)
-        }
-        setStandingsMap(sMap)
-      }
-
-      setLoading(false)
+      supabase.from('favorites').select('team_id').eq('user_id', session.user.id).eq('type', 'team'),
+      supabase.from('club_claims').select('team_id').eq('user_id', session.user.id).single(),
+    ]).then(([{ data: favs }, { data: claim }]) => {
+      const ids = new Set<string>()
+      favs?.forEach((f: any) => ids.add(f.team_id))
+      if ((claim as any)?.team_id) ids.add((claim as any).team_id)
+      setFollowedIds(ids)
     })
-  }, [])
+  }, [session?.user?.id])
 
   if (loading) return <HomeSkeleton C={C} isDark={isDark} />
+
+  // ── Derived data ───────────────────────────────────────────────────────────
+  const standingsMap: Record<string, TableRow[]> = {}
+  if (!standingsLoading) {
+    for (const div of ['Elitserien Herrar', 'Elitserien Damer'] as const) {
+      standingsMap[div] = calcHomeStandings(eliteMatches as unknown as StandingsMatch[], div)
+    }
+  }
 
   const filterByTab = (ms: Match[]) => {
     if (tab === 'alla' || followedIds.size === 0) return ms
@@ -156,9 +104,10 @@ export default function Home() {
     })
   }
 
-  const filteredLive     = filterByTab(live)
-  const filteredRecent   = filterByTab(recent)
-  const filteredUpcoming = filterByTab(upcoming)
+  const filteredLive     = DEMO ? MOCK_LIVE     : filterByTab(live)
+  const filteredRecent   = DEMO ? MOCK_RECENT   : filterByTab(recent)
+  const filteredUpcoming = DEMO ? MOCK_UPCOMING : filterByTab(upcoming)
+  const displayHonor     = DEMO ? MOCK_HONOR    : honor
 
   const UP_IN_STRIP = 3
   const liveItems: StripItem[] = [
@@ -173,8 +122,7 @@ export default function Home() {
       sub: 'Tourfinal – 6 deltävlingar bakom sig', dateLabel: '16–17 maj',
       venue: 'Sollentuna', href: '/tavlingar', isPagaende: false }] : []),
   ]
-  const remainingUp = filteredUpcoming.slice(UP_IN_STRIP)
-
+  const remainingUp    = filteredUpcoming.slice(UP_IN_STRIP)
   const recentByDate   = group(filteredRecent)
   const recentDates    = Object.keys(recentByDate).sort((a, b) => b.localeCompare(a))
   const upcomingByDate = group(remainingUp)
@@ -197,7 +145,6 @@ export default function Home() {
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
 
-        {/* DEMO badge */}
         {DEMO && (
           <div style={{ padding: '6px 16px', background: isDark ? 'rgba(245,194,0,0.08)' : 'rgba(245,194,0,0.12)',
             borderBottom: '1px solid rgba(245,194,0,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -206,7 +153,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* ALLA / FÖLJER tabs */}
         {followedIds.size > 0 && (
           <div style={{ display: 'flex', padding: '0 16px', borderBottom: '1px solid ' + C.border }}>
             {(['alla', 'foljer'] as const).map(t => (
@@ -223,10 +169,8 @@ export default function Home() {
         )}
 
         {myNextMatch && !nextMatchHidden && (
-          <NextMatchCard
-            m={myNextMatch} C={C} isDark={isDark} isDemo={DEMO}
-            followedIds={followedIds} now={now} onHide={toggleNextMatch}
-          />
+          <NextMatchCard m={myNextMatch} C={C} isDark={isDark} isDemo={DEMO}
+            followedIds={followedIds} now={now} onHide={toggleNextMatch} />
         )}
 
         {(liveItems.length > 0 || upcomingItems.length > 0) && (
@@ -235,23 +179,18 @@ export default function Home() {
 
         <MatchPulsen filteredLive={filteredLive} followedIds={followedIds} C={C} isDark={isDark} />
 
-        <HonorRoll honor={honor} C={C} isDark={isDark} />
+        <HonorRoll honor={displayHonor} C={C} isDark={isDark} />
 
         {myPlayer && <MyProfile myPlayer={myPlayer} C={C} isDark={isDark} />}
 
         {myPlayer && (
-          <TeamNeeds
-            myPlayer={myPlayer} tables={MOCK_TABLES} divisionZones={DIVISION_ZONES}
-            upcoming={filteredUpcoming} C={C} isDark={isDark}
-          />
+          <TeamNeeds myPlayer={myPlayer} tables={MOCK_TABLES} divisionZones={DIVISION_ZONES}
+            upcoming={filteredUpcoming} C={C} isDark={isDark} />
         )}
 
-        <MiniStandings
-          tableRows={tableRows} tableDiv={tableDiv} setTableDiv={setTableDiv}
-          followedIds={followedIds} C={C} isDark={isDark}
-        />
+        <MiniStandings tableRows={tableRows} tableDiv={tableDiv} setTableDiv={setTableDiv}
+          followedIds={followedIds} C={C} isDark={isDark} />
 
-        {/* Recent results */}
         {recentDates.length > 0 && (
           <div style={{ padding: '16px 16px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
@@ -265,7 +204,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Upcoming matches */}
         {upcomingDates.length > 0 && (
           <div style={{ padding: '16px 16px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 1.5, marginBottom: 10 }}>
@@ -279,7 +217,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* SLLM promo */}
         <a href="/sllm" style={{
           display: 'flex', alignItems: 'center', gap: 12,
           margin: '16px 16px 0', padding: '14px 16px',
@@ -295,7 +232,6 @@ export default function Home() {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#f5c200', flexShrink: 0 }}>Mer info →</div>
         </a>
 
-        {/* Compact next-match bar (when hidden) */}
         {myNextMatch && nextMatchHidden && (
           <div style={{ margin: '16px 16px 0', display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 12px', borderRadius: 12,
@@ -324,7 +260,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Login CTA */}
         {!session && !DEMO && !isEmpty && (
           <div style={{ margin: '20px 16px 0', borderRadius: 14,
             border: '1px solid ' + C.border,
@@ -342,7 +277,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Empty state */}
         {isEmpty && (
           <div style={{ padding: '64px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>
