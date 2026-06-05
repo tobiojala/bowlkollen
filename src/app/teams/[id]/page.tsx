@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
@@ -12,6 +13,7 @@ import TeamTableWidget from '@/components/TeamTableWidget'
 import NextMatchPreview from '@/components/NextMatchPreview'
 import SeasonTimeline from '@/components/SeasonTimeline'
 import TopPerformers from '@/components/TopPerformers'
+import { useTeam, useTeamMatches, useSession, keys } from '@/lib/queries'
 
 type Props = { params: Promise<{ id: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; slug: string | null; club_slug: string | null; description: string | null; contact_email: string | null; contact_phone: string | null; home_hall: string | null; website: string | null; instagram: string | null; facebook: string | null; logo_url: string | null }
@@ -35,18 +37,26 @@ function divisionColor(d: string | null) {
 }
 
 export default function TeamPage({ params }: Props) {
+  const { id } = use(params)
   const { theme } = useTheme()
   const C = theme === 'dark' ? dark : light
-  const [id, setId] = useState<string | null>(null)
-  const [team, setTeam] = useState<Team | null>(null)
-  const [matches, setMatches] = useState<Match[]>([])
+  const qc = useQueryClient()
+
+  // ── Cached queries ────────────────────────────────────────────────────────
+  const { data: session } = useSession()
+  const { data: teamData, isLoading: teamLoading } = useTeam(id)
+  const { data: matchData = [], isLoading: matchesLoading } = useTeamMatches(id)
+  const team = teamData as Team | undefined
+  const matches = matchData as unknown as Match[]
+
+  // ── Local state ───────────────────────────────────────────────────────────
   const [players, setPlayers] = useState<Player[]>([])
   const [clubTeams, setClubTeams] = useState<any[]>([])
   const [posts, setPosts] = useState<any[]>([])
   const [newPost, setNewPost] = useState('')
   const [postingType, setPostingType] = useState<'news' | 'lineup'>('news')
   const [submittingPost, setSubmittingPost] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [sideLoading, setSideLoading] = useState(true)
   const [error, setError] = useState(false)
   const [tab, setTab] = useState<'results' | 'upcoming' | 'squad' | 'community' | 'h2h'>('results')
   const [expandedOpp, setExpandedOpp] = useState<string | null>(null)
@@ -60,6 +70,8 @@ export default function TeamPage({ params }: Props) {
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null)
   const [logoFailed, setLogoFailed] = useState(false)
   const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+
+  const loading = teamLoading || matchesLoading
 
   const submitPost = async () => {
     if (!newPost.trim() || !id) return
@@ -98,7 +110,7 @@ export default function TeamPage({ params }: Props) {
       city: teamEdit.city,
     }).eq('id', id)
     if (!error) {
-      setTeam((prev: any) => prev ? { ...prev, ...teamEdit } : null)
+      qc.setQueryData(keys.team(id), (old: any) => old ? { ...old, ...teamEdit } : old)
       setEditingTeam(false)
     }
     setSavingTeam(false)
@@ -113,56 +125,41 @@ export default function TeamPage({ params }: Props) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  useEffect(() => { params.then(p => setId(p.id)) }, [params])
+  // Sync teamEdit when team data arrives from cache
+  useEffect(() => { if (team) setTeamEdit(team) }, [team?.id])
 
+  // Side-data: players, logo, club siblings, admin check, posts
   useEffect(() => {
-    if (!id) return
+    if (!id || teamLoading) return
+    if (!team) return
     const supabase = createClient()
-    Promise.all([
-      supabase.from('teams').select('*, slug').eq('id', id).single(),
-      supabase.from('matches')
-        .select('id, date, status, home_score, away_score, round, venue, division, home_team_id, away_team_id, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)')
-        .or('home_team_id.eq.' + id + ',away_team_id.eq.' + id)
-        .order('date', { ascending: false }),
-      supabase.from('players').select('id, name').eq('team_id', id).order('name'),
-    ]).then(async ([{ data: t }, { data: m }, { data: p }]) => {
-      if (t) {
-        setTeam(t as Team)
-        setTeamEdit(t)
-        // Fetch the club's BITS logo by matching club name
-        if ((t as any).club) {
-          supabase.from('bits_clubs').select('logo_url').eq('name', (t as any).club).limit(1)
-            .then(({ data }) => { if (data?.[0]?.logo_url) setClubLogoUrl(data[0].logo_url) })
-        }
-        if ((t as any).club_slug) {
-          supabase.from('teams').select('id, name, club_slug, team_path')
-            .eq('club_slug', (t as any).club_slug)
-            .neq('id', id)
-            .order('name')
-            .then(({ data: ct }) => { if (ct) setClubTeams(ct as any[]) })
-        }
-      }
-      if (m) setMatches(m as unknown as Match[])
 
-      // Check if logged in user is admin of this team
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: claim } = await supabase
-          .from('club_claims')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .eq('team_id', id)
-          .single()
-        setIsAdmin(!!claim)
-      }
+    // Club logo
+    if ((team as any).club) {
+      supabase.from('bits_clubs').select('logo_url').eq('name', (team as any).club).limit(1)
+        .then(({ data }) => { if (data?.[0]?.logo_url) setClubLogoUrl(data[0].logo_url) })
+    }
+    // Sibling teams at same club
+    if ((team as any).club_slug) {
+      supabase.from('teams').select('id,name,club_slug,team_path')
+        .eq('club_slug', (team as any).club_slug).neq('id', id).order('name')
+        .then(({ data: ct }) => { if (ct) setClubTeams(ct as any[]) })
+    }
+
+    Promise.all([
+      supabase.from('players').select('id,name').eq('team_id', id).order('name'),
+      supabase.from('team_posts').select('*').eq('team_id', id).order('created_at', { ascending: false }).limit(20),
+      session
+        ? supabase.from('club_claims').select('id').eq('user_id', session.user.id).eq('team_id', id).single()
+        : Promise.resolve({ data: null }),
+    ]).then(async ([{ data: p }, { data: postsData }, { data: claim }]) => {
+      if (postsData) setPosts(postsData)
+      setIsAdmin(!!claim)
       if (p) {
         setPlayers(p as Player[])
-        const playerIds = (p as Player[]).map(pl => pl.id)
-        if (playerIds.length > 0) {
-          const { data: pStats } = await supabase
-            .from('match_results')
-            .select('player_id, games')
-            .in('player_id', playerIds)
+        const pIds = (p as Player[]).map(pl => pl.id)
+        if (pIds.length > 0) {
+          const { data: pStats } = await supabase.from('match_results').select('player_id,games').in('player_id', pIds)
           const grouped: Record<string, number[]> = {}
           const mCount: Record<string, number> = {}
           pStats?.forEach((r: any) => {
@@ -181,19 +178,9 @@ export default function TeamPage({ params }: Props) {
           setPlayerStats(statsMap)
         }
       }
-
-      // Load community posts
-      const { data: postsData } = await supabase
-        .from('team_posts')
-        .select('*')
-        .eq('team_id', id)
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (postsData) setPosts(postsData)
-
-      setLoading(false)
-    }).catch(() => { setError(true); setLoading(false) })
-  }, [id])
+      setSideLoading(false)
+    }).catch(() => { setError(true); setSideLoading(false) })
+  }, [id, team?.id, session?.user?.id])
 
   if (loading) {
     const sk = C.bg === '#10161e' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
@@ -245,7 +232,7 @@ export default function TeamPage({ params }: Props) {
   if (error) return (
     <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Kunde inte ladda laget</div>
-      <button onClick={() => { setError(false); setLoading(true) }} style={{ fontSize: 12, fontWeight: 700, color: C.accent, background: 'transparent', border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '7px 16px', cursor: 'pointer' }}>
+      <button onClick={() => { setError(false); setSideLoading(true) }} style={{ fontSize: 12, fontWeight: 700, color: C.accent, background: 'transparent', border: '1px solid ' + C.accent + '55', borderRadius: 8, padding: '7px 16px', cursor: 'pointer' }}>
         Försök igen
       </button>
     </main>
