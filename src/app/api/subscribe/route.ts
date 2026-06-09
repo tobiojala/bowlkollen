@@ -14,36 +14,22 @@ function isValidEmail(email: string) {
 
 export async function POST(req: NextRequest) {
   let body: { email?: string }
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Ogiltig förfrågan.' }, { status: 400 })
-  }
+  try { body = await req.json() }
+  catch { return NextResponse.json({ error: 'Ogiltig förfrågan.' }, { status: 400 }) }
 
   const email = (body.email ?? '').trim().toLowerCase()
-
-  if (!email || !isValidEmail(email)) {
+  if (!email || !isValidEmail(email))
     return NextResponse.json({ error: 'Ogiltig e-postadress.' }, { status: 400 })
-  }
 
   let supabase: ReturnType<typeof createClient>
-  try {
-    supabase = getServiceClient()
-  } catch {
-    return NextResponse.json({ error: 'Serverkonfigurationsfel.' }, { status: 500 })
-  }
+  try { supabase = getServiceClient() }
+  catch { return NextResponse.json({ error: 'Serverkonfigurationsfel.' }, { status: 500 }) }
 
-  const { error } = await supabase
-    .from('email_subscribers')
-    .insert({ email, source: 'landing' })
-
+  const { error } = await supabase.from('email_subscribers').insert({ email, source: 'landing' })
   if (error) {
-    if (error.code === '23505') {
-      return NextResponse.json({ ok: true })
-    }
+    if (error.code === '23505') return NextResponse.json({ ok: true })
     console.error('subscribe insert error:', error)
     return NextResponse.json({ error: 'Kunde inte spara. Försök igen.' }, { status: 500 })
   }
-
   return NextResponse.json({ ok: true })
 }
