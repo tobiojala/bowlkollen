@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Ogiltig f\u00f6rfr\u00e5gan.' }, { status: 400 }) }
   const email = (body.email ?? '').trim().toLowerCase()
   if (!email || !isValidEmail(email)) return NextResponse.json({ error: 'Ogiltig e-postadress.' }, { status: 400 })
-  let supabase: ReturnType<typeof createClient>
+  let supabase: ReturnType<typeof getServiceClient>
   try { supabase = getServiceClient() } catch { return NextResponse.json({ error: 'Serverkonfigurationsfel.' }, { status: 500 }) }
   const { error } = await supabase.from('email_subscribers').insert({ email, source: 'landing' })
   if (error) {
