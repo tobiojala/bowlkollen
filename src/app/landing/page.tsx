@@ -235,22 +235,9 @@ export default function LandingPage() {
           transition={{ duration: 0.4 }}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            {/* BK monogram logo */}
-            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* B — white, with arrow notch cut from right side */}
-              <path d="M14 18 H44 C55 18 63 24 63 34 C63 39 60 43 55 45.5 C61 48 65 53 65 59 C65 70 56 82 44 82 H14 Z" fill="white"/>
-              {/* Arrow notch cut into the B */}
-              <path d="M40 38 L54 45.5 L40 53 Z" fill="#0d1a2e"/>
-              {/* inner counter cuts for B loops */}
-              <path d="M28 26 H42 C49 26 54 30 54 36 C54 42 49 45 42 45 H28 Z" fill="#0d1a2e"/>
-              <path d="M28 53 H43 C51 53 56 57 56 63 C56 69 51 74 43 74 H28 Z" fill="#0d1a2e"/>
-              {/* K — gold */}
-              <path d="M70 18 L70 82" stroke="#f5c200" strokeWidth="13" strokeLinecap="square"/>
-              <path d="M70 50 L92 18" stroke="#f5c200" strokeWidth="13" strokeLinecap="square"/>
-              <path d="M70 50 L92 82" stroke="#f5c200" strokeWidth="13" strokeLinecap="square"/>
-            </svg>
-            <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: -0.4 }}>Bowlkollen</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/logo-mark.png" alt="BK" style={{ height: 32, width: 'auto' }} />
+            <img src="/logo-wordmark.png" alt="Bowlkollen" style={{ height: 22, width: 'auto' }} />
           </div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
