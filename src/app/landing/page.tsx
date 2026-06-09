@@ -250,7 +250,7 @@ export default function LandingPage() {
 
         {/* Hero */}
         <main>
-          <section aria-label="Introduktion" style={{ paddingTop: 72, paddingBottom: 72 }}>
+          <section aria-label="Introduktion" style={{ paddingTop: 52, paddingBottom: 48 }}>
 
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -288,7 +288,7 @@ export default function LandingPage() {
               style={{
                 fontSize: 16, lineHeight: 1.75,
                 color: C_BODY,
-                margin: '0 0 42px',
+                margin: '0 0 28px',
                 maxWidth: 400,
               }}
             >
@@ -313,7 +313,7 @@ export default function LandingPage() {
             style={{
               height: '1px',
               background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-              marginBottom: 60, transformOrigin: 'left',
+              marginBottom: 36, transformOrigin: 'left',
             }}
           />
 
@@ -324,17 +324,17 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.5 }}
-              style={{ marginBottom: 32 }}
+              style={{ marginBottom: 20 }}
             >
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2.2, color: C_BODY, textTransform: 'uppercase', marginBottom: 8, margin: '0 0 8px' }}>
-                Det saknas i dag
+                Detta bygger vi!
               </p>
               <h2 style={{ fontSize: 'clamp(18px, 3.5vw, 22px)', fontWeight: 800, color: C_PRIMARY, letterSpacing: -0.6, lineHeight: 1.2, margin: 0 }}>
                 Allt samlat på en plats.
               </h2>
             </motion.div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 72 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 40 }}>
               {FEATURES.map((f, i) => <FeatureCard key={f.label} feature={f} index={i} />)}
             </div>
           </section>
