@@ -1,11 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import Nav from '@/components/Nav'
-import NavTitle from '@/components/NavTitle'
-import BottomNav from '@/components/BottomNav'
-import Footer from '@/components/Footer'
 import ThemeProvider from '@/components/ThemeProvider'
-import AuthRedirect from '@/components/AuthRedirect'
+import AppShell from '@/components/AppShell'
 import QueryProvider from '@/components/QueryProvider'
 import './globals.css'
 
@@ -19,16 +15,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="sv">
       <body style={{ margin: 0, padding: 0 }}>
         <QueryProvider>
-        <ThemeProvider>
-          <AuthRedirect />
-          <Nav />
-        <div className="main-content" style={{ paddingBottom: 102 }}>
-          <NavTitle />
-          {children}
-          <Footer />
-        </div>
-        <BottomNav />
-        </ThemeProvider>
+          <ThemeProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>
