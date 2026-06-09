@@ -236,8 +236,8 @@ export default function LandingPage() {
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src="/logo-mark.png" alt="BK" style={{ height: 32, width: 'auto' }} />
-            <img src="/logo-wordmark.png" alt="Bowlkollen" style={{ height: 22, width: 'auto' }} />
+            <img src="/logo-mark.png" alt="BK" style={{ height: 48, width: 'auto' }} />
+            <img src="/logo-wordmark.png" alt="Bowlkollen" style={{ height: 32, width: 'auto' }} />
           </div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
