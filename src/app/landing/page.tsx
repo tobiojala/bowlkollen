@@ -143,21 +143,23 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
         position: 'absolute', top: 0, left: 0, right: 0, height: '1.5px',
         background: `linear-gradient(90deg, transparent, ${feature.accent}50, transparent)`,
       }} />
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 32, height: 32, borderRadius: 8,
-        background: `${feature.accent}12`,
-        color: feature.accent, marginBottom: 12,
-      }}>
-        {feature.icon}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+          background: `${feature.accent}12`,
+          color: feature.accent,
+        }}>
+          {feature.icon}
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: feature.accent, textTransform: 'uppercase' }}>
+          {feature.label}
+        </span>
       </div>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: feature.accent, textTransform: 'uppercase', marginBottom: 5, opacity: 0.7 }}>
-        {feature.label}
-      </div>
-      <h3 style={{ fontSize: 13, fontWeight: 700, color: C_PRIMARY, marginBottom: 5, lineHeight: 1.3, margin: '0 0 5px' }}>
+      <h3 style={{ fontSize: 14, fontWeight: 700, color: C_PRIMARY, lineHeight: 1.3, margin: '0 0 6px' }}>
         {feature.title}
       </h3>
-      <p style={{ fontSize: 12, color: C_BODY, lineHeight: 1.65, margin: 0 }}>
+      <p style={{ fontSize: 13, color: C_BODY, lineHeight: 1.65, margin: 0 }}>
         {feature.desc}
       </p>
     </motion.article>
@@ -225,8 +227,8 @@ export default function LandingPage() {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <img src="/logo-mark.png" alt="Bowlkollen" style={{ height: 48, width: 'auto' }} />
-              <img src="/logo-wordmark.png" alt="" aria-hidden="true" style={{ height: 32, width: 'auto' }} />
+              <img src="/logo-mark.png" alt="Bowlkollen" style={{ height: 64, width: 'auto' }} />
+              <img src="/logo-wordmark.png" alt="" aria-hidden="true" style={{ height: 42, width: 'auto' }} />
             </div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -263,7 +265,7 @@ export default function LandingPage() {
                 animation: 'glowPulse 2.5s ease-in-out infinite',
               }} />
               <span style={{ fontSize: 12, fontWeight: 500, color: C_BODY, letterSpacing: 0.1 }}>
-                Under uppbyggnad — du kan vara med och forma det
+                Under uppbyggnad — vara med och forma det från start
               </span>
             </motion.div>
 
@@ -324,11 +326,11 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
               style={{ marginBottom: 32 }}
             >
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2.2, color: C_SUBTLE, textTransform: 'uppercase', marginBottom: 8, margin: '0 0 8px' }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2.2, color: C_BODY, textTransform: 'uppercase', marginBottom: 8, margin: '0 0 8px' }}>
                 Det saknas i dag
               </p>
               <h2 style={{ fontSize: 'clamp(18px, 3.5vw, 22px)', fontWeight: 800, color: C_PRIMARY, letterSpacing: -0.6, lineHeight: 1.2, margin: 0 }}>
-                Allt samlat. Ingenstans annat.
+                Allt samlat på en plats.
               </h2>
             </motion.div>
 
@@ -378,7 +380,7 @@ export default function LandingPage() {
                 </motion.a>
               ))}
             </div>
-            <p style={{ fontSize: 11, color: C_SUBTLE, margin: 0 }}>
+            <p style={{ fontSize: 11, color: C_BODY, margin: 0 }}>
               © 2026 Bowlkollen ·{' '}
               <a href="/legal" style={{ color: 'inherit', textDecoration: 'none' }}>Integritetspolicy</a>
             </p>
