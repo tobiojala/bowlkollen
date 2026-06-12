@@ -3,7 +3,11 @@
 import { Sheet } from '@/components/mockup/Sheet'
 import { DNA_HIGHLIGHTS, MATCHES, COLORS } from '../../data'
 
-const { GOLD, BLUE, MUTED } = COLORS
+const { GOLD } = COLORS
+const INK  = '#f4f5f7'
+const INK2 = 'rgba(244,245,247,0.64)'
+const INK3 = 'rgba(244,245,247,0.40)'
+const INK4 = 'rgba(244,245,247,0.24)'
 
 interface DnaInfoSheetProps {
   matchAvgs: number[]
@@ -23,10 +27,10 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
   const worstIdx = matchAvgs.indexOf(Math.min(...matchAvgs))
 
   return (
-    <Sheet title="BOWLING DNA" onClose={onClose}>
-      <p className="text-sm mb-6" style={{ color: MUTED, lineHeight: 1.75 }}>
-        Ditt DNA är ett <span className="text-white font-semibold">unikt avtryck</span> skapat från dina {MATCHES.length} matcher denna säsong.
-        Varje av de {MATCHES.length} spetsarna representerar en match. Ju längre spetsen, desto bättre var din form den dagen.
+    <Sheet title="Bowling-DNA" subtitle="Ditt unika avtryck den här säsongen" onClose={onClose}>
+      <p className="text-[13px] mb-6" style={{ color: INK2, lineHeight: 1.7 }}>
+        Varje av de {MATCHES.length} spetsarna är en match — ju längre spets, desto bättre form den dagen.
+        Konturen ljusnar mot de senaste matcherna, så en spelare på uppgång lyser i kanten.
       </p>
 
       {/* Mini DNA chart */}
@@ -34,7 +38,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
         <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`} className="dna-body" style={{ display: 'block' }}>
           <defs>
             <radialGradient id="li_g" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(245,194,0,0.26)" />
+              <stop offset="0%" stopColor="rgba(245,194,0,0.20)" />
               <stop offset="100%" stopColor="rgba(245,194,0,0.03)" />
             </radialGradient>
             <filter id="li_glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -43,10 +47,10 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
             </filter>
           </defs>
           {[32, 65, 98, 130].map(r => (
-            <circle key={r} cx={LCX} cy={LCY} r={r} fill="none" stroke="rgba(245,194,0,0.12)" strokeWidth="1" />
+            <circle key={r} cx={LCX} cy={LCY} r={r} fill="none" stroke="rgba(244,245,247,0.07)" strokeWidth="1" />
           ))}
           {lSpokes.map((p, i) => (
-            <line key={i} x1={LCX} y1={LCY} x2={p.x} y2={p.y} stroke="rgba(245,194,0,0.08)" strokeWidth="1" />
+            <line key={i} x1={LCX} y1={LCY} x2={p.x} y2={p.y} stroke="rgba(244,245,247,0.05)" strokeWidth="1" />
           ))}
           <path d={lPath} fill="url(#li_g)" filter="url(#li_glow)" />
           <path d={lPath} fill="none" stroke="rgba(245,194,0,0.72)" strokeWidth="2" />
@@ -54,7 +58,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
             const isBest  = i === bestIdx
             const isWorst = i === worstIdx
             const hl2     = DNA_HIGHLIGHTS.find(h => h.idx === i)
-            const color   = hl2 ? hl2.color : isBest ? GOLD : isWorst ? 'rgba(160,175,200,0.5)' : 'rgba(245,194,0,0.65)'
+            const color   = hl2 ? hl2.color : isBest ? GOLD : isWorst ? 'rgba(244,245,247,0.35)' : 'rgba(245,194,0,0.6)'
             const r       = hl2 || isBest ? 6 : isWorst ? 4 : 3
             return <circle key={i} cx={p.x} cy={p.y} r={r} fill={color} />
           })}
@@ -65,7 +69,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
             const ly     = LCY + (p.r + 18) * Math.sin(angle)
             const anchor: 'start' | 'end' | 'middle' = Math.cos(angle) > 0.25 ? 'start' : Math.cos(angle) < -0.25 ? 'end' : 'middle'
             return (
-              <text key={li} x={lx} y={ly + 4} fill={li === 0 ? GOLD : 'rgba(255,255,255,0.4)'}
+              <text key={li} x={lx} y={ly + 4} fill={li === 0 ? GOLD : 'rgba(244,245,247,0.4)'}
                 fontSize="10" fontWeight="700" textAnchor={anchor}>
                 {li === 0 ? 'Bäst' : 'Lägst'}
               </text>
@@ -76,27 +80,24 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
         </svg>
       </div>
 
-      {/* Stats — dividers not boxes */}
-      <div className="grid grid-cols-3 gap-2 mb-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 mb-5 pt-4" style={{ borderTop: '1px solid rgba(244,245,247,0.07)' }}>
         {[
-          { l: 'BÄSTA FORM',  v: `${Math.max(...matchAvgs)}`, sub: 'snitt en match', c: GOLD },
-          { l: 'LÄGSTA FORM', v: `${Math.min(...matchAvgs)}`, sub: 'snitt en match', c: MUTED },
-          { l: 'SPANN',       v: `${Math.max(...matchAvgs) - Math.min(...matchAvgs)}p`, sub: 'variation', c: BLUE },
+          { l: 'Bästa form',  v: `${Math.max(...matchAvgs)}`, sub: 'snitt en match', c: GOLD },
+          { l: 'Lägsta form', v: `${Math.min(...matchAvgs)}`, sub: 'snitt en match', c: INK3 },
+          { l: 'Spann',       v: `${Math.max(...matchAvgs) - Math.min(...matchAvgs)}p`, sub: 'variation', c: INK },
         ].map(s => (
           <div key={s.l} className="text-center py-2">
-            <div className="num text-xl" style={{ color: s.c, lineHeight: 1 }}>{s.v}</div>
-            <div className="text-[8px] mt-1 tracking-widest" style={{ color: MUTED }}>{s.l}</div>
-            <div className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>{s.sub}</div>
+            <div className="num text-2xl tabular-nums" style={{ color: s.c, lineHeight: 1 }}>{s.v}</div>
+            <div className="text-[11px] mt-1.5" style={{ color: INK3 }}>{s.l}</div>
+            <div className="text-[11px] mt-0.5" style={{ color: INK4 }}>{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Tip */}
-      <div className="px-4 py-3 rounded-xl" style={{
-        background: 'rgba(255,255,255,0.04)',
-        borderLeft: `3px solid ${GOLD}`,
-      }}>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.65 }}>
+      <div className="px-4 py-3 rounded-xl" style={{ background: 'rgba(244,245,247,0.04)' }}>
+        <p className="text-[13px]" style={{ color: INK2, lineHeight: 1.6 }}>
           Tryck på en spets i profilen för att se matchdetaljerna — poäng, motståndare och hur du presterade jämfört med ditt snitt.
         </p>
       </div>

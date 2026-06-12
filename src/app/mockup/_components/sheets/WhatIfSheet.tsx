@@ -5,7 +5,10 @@ import { TrendingUp, TrendingDown } from 'lucide-react'
 import { Sheet } from '@/components/mockup/Sheet'
 import { COLORS } from '../../data'
 
-const { GOLD, GREEN, MUTED } = COLORS
+const { GOLD, GREEN, RED } = COLORS
+const INK  = '#f4f5f7'
+const INK3 = 'rgba(244,245,247,0.40)'
+const INK4 = 'rgba(244,245,247,0.24)'
 
 interface WhatIfSheetProps {
   seasonAvg: number
@@ -21,41 +24,38 @@ export default function WhatIfSheet({ seasonAvg, totalSum, totalGames, onClose }
   const projDiff = projAvg - seasonAvg
 
   return (
-    <Sheet title="VAD HÄNDER OM..." onClose={onClose}>
-      <p className="text-sm mb-6" style={{ color: MUTED }}>
-        Dra reglaget — se hur nästa match påverkar ditt snitt
-      </p>
+    <Sheet title="Vad händer om..." subtitle="Dra reglaget — se hur nästa match påverkar ditt snitt" onClose={onClose}>
 
       {/* Big numbers */}
-      <div className="flex items-center justify-between mb-7">
+      <div className="flex items-center justify-between mt-2 mb-7">
         <div>
-          <p className="text-xs mb-1" style={{ color: MUTED }}>Du snittade</p>
-          <div className="num" style={{ fontSize: 52, color: GOLD, lineHeight: 1 }}>{whatIfVal}</div>
-          <p className="text-xs mt-1" style={{ color: MUTED }}>i nästa match</p>
+          <p className="text-[12px] mb-1.5" style={{ color: INK3 }}>Du snittar</p>
+          <div className="num tabular-nums" style={{ fontSize: 52, color: INK }}>{whatIfVal}</div>
+          <p className="text-[12px] mt-1.5" style={{ color: INK3 }}>i nästa match</p>
         </div>
-        <div style={{ fontSize: 28, color: 'rgba(255,255,255,0.12)', fontWeight: 300 }}>→</div>
+        <div style={{ fontSize: 28, color: INK4, fontWeight: 300 }}>→</div>
         <div className="text-right">
-          <p className="text-xs mb-1" style={{ color: MUTED }}>Nytt säsongssnitt</p>
-          <div className="num" style={{ fontSize: 52, lineHeight: 1, color: projDiff > 0 ? GREEN : projDiff < 0 ? '#e05555' : MUTED }}>
+          <p className="text-[12px] mb-1.5" style={{ color: INK3 }}>Nytt säsongssnitt</p>
+          <div className="num tabular-nums" style={{ fontSize: 52, color: projDiff > 0 ? GREEN : projDiff < 0 ? RED : INK3 }}>
             {projAvg}
           </div>
-          <div className="flex items-center justify-end gap-1 mt-1">
-            {projDiff > 0 ? <TrendingUp size={14} color={GREEN} /> : projDiff < 0 ? <TrendingDown size={14} color="#e05555" /> : null}
-            <span className="text-sm font-bold" style={{ color: projDiff > 0 ? GREEN : projDiff < 0 ? '#e05555' : MUTED }}>
+          <div className="flex items-center justify-end gap-1 mt-1.5">
+            {projDiff > 0 ? <TrendingUp size={14} color={GREEN} /> : projDiff < 0 ? <TrendingDown size={14} color={RED} /> : null}
+            <span className="text-[13px] font-bold" style={{ color: projDiff > 0 ? GREEN : projDiff < 0 ? RED : INK3 }}>
               {projDiff > 0 ? `+${projDiff}` : projDiff < 0 ? projDiff : 'oförändrat'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Slider */}
+      {/* Slider — the one interactive accent */}
       <input type="range" min="140" max="280" step="5" value={whatIfVal}
         onChange={e => setWhatIfVal(Number(e.target.value))}
         className="w-full cursor-pointer"
-        style={{ accentColor: GOLD }} />
-      <div className="flex justify-between text-xs mt-1.5" style={{ color: MUTED }}>
+        style={{ accentColor: GOLD, height: 28 }} />
+      <div className="flex justify-between text-[12px] mt-1.5 tabular-nums" style={{ color: INK4 }}>
         <span>140</span>
-        <span style={{ color: GOLD, fontWeight: 600 }}>Ditt snitt: {seasonAvg}</span>
+        <span style={{ color: INK3, fontWeight: 600 }}>Ditt snitt: {seasonAvg}</span>
         <span>280</span>
       </div>
     </Sheet>
