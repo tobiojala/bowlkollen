@@ -13,6 +13,38 @@ export const MCFG: Record<Metric, { label: string; color: string }> = {
 
 const CW = 172
 
+/* Full-width season curve for the profile hero — no axes, no labels,
+   just the shape of the season under the hero number. */
+export function HeroCurve({ matchAvgs, seasonAvg }: { matchAvgs: number[]; seasonAvg: number }) {
+  const W = 360, H = 84
+  const PAD = { l: 2, r: 8, t: 10, b: 8 }
+  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
+  const mn = Math.min(...matchAvgs) - 6, mx = Math.max(...matchAvgs) + 6
+  const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * iW
+  const cy = (v: number) => PAD.t + iH - ((v - mn) / (mx - mn)) * iH
+  const pts  = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
+  const line = smooth(pts)
+  const fill = line + ` L ${pts[pts.length-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
+  const last = pts[pts.length - 1]
+  const avgY = cy(seasonAvg)
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="hc_f" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(245,194,0,0.18)" /><stop offset="100%" stopColor="rgba(245,194,0,0)" />
+        </linearGradient>
+        <linearGradient id="hc_l" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="rgba(245,194,0,0.35)" /><stop offset="100%" stopColor="#f5c200" />
+        </linearGradient>
+      </defs>
+      <line x1={PAD.l} y1={avgY} x2={W - PAD.r} y2={avgY} stroke="rgba(244,245,247,0.14)" strokeWidth="1" strokeDasharray="3,3" />
+      <path d={fill} fill="url(#hc_f)" />
+      <path d={line} fill="none" stroke="url(#hc_l)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={last.x} cy={last.y} r={4.5} fill="#f5c200" stroke="rgba(245,194,0,0.25)" strokeWidth={5} />
+    </svg>
+  )
+}
+
 export function MiniCurve({ matchAvgs, seasonAvg }: { matchAvgs: number[]; seasonAvg: number }) {
   const W = CW - 28, H = 70
   const PAD = { l: 2, r: 2, t: 4, b: 4 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Flame, Heart, CreditCard, Swords, TrendingUp, TrendingDown, Trophy, Star, Check, Zap, Share2 } from 'lucide-react'
+import { Flame, Heart, CreditCard, Swords, TrendingUp, TrendingDown, Trophy, Check, Zap, Share2 } from 'lucide-react'
 
 import { MATCHES, DNA_HIGHLIGHTS, CHALLENGES, LAST_SEASON, COLORS, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, MOCK_FOLLOWERS, MOCK_REACTIONS, MATCH_HOME_AWAY } from './data'
 import { stdDev, calcStreaks, smooth, characterSentence, calcGameAverages, rhythmLabel, narrativeParagraph } from './helpers'
@@ -9,7 +9,7 @@ import { stdDev, calcStreaks, smooth, characterSentence, calcGameAverages, rhyth
 import MatchSparkline   from '@/components/mockup/MatchSparkline'
 import ProfileDNA       from '@/components/mockup/ProfileDNA'
 import { Sheet }        from '@/components/mockup/Sheet'
-import { FullCurve, MiniCurve, MCFG, type Metric } from '@/components/mockup/Curves'
+import { FullCurve, HeroCurve, MCFG, type Metric } from '@/components/mockup/Curves'
 import { WhatIfCard, ChallengesCard, DuellCard, CIcon } from '@/components/mockup/StatCards'
 import { Surface, SectionHeader, HeroNumber, ActionRow, ActionButton, Pill, StatTile, Hairline } from '@/components/ui/primitives'
 
@@ -208,7 +208,7 @@ export default function MockupPage() {
           <span style={{ color: INK2, fontWeight: 600 }}>{MOCK_FOLLOWERS.following}</span> följer
         </div>
 
-        {/* ── HERO NUMBER ──────────────────────────────────────────────── */}
+        {/* ── HERO: number + season curve (the curve's one canonical home) ── */}
         <div className="hero-in" style={{ padding: '26px 20px 0' }}>
           <HeroNumber
             label="Säsongssnitt"
@@ -217,6 +217,14 @@ export default function MockupPage() {
             deltaSuffix=" form"
             caption={<>Top {bkTopPct}% i Elitserien Damer · BK Rating <span style={{ color: INK, fontWeight: 700 }}>{PLAYER_BK_RATING}</span></>}
           />
+          <div onClick={() => setExpanded('curve')} style={{ marginTop: 18, cursor: 'pointer' }}>
+            <HeroCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
+              <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
+              <span style={{ fontSize: 12, color: INK3 }}>{MATCHES.length} matcher · förra säsongen {lastSeasonAvg}</span>
+              <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[MATCHES.length - 1].date}</span>
+            </div>
+          </div>
         </div>
 
         {/* ── ACTION ROW ───────────────────────────────────────────────── */}
@@ -323,23 +331,6 @@ export default function MockupPage() {
         <div style={{ padding: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SectionHeader label="Prestanda" />
 
-          {/* Säsongskurva */}
-          <Surface level={1} onClick={() => setExpanded('curve')} className="px-4 pt-4 pb-3">
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: 1, marginBottom: 6 }}>SÄSONGSKURVA</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: INK, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{seasonAvg}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: formDiff > 0 ? GREEN : RED }}>
-                    {formDiff > 0 ? '+' : ''}{formDiff} form
-                  </span>
-                </div>
-              </div>
-              <span style={{ fontSize: 11, color: INK3 }}>{MATCHES.length} matcher · förra {lastSeasonAvg}</span>
-            </div>
-            <MiniCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} />
-          </Surface>
-
           {/* Spelanalys: distribution + character + stats + rhythm */}
           <Surface level={1} className="px-4 py-4">
             <div style={{ display: 'flex', height: 8, borderRadius: 6, overflow: 'hidden', gap: 2 }}>
@@ -363,10 +354,10 @@ export default function MockupPage() {
             <Hairline className="my-4" />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
-              <StatTile value={seasonAvg} label="Snitt" />
-              <StatTile value={formDiff > 0 ? `+${formDiff}` : formDiff} label="Form" tone={formDiff >= 0 ? 'positive' : 'negative'} />
               <StatTile value={`${hitRate}%`} label="Träff" />
               <StatTile value={consistency} label="Karaktär" />
+              <StatTile value={bestSeries} label="Bästa serie" tone="gold" />
+              <StatTile value={s200.best} label="200+-svit" />
             </div>
 
             <Hairline className="my-4" />
@@ -491,22 +482,8 @@ export default function MockupPage() {
         <div style={{ padding: '28px 20px 0' }}>
           <SectionHeader label="Historik" />
 
-          {/* Record chips */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, background: '#14171c' }}>
-              <Trophy size={13} color={GOLD} />
-              <span style={{ fontSize: 13, color: INK3 }}>Bästa serie</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: INK, fontVariantNumeric: 'tabular-nums' }}>{bestSeries}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, background: '#14171c' }}>
-              <Star size={13} color={INK3} />
-              <span style={{ fontSize: 13, color: INK3 }}>200+-svit</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: INK, fontVariantNumeric: 'tabular-nums' }}>{s200.best} spel</span>
-            </div>
-          </div>
-
           {/* Filter pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
             {(['alla', 'bästa', 'hemma', 'borta'] as const).map(f => (
               <Pill key={f} label={f.charAt(0).toUpperCase() + f.slice(1)}
                 active={matchFilter === f} onClick={() => setMatchFilter(f)} />

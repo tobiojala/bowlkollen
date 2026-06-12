@@ -86,9 +86,22 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
             stroke={hov ? 'rgba(244,245,247,0.07)' : 'rgba(244,245,247,0.05)'} strokeWidth="1" />
         ))}
         <path d={pathD} fill="url(#dna_g)" filter="url(#dna_glow)" />
-        <path d={pathD} fill="none"
-          stroke={hov ? 'rgba(245,194,0,0.85)' : 'rgba(245,194,0,0.65)'}
-          strokeWidth={hov ? '2.5' : '2'} />
+        {/* Recency gradient: spokes run chronologically clockwise, so the
+            outline brightens toward the latest matches — a rising player
+            shows a bright, swollen edge on the recent side. The wrap
+            segment (newest back to oldest) stays dim to mark season start. */}
+        {spokes.map((p, i) => {
+          const q      = spokes[(i + 1) % n]
+          const isWrap = i === n - 1
+          const t      = isWrap ? 0 : (i + 1) / (n - 1)
+          const op     = Math.min(1, (0.28 + 0.6 * t) * (hov ? 1.2 : 1))
+          return (
+            <line key={`seg${i}`} x1={p.x.toFixed(1)} y1={p.y.toFixed(1)}
+              x2={q.x.toFixed(1)} y2={q.y.toFixed(1)}
+              stroke={`rgba(245,194,0,${op.toFixed(2)})`}
+              strokeWidth={hov ? 2.5 : 2} strokeLinecap="round" />
+          )
+        })}
       </g>
 
       {/* Floating spoke dots */}
@@ -113,7 +126,8 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
                 <circle cx={p.x} cy={p.y} r={6.5} fill={hl.color} opacity="0.96" />
               </g>
             ) : (
-              <circle cx={p.x} cy={p.y} r={hov ? 4 : 3.5} fill="rgba(245,194,0,0.68)" />
+              <circle cx={p.x} cy={p.y} r={hov ? 4 : 3.5}
+                fill={`rgba(245,194,0,${(0.3 + 0.55 * (i / (n - 1))).toFixed(2)})`} />
             )}
           </g>
         )
