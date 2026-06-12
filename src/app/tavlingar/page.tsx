@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Star } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -190,9 +191,8 @@ export default function TavlingarPage() {
         {/* ── Banner image header (special tävlingar only) ── */}
         {hasBanner ? (
           <div style={{ position: 'relative', height: 136, overflow: 'hidden' }}>
-            <img src={t.banner} alt={t.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover',
-                objectPosition: 'center 30%', display: 'block' }} />
+            <Image src={t.banner!} alt={t.name} fill
+              style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
             <div style={{ position: 'absolute', inset: 0,
               background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.75) 100%)' }} />
             {/* Status pill */}

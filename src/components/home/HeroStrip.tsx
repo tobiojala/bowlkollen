@@ -9,6 +9,28 @@ import type { Match } from '@/app/home/types'
 import { divColor, shortDiv, countdown, dateLabel, streamStyle } from '@/app/home/helpers'
 import { prefetchMatch } from '@/lib/prefetch'
 
+function teamHue(name: string) {
+  return name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+}
+
+function TeamAvatar({ name, size, isDark }: { name: string; size: number; isDark: boolean }) {
+  const hue  = teamHue(name)
+  const tc   = `hsl(${hue},50%,50%)`
+  const tclo = isDark ? `hsl(${hue},40%,14%)` : `hsl(${hue},40%,90%)`
+  const ini  = name.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size * 0.28,
+      background: tclo, border: `1.5px solid ${tc}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.3, fontWeight: 800, color: tc, flexShrink: 0,
+      letterSpacing: -0.5,
+    }}>
+      {ini}
+    </div>
+  )
+}
+
 type StripMatch = { kind: 'match'; match: Match }
 type StripTav   = {
   kind: 'tavling'; id: string; name: string; sub: string
@@ -124,7 +146,11 @@ export default function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: 
                       {isLive ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN_M, boxShadow: `0 0 6px ${GREEN_M}` }} />
+                            <motion.div
+                              animate={{ opacity: [1, 0.25, 1], boxShadow: [`0 0 3px ${GREEN_M}`, `0 0 10px ${GREEN_M}`, `0 0 3px ${GREEN_M}`] }}
+                              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                              style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN_M }}
+                            />
                             <span style={{ fontSize: 10, fontWeight: 800, color: GREEN_M, letterSpacing: 1.5 }}>PÅGÅENDE</span>
                           </div>
                           {isStream && (
@@ -149,44 +175,51 @@ export default function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: 
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                      {/* Home team */}
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                        <TeamAvatar name={m.home?.name || ''} size={32} isDark={isDark} />
+                        <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          maxWidth: '100%', textAlign: 'right',
                           color: hasScore ? (homeWin ? C.text : C.textMuted) : C.text }}>
                           {shortName(m.home?.name || '')}
                         </div>
-                        <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Hemma</div>
+                        <div style={{ fontSize: 9, color: C.textMuted }}>Hemma</div>
                       </div>
 
-                      <div style={{ flexShrink: 0, width: 88, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {/* Score / countdown */}
+                      <div style={{ flexShrink: 0, width: 80, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {hasScore ? (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
-                            <span style={{ fontSize: 22, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
-                            <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
+                            <span style={{ fontSize: 38, fontWeight: 900, lineHeight: 1, color: homeWin ? C.accent : C.textMuted }}>{m.home_score}</span>
+                            <span style={{ fontSize: 20, color: C.textMuted, fontWeight: 200, marginTop: -2 }}>–</span>
+                            <span style={{ fontSize: 38, fontWeight: 900, lineHeight: 1, color: awayWin ? C.accent : C.textMuted }}>{m.away_score}</span>
                           </div>
                         ) : cd ? (
                           <>
-                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
+                            <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: C.accent, fontVariantNumeric: 'tabular-nums', textAlign: 'center' }}>{cd}</div>
                             <div style={{ fontSize: 9, color: C.textMuted, marginTop: 6, textAlign: 'center', lineHeight: 1.5 }}>
                               {dateLabel(dateStr)}<br />{time}
                             </div>
                           </>
                         ) : (
                           <>
-                            <div style={{ fontSize: 18, fontWeight: 800, color: C.text, textAlign: 'center' }}>{time || 'vs'}</div>
+                            <div style={{ fontSize: 17, fontWeight: 800, color: C.text, textAlign: 'center' }}>{time || 'vs'}</div>
                             <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, textAlign: 'center' }}>{dateLabel(dateStr)}</div>
                           </>
                         )}
                       </div>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25,
+                      {/* Away team */}
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+                        <TeamAvatar name={m.away?.name || ''} size={32} isDark={isDark} />
+                        <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          maxWidth: '100%',
                           color: hasScore ? (awayWin ? C.text : C.textMuted) : C.text }}>
                           {shortName(m.away?.name || '')}
                         </div>
-                        <div style={{ fontSize: 9, color: C.textMuted, marginTop: 3 }}>Borta</div>
+                        <div style={{ fontSize: 9, color: C.textMuted }}>Borta</div>
                       </div>
                     </div>
 
@@ -287,8 +320,15 @@ export default function HeroStrip({ liveItems, upcomingItems, C, isDark, now }: 
                       style={{ fontSize: 8, fontWeight: 800, color: '#e05555', letterSpacing: 0.5, marginTop: 2 }}>
                       ● LIVE
                     </motion.div>
+                  ) : isLiveM ? (
+                    <motion.div
+                      animate={{ opacity: [1, 0.35, 1] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                      style={{ fontSize: 8, fontWeight: 800, color: GREEN_S, letterSpacing: 0.5, marginTop: 2 }}>
+                      ● PÅGÅR
+                    </motion.div>
                   ) : (
-                    <div style={{ fontSize: 8.5, fontWeight: 700, color: isLiveM ? GREEN_S : dc, letterSpacing: 0.2,
+                    <div style={{ fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: 0.2,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 72, marginTop: 2 }}>
                       {shortDiv(m.division)}
                     </div>

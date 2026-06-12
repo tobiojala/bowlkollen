@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { Check, X, HelpCircle, MapPin } from 'lucide-react'
@@ -268,7 +269,7 @@ export default function TillganlighetPage({ params }: Props) {
                     return (
                       <div key={r.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: gbg, borderRadius: 10, border: '1px solid ' + color + '33' }}>
                         {p?.avatar_url ? (
-                          <img src={p.avatar_url} style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' as const }} />
+                          <Image src={p.avatar_url} alt="" width={28} height={28} style={{ borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }} />
                         ) : (
                           <div style={{ width: 28, height: 28, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: tc, flexShrink: 0 }}>
                             {name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}

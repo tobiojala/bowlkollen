@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -63,8 +64,8 @@ function computeStats(results: any[]): Stats {
 function Avatar({ player, tc, tclo }: { player: Player; tc: string; tclo: string }) {
   const ini = player.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return player.avatar_url ? (
-    <img src={player.avatar_url} alt={player.name}
-      style={{ width: 68, height: 68, borderRadius: '50%', border: `2.5px solid ${tc}`, objectFit: 'cover' }} />
+    <Image src={player.avatar_url} alt={player.name} width={68} height={68}
+      style={{ borderRadius: '50%', border: `2.5px solid ${tc}`, objectFit: 'cover' }} />
   ) : (
     <div style={{ width: 68, height: 68, borderRadius: '50%', background: tclo, border: `2.5px solid ${tc}`,
       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: tc }}>

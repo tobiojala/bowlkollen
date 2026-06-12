@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 1620" width="390" height="1620">
+<defs><style>
+  .bg{fill:#0D0D0D} .nav{fill:#111111} .card{fill:#1A1A1A} .card-dark{fill:#141414}
+  .card-light{fill:#222222} .t1{fill:#444444} .t2{fill:#2D2D2D} .t3{fill:#1E1E1E}
+  .accent{fill:#353530} .chip{fill:#1C1C1C} .div{fill:#1A1A1A}
+  .dw{fill:#1A2E18} .dl{fill:#2E1818}
+</style></defs>
+
+<rect width="390" height="1620" class="bg"/>
+
+<!-- ══════════════════════════════════════
+     TOP NAV  0–56
+══════════════════════════════════════ -->
+<rect width="390" height="56" class="nav"/>
+<rect x="20" y="16" width="24" height="24" rx="6" class="card-light"/>
+<rect x="175" y="19" width="40" height="18" rx="4" class="t2"/>
+<rect x="346" y="16" width="24" height="24" rx="6" class="card-light"/>
+
+<!-- ══════════════════════════════════════
+     DNA HERO  56–390
+══════════════════════════════════════ -->
+<ellipse cx="195" cy="222" rx="172" ry="162" class="card-dark"/>
+
+<!-- radial spokes -->
+<line x1="195" y1="222" x2="195" y2="74"   stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="253" y2="86"   stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="297" y2="120"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="322" y2="174"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="324" y2="234"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="300" y2="286"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="254" y2="322"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="195" y2="352"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="138" y2="322"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="94"  y2="286"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="68"  y2="234"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="70"  y2="174"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="96"  y2="120"  stroke="#252525" stroke-width="1"/>
+<line x1="195" y1="222" x2="138" y2="86"   stroke="#252525" stroke-width="1"/>
+
+<!-- DNA polygon (fingerprint outline at varying radii per spoke) -->
+<polygon
+  points="195,94 248,100 292,130 316,178 318,238 292,286 252,318 195,340 140,318 100,288 74,238 76,180 100,132 140,100"
+  fill="none" stroke="#2A2A2A" stroke-width="1.5"/>
+
+<!-- highlight dots -->
+<circle cx="195" cy="94"  r="4" class="card-light" stroke="#2D2D2D" stroke-width="1"/>
+<circle cx="316" cy="178" r="4" class="card-light" stroke="#2D2D2D" stroke-width="1"/>
+<circle cx="100" cy="288" r="4" class="card-light" stroke="#2D2D2D" stroke-width="1"/>
+
+<!-- callout lines from highlight dots -->
+<line x1="195" y1="94"  x2="195" y2="68"  stroke="#252525" stroke-width="0.75"/>
+<line x1="316" y1="178" x2="344" y2="166" stroke="#252525" stroke-width="0.75"/>
+<line x1="100" y1="288" x2="72"  y2="300" stroke="#252525" stroke-width="0.75"/>
+<!-- callout end caps -->
+<circle cx="195" cy="68"  r="2" class="t3"/>
+<circle cx="344" cy="166" r="2" class="t3"/>
+<circle cx="72"  cy="300" r="2" class="t3"/>
+
+<!-- avatar circle in center of DNA -->
+<circle cx="195" cy="222" r="38" class="card" stroke="#252525" stroke-width="2"/>
+<rect x="178" y="214" width="34" height="16" rx="3" class="t2"/>
+
+<!-- ══════════════════════════════════════
+     IDENTITY  390–480
+══════════════════════════════════════ -->
+<rect x="20" y="398" width="206" height="22" rx="4" class="t1"/>
+<!-- tier badge + form indicator -->
+<rect x="20" y="428" width="74" height="18" rx="9" class="chip"/>
+<rect x="102" y="430" width="44" height="14" rx="5" class="accent"/>
+<!-- team link + hometown -->
+<rect x="20" y="454" width="104" height="11" rx="2" class="t2"/>
+<rect x="132" y="454" width="72" height="11" rx="2" class="t3"/>
+<!-- follow button -->
+<rect x="308" y="396" width="62" height="34" rx="17" class="card-light" stroke="#252525" stroke-width="1"/>
+
+<!-- ══════════════════════════════════════
+     4 STATS CARDS  484–552
+══════════════════════════════════════ -->
+<rect x="20"  y="484" width="80" height="64" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="108" y="484" width="80" height="64" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="196" y="484" width="80" height="64" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="284" y="484" width="86" height="64" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<!-- values -->
+<rect x="32"  y="496" width="56" height="18" rx="3" class="t2"/>
+<rect x="40"  y="520" width="40" height="9"  rx="2" class="t3"/>
+<rect x="120" y="496" width="56" height="18" rx="3" class="t2"/>
+<rect x="128" y="520" width="40" height="9"  rx="2" class="t3"/>
+<rect x="208" y="496" width="56" height="18" rx="3" class="t2"/>
+<rect x="216" y="520" width="40" height="9"  rx="2" class="t3"/>
+<rect x="296" y="496" width="62" height="18" rx="3" class="t2"/>
+<rect x="304" y="520" width="46" height="9"  rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     DISTRIBUTION BAR  564–608
+══════════════════════════════════════ -->
+<rect x="20" y="564" width="350" height="14" rx="7" class="card-dark"/>
+<rect x="20" y="564" width="66"  height="14" rx="7" class="t3"/>
+<rect x="86" y="564" width="88"  height="14" fill="#252525"/>
+<rect x="174" y="564" width="116" height="14" fill="#2E2E2A"/>
+<rect x="290" y="564" width="80"  height="14" rx="7" fill="#363632"/>
+<!-- segment labels -->
+<rect x="24" y="584" width="36" height="8" rx="2" class="t3"/>
+<rect x="92" y="584" width="48" height="8" rx="2" class="t3"/>
+<rect x="188" y="584" width="48" height="8" rx="2" class="t3"/>
+<rect x="306" y="584" width="28" height="8" rx="2" class="t3"/>
+
+<!-- character sentence -->
+<rect x="20" y="608" width="312" height="10" rx="2" class="t3"/>
+<rect x="20" y="624" width="252" height="10" rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     BK RATING BAR  648–704
+══════════════════════════════════════ -->
+<rect x="20" y="648" width="350" height="1" class="div"/>
+<rect x="20" y="656" width="184" height="10" rx="2" class="t2"/>
+<rect x="20" y="672" width="350" height="12" rx="6" class="card-dark"/>
+<rect x="20" y="672" width="242" height="12" rx="6" fill="#2C2C28"/>
+<rect x="20" y="690" width="132" height="9" rx="2" class="t3"/>
+<rect x="298" y="690" width="72" height="9" rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     NARRATIVE  714–780
+══════════════════════════════════════ -->
+<rect x="20" y="714" width="350" height="1" class="div"/>
+<rect x="20" y="722" width="342" height="10" rx="2" class="t3"/>
+<rect x="20" y="738" width="302" height="10" rx="2" class="t3"/>
+<rect x="20" y="754" width="322" height="10" rx="2" class="t3"/>
+<rect x="20" y="770" width="202" height="10" rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     SWIPEABLE CARDS  794–1010
+══════════════════════════════════════ -->
+<!-- tab pills -->
+<rect x="20"  y="794" width="82" height="28" rx="8" class="accent"/>
+<rect x="110" y="794" width="82" height="28" rx="8" class="chip"/>
+<rect x="200" y="794" width="92" height="28" rx="8" class="chip"/>
+<rect x="300" y="794" width="70" height="28" rx="8" class="chip"/>
+
+<!-- active card: Säsongskurva -->
+<rect x="20" y="830" width="350" height="164" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<!-- metric selector inside -->
+<rect x="36" y="848" width="52" height="18" rx="9" class="accent"/>
+<rect x="96" y="848" width="42" height="18" rx="9" class="chip"/>
+<rect x="146" y="848" width="38" height="18" rx="9" class="chip"/>
+
+<!-- chart area -->
+<rect x="36" y="876" width="318" height="100" rx="8" class="card-dark"/>
+<!-- bar chart columns -->
+<rect x="50"  y="916" width="14" height="48" rx="2" fill="#252525"/>
+<rect x="72"  y="906" width="14" height="58" rx="2" fill="#282826"/>
+<rect x="94"  y="898" width="14" height="66" rx="2" fill="#2C2C28"/>
+<rect x="116" y="908" width="14" height="56" rx="2" fill="#2A2A26"/>
+<rect x="138" y="892" width="14" height="72" rx="2" fill="#303030"/>
+<rect x="160" y="896" width="14" height="68" rx="2" fill="#2E2E2C"/>
+<rect x="182" y="888" width="14" height="76" rx="2" fill="#323230"/>
+<rect x="204" y="898" width="14" height="66" rx="2" fill="#2E2E2C"/>
+<rect x="226" y="882" width="14" height="82" rx="2" fill="#363634"/>
+<rect x="248" y="886" width="14" height="78" rx="2" fill="#343432"/>
+<rect x="270" y="878" width="14" height="86" rx="2" fill="#3A3A38"/>
+<rect x="292" y="894" width="14" height="70" rx="2" fill="#303030"/>
+<rect x="314" y="890" width="14" height="74" rx="2" fill="#323232"/>
+
+<!-- dots for card carousel -->
+<rect x="178" y="1000" width="14" height="4" rx="2" class="accent"/>
+<circle cx="200" cy="1002" r="2" class="chip"/>
+<circle cx="209" cy="1002" r="2" class="chip"/>
+<circle cx="218" cy="1002" r="2" class="chip"/>
+
+<!-- ══════════════════════════════════════
+     MATCH LOG  1022–1432
+══════════════════════════════════════ -->
+<!-- section header -->
+<rect x="20" y="1022" width="82" height="11" rx="2" class="t2"/>
+
+<!-- filter chips -->
+<rect x="20"  y="1040" width="40" height="20" rx="10" class="accent"/>
+<rect x="68"  y="1040" width="48" height="20" rx="10" class="chip"/>
+<rect x="124" y="1040" width="56" height="20" rx="10" class="chip"/>
+<rect x="188" y="1040" width="56" height="20" rx="10" class="chip"/>
+
+<!-- row 1 -->
+<rect x="20" y="1070" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1080" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1095" width="56" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1076" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="124" y="1076" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="148" y="1076" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="172" y="1076" width="20" height="14" rx="3" class="card-light"/>
+<rect x="220" y="1076" width="38" height="14" rx="3" class="card-light"/>
+<polyline points="272,1096 284,1084 296,1090 308,1080 320,1086 332,1078" fill="none" stroke="#2C2C2C" stroke-width="1.5"/>
+
+<!-- row 2 -->
+<rect x="20" y="1130" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1140" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1155" width="60" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1136" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="124" y="1136" width="20" height="14" rx="3" class="card-light"/>
+<rect x="148" y="1136" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="172" y="1136" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="220" y="1136" width="38" height="14" rx="3" class="card-dark"/>
+<polyline points="272,1152 284,1144 296,1154 308,1142 320,1148 332,1140" fill="none" stroke="#282828" stroke-width="1.5"/>
+
+<!-- row 3 -->
+<rect x="20" y="1190" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1200" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1215" width="50" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1196" width="20" height="14" rx="3" class="card-light"/>
+<rect x="124" y="1196" width="20" height="14" rx="3" class="card-light"/>
+<rect x="148" y="1196" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="172" y="1196" width="20" height="14" rx="3" class="card-light"/>
+<rect x="220" y="1196" width="38" height="14" rx="3" class="card-light"/>
+<polyline points="272,1208 284,1200 296,1206 308,1198 320,1204 332,1198" fill="none" stroke="#2E2E2E" stroke-width="1.5"/>
+
+<!-- row 4 -->
+<rect x="20" y="1250" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1260" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1275" width="64" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1256" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="124" y="1256" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="148" y="1256" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="172" y="1256" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="220" y="1256" width="38" height="14" rx="3" class="card-dark"/>
+<polyline points="272,1266 284,1272 296,1268 308,1274 320,1268 332,1274" fill="none" stroke="#242424" stroke-width="1.5"/>
+
+<!-- row 5 -->
+<rect x="20" y="1310" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1320" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1335" width="54" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1316" width="20" height="14" rx="3" class="card-light"/>
+<rect x="124" y="1316" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="148" y="1316" width="20" height="14" rx="3" class="card-light"/>
+<rect x="172" y="1316" width="20" height="14" rx="3" class="card-light"/>
+<rect x="220" y="1316" width="38" height="14" rx="3" class="card-light"/>
+<polyline points="272,1326 284,1322 296,1328 308,1320 320,1324 332,1318" fill="none" stroke="#2A2A2A" stroke-width="1.5"/>
+
+<!-- row 6 -->
+<rect x="20" y="1370" width="350" height="52" rx="12" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1380" width="34" height="9"  rx="2" class="t3"/>
+<rect x="34" y="1395" width="46" height="9"  rx="2" class="t2"/>
+<rect x="100" y="1376" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="124" y="1376" width="20" height="14" rx="3" class="card-light"/>
+<rect x="148" y="1376" width="20" height="14" rx="3" class="card-light"/>
+<rect x="172" y="1376" width="20" height="14" rx="3" class="card-dark"/>
+<rect x="220" y="1376" width="38" height="14" rx="3" class="card-dark"/>
+<polyline points="272,1388 284,1392 296,1384 308,1390 320,1382 332,1388" fill="none" stroke="#262626" stroke-width="1.5"/>
+
+<!-- ══════════════════════════════════════
+     BOTTOM NAV  1536–1620
+══════════════════════════════════════ -->
+<rect y="1536" width="390" height="84" class="nav" stroke="#1A1A1A" stroke-width="1"/>
+<circle cx="39"  cy="1563" r="14" class="card-light"/>
+<circle cx="117" cy="1563" r="14" class="card-light"/>
+<circle cx="195" cy="1558" r="22" class="accent" stroke="#303028" stroke-width="1"/>
+<circle cx="273" cy="1563" r="14" class="card-light"/>
+<circle cx="351" cy="1563" r="14" class="accent"/>
+<rect x="18"  y="1583" width="42" height="7" rx="2" class="t3"/>
+<rect x="96"  y="1583" width="42" height="7" rx="2" class="t3"/>
+<rect x="174" y="1586" width="42" height="7" rx="2" class="t3"/>
+<rect x="252" y="1583" width="42" height="7" rx="2" class="t3"/>
+<rect x="330" y="1583" width="42" height="7" rx="2" class="t3"/>
+
+</svg>

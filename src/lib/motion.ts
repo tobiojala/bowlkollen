@@ -60,6 +60,39 @@ export const stagger = (delay = 0.06): Variants => ({
   visible: { transition: { staggerChildren: delay } },
 })
 
+// ── Scroll-reveal variants ────────────────────────────────────────────────
+// Used by <Reveal> component. Each variant pair represents one direction.
+export const revealUp: Variants = {
+  hidden:  { opacity: 0, y: 22 },
+  visible: { opacity: 1, y: 0, transition: spring.soft },
+}
+export const revealFade: Variants = {
+  hidden:  { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.36, ease: [0.25, 0.46, 0.45, 0.94] } },
+}
+export const revealLeft: Variants = {
+  hidden:  { opacity: 0, x: 24 },
+  visible: { opacity: 1, x: 0, transition: spring.soft },
+}
+export const revealScale: Variants = {
+  hidden:  { opacity: 0, scale: 0.88 },
+  visible: { opacity: 1, scale: 1, transition: spring.bounce },
+}
+
+// ── Cinematic stagger container ───────────────────────────────────────────
+// Parent container: animate="visible" when in view, children inherit.
+// Children use any revealXxx variant above.
+export const staggerContainer = (staggerDelay = 0.07, delayChildren = 0): Variants => ({
+  hidden:  {},
+  visible: { transition: { staggerChildren: staggerDelay, delayChildren } },
+})
+
+// Convenience: a child item for use inside staggerContainer
+export const staggerItem: Variants = {
+  hidden:  { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: spring.soft },
+}
+
 // ── Interactive tap presets ───────────────────────────────────────────────
 // Spread onto <motion.button> or <motion.div>.
 export const tap         = { whileTap: { scale: 0.96, transition: spring.snappy } }

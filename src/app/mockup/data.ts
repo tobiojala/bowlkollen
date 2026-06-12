@@ -50,6 +50,17 @@ export const MATCH_HOME_AWAY: Record<number, boolean> = {
 
 export const MOCK_FOLLOWERS = { followers: 142, following: 38 }
 
+export const PLAYER_LEVEL = { level: 12, xp: 2340, nextLevelXp: 2500, title: 'Pro' }
+
+export const ACHIEVEMENTS = [
+  { icon: 'Star',      title: '250-klubben', sub: '10 × 250+',       earned: true,  near: false, color: '#f5c200' },
+  { icon: 'Lightning', title: 'Personbästa', sub: '278 poäng',        earned: true,  near: false, color: '#7ab4e8' },
+  { icon: 'Trophy',    title: 'Serierekord', sub: '1 013 / 1 050',    earned: false, near: true,  color: '#f5c200' },
+  { icon: 'Fire',      title: 'Hetsviten',   sub: '5 i rad >220',      earned: false, near: true,  color: '#f5a623' },
+  { icon: 'Target',    title: 'Precision',   sub: '±15p fem matcher',  earned: false, near: false, color: '#6b7a99' },
+  { icon: 'Crown',     title: '300-klubben', sub: 'Bowla en 300',      earned: false, near: false, color: '#6b7a99' },
+] as const
+
 // Reactions on top-scoring matches (by match index)
 export const MOCK_REACTIONS: Record<number, { flame: number; heart: number }> = {
   14: { flame: 18, heart: 24 },  // 1 002 total

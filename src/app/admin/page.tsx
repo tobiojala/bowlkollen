@@ -33,7 +33,8 @@ export default function AdminPage() {
   // New match state
   const [mHome, setMHome] = useState('')
   const [mAway, setMAway] = useState('')
-  const [mDate, setMDate] = useState(new Date().toISOString().slice(0, 10))
+  const [mDate, setMDate] = useState('')
+  useEffect(() => { setMDate(new Date().toISOString().slice(0, 10)) }, [])
   const [mStatus, setMStatus] = useState('upcoming')
   const [mVenue, setMVenue] = useState('')
 

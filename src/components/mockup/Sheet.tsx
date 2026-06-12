@@ -1,12 +1,25 @@
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 99 }} />
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, maxWidth: 600,
-        margin: '0 auto', background: '#141e2e', borderRadius: '22px 22px 0 0',
-        padding: '20px 20px 44px', maxHeight: '88vh', overflowY: 'auto' }}
-        className="noscroll">
-        <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 18px' }} />
+      <style>{`
+        @keyframes sheet-up {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        .sheet-panel { animation: sheet-up 0.38s cubic-bezier(0.32,0.72,0,1) both; }
+      `}</style>
+      {/* Transparent backdrop — click to close; page overlay handles darkening */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'transparent' }} />
+      <div className="sheet-panel noscroll"
+        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, maxWidth: 600,
+          margin: '0 auto', borderRadius: '22px 22px 0 0',
+          background: 'rgba(11,18,30,0.70)',
+          backdropFilter: 'blur(32px) saturate(220%) brightness(1.08)',
+          WebkitBackdropFilter: 'blur(32px) saturate(220%) brightness(1.08)',
+          borderTop: '1px solid rgba(255,255,255,0.14)',
+          boxShadow: '0 -8px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1)',
+          padding: '20px 20px 44px', maxHeight: '88vh', overflowY: 'auto' }}>
+        <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.25)', borderRadius: 2, margin: '0 auto 18px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>{title}</span>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: '5px 14px', color: 'rgba(255,255,255,0.45)', fontSize: 12, cursor: 'pointer' }}>Stäng</button>

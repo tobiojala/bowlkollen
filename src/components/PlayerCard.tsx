@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 
 const RemotionPlayer = dynamic(() => import('./RemotionPlayerEmbed'), { ssr: false })
@@ -165,8 +166,8 @@ function CardFront({ name, teamName, avatarUrl, avg, bestSeries, over200, tier, 
 
       {/* Full-art photo */}
       {avatarUrl ? (
-        <img src={avatarUrl} alt={name} crossOrigin="anonymous"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }} />
+        <Image src={avatarUrl} alt={name} fill crossOrigin="anonymous"
+          style={{ objectFit: 'cover', objectPosition: 'center 15%' }} />
       ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 100 }}>
           <div style={{
