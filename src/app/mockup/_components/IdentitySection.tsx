@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
 import { HeroCurve } from '@/components/mockup/Curves'
 import { HeroNumber, ActionRow, ActionButton } from '@/components/ui/primitives'
-import { ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, PLAYER_BK_RATING, MATCHES, COLORS } from '../data'
+import { ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, PLAYER_BK_RATING, MATCHES, BK_PROGRESS, RANKING_PTS, COLORS } from '../data'
 
 const { GOLD } = COLORS
 const INK  = '#f4f5f7'
@@ -29,6 +29,8 @@ function BadgeIcon({ name, size, color, filled }: {
   return Icon ? <Icon size={size} color={color} fill={filled ? color : 'none'} strokeWidth={2} /> : null
 }
 
+type HeroMetric = 'snitt' | 'bk' | 'ranking'
+
 interface IdentitySectionProps {
   matchAvgs: number[]
   seasonAvg: number
@@ -36,7 +38,7 @@ interface IdentitySectionProps {
   recentAvg: number
   lastSeasonAvg: number
   bkTopPct: number
-  onOpenCurve: () => void
+  onOpenCurve: (metric?: HeroMetric) => void
   onOpenChallenges: () => void
 }
 
@@ -45,12 +47,70 @@ export default function IdentitySection({
   bkTopPct, onOpenCurve, onOpenChallenges,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
+  const [activeHero, setActiveHero] = useState(0)
+  const heroRowRef = useRef<HTMLDivElement>(null)
 
   // Projected season avg if next 3 matches hold current form
   const projSeasonAvg = Math.round(
     (matchAvgs.reduce((a, b) => a + b) + recentAvg * 3) / (matchAvgs.length + 3)
   )
   const projDiff = projSeasonAvg - seasonAvg
+
+  const rankTotal = RANKING_PTS.reduce((a, b) => a + b)
+
+  // The swipeable hero deck — one number per card, Revolut account-card style
+  const heroCards: {
+    key: HeroMetric; label: string; value: number; delta: number; deltaSuffix: string
+    caption: React.ReactNode; color: string; data: number[]; proj?: number
+    footer: React.ReactNode
+  }[] = [
+    {
+      key: 'snitt', label: 'Säsongssnitt', value: seasonAvg, delta: formDiff, deltaSuffix: ' form',
+      caption: <>Top {bkTopPct}% i Elitserien Damer · BK Rating <span style={{ color: INK, fontWeight: 700 }}>{PLAYER_BK_RATING}</span></>,
+      color: '#f5c200', data: matchAvgs, proj: recentAvg,
+      footer: (
+        <>
+          <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
+          <span style={{ fontSize: 12, color: INK3 }}>{MATCHES.length} matcher · förra säsongen {lastSeasonAvg}</span>
+          <span style={{ fontSize: 12, color: INK3 }}>
+            Prognos <span style={{ fontWeight: 700, color: projDiff >= 0 ? '#5dcaa5' : '#e05555', fontVariantNumeric: 'tabular-nums' }}>{projSeasonAvg}</span>
+          </span>
+        </>
+      ),
+    },
+    {
+      key: 'bk', label: 'BK Rating', value: PLAYER_BK_RATING, delta: PLAYER_BK_RATING - BK_PROGRESS[0], deltaSuffix: ' i år',
+      caption: <>Bowlkollens prestationsbetyg · Top {bkTopPct}% i ligan</>,
+      color: '#5dcaa5', data: BK_PROGRESS,
+      footer: (
+        <>
+          <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
+          <span style={{ fontSize: 12, color: INK3 }}>startade på {BK_PROGRESS[0]} · stigit hela säsongen</span>
+          <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[MATCHES.length - 1].date}</span>
+        </>
+      ),
+    },
+    {
+      key: 'ranking', label: 'Rankingpoäng', value: rankTotal, delta: RANKING_PTS[RANKING_PTS.length - 1], deltaSuffix: ' senaste',
+      caption: <>Poäng till seriens individuella ranking</>,
+      color: '#7ab4e8', data: RANKING_PTS,
+      footer: (
+        <>
+          <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
+          <span style={{ fontSize: 12, color: INK3 }}>max 8 poäng per match</span>
+          <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[MATCHES.length - 1].date}</span>
+        </>
+      ),
+    },
+  ]
+
+  const handleHeroScroll = () => {
+    const el = heroRowRef.current
+    if (!el) return
+    const child = el.firstElementChild as HTMLElement | null
+    const step = (child?.offsetWidth ?? el.clientWidth) + 24
+    setActiveHero(Math.min(heroCards.length - 1, Math.max(0, Math.round(el.scrollLeft / step))))
+  }
 
   return (
     <div style={{ padding: '20px 20px 0' }}>
@@ -98,24 +158,38 @@ export default function IdentitySection({
         ))}
       </div>
 
-      {/* Hero: the one home for snitt, form, percentile and rating */}
+      {/* Hero deck: one number per card — swipe for BK Rating and Rankingpoäng */}
       <div className="hero-in" style={{ marginTop: 24 }}>
-        <HeroNumber
-          label="Säsongssnitt"
-          value={seasonAvg}
-          delta={formDiff}
-          deltaSuffix=" form"
-          caption={<>Top {bkTopPct}% i Elitserien Damer · BK Rating <span style={{ color: INK, fontWeight: 700 }}>{PLAYER_BK_RATING}</span></>}
-        />
-        <div onClick={onOpenCurve} style={{ marginTop: 18, cursor: 'pointer' }}>
-          <HeroCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} projAvg={recentAvg} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-            <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
-            <span style={{ fontSize: 12, color: INK3 }}>{MATCHES.length} matcher · förra säsongen {lastSeasonAvg}</span>
-            <span style={{ fontSize: 12, color: INK3 }}>
-              Prognos <span style={{ fontWeight: 700, color: projDiff >= 0 ? '#5dcaa5' : '#e05555', fontVariantNumeric: 'tabular-nums' }}>{projSeasonAvg}</span>
-            </span>
-          </div>
+        <div ref={heroRowRef} onScroll={handleHeroScroll} className="noscroll"
+          style={{ display: 'flex', gap: 24, overflowX: 'auto', scrollSnapType: 'x mandatory',
+            margin: '0 -20px', padding: '0 20px',
+            scrollbarWidth: 'none' } as React.CSSProperties}>
+          {heroCards.map(c => (
+            <div key={c.key} style={{ minWidth: '100%', scrollSnapAlign: 'center' }}>
+              <HeroNumber
+                label={c.label}
+                value={c.value}
+                delta={c.delta}
+                deltaSuffix={c.deltaSuffix}
+                caption={c.caption}
+              />
+              <div onClick={() => onOpenCurve(c.key)} style={{ marginTop: 18, cursor: 'pointer' }}>
+                <HeroCurve data={c.data} seasonAvg={c.key === 'snitt' ? seasonAvg : undefined}
+                  projAvg={c.proj} color={c.color} gid={`hero_${c.key}`} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
+                  {c.footer}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Deck dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
+          {heroCards.map((c, i) => (
+            <div key={c.key} style={{ height: 6, borderRadius: 3, transition: 'all 0.25s ease',
+              width: i === activeHero ? 18 : 6,
+              background: i === activeHero ? 'rgba(244,245,247,0.7)' : 'rgba(244,245,247,0.18)' }} />
+          ))}
         </div>
       </div>
 

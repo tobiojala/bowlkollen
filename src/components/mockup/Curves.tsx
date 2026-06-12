@@ -11,49 +11,64 @@ export const MCFG: Record<Metric, { label: string; color: string }> = {
   alla:    { label: 'Alla 3', color: 'white'   },
 }
 
+/* Hex color + alpha (0-1) → rgba() string */
+function rgba(hex: string, a: number) {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
+}
+
 /* Full-width season curve for the profile hero — no axes, no labels,
    just the shape of the season under the hero number. Optional dashed
    projection extends the curve if current form holds. */
-export function HeroCurve({ matchAvgs, seasonAvg, projAvg }: {
-  matchAvgs: number[]; seasonAvg: number; projAvg?: number
+export function HeroCurve({ data, seasonAvg, projAvg, color = '#f5c200', gid = 'hc' }: {
+  data: number[]
+  /** Reference line value (dashed). Omit to hide. */
+  seasonAvg?: number
+  projAvg?: number
+  /** Curve color — gold for snitt, green for BK, blue for ranking */
+  color?: string
+  /** Unique gradient id — required when several HeroCurves render at once */
+  gid?: string
 }) {
   const W = 360, H = 84
   const PAD = { l: 2, r: 8, t: 10, b: 8 }
   const iH = H - PAD.t - PAD.b
   // Reserve right-side width for the projection when shown
   const splitX = projAvg !== undefined ? W * 0.8 : W
-  const allVals = projAvg !== undefined ? [...matchAvgs, projAvg] : matchAvgs
-  const mn = Math.min(...allVals) - 6, mx = Math.max(...allVals) + 6
-  const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * (splitX - PAD.l - PAD.r)
+  const allVals = projAvg !== undefined ? [...data, projAvg] : data
+  const vPad = Math.max((Math.max(...allVals) - Math.min(...allVals)) * 0.18, 2)
+  const mn = Math.min(...allVals) - vPad, mx = Math.max(...allVals) + vPad
+  const cx = (i: number) => PAD.l + (i / (data.length - 1)) * (splitX - PAD.l - PAD.r)
   const cy = (v: number) => PAD.t + iH - ((v - mn) / (mx - mn)) * iH
-  const pts  = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
+  const pts  = data.map((v, i) => ({ x: cx(i), y: cy(v) }))
   const line = smooth(pts)
   const fill = line + ` L ${pts[pts.length-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
   const last = pts[pts.length - 1]
-  const avgY = cy(seasonAvg)
   const projX = W - PAD.r
   const projY = projAvg !== undefined ? cy(projAvg) : 0
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
-        <linearGradient id="hc_f" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(245,194,0,0.18)" /><stop offset="100%" stopColor="rgba(245,194,0,0)" />
+        <linearGradient id={`${gid}_f`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={rgba(color, 0.18)} /><stop offset="100%" stopColor={rgba(color, 0)} />
         </linearGradient>
-        <linearGradient id="hc_l" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(245,194,0,0.35)" /><stop offset="100%" stopColor="#f5c200" />
+        <linearGradient id={`${gid}_l`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={rgba(color, 0.35)} /><stop offset="100%" stopColor={color} />
         </linearGradient>
       </defs>
-      <line x1={PAD.l} y1={avgY} x2={W - PAD.r} y2={avgY} stroke="rgba(244,245,247,0.14)" strokeWidth="1" strokeDasharray="3,3" />
-      <path d={fill} fill="url(#hc_f)" />
-      <path d={line} fill="none" stroke="url(#hc_l)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {seasonAvg !== undefined && (
+        <line x1={PAD.l} y1={cy(seasonAvg)} x2={W - PAD.r} y2={cy(seasonAvg)} stroke="rgba(244,245,247,0.14)" strokeWidth="1" strokeDasharray="3,3" />
+      )}
+      <path d={fill} fill={`url(#${gid}_f)`} />
+      <path d={line} fill="none" stroke={`url(#${gid}_l)`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {projAvg !== undefined && (
         <>
           <path d={`M ${last.x.toFixed(1)},${last.y.toFixed(1)} L ${projX.toFixed(1)},${projY.toFixed(1)}`}
-            fill="none" stroke="rgba(245,194,0,0.45)" strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
-          <circle cx={projX} cy={projY} r={3} fill="rgba(245,194,0,0.45)" />
+            fill="none" stroke={rgba(color, 0.45)} strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
+          <circle cx={projX} cy={projY} r={3} fill={rgba(color, 0.45)} />
         </>
       )}
-      <circle cx={last.x} cy={last.y} r={4.5} fill="#f5c200" stroke="rgba(245,194,0,0.25)" strokeWidth={5} />
+      <circle cx={last.x} cy={last.y} r={4.5} fill={color} stroke={rgba(color, 0.25)} strokeWidth={5} />
     </svg>
   )
 }
@@ -138,9 +153,13 @@ export function MiniCurve({
   )
 }
 
-export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap }: {
+export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap, upcoming, recentAvg }: {
   matchAvgs: number[]; seasonAvg: number; metric: Metric
   tapped: number | null; onTap: (i: number | null) => void
+  /** Upcoming matches → ghost prediction fan after the last played match (snitt only) */
+  upcoming?: { date: string; opp: string }[]
+  /** "If form holds" scenario value for the ghost fan */
+  recentAvg?: number
 }) {
   const W = 320, H = 124, PAD = { l: 30, r: 42, t: 14, b: 22 }
   const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
@@ -187,7 +206,12 @@ export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap }: {
   const [mnV, mxV] = metric === 'snitt' ? [150, 290] : metric === 'ranking' ? [-0.5, 10.5] : [65, 95]
   const gridVs = metric === 'snitt' ? [170, 200, 230, 260] : metric === 'ranking' ? [2, 4, 6, 8] : [70, 75, 80, 85, 90]
   const cy     = (v: number) => PAD.t + iH - ((v - mnV) / (mxV - mnV)) * iH
-  const pts    = data.map((v, i) => ({ x: cx(i), y: cy(v) }))
+  // Ghost prediction fan: compress the played matches to make room for upcoming ones
+  const ghost  = metric === 'snitt' && !!upcoming?.length && recentAvg !== undefined
+  const U      = ghost ? upcoming!.length : 0
+  const cxG    = (i: number) => PAD.l + (i / (data.length + U - 1)) * iW
+  const px     = ghost ? cxG : cx
+  const pts    = data.map((v, i) => ({ x: px(i), y: cy(v) }))
   const line   = smooth(pts)
   const fill   = line + ` L ${pts[pts.length-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
   const last   = pts[pts.length - 1]
@@ -211,11 +235,50 @@ export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap }: {
       {metric === 'snitt' && (
         <>
           <line x1={PAD.l} y1={cy(seasonAvg)} x2={W - PAD.r} y2={cy(seasonAvg)} stroke="rgba(245,194,0,0.35)" strokeWidth="1" strokeDasharray="4,3" />
-          <text x={W - PAD.r + 4} y={cy(seasonAvg) + 4} fill="rgba(245,194,0,0.6)" fontSize="8.5" fontWeight="bold">snitt {seasonAvg}</text>
+          {!ghost && (
+            <text x={W - PAD.r + 4} y={cy(seasonAvg) + 4} fill="rgba(245,194,0,0.6)" fontSize="8.5" fontWeight="bold">snitt {seasonAvg}</text>
+          )}
         </>
       )}
       <path d={fill} fill={`url(#${gid}_f)`} />
       <path d={line} fill="none" stroke={`url(#${gid}_l)`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Ghost prediction fan — two dashed scenarios into the upcoming matches */}
+      {ghost && (() => {
+        const yForm = cy(recentAvg!)
+        const yAvg  = cy(seasonAvg)
+        const endX  = cxG(data.length + U - 1)
+        return (
+          <g>
+            {/* "today" separator */}
+            <line x1={last.x} y1={PAD.t} x2={last.x} y2={PAD.t + iH} stroke="rgba(244,245,247,0.07)" strokeWidth="1" />
+            {/* Fan area between the two scenarios */}
+            <path d={`M ${last.x.toFixed(1)},${last.y.toFixed(1)} L ${endX.toFixed(1)},${yForm.toFixed(1)} L ${endX.toFixed(1)},${yAvg.toFixed(1)} Z`}
+              fill="rgba(245,194,0,0.05)" />
+            {/* If form holds */}
+            <line x1={last.x} y1={last.y} x2={endX} y2={yForm}
+              stroke="rgba(245,194,0,0.5)" strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
+            {/* If season average holds */}
+            <line x1={last.x} y1={last.y} x2={endX} y2={yAvg}
+              stroke="rgba(244,245,247,0.22)" strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
+            {/* Ghost match markers along the form scenario + opponent labels */}
+            {upcoming!.map((u, k) => {
+              const gx = cxG(data.length + k)
+              const gy = last.y + (yForm - last.y) * ((k + 1) / U)
+              const initials = u.opp.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
+              return (
+                <g key={k}>
+                  <circle cx={gx} cy={gy} r={3.5} fill="#0f1216" stroke="rgba(245,194,0,0.5)" strokeWidth="1.5" />
+                  <text x={gx} y={H - 4} fill="rgba(244,245,247,0.30)" fontSize="8" textAnchor="middle">{initials}</text>
+                </g>
+              )
+            })}
+            <text x={endX + 3} y={yForm + 3} fill="rgba(245,194,0,0.65)" fontSize="8" fontWeight="bold">{recentAvg}</text>
+            <text x={endX + 3} y={yAvg + 3} fill="rgba(244,245,247,0.35)" fontSize="8">{seasonAvg}</text>
+          </g>
+        )
+      })()}
+
       {pts.map((p, i) => (
         <g key={i} onClick={() => onTap(tapped === i ? null : i)} style={{ cursor: 'pointer' }}>
           <circle cx={p.x} cy={p.y} r={13} fill="transparent" />
@@ -227,7 +290,9 @@ export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap }: {
       ))}
       <text x={last.x} y={last.y - 11} fill={color} fontSize="9" textAnchor="middle" fontWeight="bold">nu</text>
       <text x={PAD.l} y={H - 4} fill="rgba(255,255,255,0.22)" fontSize="8" textAnchor="middle">{MATCHES[0].date}</text>
-      <text x={W - PAD.r} y={H - 4} fill="rgba(255,255,255,0.22)" fontSize="8" textAnchor="end">{MATCHES[MATCHES.length-1].date}</text>
+      {!ghost && (
+        <text x={W - PAD.r} y={H - 4} fill="rgba(255,255,255,0.22)" fontSize="8" textAnchor="end">{MATCHES[MATCHES.length-1].date}</text>
+      )}
     </svg>
   )
 }

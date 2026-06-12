@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { MATCHES, LAST_SEASON, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, COLORS } from './data'
 import { calcStreaks } from './helpers'
+import type { Metric } from '@/components/mockup/Curves'
 
 import Reveal from '@/components/Reveal'
 
@@ -25,6 +26,7 @@ type CardType = 'curve' | 'whatif' | 'challenges' | 'duell' | 'match'
 
 export default function MockupPage() {
   const [expanded, setExpanded]         = useState<CardType | null>(null)
+  const [curveMetric, setCurveMetric]   = useState<Metric>('snitt')
   const [matchTapped, setMatchTapped]   = useState<number | null>(null)
   const [dnaSpoke, setDnaSpoke]         = useState<number | null>(null)
   const [dnaInfoOpen, setDnaInfoOpen]   = useState(false)
@@ -115,7 +117,7 @@ export default function MockupPage() {
             recentAvg={recentAvg}
             lastSeasonAvg={lastSeasonAvg}
             bkTopPct={bkTopPct}
-            onOpenCurve={() => setExpanded('curve')}
+            onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => setExpanded('challenges')}
           />
 
@@ -131,7 +133,7 @@ export default function MockupPage() {
             <AnalysisSection
               seasonAvg={seasonAvg}
               formDiff={formDiff}
-              onOpenCurve={() => setExpanded('curve')}
+              onOpenCurve={() => { setCurveMetric('snitt'); setExpanded('curve') }}
             />
           </Reveal>
 
@@ -173,6 +175,8 @@ export default function MockupPage() {
           matchAvgs={matchAvgs}
           seasonAvg={seasonAvg}
           formDiff={formDiff}
+          recentAvg={recentAvg}
+          initialMetric={curveMetric}
           onClose={close}
         />
       )}

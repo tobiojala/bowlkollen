@@ -17,6 +17,12 @@ export const MATCHES = [
 ]
 
 export const RANKING_PTS = [3, 6, 4, 3, 7, 5, 3, 6, 4, 7, 6, 8, 8, 8, 7]
+
+export const UPCOMING = [
+  { date: '25 jan', opp: 'Malmö BK' },
+  { date: '1 feb',  opp: 'Sthlm BK' },
+  { date: '8 feb',  opp: 'Uppsala BK' },
+]
 export const BK_PROGRESS = [72, 74, 73, 73, 76, 75, 74, 76, 75, 79, 78, 82, 84, 87, 87]
 export const LAST_SEASON = [183, 192, 186, 194, 199, 195, 201, 197, 203, 208, 205, 211, 208, 215, 212]
 

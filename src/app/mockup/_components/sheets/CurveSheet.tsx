@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Sheet } from '@/components/mockup/Sheet'
 import { FullCurve, MCFG, type Metric } from '@/components/mockup/Curves'
-import { MATCHES, COLORS } from '../../data'
+import { MATCHES, UPCOMING, COLORS } from '../../data'
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -15,11 +15,13 @@ interface CurveSheetProps {
   matchAvgs: number[]
   seasonAvg: number
   formDiff: number
+  recentAvg: number
+  initialMetric?: Metric
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, seasonAvg, formDiff, onClose }: CurveSheetProps) {
-  const [curveMetric, setCurveMetric] = useState<Metric>('snitt')
+export default function CurveSheet({ matchAvgs, seasonAvg, formDiff, recentAvg, initialMetric, onClose }: CurveSheetProps) {
+  const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
   const curveTapM = curveTapped !== null ? MATCHES[curveTapped] : null
@@ -59,10 +61,26 @@ export default function CurveSheet({ matchAvgs, seasonAvg, formDiff, onClose }: 
         })}
       </div>
 
-      <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric={curveMetric} tapped={curveTapped} onTap={setCurveTapped} />
+      <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric={curveMetric}
+        tapped={curveTapped} onTap={setCurveTapped}
+        upcoming={UPCOMING} recentAvg={recentAvg} />
+
+      {/* Ghost fan legend */}
+      {curveMetric === 'snitt' && (
+        <div className="flex items-center gap-4 mt-3">
+          <div className="flex items-center gap-1.5">
+            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(245,194,0,0.55)" strokeWidth="1.5" strokeDasharray="4,3" /></svg>
+            <span className="text-[12px]" style={{ color: INK3 }}>om formen håller · <span className="tabular-nums font-semibold" style={{ color: INK2 }}>{recentAvg}</span></span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(244,245,247,0.28)" strokeWidth="1.5" strokeDasharray="4,3" /></svg>
+            <span className="text-[12px]" style={{ color: INK3 }}>om snittet håller · <span className="tabular-nums font-semibold" style={{ color: INK2 }}>{seasonAvg}</span></span>
+          </div>
+        </div>
+      )}
 
       {curveMetric === 'snitt' && !curveTapM && (
-        <p className="text-[12px] text-center mt-2" style={{ color: INK4 }}>
+        <p className="text-[12px] text-center mt-3" style={{ color: INK4 }}>
           Tryck på en punkt för matchinfo
         </p>
       )}
