@@ -13,11 +13,13 @@ export function Sheet({ title, subtitle, onClose, children }: {
         }
         .sheet-panel { animation: sheet-up 0.38s cubic-bezier(0.32,0.72,0,1) both; }
       `}</style>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99 }} />
+      {/* Click-to-close catcher — darkening is handled by the page's depth overlay */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 99 }} />
       <div className="sheet-panel noscroll"
         style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, maxWidth: 600,
-          margin: '0 auto', background: '#1c2127', borderRadius: '28px 28px 0 0',
-          boxShadow: '0 -8px 60px rgba(0,0,0,0.45)',
+          margin: '0 auto', background: '#0f1216', borderRadius: '28px 28px 0 0',
+          borderTop: '1px solid rgba(244,245,247,0.10)',
+          boxShadow: '0 -16px 70px rgba(0,0,0,0.7)',
           padding: '12px 20px calc(36px + env(safe-area-inset-bottom))', maxHeight: '88vh', overflowY: 'auto' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(244,245,247,0.18)', borderRadius: 2, margin: '0 auto 14px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, minHeight: 44, gap: 12 }}>

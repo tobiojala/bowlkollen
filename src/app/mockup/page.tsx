@@ -155,7 +155,7 @@ export default function MockupPage() {
       {/* Dark overlay */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 9,
-        background: isToastActive ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.28)',
+        background: isToastActive ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.45)',
         opacity: isDepthActive ? 1 : 0,
         transition: 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)',
         pointerEvents: isDepthActive && !popupMoment ? 'auto' : 'none',
