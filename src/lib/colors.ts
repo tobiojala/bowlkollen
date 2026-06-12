@@ -1,11 +1,11 @@
 export const dark = {
-  bg:       '#10161e',
-  surface:  '#172030',
-  card:     '#1c2840',
-  border:   '#2a3858',
+  bg:       '#0b0d10',
+  surface:  '#14171c',
+  card:     '#1a1e24',
+  border:   '#242a32',
   accent:   '#f5c200',
-  text:     '#ffffff',
-  textMuted:'#6b7a99',
+  text:     '#f4f5f7',
+  textMuted:'#828b99',
   green:    '#5a82b4',
   red:      '#e05555',
 }

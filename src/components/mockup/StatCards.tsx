@@ -34,7 +34,7 @@ export function CurveCard({ matchAvgs, seasonAvg, formDiff, onExpand }: {
             {formDiff > 0 ? `+${formDiff}` : formDiff} form
           </span>
         </div>
-        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', marginTop: 4 }}>Tryck för metric-jämförelse</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginTop: 4 }}>Tryck för metric-jämförelse</div>
       </div>
     </Card>
   )
@@ -49,11 +49,11 @@ export function WhatIfCard({ seasonAvg, totalSum, totalGames, onExpand }: {
   return (
     <Card accent={GREEN} onExpand={onExpand}>
       <CardLabel text="VAD HÄNDER OM..." isNew />
-      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.32)', lineHeight: 1.4 }}>Nästa match snitt:</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.32)', lineHeight: 1.4 }}>Nästa match snitt:</div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 30, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{val}</div>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>nästa</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>nästa</div>
         </div>
         <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.12)' }}>→</div>
         <div style={{ textAlign: 'center' }}>
@@ -67,7 +67,7 @@ export function WhatIfCard({ seasonAvg, totalSum, totalGames, onExpand }: {
         <input type="range" min="140" max="280" step="5" value={val}
           onChange={e => setVal(Number(e.target.value))}
           style={{ width: '100%', accentColor: GOLD, cursor: 'pointer' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 2 }}>
           <span>140</span><span style={{ color: GOLD }}>{seasonAvg}</span><span>280</span>
         </div>
       </div>
@@ -122,7 +122,7 @@ export function DuellCard({ matchAvgs, onExpand }: { matchAvgs: number[]; onExpa
   return (
     <Card accent={BLUE} onExpand={onExpand}>
       <CardLabel text="SÄSONGSDUELL" isNew />
-      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>I år vs förra säsongen</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>I år vs förra säsongen</div>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>
         <path d={smooth(lastPts)} fill="none" stroke="rgba(160,175,200,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="4,2" />
         <path d={smooth(thisPts)} fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
@@ -132,14 +132,14 @@ export function DuellCard({ matchAvgs, onExpand }: { matchAvgs: number[]; onExpa
       <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
         <div style={{ flex: 1, textAlign: 'center', padding: '6px 4px', background: 'rgba(245,194,0,0.07)', border: '1px solid rgba(245,194,0,0.15)', borderRadius: 10 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{thisAvg}</div>
-          <div style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>I ÅR</div>
+          <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>I ÅR</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 900, color: GREEN }}>↑{thisAvg - lastAvg}</span>
         </div>
         <div style={{ flex: 1, textAlign: 'center', padding: '6px 4px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 10 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: 'rgba(160,175,200,0.55)', lineHeight: 1 }}>{lastAvg}</div>
-          <div style={{ fontSize: 8, color: MUTED, marginTop: 2 }}>FÖRRA</div>
+          <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>FÖRRA</div>
         </div>
       </div>
     </Card>

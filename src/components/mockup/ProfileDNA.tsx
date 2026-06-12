@@ -35,7 +35,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <defs>
         <radialGradient id="dna_g" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={hov ? 'rgba(245,194,0,0.28)' : 'rgba(245,194,0,0.20)'} />
+          <stop offset="0%" stopColor={hov ? 'rgba(245,194,0,0.22)' : 'rgba(245,194,0,0.14)'} />
           <stop offset="100%" stopColor="rgba(245,194,0,0.02)" />
         </radialGradient>
         <filter id="dna_glow" x="-25%" y="-25%" width="150%" height="150%">
@@ -75,7 +75,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
       <g className={isLive ? 'dna-body-live' : hov ? 'dna-body-hov' : 'dna-body'}>
         {[rMin, rMin + (rMax - rMin) * 0.5, rMax].map(r => (
           <circle key={r} cx={CX} cy={CY} r={r} fill="none"
-            stroke={hov ? 'rgba(245,194,0,0.18)' : 'rgba(245,194,0,0.10)'} strokeWidth="1" />
+            stroke={hov ? 'rgba(244,245,247,0.10)' : 'rgba(244,245,247,0.06)'} strokeWidth="1" />
         ))}
         {/* Spoke lines start outside avatar to keep center clean */}
         {spokes.map((p, i) => (
@@ -83,7 +83,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
             x1={(CX + SPOKE_START * Math.cos(p.angle)).toFixed(1)}
             y1={(CY + SPOKE_START * Math.sin(p.angle)).toFixed(1)}
             x2={p.x} y2={p.y}
-            stroke={hov ? 'rgba(245,194,0,0.10)' : 'rgba(245,194,0,0.07)'} strokeWidth="1" />
+            stroke={hov ? 'rgba(244,245,247,0.07)' : 'rgba(244,245,247,0.05)'} strokeWidth="1" />
         ))}
         <path d={pathD} fill="url(#dna_g)" filter="url(#dna_glow)" />
         <path d={pathD} fill="none"
@@ -147,8 +147,8 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
       <g filter="url(#avatar_glow)" style={{ pointerEvents: 'none' }}>
         <circle cx={CX} cy={CY} r={AVATAR_R + 5} fill="rgba(245,194,0,0.08)" />
       </g>
-      <circle cx={CX} cy={CY} r={AVATAR_R} fill="#10161e"
-        stroke="#f5c200" strokeWidth="2.5" />
+      <circle cx={CX} cy={CY} r={AVATAR_R} fill="#0b0d10"
+        stroke="rgba(245,194,0,0.85)" strokeWidth="2" />
       <text x={CX} y={CY + 8} fill="#f5c200" fontSize="22" fontWeight="900"
         textAnchor="middle" style={{ letterSpacing: '-0.5px' }}>SH</text>
     </svg>

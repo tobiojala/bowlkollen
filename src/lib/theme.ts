@@ -4,12 +4,12 @@
 // New code: prefer Tailwind classes (bg-gold, text-green, border-dark-border, etc.)
 
 export const colors = {
-  // Surfaces
-  darkBg:       '#10161e',
-  darkSurface:  '#172030',
-  darkCard:     '#1c2840',
-  darkBorder:   '#2a3858',
-  darkMuted:    '#6b7a99',
+  // Surfaces — near-black, desaturated. Elevation = tonal step, not borders.
+  darkBg:       '#0b0d10',
+  darkSurface:  '#14171c',
+  darkCard:     '#1a1e24',
+  darkBorder:   '#242a32',
+  darkMuted:    '#828b99',
 
   lightBg:      '#f5f2ec',
   lightSurface: '#ffffff',
@@ -37,7 +37,7 @@ export function theme(isDark: boolean) {
     card:      isDark ? colors.darkCard     : colors.lightCard,
     border:    isDark ? colors.darkBorder   : colors.lightBorder,
     muted:     isDark ? colors.darkMuted    : colors.lightMuted,
-    text:      isDark ? '#ffffff'           : '#1a2535',
+    text:      isDark ? '#f4f5f7'           : '#1a2535',
     accent:    colors.gold,
     green:     colors.green,
     blue:      colors.blue,

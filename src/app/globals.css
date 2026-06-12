@@ -12,12 +12,24 @@
 
 /* ── Design tokens ──────────────────────────────────────────────────────── */
 @theme {
-  /* ── Dark surface palette ── */
-  --color-dark-bg:       #10161e;
-  --color-dark-surface:  #172030;
-  --color-dark-card:     #1c2840;
-  --color-dark-border:   #2a3858;
-  --color-dark-muted:    #6b7a99;
+  /* ── Dark surface palette ──
+     Near-black, desaturated. Elevation = tonal step up, never a border.
+     bg → surface → surface-2 are the only three levels. */
+  --color-dark-bg:       #0b0d10;
+  --color-dark-surface:  #14171c;
+  --color-dark-card:     #1a1e24;
+  --color-dark-border:   #242a32;   /* hairline only — avoid; prefer tonal contrast */
+  --color-dark-muted:    #828b99;
+
+  /* Canonical aliases for new components (dark-first) */
+  --color-bg:        #0b0d10;
+  --color-surface:   #14171c;
+  --color-surface-2: #1c2127;
+  --color-ink:       #f4f5f7;                   /* primary text   */
+  --color-ink-2:     rgba(244,245,247,0.64);    /* secondary text */
+  --color-ink-3:     rgba(244,245,247,0.40);    /* muted text     */
+  --color-ink-4:     rgba(244,245,247,0.24);    /* faint/disabled */
+  --color-hairline:  rgba(244,245,247,0.07);
 
   /* ── Light surface palette ── */
   --color-light-bg:      #f5f2ec;
@@ -56,14 +68,29 @@
   /* ── Layout ── */
   --max-w-app:           600px;
 
-  /* ── Typography ── */
-  --font-sans:           system-ui, sans-serif;
+  /* ── Typography ──
+     Hard scale — nothing below 11px ships. Scores always tabular. */
+  --font-sans:           -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+  --text-hero:           52px;
+  --text-hero--line-height: 1;
+  --text-hero--letter-spacing: -0.02em;
+  --text-title:          24px;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.015em;
+  --text-body:           15px;
+  --text-body--line-height: 1.5;
+  --text-caption:        13px;
+  --text-caption--line-height: 1.4;
+  --text-label:          11px;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.08em;
 }
 
 body {
-  background-color: var(--color-dark-bg);
-  color: #ffffff;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── Skeleton pulse ─────────────────────────────────────────────────────── */

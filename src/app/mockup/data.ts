@@ -59,10 +59,13 @@ export const MOCK_REACTIONS: Record<number, { flame: number; heart: number }> = 
 }
 
 export const COLORS = {
-  BG:    '#10161e',
-  GOLD:  '#f5c200',
-  BLUE:  '#7ab4e8',
-  GREEN: '#5dcaa5',
-  MUTED: 'rgba(255,255,255,0.38)',
-  BORDER: 'rgba(255,255,255,0.08)',
+  BG:      '#0b0d10',
+  SURFACE: '#14171c',
+  SURFACE2:'#1c2127',
+  GOLD:    '#f5c200',
+  BLUE:    '#7ab4e8',
+  GREEN:   '#5dcaa5',
+  RED:     '#e05555',
+  MUTED:   'rgba(244,245,247,0.42)',
+  BORDER:  'rgba(244,245,247,0.07)',
 } as const
