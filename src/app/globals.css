@@ -126,3 +126,86 @@ body {
   0%   { transform: translateY(0px) translateX(0px) scale(0.8);    opacity: 0.7; }
   100% { transform: translateY(-35px) translateX(-8px) scale(0.3); opacity: 0; }
 }
+
+/* ── Design system utilities ────────────────────────────────────────────── */
+
+/* Display numbers — scores, stats, big figures */
+.num {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Section label — unified across all pages */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Live pulse dot */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #f5c200;
+  animation: live-pulse 1.4s ease-in-out infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Mockup page ── */
+@keyframes mockup-ticker-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+.ticker-dot { animation: mockup-ticker-dot 1s ease-in-out infinite; }
+
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-track { display: flex; animation: ticker 22s linear infinite; white-space: nowrap; }
+
+@keyframes streak-ring { 0%, 100% { box-shadow: 0 0 0 0 rgba(245,194,0,0.5); } 65% { box-shadow: 0 0 0 10px rgba(245,194,0,0); } }
+.streak-icon { animation: streak-ring 2s ease-in-out infinite; }
+
+@keyframes challenge-urgent { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+.challenge-urgent { animation: challenge-urgent 1.4s ease-in-out infinite; }
+
+@keyframes badge-near-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(245,194,0,0.5); } 50% { box-shadow: 0 0 12px 4px rgba(245,194,0,0.18); } }
+.badge-near { animation: badge-near-pulse 1.8s ease-in-out infinite; }
+
+@keyframes xp-fill { from { width: 0; } to { width: var(--xp-w); } }
+.xp-bar { animation: xp-fill 1.2s cubic-bezier(0.34,1.2,0.64,1) 0.4s both; }
+
+@keyframes slide-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
+
+@keyframes toast-life { 0% { transform: translateY(72px); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(72px); opacity: 0; } }
+.toast-card { animation: toast-life 4.2s ease forwards; }
+
+@keyframes arc-fill { from { stroke-dashoffset: 201.1; } }
+
+@keyframes dna-pulse { 0%, 100% { opacity: 0.18; } 50% { opacity: 0; } }
+.dna-hl-pulse { animation: dna-pulse 2.2s ease-in-out infinite; }
+@keyframes dna-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
+@keyframes dna-breathe-fast { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.034); } }
+.dna-body { animation: dna-breathe 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.dna-body-hov { animation: dna-breathe-fast 2.1s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes dna-live-glow { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(245,194,0,0.3)); } 50% { transform: scale(1.026); filter: drop-shadow(0 0 18px rgba(245,194,0,0.65)); } }
+.dna-body-live { animation: dna-live-glow 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+
+@keyframes flame-dance { 0%,100% { transform: translateY(0) rotate(-4deg) scale(1); } 25% { transform: translateY(-4px) rotate(3deg) scale(1.1); } 50% { transform: translateY(-7px) rotate(-2deg) scale(1.15); } 75% { transform: translateY(-3px) rotate(4deg) scale(1.08); } }
+.flame-dance { animation: flame-dance 0.85s ease-in-out infinite; display: inline-block; }
+
+@keyframes curtain-open { from { opacity: 0; transform: translateX(-50%) translateY(-6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.season-curtain { animation: curtain-open 0.15s ease-out; }
+
+/* Tonal row/card — elevation by tone, never borders or blur */
+.glass-row {
+  background: var(--color-surface);
+  transition: background 0.15s;
+}
+.glass-row:hover { background: var(--color-surface-2); }
+.feed-in { animation: slide-left 0.4s cubic-bezier(0.34,1.1,0.64,1) both; }
+.noscroll::-webkit-scrollbar { display: none; }

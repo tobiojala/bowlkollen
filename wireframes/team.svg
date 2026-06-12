@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 1380" width="390" height="1380">
+<defs><style>
+  .bg{fill:#0D0D0D} .nav{fill:#111111} .card{fill:#1A1A1A} .card-dark{fill:#141414}
+  .card-light{fill:#222222} .t1{fill:#444444} .t2{fill:#2D2D2D} .t3{fill:#1E1E1E}
+  .accent{fill:#353530} .chip{fill:#1C1C1C} .div{fill:#1A1A1A}
+  .hl{fill:#1E1C10} .dw{fill:#1A2E18} .dl{fill:#2E1818}
+</style></defs>
+
+<rect width="390" height="1380" class="bg"/>
+
+<!-- ══════════════════════════════════════
+     TOP NAV  0–56
+══════════════════════════════════════ -->
+<rect width="390" height="56" class="nav"/>
+<rect x="20" y="16" width="24" height="24" rx="6" class="card-light"/>
+<rect x="175" y="19" width="40" height="18" rx="4" class="t2"/>
+<rect x="346" y="16" width="24" height="24" rx="6" class="card-light"/>
+
+<!-- ══════════════════════════════════════
+     TEAM HEADER  56–290
+══════════════════════════════════════ -->
+<!-- team avatar -->
+<circle cx="195" cy="124" r="50" class="card-light" stroke="#252525" stroke-width="2"/>
+<rect x="177" y="112" width="36" height="22" rx="4" class="t2"/>
+
+<!-- team name -->
+<rect x="108" y="184" width="174" height="20" rx="4" class="t1"/>
+
+<!-- division badge -->
+<rect x="149" y="212" width="92" height="18" rx="9" class="chip"/>
+
+<!-- action buttons -->
+<rect x="76" y="240" width="108" height="34" rx="17" class="card-light" stroke="#252525" stroke-width="1"/>
+<rect x="206" y="240" width="108" height="34" rx="17" class="card" stroke="#222222" stroke-width="1"/>
+
+<!-- quick stats strip -->
+<rect x="20" y="286" width="108" height="52" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="141" y="286" width="108" height="52" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="262" y="286" width="108" height="52" rx="10" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<!-- values -->
+<rect x="36" y="298" width="76" height="14" rx="3" class="t2"/>
+<rect x="54" y="316" width="40" height="9" rx="2" class="t3"/>
+<rect x="157" y="298" width="76" height="14" rx="3" class="t2"/>
+<rect x="175" y="316" width="40" height="9" rx="2" class="t3"/>
+<rect x="278" y="298" width="76" height="14" rx="3" class="t2"/>
+<rect x="296" y="316" width="40" height="9" rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     TABS  350–398
+══════════════════════════════════════ -->
+<rect x="0" y="350" width="390" height="48" class="nav" stroke="#1A1A1A" stroke-width="1"/>
+<rect x="12" y="361" width="68" height="26" rx="7" class="t3"/>
+<rect x="88" y="361" width="56" height="26" rx="7" class="accent"/>
+<rect x="152" y="361" width="68" height="26" rx="7" class="t3"/>
+<rect x="228" y="361" width="44" height="26" rx="7" class="t3"/>
+<!-- active underline -->
+<rect x="88" y="374" width="56" height="2" rx="1" fill="#302E20"/>
+
+<!-- ══════════════════════════════════════
+     AUTO-STORY FEED  398–1040
+══════════════════════════════════════ -->
+
+<!-- CARD 1: Match result -->
+<rect x="20" y="410" width="350" height="148" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<circle cx="36" cy="436" r="6" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="50" y="431" width="66" height="9" rx="2" class="t3"/>
+<rect x="294" y="431" width="56" height="9" rx="2" class="t3"/>
+<rect x="34" y="449" width="322" height="1" class="div"/>
+
+<!-- result row -->
+<rect x="36" y="460" width="44" height="44" rx="12" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="157" y="464" width="76" height="32" rx="5" class="card-dark"/>
+<rect x="310" y="460" width="44" height="44" rx="12" class="card-light" stroke="#222222" stroke-width="1"/>
+<!-- team name lines -->
+<rect x="36" y="510" width="74" height="9" rx="2" class="t2"/>
+<rect x="276" y="510" width="78" height="9" rx="2" class="t2"/>
+<!-- narrative -->
+<rect x="36" y="528" width="290" height="9" rx="2" class="t3"/>
+<rect x="36" y="542" width="224" height="9" rx="2" class="t3"/>
+
+<!-- CARD 2: Player milestone -->
+<rect x="20" y="574" width="350" height="110" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<circle cx="36" cy="598" r="6" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="50" y="593" width="82" height="9" rx="2" class="t3"/>
+<rect x="294" y="593" width="56" height="9" rx="2" class="t3"/>
+<rect x="34" y="611" width="322" height="1" class="div"/>
+
+<!-- player row -->
+<circle cx="52" cy="642" r="20" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="80" y="628" width="122" height="12" rx="3" class="t2"/>
+<rect x="80" y="646" width="202" height="9" rx="2" class="t3"/>
+<rect x="80" y="661" width="162" height="9" rx="2" class="t3"/>
+<rect x="298" y="628" width="52" height="30" rx="8" class="accent"/>
+
+<!-- CARD 3: Winning streak -->
+<rect x="20" y="700" width="350" height="98" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<circle cx="36" cy="724" r="6" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="50" y="719" width="90" height="9" rx="2" class="t3"/>
+<rect x="294" y="719" width="56" height="9" rx="2" class="t3"/>
+<rect x="34" y="737" width="322" height="1" class="div"/>
+
+<!-- streak progress bar -->
+<rect x="36" y="751" width="318" height="30" rx="8" class="card-dark"/>
+<rect x="36" y="751" width="196" height="30" rx="8" class="accent"/>
+<rect x="44" y="760" width="88" height="12" rx="3" class="t2"/>
+<rect x="282" y="760" width="66" height="12" rx="3" class="card-light"/>
+
+<!-- CARD 4: Season standing -->
+<rect x="20" y="814" width="350" height="98" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<circle cx="36" cy="838" r="6" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="50" y="833" width="98" height="9" rx="2" class="t3"/>
+<rect x="294" y="833" width="56" height="9" rx="2" class="t3"/>
+<rect x="34" y="851" width="322" height="1" class="div"/>
+
+<rect x="36" y="863" width="58" height="34" rx="9" class="card-dark"/>
+<rect x="44" y="871" width="42" height="18" rx="4" class="t2"/>
+<rect x="104" y="866" width="240" height="10" rx="2" class="t3"/>
+<rect x="104" y="882" width="192" height="10" rx="2" class="t3"/>
+
+<!-- CARD 5: Upcoming match -->
+<rect x="20" y="928" width="350" height="122" rx="16" class="card" stroke="#222222" stroke-width="1"/>
+<circle cx="36" cy="952" r="6" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="50" y="947" width="74" height="9" rx="2" class="t3"/>
+<rect x="294" y="947" width="56" height="9" rx="2" class="t3"/>
+<rect x="34" y="965" width="322" height="1" class="div"/>
+
+<!-- vs layout -->
+<rect x="36" y="978" width="44" height="44" rx="12" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="162" y="984" width="66" height="30" rx="7" class="chip"/>
+<rect x="310" y="978" width="44" height="44" rx="12" class="card-light" stroke="#222222" stroke-width="1"/>
+<!-- countdown -->
+<rect x="124" y="1028" width="142" height="16" rx="6" class="accent"/>
+
+<!-- ══════════════════════════════════════
+     CAPTAIN CARD  1066–1154
+══════════════════════════════════════ -->
+<rect x="20" y="1066" width="350" height="72" rx="14" class="card-dark" stroke="#222222" stroke-width="1"/>
+<circle cx="54" cy="1102" r="22" class="card-light" stroke="#252525" stroke-width="1.5"/>
+<rect x="84" y="1086" width="52" height="8" rx="2" class="t3"/>
+<rect x="84" y="1100" width="128" height="13" rx="3" class="t2"/>
+<rect x="84" y="1119" width="92" height="8" rx="2" class="t3"/>
+<rect x="282" y="1090" width="68" height="26" rx="13" class="accent"/>
+
+<!-- ══════════════════════════════════════
+     BOTTOM NAV  1296–1380
+══════════════════════════════════════ -->
+<rect y="1296" width="390" height="84" class="nav" stroke="#1A1A1A" stroke-width="1"/>
+<circle cx="39" cy="1323" r="14" class="card-light"/>
+<circle cx="117" cy="1323" r="14" class="card-light"/>
+<circle cx="195" cy="1318" r="22" class="accent" stroke="#303028" stroke-width="1"/>
+<circle cx="273" cy="1323" r="14" class="accent"/>
+<circle cx="351" cy="1323" r="14" class="card-light"/>
+<rect x="18" y="1343" width="42" height="7" rx="2" class="t3"/>
+<rect x="96" y="1343" width="42" height="7" rx="2" class="t3"/>
+<rect x="174" y="1346" width="42" height="7" rx="2" class="t3"/>
+<rect x="252" y="1343" width="42" height="7" rx="2" class="t3"/>
+<rect x="330" y="1343" width="42" height="7" rx="2" class="t3"/>
+
+</svg>

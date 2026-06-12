@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -443,7 +444,7 @@ export default function InternPage({ params }: Props) {
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
                   {profiles[m.user_id]?.avatar_url ? (
-                    <img src={profiles[m.user_id].avatar_url} style={{ width: 36, height: 36, borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
+                    <Image src={profiles[m.user_id].avatar_url} alt="" width={36} height={36} style={{ borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: tc, flexShrink: 0 }}>
                       {(profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || '?')[0].toUpperCase()}

@@ -54,7 +54,7 @@ const MOCK_LIVE: Match[] = [
     away: { id: 'demo-t4', name: 'Linköpings BK' },
     gameNumber: 2, totalGames: 4,
     individualGames: { home: [156, 178], away: [201, 234] },
-    highSeries: [{ playerName: 'Marcus Lindgren', score: 234, team: 'away' }],
+    highSeries: [{ playerName: 'Tobias Bergmark', score: 234, team: 'away' }],
   },
 ]
 

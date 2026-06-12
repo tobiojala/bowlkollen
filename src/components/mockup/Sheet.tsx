@@ -1,11 +1,19 @@
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <>
+      <style>{`
+        @keyframes sheet-up {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        .sheet-panel { animation: sheet-up 0.38s cubic-bezier(0.32,0.72,0,1) both; }
+      `}</style>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99 }} />
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, maxWidth: 600,
-        margin: '0 auto', background: '#1c2127', borderRadius: '24px 24px 0 0',
-        padding: '14px 20px 44px', maxHeight: '88vh', overflowY: 'auto' }}
-        className="noscroll">
+      <div className="sheet-panel noscroll"
+        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, maxWidth: 600,
+          margin: '0 auto', background: '#1c2127', borderRadius: '24px 24px 0 0',
+          boxShadow: '0 -8px 60px rgba(0,0,0,0.45)',
+          padding: '14px 20px 44px', maxHeight: '88vh', overflowY: 'auto' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(244,245,247,0.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, minHeight: 44 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(244,245,247,0.4)', letterSpacing: 1.6 }}>{title}</span>

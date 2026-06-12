@@ -98,18 +98,40 @@ export function streamStyle(url: string): { label: string; color: string; bg: st
 export function calcHomeStandings(matches: StandingsMatch[], division: string): TableRow[] {
   const divMatches = matches.filter(m => m.division === division && m.home_score !== null)
   const table: Record<string, TableRow & { diff: number }> = {}
+  const history: Record<string, { result: 'W' | 'D' | 'L'; date: string }[]> = {}
+
   divMatches.forEach(m => {
     const hid = m.home_team_id, aid = m.away_team_id
-    if (!table[hid]) table[hid] = { rank: 0, teamId: hid, teamName: m.home.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0 }
-    if (!table[aid]) table[aid] = { rank: 0, teamId: aid, teamName: m.away.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0 }
+    const date = m.date ?? ''
+    if (!table[hid]) table[hid] = { rank: 0, teamId: hid, teamName: m.home.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0, form: [] }
+    if (!table[aid]) table[aid] = { rank: 0, teamId: aid, teamName: m.away.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0, diff: 0, form: [] }
+    if (!history[hid]) history[hid] = []
+    if (!history[aid]) history[aid] = []
+
     const hs = m.home_score!, as_ = m.away_score!
     table[hid].played++; table[aid].played++
     table[hid].diff += hs - as_; table[aid].diff += as_ - hs
-    if (hs > as_)      { table[hid].won++;   table[hid].points += 2; table[aid].lost++ }
-    else if (as_ > hs) { table[aid].won++;   table[aid].points += 2; table[hid].lost++ }
-    else               { table[hid].drawn++; table[hid].points++;    table[aid].drawn++; table[aid].points++ }
+
+    if (hs > as_) {
+      table[hid].won++;  table[hid].points += 2; table[aid].lost++
+      history[hid].push({ result: 'W', date }); history[aid].push({ result: 'L', date })
+    } else if (as_ > hs) {
+      table[aid].won++;  table[aid].points += 2; table[hid].lost++
+      history[hid].push({ result: 'L', date }); history[aid].push({ result: 'W', date })
+    } else {
+      table[hid].drawn++; table[hid].points++; table[aid].drawn++; table[aid].points++
+      history[hid].push({ result: 'D', date }); history[aid].push({ result: 'D', date })
+    }
   })
+
   return Object.values(table)
     .sort((a, b) => b.points - a.points || b.diff - a.diff || b.won - a.won)
-    .map((s, i) => ({ rank: i + 1, teamId: s.teamId, teamName: s.teamName, played: s.played, won: s.won, drawn: s.drawn, lost: s.lost, points: s.points }))
+    .map((s, i) => ({
+      rank: i + 1, teamId: s.teamId, teamName: s.teamName,
+      played: s.played, won: s.won, drawn: s.drawn, lost: s.lost, points: s.points,
+      form: (history[s.teamId] ?? [])
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 5)
+        .map(h => h.result),
+    }))
 }

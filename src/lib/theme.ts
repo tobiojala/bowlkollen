@@ -37,6 +37,7 @@ export function theme(isDark: boolean) {
     card:      isDark ? colors.darkCard     : colors.lightCard,
     border:    isDark ? colors.darkBorder   : colors.lightBorder,
     muted:     isDark ? colors.darkMuted    : colors.lightMuted,
+    textMuted: isDark ? colors.darkMuted    : colors.lightMuted, // alias for legacy components
     text:      isDark ? '#f4f5f7'           : '#1a2535',
     accent:    colors.gold,
     green:     colors.green,

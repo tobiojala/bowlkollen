@@ -1,0 +1,106 @@
+// ── App ───────────────────────────────────────────────────────────────────────
+export const APP_NAME        = 'Bowlkollen'
+export const APP_DESCRIPTION = 'Live bowling — svenska ligan'
+export const APP_LOCALE      = 'sv-SE'
+
+// ── Scoring thresholds ────────────────────────────────────────────────────────
+// A single place to change what counts as a "good", "great", or "perfect" game.
+export const SCORE = {
+  HONOR_ROLL:  220,   // minimum single-game score for honor roll
+  GOOD:        200,   // green highlight
+  GREAT:       220,   // gold highlight
+  ELITE:       250,   // special highlight
+  PERFECT:     300,   // perfect game
+} as const
+
+// ── Player rating tier thresholds ─────────────────────────────────────────────
+export const RATING = {
+  LEGEND:  95,
+  ELITE:   85,
+  PRO:     75,
+  VETERAN: 60,
+  // < 60 = ROOKIE
+} as const
+
+// ── Season boundaries (Swedish bowling year: 1 Jul – 30 Jun) ─────────────────
+export const SEASON = {
+  CURRENT: '2025-07-01',
+  PREV:    '2024-07-01',
+} as const
+
+// ── Divisions shown in the main standings table ───────────────────────────────
+export const STANDINGS_DIVISIONS = ['Elitserien Herrar', 'Elitserien Damer'] as const
+
+// ── Query / pagination defaults ───────────────────────────────────────────────
+export const QUERY = {
+  HOME_MATCH_WINDOW_DAYS: 7,
+  HOME_MATCHES_LIMIT:     40,
+  HOME_UPCOMING_LIMIT:    15,
+  TEAM_MATCHES_LIMIT:     40,
+  HONOR_ROLL_LIMIT:       12,
+  SEARCH_MIN_CHARS:       2,
+} as const
+
+// ── Stale times (ms) — how long React Query considers data fresh ──────────────
+export const STALE = {
+  LIVE:      20_000,   // match scores — refresh quickly
+  SHORT:     30_000,   // home feed
+  DEFAULT:   60_000,   // most lists
+  MEDIUM:  5 * 60_000, // standings, session
+  LONG:   10 * 60_000, // player claims, slow-moving data
+} as const
+
+// ── Protected routes — middleware redirects unauthenticated users ─────────────
+export const PROTECTED_PATHS = [
+  '/profile',
+  '/admin',
+  '/team',      // covers /team/[id]/intern, /team/[id]/laguttagning, etc.
+] as const
+
+// ── Auto-Story Engine ─────────────────────────────────────────────────────────
+
+export const TEAM_EVENT = {
+  // How many events syncTeamEvents may INSERT in a single page-load call
+  MAX_INSERT_PER_SYNC: 10,
+
+  // Thresholds for win streak milestone events
+  WIN_STREAK_MILESTONES: [3, 5, 7, 10] as const,
+
+  // Thresholds for unbeaten run milestone events
+  UNBEATEN_MILESTONES: [4, 6, 8, 10] as const,
+
+  // Player match count milestones
+  PLAYER_MATCH_MILESTONES: [10, 25, 50, 100] as const,
+
+  // form_rising fires when recentAvg - seasonAvg exceeds this
+  FORM_RISING_DELTA: 8,
+
+  // giant_killer fires when opponent is this many table positions above the team
+  GIANT_KILLER_GAP: 5,
+
+  // match_preview is created when match is this many hours away
+  MATCH_PREVIEW_HOURS: 48,
+
+  // Captain has this many hours to set a match hero before auto-default kicks in
+  HERO_TAP_WINDOW_HOURS: 24,
+
+  // Captain note max length (enforced in DB too)
+  CAPTAIN_NOTE_MAX_LENGTH: 140,
+} as const
+
+// Narrative archetype conditions (used in computeTeamNarrative)
+export const NARRATIVE = {
+  // Points gap within which playoff push archetype fires (team within N pts of top 2)
+  PLAYOFF_PUSH_GAP: 4,
+  PLAYOFF_PUSH_MIN_REMAINING: 3,
+
+  // Matches remaining threshold for promotion/relegation archetypes
+  ENDGAME_MATCHES_REMAINING: 5,
+
+  // Win streak length to trigger dominant_form (if no promotion/playoff signal)
+  DOMINANT_FORM_STREAK: 4,
+
+  // Comeback: wins after a loss run
+  COMEBACK_WIN_STREAK: 3,
+  COMEBACK_LOSS_RUN: 3,
+} as const

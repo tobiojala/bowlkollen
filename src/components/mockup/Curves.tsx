@@ -11,22 +11,28 @@ export const MCFG: Record<Metric, { label: string; color: string }> = {
   alla:    { label: 'Alla 3', color: 'white'   },
 }
 
-const CW = 172
-
 /* Full-width season curve for the profile hero — no axes, no labels,
-   just the shape of the season under the hero number. */
-export function HeroCurve({ matchAvgs, seasonAvg }: { matchAvgs: number[]; seasonAvg: number }) {
+   just the shape of the season under the hero number. Optional dashed
+   projection extends the curve if current form holds. */
+export function HeroCurve({ matchAvgs, seasonAvg, projAvg }: {
+  matchAvgs: number[]; seasonAvg: number; projAvg?: number
+}) {
   const W = 360, H = 84
   const PAD = { l: 2, r: 8, t: 10, b: 8 }
-  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
-  const mn = Math.min(...matchAvgs) - 6, mx = Math.max(...matchAvgs) + 6
-  const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * iW
+  const iH = H - PAD.t - PAD.b
+  // Reserve right-side width for the projection when shown
+  const splitX = projAvg !== undefined ? W * 0.8 : W
+  const allVals = projAvg !== undefined ? [...matchAvgs, projAvg] : matchAvgs
+  const mn = Math.min(...allVals) - 6, mx = Math.max(...allVals) + 6
+  const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * (splitX - PAD.l - PAD.r)
   const cy = (v: number) => PAD.t + iH - ((v - mn) / (mx - mn)) * iH
   const pts  = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
   const line = smooth(pts)
   const fill = line + ` L ${pts[pts.length-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
   const last = pts[pts.length - 1]
   const avgY = cy(seasonAvg)
+  const projX = W - PAD.r
+  const projY = projAvg !== undefined ? cy(projAvg) : 0
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
@@ -40,32 +46,94 @@ export function HeroCurve({ matchAvgs, seasonAvg }: { matchAvgs: number[]; seaso
       <line x1={PAD.l} y1={avgY} x2={W - PAD.r} y2={avgY} stroke="rgba(244,245,247,0.14)" strokeWidth="1" strokeDasharray="3,3" />
       <path d={fill} fill="url(#hc_f)" />
       <path d={line} fill="none" stroke="url(#hc_l)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {projAvg !== undefined && (
+        <>
+          <path d={`M ${last.x.toFixed(1)},${last.y.toFixed(1)} L ${projX.toFixed(1)},${projY.toFixed(1)}`}
+            fill="none" stroke="rgba(245,194,0,0.45)" strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
+          <circle cx={projX} cy={projY} r={3} fill="rgba(245,194,0,0.45)" />
+        </>
+      )}
       <circle cx={last.x} cy={last.y} r={4.5} fill="#f5c200" stroke="rgba(245,194,0,0.25)" strokeWidth={5} />
     </svg>
   )
 }
 
-export function MiniCurve({ matchAvgs, seasonAvg }: { matchAvgs: number[]; seasonAvg: number }) {
-  const W = CW - 28, H = 70
-  const PAD = { l: 2, r: 2, t: 4, b: 4 }
-  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
-  const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * iW
-  const cy = (v: number) => PAD.t + iH - ((v - 150) / 140) * iH
+export function MiniCurve({
+  matchAvgs, seasonAvg, height = 70, projAvg,
+}: {
+  matchAvgs: number[]
+  seasonAvg: number
+  height?: number
+  /** If provided, draws a dashed projection for 3 future matches at this average */
+  projAvg?: number
+}) {
+  const W = 300, H = height
+  const N = matchAvgs.length
+  // Reserve ~22% of width for projection when shown
+  const splitX = projAvg !== undefined ? W * 0.78 : W
+  const PAD = { l: 2, r: 2, t: 6, b: 4 }
+  const iH = H - PAD.t - PAD.b
+
+  // Adaptive y-scale — fills the full chart height instead of a fixed 150-290 range
+  const allVals = projAvg !== undefined ? [...matchAvgs, projAvg] : matchAvgs
+  const dataMin = Math.min(...allVals)
+  const dataMax = Math.max(...allVals)
+  const vPad = Math.max((dataMax - dataMin) * 0.2, 8)
+  const mn = dataMin - vPad
+  const mx = dataMax + vPad
+
+  const cx = (i: number) => PAD.l + (i / (N - 1)) * (splitX - PAD.l - PAD.r)
+  const cy = (v: number) => PAD.t + iH - ((v - mn) / (mx - mn)) * iH
+
   const pts  = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
   const line = smooth(pts)
-  const fill = line + ` L ${pts[pts.length-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
+  const fill = line + ` L ${pts[N-1].x.toFixed(1)},${(PAD.t+iH).toFixed(1)} L ${PAD.l},${(PAD.t+iH).toFixed(1)} Z`
   const avgY = cy(seasonAvg)
+
+  // Projection: straight dashed line from last actual point to 3 future points
+  const projStartX = pts[N - 1].x
+  const projEndX   = W - PAD.r
+  const projY      = projAvg !== undefined ? cy(projAvg) : 0
+  const projPath   = projAvg !== undefined
+    ? `M ${projStartX.toFixed(1)},${pts[N-1].y.toFixed(1)} L ${projEndX.toFixed(1)},${projY.toFixed(1)}`
+    : ''
+
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
       <defs>
         <linearGradient id="mc_f" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(245,194,0,0.16)" /><stop offset="100%" stopColor="rgba(245,194,0,0)" />
+          <stop offset="0%" stopColor="rgba(245,194,0,0.20)" />
+          <stop offset="100%" stopColor="rgba(245,194,0,0)" />
         </linearGradient>
       </defs>
-      <line x1={PAD.l} y1={avgY} x2={W - PAD.r} y2={avgY} stroke="rgba(245,194,0,0.28)" strokeWidth="1" strokeDasharray="3,2" />
+
+      {/* Season average reference line */}
+      <line x1={PAD.l} y1={avgY} x2={W - PAD.r} y2={avgY}
+        stroke="rgba(245,194,0,0.22)" strokeWidth="1" strokeDasharray="3,2" />
+
+      {/* Fill under actual curve */}
       <path d={fill} fill="url(#mc_f)" />
-      <path d={line} fill="none" stroke="#f5c200" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r={4} fill="#f5c200" stroke="rgba(245,194,0,0.3)" strokeWidth={4} />
+
+      {/* Actual curve */}
+      <path d={line} fill="none" stroke="#f5c200" strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Projection dashed line */}
+      {projAvg !== undefined && (
+        <>
+          {/* Fade zone between actual and projection */}
+          <line x1={projStartX} y1={PAD.t} x2={projStartX} y2={PAD.t + iH}
+            stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+          <path d={projPath} fill="none" stroke="rgba(245,194,0,0.5)"
+            strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round" />
+          <circle cx={projEndX} cy={projY} r={3}
+            fill="rgba(245,194,0,0.5)" />
+        </>
+      )}
+
+      {/* Last actual data point */}
+      <circle cx={pts[N-1].x} cy={pts[N-1].y} r={4}
+        fill="#f5c200" stroke="rgba(245,194,0,0.3)" strokeWidth={4} />
     </svg>
   )
 }

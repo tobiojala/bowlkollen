@@ -1,24 +1,10 @@
-// ── Types ─────────────────────────────────────────────────────────────────────
-export type MatchResult = {
-  id: string
-  player_id: string
-  match_id: string
-  games: number[]
-  matches: {
-    id: string; date: string; division: string
-    home_team_id: string; away_team_id: string
-    home_score: number | null; away_score: number | null
-    home: { name: string }; away: { name: string }
-  } | null
-}
+import type { MatchResult, TierInfo } from '@/lib/types'
+export type { MatchResult, TierInfo }
+import { SEASON } from '@/lib/constants'
 
-export type TierInfo = {
-  label: string; accent: string; glow: string; bg: string; border: string
-}
-
-// ── Season boundaries (Swedish bowling year: 1 Jul – 30 Jun) ─────────────────
-export const SEASON_CURRENT = '2025-07-01'
-export const SEASON_PREV    = '2024-07-01'
+// Legacy aliases — existing code compiles unchanged.
+export const SEASON_CURRENT = SEASON.CURRENT
+export const SEASON_PREV    = SEASON.PREV
 
 export function seasonResults(results: MatchResult[], season: 'current' | 'prev') {
   if (season === 'current')

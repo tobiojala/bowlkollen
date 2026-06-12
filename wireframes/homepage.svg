@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 1624" width="390" height="1624">
+<defs><style>
+  .bg{fill:#0D0D0D} .nav{fill:#111111} .card{fill:#1A1A1A} .card-dark{fill:#141414}
+  .card-light{fill:#222222} .t1{fill:#444444} .t2{fill:#2D2D2D} .t3{fill:#1E1E1E}
+  .accent{fill:#353530} .chip{fill:#1C1C1C} .div{fill:#1A1A1A}
+  .hl{fill:#1E1C10} .dw{fill:#1A2E18} .dl{fill:#2E1818}
+</style></defs>
+
+<rect width="390" height="1624" class="bg"/>
+
+<!-- ══════════════════════════════════════
+     TOP NAV  0–56
+══════════════════════════════════════ -->
+<rect width="390" height="56" class="nav"/>
+<rect x="20" y="19" width="92" height="18" rx="4" class="t1"/>
+<rect x="330" y="16" width="24" height="24" rx="6" class="card-light"/>
+<rect x="358" y="16" width="24" height="24" rx="6" class="card-light"/>
+
+<!-- ══════════════════════════════════════
+     APP GREETING  56–490
+══════════════════════════════════════ -->
+<rect x="24" y="76" width="60" height="10" rx="2" class="t3"/>
+<rect x="24" y="94" width="136" height="24" rx="4" class="t1"/>
+<rect x="24" y="126" width="78" height="10" rx="2" class="t3"/>
+
+<!-- ambient orb -->
+<circle cx="195" cy="290" r="132" fill="none" stroke="#161616" stroke-width="1"/>
+
+<!-- live ripple rings -->
+<circle cx="195" cy="252" r="5" class="card-light"/>
+<circle cx="195" cy="252" r="20" fill="none" stroke="#222222" stroke-width="1"/>
+<circle cx="195" cy="252" r="36" fill="none" stroke="#1A1A1A" stroke-width="1"/>
+
+<!-- big hero number -->
+<rect x="148" y="272" width="94" height="72" rx="6" class="card-light"/>
+
+<!-- subtitle -->
+<rect x="122" y="356" width="146" height="12" rx="3" class="t3"/>
+
+<!-- CTA -->
+<rect x="152" y="384" width="86" height="10" rx="2" fill="#2A2A24"/>
+
+<!-- scroll indicator -->
+<circle cx="195" cy="452" r="15" fill="none" stroke="#222222" stroke-width="1"/>
+<rect x="191" y="446" width="8" height="12" rx="3" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     LIVE HERO  490–700
+══════════════════════════════════════ -->
+<circle cx="27" cy="502" r="4" class="card-light"/>
+<rect x="38" y="497" width="74" height="10" rx="2" class="t2"/>
+<rect x="338" y="497" width="34" height="10" rx="2" class="t3"/>
+
+<!-- match card -->
+<rect x="20" y="514" width="350" height="174" rx="20" class="card" stroke="#222222" stroke-width="1"/>
+<rect x="20" y="514" width="130" height="3" rx="1.5" class="card-light"/>
+
+<!-- status + division chip -->
+<circle cx="40" cy="534" r="3" class="card-light"/>
+<rect x="50" y="529" width="70" height="10" rx="2" class="t2"/>
+<rect x="296" y="526" width="56" height="16" rx="5" class="chip"/>
+
+<!-- home team col -->
+<rect x="30" y="550" width="46" height="46" rx="13" class="card-light" stroke="#252525" stroke-width="1"/>
+<rect x="28" y="604" width="84" height="11" rx="2" class="t2"/>
+<rect x="46" y="621" width="48" height="8" rx="2" class="t3"/>
+
+<!-- score block -->
+<rect x="157" y="550" width="76" height="42" rx="5" class="card-light"/>
+<rect x="189" y="598" width="12" height="10" rx="2" class="t3"/>
+
+<!-- away team col -->
+<rect x="314" y="550" width="46" height="46" rx="13" class="card-light" stroke="#252525" stroke-width="1"/>
+<rect x="278" y="604" width="84" height="11" rx="2" class="t2"/>
+<rect x="296" y="621" width="48" height="8" rx="2" class="t3"/>
+
+<!-- series breakdown chips -->
+<rect x="30" y="642" width="50" height="34" rx="8" class="card-dark"/>
+<rect x="88" y="642" width="50" height="34" rx="8" class="card-dark"/>
+<rect x="146" y="642" width="50" height="34" rx="8" class="card-dark"/>
+<rect x="204" y="642" width="50" height="34" rx="8" class="card-dark"/>
+<rect x="262" y="642" width="50" height="34" rx="8" class="card-dark"/>
+
+<!-- progress dots -->
+<rect x="172" y="694" width="22" height="5" rx="2.5" class="card-light"/>
+<circle cx="204" cy="696" r="2.5" class="t3"/>
+<circle cx="214" cy="696" r="2.5" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     HONOR FEED  706–952
+══════════════════════════════════════ -->
+<rect x="20" y="718" width="78" height="9" rx="2" fill="#2A2818"/>
+<rect x="106" y="720" width="82" height="7" rx="2" class="t3"/>
+
+<!-- main honor card (78vw ≈ 304px) -->
+<rect x="20" y="734" width="304" height="196" rx="22" class="card-dark" stroke="#222222" stroke-width="1"/>
+<rect x="112" y="756" width="80" height="8" rx="2" class="t3"/>
+<rect x="130" y="774" width="100" height="62" rx="5" class="card-light"/>
+<rect x="146" y="844" width="68" height="9" rx="2" class="t3"/>
+<rect x="106" y="860" width="148" height="13" rx="3" class="t2"/>
+<rect x="126" y="879" width="108" height="10" rx="2" class="t3"/>
+
+<!-- peek of second card -->
+<rect x="332" y="734" width="58" height="196" rx="22" class="card-dark" stroke="#1C1C1C" stroke-width="1" opacity="0.7"/>
+
+<!-- dots -->
+<rect x="164" y="936" width="18" height="4" rx="2" fill="#2A2818"/>
+<circle cx="191" cy="938" r="2" class="t3"/>
+<circle cx="200" cy="938" r="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     MATCH RESULTS  952–1200
+══════════════════════════════════════ -->
+<!-- date header 1 -->
+<rect x="20" y="960" width="50" height="10" rx="2" class="t2"/>
+<rect x="78" y="964" width="272" height="1" class="div"/>
+
+<!-- row 1 -->
+<rect x="20" y="978" width="350" height="54" rx="14" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="991" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="72" y="995" width="74" height="10" rx="2" class="t2"/>
+<rect x="157" y="990" width="76" height="22" rx="4" class="card-dark"/>
+<rect x="286" y="991" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="248" y="995" width="34" height="10" rx="2" class="t2"/>
+
+<!-- row 2 -->
+<rect x="20" y="1040" width="350" height="54" rx="14" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1053" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="72" y="1057" width="60" height="10" rx="2" class="t2"/>
+<rect x="157" y="1052" width="76" height="22" rx="4" class="card-dark"/>
+<rect x="286" y="1053" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="248" y="1057" width="50" height="10" rx="2" class="t2"/>
+
+<!-- row 3 -->
+<rect x="20" y="1102" width="350" height="54" rx="14" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1115" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="72" y="1119" width="82" height="10" rx="2" class="t2"/>
+<rect x="157" y="1114" width="76" height="22" rx="4" class="card-dark"/>
+<rect x="286" y="1115" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="248" y="1119" width="40" height="10" rx="2" class="t2"/>
+
+<!-- date header 2 -->
+<rect x="20" y="1168" width="38" height="10" rx="2" class="t2"/>
+<rect x="66" y="1172" width="284" height="1" class="div"/>
+
+<!-- row 4 -->
+<rect x="20" y="1186" width="350" height="54" rx="14" class="card" stroke="#1E1E1E" stroke-width="1"/>
+<rect x="34" y="1199" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="72" y="1203" width="66" height="10" rx="2" class="t2"/>
+<rect x="157" y="1198" width="76" height="22" rx="4" class="card-dark"/>
+<rect x="286" y="1199" width="30" height="30" rx="9" class="card-light" stroke="#222222" stroke-width="1"/>
+<rect x="248" y="1203" width="44" height="10" rx="2" class="t2"/>
+
+<!-- ══════════════════════════════════════
+     MINI STANDINGS  1258–1538
+══════════════════════════════════════ -->
+<rect x="20" y="1260" width="74" height="10" rx="2" class="t2"/>
+<rect x="270" y="1256" width="52" height="20" rx="6" class="accent"/>
+<rect x="330" y="1256" width="40" height="20" rx="6" class="card-light"/>
+
+<!-- table container -->
+<rect x="20" y="1284" width="350" height="244" rx="16" class="card-dark" stroke="#1E1E1E" stroke-width="1"/>
+
+<!-- header row -->
+<rect x="20" y="1284" width="350" height="28" rx="16" class="card"/>
+<rect x="20" y="1298" width="350" height="14" class="card"/>
+<rect x="36" y="1291" width="12" height="8" rx="2" class="t3"/>
+<rect x="62" y="1291" width="16" height="8" rx="2" class="t3"/>
+<rect x="172" y="1291" width="10" height="8" rx="2" class="t3"/>
+<rect x="308" y="1291" width="34" height="8" rx="2" class="t3"/>
+<rect x="20" y="1312" width="350" height="1" class="div"/>
+
+<!-- row 1 — highlighted (user's team) -->
+<rect x="20" y="1313" width="350" height="34" class="hl"/>
+<rect x="36" y="1323" width="12" height="14" rx="2" fill="#3A3A28"/>
+<rect x="62" y="1325" width="96" height="10" rx="2" fill="#2C2C1C"/>
+<rect x="172" y="1323" width="16" height="14" rx="2" fill="#3A3A28"/>
+<circle cx="308" cy="1330" r="3" class="dw"/>
+<circle cx="318" cy="1330" r="3" class="dw"/>
+<circle cx="328" cy="1330" r="3" class="dl"/>
+<circle cx="338" cy="1330" r="3" class="dw"/>
+<circle cx="348" cy="1330" r="3" class="dw"/>
+<rect x="20" y="1347" width="350" height="1" class="div"/>
+
+<!-- row 2 -->
+<rect x="36" y="1358" width="12" height="14" rx="2" class="t3"/>
+<rect x="62" y="1360" width="82" height="10" rx="2" class="t3"/>
+<rect x="172" y="1358" width="16" height="14" rx="2" class="t3"/>
+<circle cx="308" cy="1365" r="3" class="dw"/>
+<circle cx="318" cy="1365" r="3" class="dw"/>
+<circle cx="328" cy="1365" r="3" class="dw"/>
+<circle cx="338" cy="1365" r="3" class="dl"/>
+<circle cx="348" cy="1365" r="3" class="dw"/>
+<rect x="20" y="1381" width="350" height="1" class="div"/>
+
+<!-- row 3 -->
+<rect x="36" y="1392" width="12" height="14" rx="2" class="t3"/>
+<rect x="62" y="1394" width="100" height="10" rx="2" class="t3"/>
+<rect x="172" y="1392" width="16" height="14" rx="2" class="t3"/>
+<circle cx="308" cy="1399" r="3" class="dl"/>
+<circle cx="318" cy="1399" r="3" class="dw"/>
+<circle cx="328" cy="1399" r="3" class="dw"/>
+<circle cx="338" cy="1399" r="3" class="dw"/>
+<circle cx="348" cy="1399" r="3" class="dl"/>
+<rect x="20" y="1415" width="350" height="1" class="div"/>
+
+<!-- row 4 -->
+<rect x="36" y="1426" width="12" height="14" rx="2" class="t3"/>
+<rect x="62" y="1428" width="72" height="10" rx="2" class="t3"/>
+<rect x="172" y="1426" width="16" height="14" rx="2" class="t3"/>
+<circle cx="308" cy="1433" r="3" class="dw"/>
+<circle cx="318" cy="1433" r="3" class="dl"/>
+<circle cx="328" cy="1433" r="3" class="dl"/>
+<circle cx="338" cy="1433" r="3" class="dw"/>
+<circle cx="348" cy="1433" r="3" class="dw"/>
+<rect x="20" y="1449" width="350" height="1" class="div"/>
+
+<!-- row 5 -->
+<rect x="36" y="1460" width="12" height="14" rx="2" class="t3"/>
+<rect x="62" y="1462" width="110" height="10" rx="2" class="t3"/>
+<rect x="172" y="1460" width="16" height="14" rx="2" class="t3"/>
+<circle cx="308" cy="1467" r="3" class="dl"/>
+<circle cx="318" cy="1467" r="3" class="dl"/>
+<circle cx="328" cy="1467" r="3" class="dw"/>
+<circle cx="338" cy="1467" r="3" class="dl"/>
+<circle cx="348" cy="1467" r="3" class="dw"/>
+<rect x="20" y="1483" width="350" height="1" class="div"/>
+
+<!-- row 6 -->
+<rect x="36" y="1494" width="12" height="14" rx="2" class="t3"/>
+<rect x="62" y="1496" width="88" height="10" rx="2" class="t3"/>
+<rect x="172" y="1494" width="16" height="14" rx="2" class="t3"/>
+<circle cx="308" cy="1501" r="3" class="dw"/>
+<circle cx="318" cy="1501" r="3" class="dl"/>
+<circle cx="328" cy="1501" r="3" class="dl"/>
+<circle cx="338" cy="1501" r="3" class="dl"/>
+<circle cx="348" cy="1501" r="3" class="dl"/>
+<rect x="20" y="1517" width="350" height="1" class="div"/>
+
+<!-- footer link -->
+<rect x="36" y="1522" width="90" height="10" rx="2" class="t3"/>
+<rect x="344" y="1522" width="14" height="10" rx="2" class="t3"/>
+
+<!-- ══════════════════════════════════════
+     BOTTOM NAV  1540–1624
+══════════════════════════════════════ -->
+<rect y="1540" width="390" height="84" class="nav" stroke="#1A1A1A" stroke-width="1"/>
+<circle cx="39" cy="1567" r="14" class="card-light"/>
+<circle cx="117" cy="1567" r="14" class="accent"/>
+<circle cx="195" cy="1562" r="22" class="accent" stroke="#303028" stroke-width="1"/>
+<circle cx="273" cy="1567" r="14" class="card-light"/>
+<circle cx="351" cy="1567" r="14" class="card-light"/>
+<rect x="18" y="1587" width="42" height="7" rx="2" class="t3"/>
+<rect x="96" y="1587" width="42" height="7" rx="2" class="t3"/>
+<rect x="174" y="1590" width="42" height="7" rx="2" class="t3"/>
+<rect x="252" y="1587" width="42" height="7" rx="2" class="t3"/>
+<rect x="330" y="1587" width="42" height="7" rx="2" class="t3"/>
+
+</svg>

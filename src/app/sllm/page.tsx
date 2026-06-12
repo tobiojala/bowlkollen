@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 
@@ -120,8 +121,8 @@ export default function SLLMPage() {
 
         {/* ── Hero banner ───────────────────────────────────────────────────── */}
         <div style={{ position: 'relative', width: '100%', height: 210, overflow: 'hidden' }}>
-          <img src={EVENT.banner} alt={EVENT.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', display: 'block' }} />
+          <Image src={EVENT.banner} alt={EVENT.name} fill
+            style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
           {/* Gradient overlay */}
           <div style={{ position: 'absolute', inset: 0,
             background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.72) 100%)' }} />

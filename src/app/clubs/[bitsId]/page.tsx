@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
@@ -164,7 +165,7 @@ export default function ClubPage({ params }: Props) {
               fontSize: 18, fontWeight: 900, color: `hsl(${hue},50%,55%)`,
             }}>
               {club.logo_url && !logoFailed
-                ? <img src={club.logo_url} alt={club.name} onError={() => setLogoFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+                ? <Image src={club.logo_url} alt={club.name} width={80} height={80} onError={() => setLogoFailed(true)} style={{ objectFit: 'contain', padding: 8 }} />
                 : initials
               }
             </div>

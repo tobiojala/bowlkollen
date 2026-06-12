@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
+import NotificationBell from '@/components/NotificationBell'
 
 type NavConfig = {
   backHref: string | null
@@ -103,16 +105,16 @@ export default function Nav() {
 
   const glass: React.CSSProperties = {
     position: 'absolute', inset: 0, overflow: 'hidden',
-    backdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-    WebkitBackdropFilter: 'blur(2px) saturate(160%) brightness(1.08)',
-    background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.28)',
+    backdropFilter: 'blur(20px) saturate(180%) brightness(1.05)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%) brightness(1.05)',
+    background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.52)',
   }
   const rim: React.CSSProperties = {
     position: 'absolute', inset: 0, pointerEvents: 'none',
-    border: isDark ? '0.5px solid rgba(255,255,255,0.28)' : '0.5px solid rgba(255,255,255,0.80)',
+    border: isDark ? '0.5px solid rgba(255,255,255,0.22)' : '0.5px solid rgba(255,255,255,0.85)',
     boxShadow: isDark
-      ? 'inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -0.5px 0 rgba(255,255,255,0.08), inset 1px 0 0 rgba(255,255,255,0.10), inset -1px 0 0 rgba(255,255,255,0.10), 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.28)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.90), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.07)',
+      ? 'inset 0 1px 0 rgba(255,255,255,0.50), inset 0 -0.5px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.28)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -0.5px 0 rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)',
   }
   const iconBtn: React.CSSProperties = {
     position: 'relative', zIndex: 1,
@@ -242,10 +244,12 @@ export default function Nav() {
               <Search size={16} color={mutedColor} />
             </button>
 
+            {user && <NotificationBell />}
+
             {user ? (
               <a href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'} style={{ ...iconBtn, textDecoration: 'none' }}>
                 {avatar ? (
-                  <img src={avatar} alt={name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(245,194,0,0.35)' }} />
+                  <Image src={avatar} alt={name} width={28} height={28} style={{ borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(245,194,0,0.35)' }} />
                 ) : (
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', border: '1.5px solid rgba(245,194,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#f5c200' }}>
                     {initials}
@@ -275,17 +279,17 @@ export default function Nav() {
             onClick={() => setMenuOpen(false)} />
           <div style={{
             position: 'fixed', top: 60, right: 16, zIndex: 39, width: 236,
-            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
-            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.85)'}`,
+            background: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(24px) saturate(180%) brightness(1.08)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%) brightness(1.08)',
+            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.90)'}`,
             borderRadius: 20, overflow: 'hidden',
             boxShadow: isDark
-              ? 'inset 0 1.5px 0 rgba(255,255,255,0.18), 0 12px 40px rgba(0,0,0,0.40)'
-              : 'inset 0 1.5px 0 rgba(255,255,255,0.95), 0 12px 40px rgba(0,0,0,0.12)',
+              ? 'inset 0 1px 0 rgba(255,255,255,0.45), 0 16px 48px rgba(0,0,0,0.50), 0 4px 16px rgba(0,0,0,0.32)'
+              : 'inset 0 1px 0 rgba(255,255,255,1.0), 0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06)',
           }}>
-            <div style={{ padding: '10px 16px 6px', fontSize: 9, fontWeight: 800, color: mutedColor, letterSpacing: 1.5 }}>
-              UTFORSKA
+            <div style={{ padding: '12px 16px 6px' }}>
+              <span className="section-label" style={{ color: mutedColor }}>Utforska</span>
             </div>
             {[
               { href: '/hallar',       icon: MapPin,      label: 'Bowlinghallar', sub: '174 hallar i Sverige' },
@@ -325,13 +329,13 @@ export default function Nav() {
             onClick={() => setSearching(false)} />
           <div style={{
             position: 'fixed', top: 56, left: 0, right: 0, zIndex: 39,
-            background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.40)',
-            backdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            WebkitBackdropFilter: 'blur(6px) saturate(180%) brightness(1.12)',
-            borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.70)'}`,
+            background: isDark ? 'rgba(16,22,30,0.88)' : 'rgba(248,246,242,0.88)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'}`,
             boxShadow: isDark
-              ? 'inset 0 -1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.30)'
-              : 'inset 0 -1px 0 rgba(255,255,255,0.80), 0 8px 24px rgba(0,0,0,0.08)',
+              ? '0 12px 40px rgba(0,0,0,0.40)'
+              : '0 8px 32px rgba(0,0,0,0.10)',
             maxHeight: '60vh', overflowY: 'auto',
           }}>
             {!query.trim() && (
@@ -347,7 +351,7 @@ export default function Nav() {
 
             {players.length > 0 && (
               <>
-                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5 }}>SPELARE</div>
+                <div style={{ padding: '12px 20px 4px' }}><span className="section-label" style={{ color: mutedColor }}>Spelare</span></div>
                 {players.map((p, i) => {
                   const hue = p.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
                   const tc  = `hsl(${hue},50%,45%)`
@@ -374,7 +378,7 @@ export default function Nav() {
 
             {teams.length > 0 && (
               <>
-                <div style={{ padding: '10px 20px 4px', fontSize: 10, fontWeight: 700, color: mutedColor, letterSpacing: 1.5, borderTop: players.length > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` : 'none' }}>LAG & KLUBBAR</div>
+                <div style={{ padding: '12px 20px 4px', borderTop: players.length > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` : 'none' }}><span className="section-label" style={{ color: mutedColor }}>Lag & Klubbar</span></div>
                 {teams.map((t, i) => {
                   const hue = t.club.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
                   const tc  = `hsl(${hue},50%,45%)`

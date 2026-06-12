@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
@@ -134,7 +135,7 @@ export default function ProfilePage() {
         {/* User card */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 16px 16px', borderBottom: '1px solid ' + C.border }}>
           {avatar ? (
-            <img src={avatar} alt={name} style={{ width: 48, height: 48, borderRadius: '50%', border: '2px solid ' + C.border, flexShrink: 0 }} />
+            <Image src={avatar} alt={name} width={48} height={48} style={{ borderRadius: '50%', border: '2px solid ' + C.border, flexShrink: 0 }} />
           ) : (
             <div style={{ width: 48, height: 48, borderRadius: '50%', background: tclo, border: '2px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: tc, flexShrink: 0 }}>
               {name?.slice(0, 2).toUpperCase()}

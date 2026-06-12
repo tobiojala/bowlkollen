@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
@@ -100,8 +101,8 @@ function ClubAvatar({ bitsId, name, storedUrl, isDark, tc, tclo, ini }: {
       overflow: 'hidden',
     }}>
       {showImg
-        ? <img src={src} alt={name} onError={() => setImgFailed(true)}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} />
+        ? <Image src={src} alt={name} width={68} height={68} onError={() => setImgFailed(true)}
+            style={{ objectFit: 'contain', padding: 4 }} />
         : ini
       }
     </div>

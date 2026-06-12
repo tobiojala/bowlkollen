@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 type Slide = {
   id: string
@@ -73,7 +74,7 @@ export default function HeroCarousel() {
       {/* Background */}
       {slide.image ? (
         <div style={{ position: 'absolute', inset: 0 }}>
-          <img src={slide.image} alt={slide.title} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+          <Image src={slide.image} alt={slide.title} fill style={{ objectFit: 'cover', objectPosition: 'center' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(10,16,30,0.95) 100%)' }} />
         </div>
