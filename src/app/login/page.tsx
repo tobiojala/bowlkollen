@@ -1,13 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 export default function LoginPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C } = useColors()
   const [googleLoading, setGoogleLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [magicLoading, setMagicLoading] = useState(false)
@@ -107,9 +106,9 @@ export default function LoginPage() {
 
         <div style={{ textAlign: 'center', fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
           Genom att logga in godkanner du vara{' '}
-          <a href="/terms" style={{ color: C.accent, textDecoration: 'none' }}>anvandarvillkor</a>
+          <Link href="/terms" style={{ color: C.accent, textDecoration: 'none' }}>anvandarvillkor</Link>
           {' '}och{' '}
-          <a href="/privacy" style={{ color: C.accent, textDecoration: 'none' }}>integritetspolicy</a>
+          <Link href="/privacy" style={{ color: C.accent, textDecoration: 'none' }}>integritetspolicy</Link>
         </div>
 
       </div>

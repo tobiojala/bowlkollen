@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 type Props = { params: Promise<{ club_slug: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; club_slug: string; team_path: string | null }
@@ -28,8 +28,7 @@ function teamLabel(path: string | null) {
 }
 
 export default function ClubPage({ params }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [clubSlug, setClubSlug] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,7 +63,7 @@ export default function ClubPage({ params }: Props) {
   const city = teams[0].city
   const hue = club.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
   const tc = 'hsl(' + hue + ',50%,45%)'
-  const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+  const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
   const ini = club.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
@@ -72,10 +71,10 @@ export default function ClubPage({ params }: Props) {
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 0 48px' }}>
 
         {/* Hero */}
-        <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '24px 20px 20px' }}>
-          <a href="/teams" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
+        <div style={{ background: isDark ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '24px 20px 20px' }}>
+          <Link href="/teams" style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
             ← Alla lag
-          </a>
+          </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 68, height: 68, borderRadius: 16, background: tclo, border: '2.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: tc, flexShrink: 0 }}>
               {ini}
@@ -106,10 +105,10 @@ export default function ClubPage({ params }: Props) {
             : '/teams/' + t.id
           const thue = t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
           const ttc = 'hsl(' + thue + ',50%,45%)'
-          const ttclo = theme === 'dark' ? 'hsl(' + thue + ',40%,15%)' : 'hsl(' + thue + ',40%,92%)'
+          const ttclo = isDark ? 'hsl(' + thue + ',40%,15%)' : 'hsl(' + thue + ',40%,92%)'
 
           return (
-            <a key={t.id} href={url}
+            <Link key={t.id} href={url}
               style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.background = C.card)}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -127,7 +126,7 @@ export default function ClubPage({ params }: Props) {
                 {label}
               </span>
               <div style={{ color: C.textMuted, fontSize: 16 }}>›</div>
-            </a>
+            </Link>
           )
         })}
       </div>
