@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
@@ -168,7 +169,7 @@ export default function Nav() {
             </span>
           </button>
         ) : cfg.backHref ? (
-          <a
+          <Link
             href={cfg.backHref}
             style={{
               pointerEvents: 'auto', flexShrink: 0,
@@ -184,9 +185,9 @@ export default function Nav() {
             <span style={{ position: 'relative', zIndex: 1, fontSize: 14, fontWeight: 600, color: isDark ? '#f5c200' : '#1a2535' }}>
               Tillbaka
             </span>
-          </a>
+          </Link>
         ) : (
-          <a
+          <Link
             href="/"
             style={{
               pointerEvents: 'auto', flexShrink: 0,
@@ -201,7 +202,7 @@ export default function Nav() {
             <span style={{ position: 'relative', zIndex: 1, fontSize: 17, fontWeight: 900, color: textColor, letterSpacing: -0.5 }}>
               Bowl<span style={{ color: '#f5c200' }}>kollen</span>
             </span>
-          </a>
+          </Link>
         )}
 
         {/* ── SEARCH INPUT PILL (replaces right pill while searching) ── */}
@@ -247,7 +248,7 @@ export default function Nav() {
             {user && <NotificationBell />}
 
             {user ? (
-              <a href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'} style={{ ...iconBtn, textDecoration: 'none' }}>
+              <Link href={claimedPlayerId ? `/players/${claimedPlayerId}` : '/profile'} style={{ ...iconBtn, textDecoration: 'none' }}>
                 {avatar ? (
                   <Image src={avatar} alt={name} width={28} height={28} style={{ borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(245,194,0,0.35)' }} />
                 ) : (
@@ -255,11 +256,11 @@ export default function Nav() {
                     {initials}
                   </div>
                 )}
-              </a>
+              </Link>
             ) : (
-              <a href="/login" style={{ ...iconBtn, textDecoration: 'none' }}>
+              <Link href="/login" style={{ ...iconBtn, textDecoration: 'none' }}>
                 <User size={16} color={mutedColor} />
-              </a>
+              </Link>
             )}
 
             <button
@@ -296,7 +297,7 @@ export default function Nav() {
               { href: '/klotshopar',   icon: ShoppingBag, label: 'Klotshopar',    sub: '16 pro shops' },
               { href: '/oljeprofiler', icon: Droplets,    label: 'Oljeprofiler',  sub: 'Säsong 2025/2026' },
             ].map(({ href, icon: Icon, label, sub }) => (
-              <a key={href} href={href}
+              <Link key={href} href={href}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
                   textDecoration: 'none', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}
                 onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
@@ -311,12 +312,12 @@ export default function Nav() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: textColor }}>{label}</div>
                   <div style={{ fontSize: 10, color: mutedColor, marginTop: 1 }}>{sub}</div>
                 </div>
-              </a>
+              </Link>
             ))}
             <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: '10px 16px' }}>
-              <a href="/mer" style={{ fontSize: 12, fontWeight: 600, color: mutedColor, textDecoration: 'none' }}>
+              <Link href="/mer" style={{ fontSize: 12, fontWeight: 600, color: mutedColor, textDecoration: 'none' }}>
                 Visa mer →
-              </a>
+              </Link>
             </div>
           </div>
         </>
@@ -357,7 +358,7 @@ export default function Nav() {
                   const tc  = `hsl(${hue},50%,45%)`
                   const bg  = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
                   return (
-                    <a key={p.id} href={`/players/${p.id}`}
+                    <Link key={p.id} href={`/players/${p.id}`}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none', textDecoration: 'none', background: 'transparent' }}
                       onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -370,7 +371,7 @@ export default function Nav() {
                         {p.teamName && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{p.teamName}</div>}
                       </div>
                       <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
-                    </a>
+                    </Link>
                   )
                 })}
               </>
@@ -385,7 +386,7 @@ export default function Nav() {
                   const bg  = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
                   const ini = t.club.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
                   return (
-                    <a key={t.id} href={t.href}
+                    <Link key={t.id} href={t.href}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: i > 0 ? `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` : 'none', textDecoration: 'none', background: 'transparent' }}
                       onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -398,7 +399,7 @@ export default function Nav() {
                         {t.city && <div style={{ fontSize: 11, color: mutedColor, marginTop: 1 }}>{t.city}</div>}
                       </div>
                       <ChevronLeft size={15} color={mutedColor} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
-                    </a>
+                    </Link>
                   )
                 })}
               </>
@@ -406,12 +407,12 @@ export default function Nav() {
 
             {(players.length > 0 || teams.length > 0) && (
               <div style={{ display: 'flex', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <a href="/players" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center' }}>
+                <Link href="/players" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center' }}>
                   Alla spelare →
-                </a>
-                <a href="/teams" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center', borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                </Link>
+                <Link href="/teams" style={{ flex: 1, padding: '12px', fontSize: 12, fontWeight: 600, color: '#f5c200', textDecoration: 'none', textAlign: 'center', borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                   Alla lag →
-                </a>
+                </Link>
               </div>
             )}
           </div>
