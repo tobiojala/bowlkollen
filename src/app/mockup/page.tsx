@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 
-import { MATCHES, LAST_SEASON, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, COLORS } from './data'
+import { MATCHES, LAST_SEASON, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, BK_READY, BK_PROGRESS, RANKING_PTS, ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, MATCH_HOME_AWAY, COLORS } from './data'
 import { calcStreaks } from './helpers'
+import { buildProfileData, type ProfileMatch, type ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
 import Reveal from '@/components/Reveal'
@@ -47,6 +48,16 @@ export default function MockupPage() {
   const lastSeasonAvg = Math.round(LAST_SEASON.reduce((a, b) => a + b) / LAST_SEASON.length)
   const bkBelow       = ELITSERIEN_BK_RATINGS.filter(r => r < PLAYER_BK_RATING).length
   const bkTopPct      = Math.round((1 - bkBelow / ELITSERIEN_BK_RATINGS.length) * 100)
+
+  // Canonical profile data — the same shape the real /players/[id] route builds
+  const mockMatches: ProfileMatch[] = MATCHES.map((m, i) => ({
+    date: m.date, opp: m.opp, result: m.result, games: m.games, home: MATCH_HOME_AWAY[i] === true,
+  }))
+  const pdata = buildProfileData(mockMatches, { lastSeasonAvg })
+  const identity: ProfileIdentity = {
+    name: 'Sara Holmberg', initials: 'SH', teamLabel: 'Örebro BK · Elitserien',
+    followers: MOCK_FOLLOWERS.followers, following: MOCK_FOLLOWERS.following,
+  }
 
   // Projected avg using default slider value (210) — used in feed row
   const projAvg  = Math.round((totalSum + 210 * 4) / (allGames.length + 4))
@@ -112,12 +123,14 @@ export default function MockupPage() {
 
           {/* Identity first: who she is, the hero number, the curve, actions */}
           <IdentitySection
-            matchAvgs={matchAvgs}
-            seasonAvg={seasonAvg}
-            formDiff={formDiff}
-            recentAvg={recentAvg}
-            lastSeasonAvg={lastSeasonAvg}
+            data={pdata}
+            identity={identity}
             bkTopPct={bkTopPct}
+            bkRating={BK_READY ? PLAYER_BK_RATING : null}
+            level={PLAYER_LEVEL}
+            achievements={ACHIEVEMENTS}
+            bkProgress={BK_PROGRESS}
+            rankingPts={RANKING_PTS}
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => setExpanded('challenges')}
             onOpenBkRating={() => setExpanded('bkrating')}
