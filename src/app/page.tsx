@@ -11,6 +11,8 @@ import { MOCK_LIVE, MOCK_UPCOMING, MOCK_RECENT, MOCK_HONOR, MOCK_TABLES, MOCK_MY
 import { useHomeMatches, useHonorRoll, useStandings, useSession } from '@/lib/queries'
 
 import HomeSkeleton from '@/components/home/HomeSkeleton'
+import MomentHero from '@/components/home/MomentHero'
+import { buildMoments } from './home/moments'
 import HeroStrip, { type StripItem } from '@/components/home/HeroStrip'
 import NextMatchCard from '@/components/home/NextMatchCard'
 import MatchPulsen from '@/components/home/MatchPulsen'
@@ -141,6 +143,17 @@ export default function Home() {
 
   const myPlayer = DEMO ? MOCK_MY_PLAYER : null
 
+  // The lead story — turn the raw data into the one thing worth opening for.
+  const moments = buildMoments({
+    live: filteredLive,
+    upcoming: filteredUpcoming,
+    recent: filteredRecent,
+    honor: displayHonor,
+    tables: DEMO ? MOCK_TABLES : standingsMap,
+    followedIds,
+    now,
+  })
+
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
@@ -166,6 +179,10 @@ export default function Home() {
               </button>
             ))}
           </div>
+        )}
+
+        {moments.length > 0 && (
+          <MomentHero moments={moments} C={C} isDark={isDark} now={now} />
         )}
 
         {myNextMatch && !nextMatchHidden && (
