@@ -154,6 +154,18 @@ export default function Home() {
     now,
   })
 
+  // Before any real data exists the hero would be empty — show sample stories
+  // so the homepage is alive from the first visit. Real moments take over the
+  // moment there's anything to say.
+  const sampleHero = moments.length === 0
+  const heroMoments = sampleHero
+    ? buildMoments({
+        live: MOCK_LIVE, upcoming: MOCK_UPCOMING, recent: MOCK_RECENT,
+        honor: MOCK_HONOR, tables: MOCK_TABLES,
+        followedIds: new Set(['demo-t1', 'demo-t3']), now,
+      })
+    : moments
+
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
@@ -181,8 +193,8 @@ export default function Home() {
           </div>
         )}
 
-        {moments.length > 0 && (
-          <MomentHero moments={moments} C={C} isDark={isDark} now={now} />
+        {heroMoments.length > 0 && (
+          <MomentHero moments={heroMoments} sample={sampleHero} C={C} isDark={isDark} now={now} />
         )}
 
         {myNextMatch && !nextMatchHidden && (

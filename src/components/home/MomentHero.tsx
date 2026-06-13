@@ -11,11 +11,12 @@ const ROTATE_MS = 6500
 
 // The lead story on the homepage. Picks the most relevant moment, renders it
 // big and emotional, and auto-rotates through the rest. Tap a dot to pin one.
-export default function MomentHero({ moments, C, isDark, now }: {
+export default function MomentHero({ moments, C, isDark, now, sample }: {
   moments: Moment[]
   C: typeof dark
   isDark: boolean
   now: number
+  sample?: boolean   // true → these are example stories shown before real data exists
 }) {
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -127,6 +128,10 @@ export default function MomentHero({ moments, C, isDark, now }: {
       {/* progress dots — tap to pin a story */}
       {moments.length > 1 && (
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 12 }}>
+          {sample && (
+            <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1.4, color: C.textMuted,
+              marginRight: 4, alignSelf: 'center' }}>EXEMPEL</span>
+          )}
           {moments.map((mm, i) => (
             <button
               key={mm.id}
