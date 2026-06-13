@@ -2,18 +2,20 @@
 
 import { useState } from 'react'
 import ProfileDNA from '@/components/mockup/ProfileDNA'
-import { LAST_SEASON, COLORS } from '../data'
+import { COLORS } from '../data'
 
 const { GOLD, BLUE, MUTED } = COLORS
 
 interface DnaSectionProps {
   matchAvgs: number[]
+  /** Previous-season per-match averages, drawn as a ghost overlay. */
+  overlayAvgs?: number[]
   isLive: boolean
   onTapSpoke: (i: number) => void
   onDnaTap: () => void
 }
 
-export default function DnaSection({ matchAvgs, isLive, onTapSpoke, onDnaTap }: DnaSectionProps) {
+export default function DnaSection({ matchAvgs, overlayAvgs, isLive, onTapSpoke, onDnaTap }: DnaSectionProps) {
   const [showOverlay, setShowOverlay]       = useState(false)
   const [showSeasonMenu, setShowSeasonMenu] = useState(false)
 
@@ -99,7 +101,7 @@ export default function DnaSection({ matchAvgs, isLive, onTapSpoke, onDnaTap }: 
       <div style={{ width: '84%', margin: '4px auto 0' }}>
         <ProfileDNA
           matchAvgs={matchAvgs}
-          overlayAvgs={showOverlay ? LAST_SEASON : undefined}
+          overlayAvgs={showOverlay ? overlayAvgs : undefined}
           onTapSpoke={onTapSpoke}
           onDNATap={onDnaTap}
           isLive={isLive}

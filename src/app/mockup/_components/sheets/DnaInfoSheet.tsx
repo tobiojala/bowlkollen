@@ -1,7 +1,8 @@
 'use client'
 
 import { Sheet } from '@/components/mockup/Sheet'
-import { DNA_HIGHLIGHTS, MATCHES, COLORS } from '../../data'
+import { COLORS } from '../../data'
+import type { ProfileHighlight } from '@/lib/profile'
 
 const { GOLD } = COLORS
 const INK  = '#f4f5f7'
@@ -11,10 +12,16 @@ const INK4 = 'rgba(244,245,247,0.24)'
 
 interface DnaInfoSheetProps {
   matchAvgs: number[]
+  /** Number of matches (for the explainer copy). */
+  matchCount: number
+  /** Highlight markers placed on their matching spokes. */
+  highlights?: readonly ProfileHighlight[]
+  /** Center-glyph initials. */
+  initials: string
   onClose: () => void
 }
 
-export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) {
+export default function DnaInfoSheet({ matchAvgs, matchCount, highlights = [], initials, onClose }: DnaInfoSheetProps) {
   const S = 280, LCX = S / 2, LCY = S / 2
   const lmn = Math.min(...matchAvgs), lmx = Math.max(...matchAvgs)
   const lSpokes = matchAvgs.map((avg, i) => {
@@ -29,7 +36,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
   return (
     <Sheet title="Bowling-DNA" subtitle="Ditt unika avtryck den här säsongen" onClose={onClose}>
       <p className="text-[13px] mb-6" style={{ color: INK2, lineHeight: 1.7 }}>
-        Varje av de {MATCHES.length} spetsarna är en match — ju längre spets, desto bättre form den dagen.
+        Varje av de {matchCount} spetsarna är en match — ju längre spets, desto bättre form den dagen.
         Konturen ljusnar mot de senaste matcherna, så en spelare på uppgång lyser i kanten.
       </p>
 
@@ -57,7 +64,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
           {lSpokes.map((p, i) => {
             const isBest  = i === bestIdx
             const isWorst = i === worstIdx
-            const hl2     = DNA_HIGHLIGHTS.find(h => h.idx === i)
+            const hl2     = highlights.find(h => h.idx === i)
             const color   = hl2 ? hl2.color : isBest ? GOLD : isWorst ? 'rgba(244,245,247,0.35)' : 'rgba(245,194,0,0.6)'
             const r       = hl2 || isBest ? 6 : isWorst ? 4 : 3
             return <circle key={i} cx={p.x} cy={p.y} r={r} fill={color} />
@@ -76,7 +83,7 @@ export default function DnaInfoSheet({ matchAvgs, onClose }: DnaInfoSheetProps) 
             )
           })}
           <circle cx={LCX} cy={LCY} r={26} fill="#0b0d10" stroke="rgba(245,194,0,0.35)" strokeWidth="1.5" />
-          <text x={LCX} y={LCY + 5} fill={GOLD} fontSize="13" fontWeight="900" textAnchor="middle">SH</text>
+          <text x={LCX} y={LCY + 5} fill={GOLD} fontSize="13" fontWeight="900" textAnchor="middle">{initials}</text>
         </svg>
       </div>
 

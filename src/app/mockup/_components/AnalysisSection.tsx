@@ -1,8 +1,9 @@
 'use client'
 
 import { Surface, SectionHeader, Hairline } from '@/components/ui/primitives'
-import { stdDev, calcStreaks, characterSentence, calcGameAverages, rhythmLabel, narrativeParagraph } from '../helpers'
-import { MATCHES, LAST_SEASON, COLORS } from '../data'
+import { characterSentence, rhythmLabel, narrativeParagraph } from '../helpers'
+import { COLORS } from '../data'
+import type { ProfileData } from '@/lib/profile'
 
 const { GOLD } = COLORS
 const INK  = '#f4f5f7'
@@ -11,27 +12,30 @@ const INK3 = 'rgba(244,245,247,0.40)'
 const INK4 = 'rgba(244,245,247,0.24)'
 
 interface AnalysisSectionProps {
-  seasonAvg: number
-  formDiff: number
+  data: ProfileData
+  /** First name for the season narrative copy. */
+  firstName: string
   onOpenCurve: () => void
 }
 
-export default function AnalysisSection({ seasonAvg, formDiff, onOpenCurve }: AnalysisSectionProps) {
-  const allGames    = MATCHES.flatMap(m => m.games)
+export default function AnalysisSection({ data, firstName, onOpenCurve }: AnalysisSectionProps) {
+  const { seasonAvg, formDiff } = data
+  const allGames    = data.matches.flatMap(m => m.games.filter(g => g > 0))
   const n           = allGames.length
-  const over200     = allGames.filter(g => g >= 200).length
-  const sd          = stdDev(allGames)
-  const consistency = sd < 20 ? 'Konsekvent' : sd < 30 ? 'Stabil' : sd < 40 ? 'Varierad' : 'Explosiv'
-  const hitRate     = Math.round(over200 / n * 100)
-  const s200        = calcStreaks(allGames, 200)
-  const sAvg        = calcStreaks(allGames, seasonAvg)
-  const bestSeries  = Math.max(...MATCHES.map(m => m.games.reduce((a, b) => a + b)))
-  const bestIdx     = MATCHES.findIndex(m => m.games.reduce((a, b) => a + b) === bestSeries)
-  const gameAvgs    = calcGameAverages(MATCHES)
+  const over200     = data.over200
+  const sd          = data.sd
+  const consistency = data.consistency
+  const hitRate     = data.hitRate
+  const s200        = data.streak200
+  const sAvg        = data.streakAvg
+  const bestSeries  = data.bestSeries
+  const bestIdx     = data.bestSeriesIdx
+  const bestMatch   = data.matches[bestIdx]
+  const gameAvgs    = data.gameAvgs
   const rhythm      = rhythmLabel(gameAvgs)
-  const lastSeasonAvg = Math.round(LAST_SEASON.reduce((a, b) => a + b) / LAST_SEASON.length)
+  const lastSeasonAvg = data.lastSeasonAvg
   const narrative   = narrativeParagraph({
-    firstName: 'Sara', seasonAvg, lastSeasonAvg, formDiff, hitRate,
+    firstName, seasonAvg, lastSeasonAvg, formDiff, hitRate,
     streakAboveAvg: sAvg.current, consistency, rhythmLabel: rhythm.label,
     bestSeries, games200Plus: over200, totalGames: n,
   })
@@ -94,11 +98,11 @@ export default function AnalysisSection({ seasonAvg, formDiff, onOpenCurve }: An
             <div style={cardLabel}>BÄSTA SERIE</div>
             <div className="num" style={{ fontSize: 34, color: GOLD }}>{bestSeries}</div>
             <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
-              {MATCHES[bestIdx]?.games.map((g, i) => (
+              {bestMatch?.games.map((g, i) => (
                 <span key={i} style={{ fontSize: 12, fontWeight: 700, color: g >= 250 ? GOLD : INK2, fontVariantNumeric: 'tabular-nums' }}>{g}</span>
               ))}
             </div>
-            <div style={{ fontSize: 11, color: INK3, marginTop: 9 }}>vs {MATCHES[bestIdx]?.opp} · {MATCHES[bestIdx]?.date}</div>
+            <div style={{ fontSize: 11, color: INK3, marginTop: 9 }}>vs {bestMatch?.opp} · {bestMatch?.date}</div>
           </Surface>
 
           {/* 200+-SVIT */}

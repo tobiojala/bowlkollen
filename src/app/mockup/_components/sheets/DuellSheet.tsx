@@ -2,7 +2,7 @@
 
 import { TrendingUp } from 'lucide-react'
 import { Sheet } from '@/components/mockup/Sheet'
-import { MATCHES, LAST_SEASON, COLORS } from '../../data'
+import { COLORS } from '../../data'
 import { smooth } from '../../helpers'
 
 const { GOLD, GREEN } = COLORS
@@ -11,21 +11,26 @@ const INK3 = 'rgba(244,245,247,0.40)'
 
 interface DuellSheetProps {
   matchAvgs: number[]
+  /** Previous-season per-match averages, plotted as the ghost line. */
+  lastSeasonAvgs: number[]
+  /** First and last match dates for the axis labels. */
+  firstDate: string
+  lastDate: string
   onClose: () => void
 }
 
-export default function DuellSheet({ matchAvgs, onClose }: DuellSheetProps) {
+export default function DuellSheet({ matchAvgs, lastSeasonAvgs, firstDate, lastDate, onClose }: DuellSheetProps) {
   const W = 320, H = 110, PAD = { l: 28, r: 42, t: 10, b: 20 }
   const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
-  const all = [...matchAvgs, ...LAST_SEASON]
+  const all = [...matchAvgs, ...lastSeasonAvgs]
   const mnV = Math.floor(Math.min(...all) / 10) * 10 - 5
   const mxV = Math.ceil(Math.max(...all) / 10) * 10 + 5
   const cx = (i: number) => PAD.l + (i / (matchAvgs.length - 1)) * iW
   const cy = (v: number) => PAD.t + iH - ((v - mnV) / (mxV - mnV)) * iH
   const thisPts = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
-  const lastPts = LAST_SEASON.map((v, i) => ({ x: cx(i), y: cy(v) }))
+  const lastPts = lastSeasonAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
   const thisAvg = Math.round(matchAvgs.reduce((a, b) => a + b) / matchAvgs.length)
-  const lastAvg = Math.round(LAST_SEASON.reduce((a, b) => a + b) / LAST_SEASON.length)
+  const lastAvg = Math.round(lastSeasonAvgs.reduce((a, b) => a + b) / lastSeasonAvgs.length)
 
   return (
     <Sheet title="Säsongsduell" subtitle="Den här säsongen mot förra" onClose={onClose}>
@@ -42,9 +47,9 @@ export default function DuellSheet({ matchAvgs, onClose }: DuellSheetProps) {
         <circle cx={thisPts[thisPts.length-1].x} cy={thisPts[thisPts.length-1].y} r={5} fill={GOLD} stroke="rgba(245,194,0,0.3)" strokeWidth="5" />
         <circle cx={lastPts[lastPts.length-1].x} cy={lastPts[lastPts.length-1].y} r={3} fill="rgba(244,245,247,0.35)" />
         <text x={W - PAD.r + 4} y={cy(matchAvgs[matchAvgs.length-1]) + 4} fill={GOLD} fontSize="9" fontWeight="bold">i år</text>
-        <text x={W - PAD.r + 4} y={cy(LAST_SEASON[LAST_SEASON.length-1]) + 4} fill="rgba(244,245,247,0.45)" fontSize="9">förra</text>
-        <text x={PAD.l} y={H - 3} fill="rgba(244,245,247,0.24)" fontSize="9" textAnchor="middle">{MATCHES[0].date}</text>
-        <text x={W - PAD.r} y={H - 3} fill="rgba(244,245,247,0.24)" fontSize="9" textAnchor="end">{MATCHES[MATCHES.length-1].date}</text>
+        <text x={W - PAD.r + 4} y={cy(lastSeasonAvgs[lastSeasonAvgs.length-1]) + 4} fill="rgba(244,245,247,0.45)" fontSize="9">förra</text>
+        <text x={PAD.l} y={H - 3} fill="rgba(244,245,247,0.24)" fontSize="9" textAnchor="middle">{firstDate}</text>
+        <text x={W - PAD.r} y={H - 3} fill="rgba(244,245,247,0.24)" fontSize="9" textAnchor="end">{lastDate}</text>
       </svg>
 
       {/* Summary */}

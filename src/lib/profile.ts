@@ -20,6 +20,25 @@ export type ProfileIdentity = {
   following: number
 }
 
+// View-model types for the surrounding layers (match-data sheets, feed, DNA).
+// Sections take these as props so they never import mock data directly.
+
+/** An upcoming fixture (powers the prediction fan in the curve sheet). */
+export type ProfileUpcoming = { date: string; opp: string }
+
+/** A highlight marker on a DNA spoke / its match sheet. */
+export type ProfileHighlight = {
+  idx: number; label: string; sublabel: string; color: string; iconName: string
+}
+
+/** A gamification challenge shown in the feed. */
+export type ProfileChallenge = {
+  icon: string; title: string; desc: string; progress: number; cur: string; done: boolean
+}
+
+/** Social reactions keyed by match index. */
+export type ProfileReactions = Record<number, { flame: number; heart: number }>
+
 export type ProfileData = {
   matches: ProfileMatch[]          // chronological, oldest first
   matchAvgs: number[]

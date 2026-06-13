@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 
-import { MATCHES, LAST_SEASON, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, BK_READY, BK_PROGRESS, RANKING_PTS, ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, MATCH_HOME_AWAY, COLORS } from './data'
-import { calcStreaks } from './helpers'
+import { MATCHES, LAST_SEASON, UPCOMING, CHALLENGES, MOCK_REACTIONS, DNA_HIGHLIGHTS, ELITSERIEN_BK_RATINGS, PLAYER_BK_RATING, BK_READY, BK_PROGRESS, RANKING_PTS, ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, MATCH_HOME_AWAY, COLORS } from './data'
 import { buildProfileData, type ProfileMatch, type ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
@@ -44,7 +43,6 @@ export default function MockupPage() {
   const recentAvg     = Math.round(recent4.reduce((a, b) => a + b) / recent4.length)
   const formDiff      = recentAvg - seasonAvg
   const totalSum      = allGames.reduce((a, b) => a + b)
-  const sAvg          = calcStreaks(allGames, seasonAvg)
   const lastSeasonAvg = Math.round(LAST_SEASON.reduce((a, b) => a + b) / LAST_SEASON.length)
   const bkBelow       = ELITSERIEN_BK_RATINGS.filter(r => r < PLAYER_BK_RATING).length
   const bkTopPct      = Math.round((1 - bkBelow / ELITSERIEN_BK_RATINGS.length) * 100)
@@ -139,6 +137,7 @@ export default function MockupPage() {
           {/* The identity artifact */}
           <DnaSection
             matchAvgs={matchAvgs}
+            overlayAvgs={LAST_SEASON}
             isLive={isLive}
             onTapSpoke={setDnaSpoke}
             onDnaTap={() => setDnaInfoOpen(true)}
@@ -146,19 +145,19 @@ export default function MockupPage() {
 
           <Reveal direction="up" distance={16}>
             <AnalysisSection
-              seasonAvg={seasonAvg}
-              formDiff={formDiff}
+              data={pdata}
+              firstName={identity.name.split(' ')[0]}
               onOpenCurve={() => { setCurveMetric('snitt'); setExpanded('curve') }}
             />
           </Reveal>
 
           <Reveal direction="up" delay={0.05}>
             <FeedSection
-              seasonAvg={seasonAvg}
+              data={pdata}
+              challenges={CHALLENGES}
+              reactions={MOCK_REACTIONS}
               projAvg={projAvg}
               projDiff={projDiff}
-              lastSeasonAvg={lastSeasonAvg}
-              streakCurrent={sAvg.current}
               onOpenChallenges={() => setExpanded('challenges')}
               onOpenWhatIf={() => setExpanded('whatif')}
               onOpenDuell={() => setExpanded('duell')}
@@ -188,6 +187,8 @@ export default function MockupPage() {
       {expanded === 'curve' && (
         <CurveSheet
           matchAvgs={matchAvgs}
+          matches={pdata.matches}
+          upcoming={UPCOMING}
           seasonAvg={seasonAvg}
           formDiff={formDiff}
           recentAvg={recentAvg}
@@ -214,25 +215,35 @@ export default function MockupPage() {
       )}
 
       {expanded === 'duell' && (
-        <DuellSheet matchAvgs={matchAvgs} onClose={close} />
+        <DuellSheet
+          matchAvgs={matchAvgs}
+          lastSeasonAvgs={LAST_SEASON}
+          firstDate={pdata.matches[0].date}
+          lastDate={pdata.matches[pdata.matches.length - 1].date}
+          onClose={close}
+        />
       )}
 
       {expanded === 'match' && matchTapped !== null && (
         <MatchSheet
+          match={pdata.matches[matchTapped]}
           matchIdx={matchTapped}
           totalMatches={MATCHES.length}
           seasonAvg={seasonAvg}
           isDnaSpoke={false}
+          highlight={DNA_HIGHLIGHTS.find(h => h.idx === matchTapped)}
           onClose={close}
         />
       )}
 
       {dnaSpoke !== null && (
         <MatchSheet
+          match={pdata.matches[dnaSpoke]}
           matchIdx={dnaSpoke}
           totalMatches={MATCHES.length}
           seasonAvg={seasonAvg}
           isDnaSpoke
+          highlight={DNA_HIGHLIGHTS.find(h => h.idx === dnaSpoke)}
           onClose={() => setDnaSpoke(null)}
         />
       )}
@@ -240,6 +251,9 @@ export default function MockupPage() {
       {dnaInfoOpen && (
         <DnaInfoSheet
           matchAvgs={matchAvgs}
+          matchCount={MATCHES.length}
+          highlights={DNA_HIGHLIGHTS}
+          initials={identity.initials}
           onClose={() => setDnaInfoOpen(false)}
         />
       )}

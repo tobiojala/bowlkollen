@@ -3,7 +3,8 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { Sheet } from '@/components/mockup/Sheet'
 import { CIcon } from '@/components/mockup/StatCards'
-import { MATCHES, DNA_HIGHLIGHTS, COLORS } from '../../data'
+import { COLORS } from '../../data'
+import type { ProfileMatch, ProfileHighlight } from '@/lib/profile'
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -12,21 +13,25 @@ const INK3 = 'rgba(244,245,247,0.40)'
 const INK4 = 'rgba(244,245,247,0.24)'
 
 interface MatchSheetProps {
-  /** Index of the tapped match */
+  /** The tapped match */
+  match: ProfileMatch
+  /** Index of the tapped match (for the DNA detail "Match X av Y") */
   matchIdx: number
   /** Total number of matches (for the DNA detail "Match X av Y") */
   totalMatches: number
   seasonAvg: number
   /** If true, this is a DNA spoke tap (shows highlight banner + vs-snitt footer) */
   isDnaSpoke?: boolean
+  /** Highlight marker for this match, shown only on a DNA spoke tap. */
+  highlight?: ProfileHighlight
   onClose: () => void
 }
 
-export default function MatchSheet({ matchIdx, totalMatches, seasonAvg, isDnaSpoke, onClose }: MatchSheetProps) {
-  const m     = MATCHES[matchIdx]
+export default function MatchSheet({ match, matchIdx, totalMatches, seasonAvg, isDnaSpoke, highlight, onClose }: MatchSheetProps) {
+  const m     = match
   const total = m.games.reduce((a, b) => a + b)
   const avg   = Math.round(total / m.games.length)
-  const hl    = isDnaSpoke ? DNA_HIGHLIGHTS.find(h => h.idx === matchIdx) : undefined
+  const hl    = isDnaSpoke ? highlight : undefined
   const isWin  = m.result.startsWith('W')
   const isLoss = m.result.startsWith('L')
   const resultColor = isWin ? GREEN : isLoss ? RED : INK3

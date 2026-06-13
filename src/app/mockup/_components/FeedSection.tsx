@@ -5,7 +5,8 @@ import { Zap, Swords, Heart, Flame } from 'lucide-react'
 import MatchSparkline from '@/components/mockup/MatchSparkline'
 import { CIcon } from '@/components/mockup/StatCards'
 import { Pill, SectionHeader } from '@/components/ui/primitives'
-import { MATCHES, CHALLENGES, MOCK_REACTIONS, MATCH_HOME_AWAY, COLORS } from '../data'
+import { COLORS } from '../data'
+import type { ProfileData, ProfileChallenge, ProfileReactions } from '@/lib/profile'
 
 const { GOLD, GREEN, BLUE, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -14,11 +15,12 @@ const INK3 = 'rgba(244,245,247,0.40)'
 const INK4 = 'rgba(244,245,247,0.24)'
 
 interface FeedSectionProps {
-  seasonAvg: number
+  data: ProfileData
+  challenges: readonly ProfileChallenge[]
+  reactions: ProfileReactions
+  /** Feed-specific "next match at 210" projection. */
   projAvg: number
   projDiff: number
-  lastSeasonAvg: number
-  streakCurrent: number
   onOpenChallenges: () => void
   onOpenWhatIf: () => void
   onOpenDuell: () => void
@@ -26,9 +28,11 @@ interface FeedSectionProps {
 }
 
 export default function FeedSection({
-  seasonAvg, projAvg, projDiff, lastSeasonAvg, streakCurrent,
+  data, challenges, reactions, projAvg, projDiff,
   onOpenChallenges, onOpenWhatIf, onOpenDuell, onOpenMatch,
 }: FeedSectionProps) {
+  const { seasonAvg, lastSeasonAvg } = data
+  const streakCurrent = data.streakAvg.current
   const [matchFilter, setMatchFilter] = useState<'alla' | 'bästa' | 'hemma' | 'borta'>('alla')
   const [myReactions, setMyReactions] = useState<Set<string>>(new Set())
 
@@ -46,15 +50,15 @@ export default function FeedSection({
   const scoreColor  = (g: number) => g >= 250 ? GOLD : g >= 200 ? INK : INK3
   const scoreWeight = (g: number) => g >= 250 ? 900 : g >= 200 ? 700 : 400
 
-  const urgent = CHALLENGES
+  const urgent = challenges
     .filter(c => !c.done && c.progress >= 80)
     .sort((a, b) => b.progress - a.progress)[0]
 
-  const filtered = MATCHES
+  const filtered = data.matches
     .map((m, i) => ({ m, i, total: m.games.reduce((a: number, b: number) => a + b, 0) }))
-    .filter(({ i }) => {
-      if (matchFilter === 'hemma') return MATCH_HOME_AWAY[i] === true
-      if (matchFilter === 'borta') return MATCH_HOME_AWAY[i] === false
+    .filter(({ m }) => {
+      if (matchFilter === 'hemma') return m.home === true
+      if (matchFilter === 'borta') return m.home === false
       return true
     })
     .sort(matchFilter === 'bästa' ? (a, b) => b.total - a.total : (a, b) => b.i - a.i)
@@ -164,7 +168,7 @@ export default function FeedSection({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
           {filtered.map(({ m, i, total }, filteredIdx) => {
             const avg      = Math.round(total / m.games.length)
-            const rxData   = MOCK_REACTIONS[i]
+            const rxData   = reactions[i]
             const myFlame  = myReactions.has(`${i}-flame`)
             const myHeart  = myReactions.has(`${i}-heart`)
             const isWin    = m.result.startsWith('W')

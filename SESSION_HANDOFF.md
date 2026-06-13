@@ -51,18 +51,24 @@ Read this first, then the linked docs as needed.
 ## IN PROGRESS — Player profile reconciliation (3 steps)
 
 Goal: port the mockup design onto the REAL `/players/[id]` route, sharing the
-same components so they never drift. **Step 1 of 3 is done.**
+same components so they never drift. **Steps 1 and 2 of 3 are done.**
 
 - **[DONE] Step 1** — `src/lib/profile.ts`: canonical `ProfileData` shape +
   `buildProfileData()` (one home for stat math) + 9 tests. `IdentitySection`
   generalized to render from `ProfileData` + identity/level/achievements/
   bkRating props (no more mock-data imports). Mockup renders identically.
-- **[NEXT] Step 2** — generalize the remaining sections the same way so they
-  take `ProfileData`/props instead of importing mock `data.ts`:
-  `DnaSection`, `AnalysisSection`, `FeedSection`, and the match-data sheets
-  (`CurveSheet`, `MatchSheet`, `DuellSheet`, `DnaInfoSheet`). Mechanical now
-  that the pattern is proven. Keep `/mockup` rendering identically at each step.
-- **[THEN] Step 3** — real adapter + route: map Supabase `match_results` →
+- **[DONE] Step 2** — generalized the remaining sections + match-data sheets to
+  render from `ProfileData`/props instead of importing mock `data.ts`:
+  `DnaSection` (`overlayAvgs` prop), `AnalysisSection` (`data` + `firstName`),
+  `FeedSection` (`data` + `challenges` + `reactions`), `CurveSheet`
+  (`matches` + `upcoming`), `MatchSheet` (`match` + `highlight`), `DuellSheet`
+  (`lastSeasonAvgs` + `firstDate`/`lastDate`), `DnaInfoSheet`
+  (`matchCount` + `highlights` + `initials`). Added view-model types
+  (`ProfileUpcoming`/`ProfileHighlight`/`ProfileChallenge`/`ProfileReactions`)
+  to `profile.ts`. Only `COLORS` (design tokens) still imported from `data.ts`,
+  same as Step 1. `/mockup` renders identically; 91 tests + tsc + lint green.
+  (`ChallengesSheet`/`BkRatingSheet` are out of scope — not match-data sheets.)
+- **[NEXT] Step 3** — real adapter + route: map Supabase `match_results` →
   `ProfileMatch[]` (compute W/L, opponent, home/away from the player's
   `team_id`), build `ProfileData`, and render the redesigned profile in
   `/players/[id]`. The old `app/players/[id]/_components/PlayerClient.tsx`

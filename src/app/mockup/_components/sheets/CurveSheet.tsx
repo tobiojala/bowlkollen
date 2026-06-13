@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Sheet } from '@/components/mockup/Sheet'
 import { FullCurve, MCFG, type Metric } from '@/components/mockup/Curves'
-import { MATCHES, UPCOMING, COLORS } from '../../data'
+import { COLORS } from '../../data'
+import type { ProfileMatch, ProfileUpcoming } from '@/lib/profile'
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -13,6 +14,8 @@ const INK4 = 'rgba(244,245,247,0.24)'
 
 interface CurveSheetProps {
   matchAvgs: number[]
+  matches: ProfileMatch[]
+  upcoming: ProfileUpcoming[]
   seasonAvg: number
   formDiff: number
   recentAvg: number
@@ -20,16 +23,16 @@ interface CurveSheetProps {
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, seasonAvg, formDiff, recentAvg, initialMetric, onClose }: CurveSheetProps) {
+export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, formDiff, recentAvg, initialMetric, onClose }: CurveSheetProps) {
   const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
-  const curveTapM = curveTapped !== null ? MATCHES[curveTapped] : null
+  const curveTapM = curveTapped !== null ? matches[curveTapped] : null
   const scoreColor  = (g: number) => g >= 250 ? GOLD : g >= 200 ? INK : INK3
   const scoreWeight = (g: number) => g >= 250 ? 900 : g >= 200 ? 700 : 400
 
   return (
-    <Sheet title="Säsongskurva" subtitle={`${MATCHES.length} matcher denna säsong`} onClose={onClose}>
+    <Sheet title="Säsongskurva" subtitle={`${matches.length} matcher denna säsong`} onClose={onClose}>
 
       {/* Hero — same pattern as the page */}
       <div className="flex items-baseline gap-3 mb-1">
@@ -63,7 +66,7 @@ export default function CurveSheet({ matchAvgs, seasonAvg, formDiff, recentAvg, 
 
       <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric={curveMetric}
         tapped={curveTapped} onTap={setCurveTapped}
-        upcoming={UPCOMING} recentAvg={recentAvg} />
+        upcoming={upcoming} recentAvg={recentAvg} />
 
       {/* Ghost fan legend */}
       {curveMetric === 'snitt' && (
