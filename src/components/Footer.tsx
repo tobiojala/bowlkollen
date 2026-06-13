@@ -1,8 +1,8 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import Link from 'next/link'
+import { useColors } from '@/components/ThemeProvider'
 
 const HIDE_PATHS = [
   '/intern', '/laguttagning', '/admin',
@@ -12,9 +12,8 @@ const HIDE_PATHS = [
 const YEAR = new Date().getFullYear()
 
 export default function Footer() {
-  const pathname  = usePathname()
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const pathname = usePathname()
+  const { C } = useColors()
 
   if (HIDE_PATHS.some(p => pathname.includes(p))) return null
 
@@ -26,10 +25,10 @@ export default function Footer() {
       </p>
       <p style={{ margin: '2px 0 0', fontSize: 10, color: C.textMuted }}>
         Alla rättigheter förbehålls ·{' '}
-        <a href="/legal" style={{ color: C.textMuted, textDecoration: 'underline',
+        <Link href="/legal" style={{ color: C.textMuted, textDecoration: 'underline',
           textDecorationColor: C.border }}>
           Legal
-        </a>
+        </Link>
       </p>
     </footer>
   )
