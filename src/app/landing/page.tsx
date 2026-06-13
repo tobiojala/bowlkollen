@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { motion, useInView, useScroll } from 'framer-motion'
 import SubscribeForm from './SubscribeForm'
 
@@ -227,8 +229,8 @@ export default function LandingPage() {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <img src="/logo-mark.png" alt="Bowlkollen" style={{ height: 64, width: 'auto' }} />
-              <img src="/logo-wordmark.png" alt="" aria-hidden="true" style={{ height: 42, width: 'auto' }} />
+              <Image src="/logo-mark.png" alt="Bowlkollen" width={64} height={64} style={{ height: 64, width: 'auto' }} priority />
+              <Image src="/logo-wordmark.png" alt="" aria-hidden="true" width={126} height={42} style={{ height: 42, width: 'auto' }} priority />
             </div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -382,7 +384,7 @@ export default function LandingPage() {
             </div>
             <p style={{ fontSize: 11, color: C_BODY, margin: 0 }}>
               © 2026 Bowlkollen ·{' '}
-              <a href="/legal" style={{ color: 'inherit', textDecoration: 'none' }}>Integritetspolicy</a>
+              <Link href="/legal" style={{ color: 'inherit', textDecoration: 'none' }}>Integritetspolicy</Link>
             </p>
           </motion.div>
         </footer>
