@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { shortName } from '@/lib/utils'
-import { divisionColor } from '@/lib/divisions'
+import { divisionColor, divisionShort } from '@/lib/divisions'
 import { useColors } from '@/components/ThemeProvider'
 
 type Team = { id: string; name: string; club?: string }
@@ -22,81 +22,70 @@ type Props = {
   venue?: string | null
 }
 
-function teamHue(name: string) {
-  return name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-}
-
 export default function MatchHero({
   home, away, homeScore, awayScore, homePins, awayPins,
   status, division, round, date, venue,
 }: Props) {
-  const { C, isDark } = useColors()
+  const { isDark } = useColors()
 
-  const homeWin  = homeScore !== null && awayScore !== null && homeScore > awayScore
-  const awayWin  = homeScore !== null && awayScore !== null && awayScore > homeScore
   const hasScore = homeScore !== null && awayScore !== null
+  const homeWin  = hasScore && (homeScore as number) > (awayScore as number)
+  const awayWin  = hasScore && (awayScore as number) > (homeScore as number)
   const isLive   = status === 'live'
 
-  const hHue = teamHue(home.name)
-  const aHue = teamHue(away.name)
-  const divC = divisionColor(division)
+  // Design-language palette — near-black tonal, gold budget. No per-team hues.
+  const win    = isDark ? '#f4f5f7' : '#1a2535'              // winner / primary ink
+  const muted  = isDark ? 'rgba(244,245,247,0.40)' : 'rgba(0,0,0,0.42)'
+  const faint  = isDark ? 'rgba(244,245,247,0.24)' : 'rgba(0,0,0,0.28)'
+  const gold   = '#f5c200'
+  const blue   = '#7ab4e8'
+  const pillBg = isDark ? 'rgba(244,245,247,0.06)' : 'rgba(0,0,0,0.05)'
+  const divC   = divisionColor(division, isDark ? 'dark' : 'light')
+
+  // Calm tonal elevation: a single step up from the page, fading back down.
+  // Gold (the result) is the only saturated thing in the frame.
+  const heroGrad = isDark
+    ? 'linear-gradient(180deg, #14171c 0%, #0b0d10 100%)'
+    : 'linear-gradient(180deg, #ffffff 0%, #f5f2ec 100%)'
 
   const dateStr = date ? new Date(date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
   const timeStr = date ? new Date(date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : ''
 
-  // Gradient blends home team hue (left) into away team hue (right)
-  const heroGrad = isDark
-    ? `linear-gradient(135deg, hsl(${hHue},45%,7%) 0%, hsl(${(hHue + aHue) / 2},40%,10%) 50%, hsl(${aHue},45%,7%) 100%)`
-    : `linear-gradient(135deg, hsl(${hHue},30%,91%) 0%, hsl(${(hHue + aHue) / 2},24%,94%) 50%, hsl(${aHue},30%,91%) 100%)`
-
-  const overlay = isDark ? 'rgba(255,255,255,' : 'rgba(0,0,0,'
-
   return (
     <section style={{ background: heroGrad, paddingBottom: 24 }}>
 
-      {/* Top bar: division + status */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '14px 16px 0', flexWrap: 'wrap' as const,
-      }}>
+      {/* Top bar: division + round + status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px 0', flexWrap: 'wrap' }}>
         <span style={{
-          fontSize: 11, fontWeight: 700, color: divC,
-          background: divC + (isDark ? '18' : '22'),
-          borderRadius: 6, padding: '3px 8px',
+          fontSize: 11, fontWeight: 600, color: divC,
+          background: pillBg, borderRadius: 999, padding: '3px 9px',
         }}>
-          {division}
+          {divisionShort(division)}
         </span>
         {round && (
-          <span style={{ fontSize: 11, color: overlay + '0.45)' }}>
-            Omgång {round}
-          </span>
+          <span style={{ fontSize: 11, color: muted }}>Omgång {round}</span>
         )}
         <div style={{ marginLeft: 'auto' }}>
           {isLive && (
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              fontSize: 10, fontWeight: 800, color: '#e05555',
-              background: 'rgba(224,85,85,0.14)', borderRadius: 20,
-              padding: '4px 10px', letterSpacing: '0.08em',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 11, fontWeight: 700, color: gold, letterSpacing: '0.08em',
             }}>
-              <span className="live-dot" style={{ background: '#e05555' }} />
+              <span className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: gold }} />
               LIVE
             </span>
           )}
           {status === 'upcoming' && (
             <span style={{
-              fontSize: 10, fontWeight: 700, color: '#7ab4e8',
-              background: 'rgba(122,180,232,0.14)', borderRadius: 20,
+              fontSize: 10, fontWeight: 700, color: blue,
+              background: 'rgba(122,180,232,0.12)', borderRadius: 999,
               padding: '4px 10px', letterSpacing: '0.08em',
             }}>
               KOMMANDE
             </span>
           )}
           {status === 'completed' && (
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: overlay + '0.38)',
-              letterSpacing: '0.08em',
-            }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: faint, letterSpacing: '0.08em' }}>
               AVSLUTAD
             </span>
           )}
@@ -113,12 +102,12 @@ export default function MatchHero({
         <Link href={'/teams/' + home.id} style={{ textDecoration: 'none' }}>
           <div style={{
             fontSize: 15, fontWeight: hasScore ? (homeWin ? 800 : 500) : 700,
-            color: hasScore ? (homeWin ? (isDark ? '#fff' : '#111') : overlay + '0.45)') : (isDark ? '#e8edf5' : '#1a2535'),
-            lineHeight: 1.2, textAlign: 'right',
+            color: hasScore ? (homeWin ? win : muted) : win,
+            lineHeight: 1.2, textAlign: 'right', letterSpacing: -0.2,
           }}>
             {shortName(home.name)}
           </div>
-          <div style={{ fontSize: 10, color: overlay + '0.38)', textAlign: 'right', marginTop: 4, letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: 10, color: faint, textAlign: 'right', marginTop: 4, letterSpacing: '0.04em' }}>
             Hemmalag
           </div>
         </Link>
@@ -127,38 +116,32 @@ export default function MatchHero({
         <div style={{ textAlign: 'center', minWidth: 96 }}>
           {hasScore ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <span className="num" style={{
-                  fontSize: 68, lineHeight: 1,
-                  color: homeWin ? (isDark ? '#ffffff' : '#111') : overlay + '0.30)',
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
+                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: homeWin ? gold : faint }}>
                   {homeScore}
                 </span>
-                <span style={{ fontSize: 20, color: overlay + '0.25)', fontWeight: 300, marginBottom: 4 }}>–</span>
-                <span className="num" style={{
-                  fontSize: 68, lineHeight: 1,
-                  color: awayWin ? (isDark ? '#ffffff' : '#111') : overlay + '0.30)',
-                }}>
+                <span style={{ fontSize: 20, color: faint, fontWeight: 300, marginBottom: 4 }}>–</span>
+                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: awayWin ? gold : faint }}>
                   {awayScore}
                 </span>
               </div>
-              <div style={{ fontSize: 9, color: overlay + '0.35)', letterSpacing: '0.12em', marginTop: 6 }}>
+              <div style={{ fontSize: 9, color: muted, letterSpacing: '0.12em', marginTop: 6 }}>
                 MATCHPOÄNG
               </div>
               {homePins > 0 && (
                 <div style={{
-                  marginTop: 8, fontSize: 12, color: overlay + '0.45)',
+                  marginTop: 8, fontSize: 12, color: muted, fontVariantNumeric: 'tabular-nums',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}>
-                  <span className="num" style={{ fontSize: 14, color: homeWin ? (isDark ? '#e8edf5' : '#222') : overlay + '0.35)' }}>{homePins.toLocaleString('sv')}</span>
+                  <span className="num" style={{ fontSize: 14, color: homeWin ? win : muted }}>{homePins.toLocaleString('sv')}</span>
                   <span style={{ opacity: 0.4 }}>–</span>
-                  <span className="num" style={{ fontSize: 14, color: awayWin ? (isDark ? '#e8edf5' : '#222') : overlay + '0.35)' }}>{awayPins.toLocaleString('sv')}</span>
-                  <span style={{ fontSize: 10, opacity: 0.4 }}>pins</span>
+                  <span className="num" style={{ fontSize: 14, color: awayWin ? win : muted }}>{awayPins.toLocaleString('sv')}</span>
+                  <span style={{ fontSize: 10, opacity: 0.6 }}>pins</span>
                 </div>
               )}
             </>
           ) : (
-            <div style={{ fontSize: 22, color: overlay + '0.28)', fontWeight: 300, letterSpacing: 4 }}>vs</div>
+            <div style={{ fontSize: 22, color: faint, fontWeight: 300, letterSpacing: 4 }}>vs</div>
           )}
         </div>
 
@@ -166,12 +149,12 @@ export default function MatchHero({
         <Link href={'/teams/' + away.id} style={{ textDecoration: 'none' }}>
           <div style={{
             fontSize: 15, fontWeight: hasScore ? (awayWin ? 800 : 500) : 700,
-            color: hasScore ? (awayWin ? (isDark ? '#fff' : '#111') : overlay + '0.45)') : (isDark ? '#e8edf5' : '#1a2535'),
-            lineHeight: 1.2,
+            color: hasScore ? (awayWin ? win : muted) : win,
+            lineHeight: 1.2, letterSpacing: -0.2,
           }}>
             {shortName(away.name)}
           </div>
-          <div style={{ fontSize: 10, color: overlay + '0.38)', marginTop: 4, letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: 10, color: faint, marginTop: 4, letterSpacing: '0.04em' }}>
             Bortalag
           </div>
         </Link>
@@ -181,18 +164,15 @@ export default function MatchHero({
       {(dateStr || venue) && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 8, padding: '0 16px',
-          flexWrap: 'wrap' as const,
+          gap: 8, padding: '0 16px', flexWrap: 'wrap',
         }}>
           {dateStr && (
-            <span style={{ fontSize: 11, color: overlay + '0.42)', textTransform: 'capitalize' as const }}>
+            <span style={{ fontSize: 11, color: muted, textTransform: 'capitalize' }}>
               {dateStr}{timeStr ? ` · ${timeStr}` : ''}
             </span>
           )}
           {venue && (
-            <span style={{ fontSize: 11, color: overlay + '0.38)' }}>
-              · {venue}
-            </span>
+            <span style={{ fontSize: 11, color: faint }}>· {venue}</span>
           )}
         </div>
       )}
