@@ -98,10 +98,22 @@ profile is live on `/players/[id]` with real data.**
 NOTE: `/players/[id]` now shows the NEW design. `/mockup` remains the design
 playground (mock data); the two share the same components.
 
-## After the profile: the 16-day spine (LAUNCH_PLAN.md)
+## The 16-day spine (LAUNCH_PLAN.md)
 
-1. Home feed (`/`) redesign — first impression.
-2. Player profile (this reconciliation).
-3. Match detail (`/matches/[id]`) — score hero, serie pills, kill cyan glow.
+1. **[DONE] Home feed (`/`) redesign** — first impression. Rebuilt in the dark
+   design system: greeting + one hero number (live count / next-match
+   countdown), live match cards, "Veckans bästa serier" honor list, mini
+   standings with promotion/relegation zones, recent results + upcoming rows,
+   tournament teaser. New dark sections in `src/app/home/_components/`
+   (`HomeHero`, `LiveCard`, `MatchRow`, `HonorList`, `StandingsCard`,
+   `TournamentCard`, `tokens.ts`). Keeps the `DEMO` mock-data path + all the
+   existing data hooks/helpers; `DEMO = false` in `page.tsx` flips to live.
+   Time/relative values are mount-gated to avoid SSR hydration drift.
+   FOLLOW-UP: old `src/components/home/*` (AppGreeting, LiveHero, HonorFeed,
+   MiniStandings, MatchDateGroup, TeamNeeds, HomeSkeleton, NextMatchCard) are
+   now superseded — delete once the new home is confirmed on real data.
+2. **[DONE] Player profile** (this reconciliation, steps 1–3 above).
+3. **[NEXT] Match detail (`/matches/[id]`)** — score hero, serie pills, tonal
+   surfaces, kill the cyan glow. Reuse the sheet/row patterns.
 Then: claim flow polish + manual approval, GDPR/junior guardrails, cross-app
 token sweep, merge to `main` (~day 13), real data import, invite.
