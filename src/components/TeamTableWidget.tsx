@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
 
 type Props = {
@@ -26,8 +26,7 @@ type Standing = {
 
 
 export default function TeamTableWidget({ teamId, division }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [standings, setStandings] = useState<Standing[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -105,9 +104,9 @@ export default function TeamTableWidget({ teamId, division }: Props) {
     <div style={{ margin: '0 0 0', borderTop: '1px solid ' + C.border }}>
       <div style={{ padding: '14px 20px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>TABELLPOSITION</div>
-        <a href="/league" style={{ fontSize: 11, color: C.accent, textDecoration: 'none', fontWeight: 600 }}>
+        <Link href="/league" style={{ fontSize: 11, color: C.accent, textDecoration: 'none', fontWeight: 600 }}>
           Hela tabellen ›
-        </a>
+        </Link>
       </div>
 
       {/* Position hero */}
@@ -156,14 +155,14 @@ export default function TeamTableWidget({ teamId, division }: Props) {
 
           return (
             <div key={s.teamId}
-              style={{ display: 'grid', gridTemplateColumns: '24px 1fr 28px 28px 42px', gap: 8, padding: '9px 20px', borderBottom: '1px solid ' + C.border, background: isThis ? (theme === 'dark' ? 'rgba(245,194,0,0.06)' : 'rgba(10,92,138,0.04)') : 'transparent', borderLeft: '3px solid ' + (isThis ? '#f5c200' : 'transparent'), alignItems: 'center' }}
+              style={{ display: 'grid', gridTemplateColumns: '24px 1fr 28px 28px 42px', gap: 8, padding: '9px 20px', borderBottom: '1px solid ' + C.border, background: isThis ? (isDark ? 'rgba(245,194,0,0.06)' : 'rgba(10,92,138,0.04)') : 'transparent', borderLeft: '3px solid ' + (isThis ? '#f5c200' : 'transparent'), alignItems: 'center' }}
             >
               <div style={{ fontSize: 12, fontWeight: 700, color: isThis ? '#f5c200' : C.textMuted, textAlign: 'center' }}>{realPos + 1}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {z && <div style={{ width: 5, height: 5, borderRadius: '50%', background: z.color, flexShrink: 0 }} />}
-                <a href={'/teams/' + s.teamId} style={{ fontSize: 13, fontWeight: isThis ? 700 : 400, color: isThis ? C.text : C.textMuted, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Link href={'/teams/' + s.teamId} style={{ fontSize: 13, fontWeight: isThis ? 700 : 400, color: isThis ? C.text : C.textMuted, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {shortName(s.teamName)}
-                </a>
+                </Link>
               </div>
               <div style={{ fontSize: 11, color: C.textMuted, textAlign: 'center' }}>{s.played}</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: diff > 0 ? C.green : diff < 0 ? '#e05555' : C.textMuted, textAlign: 'center' }}>
