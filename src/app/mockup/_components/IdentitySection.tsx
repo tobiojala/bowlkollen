@@ -40,11 +40,12 @@ interface IdentitySectionProps {
   bkTopPct: number
   onOpenCurve: (metric?: HeroMetric) => void
   onOpenChallenges: () => void
+  onOpenBkRating: () => void
 }
 
 export default function IdentitySection({
   matchAvgs, seasonAvg, formDiff, recentAvg, lastSeasonAvg,
-  bkTopPct, onOpenCurve, onOpenChallenges,
+  bkTopPct, onOpenCurve, onOpenChallenges, onOpenBkRating,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
@@ -173,7 +174,8 @@ export default function IdentitySection({
                 deltaSuffix={c.deltaSuffix}
                 caption={c.caption}
               />
-              <div onClick={() => onOpenCurve(c.key)} style={{ marginTop: 18, cursor: 'pointer' }}>
+              <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
+                style={{ marginTop: 18, cursor: 'pointer' }}>
                 <HeroCurve data={c.data} seasonAvg={c.key === 'snitt' ? seasonAvg : undefined}
                   projAvg={c.proj} color={c.color} gid={`hero_${c.key}`} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>

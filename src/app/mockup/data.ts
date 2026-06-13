@@ -47,6 +47,23 @@ export const ELITSERIEN_BK_RATINGS = [
 ]
 export const PLAYER_BK_RATING = 87
 
+// BK Rating breakdown (see BK_RATING_SPEC.md — worked example)
+export const PLAYER_MOT_FALTET = 12
+export const PLAYER_BK_PILLARS = [
+  { key: 'grund',      label: 'Grund',      weight: 50, value: 92,
+    desc: 'Mot fältet över hela säsongen',
+    sentence: 'Slår fältet i 9 av 10 matcher — +12 i snitt mot alla som bowlade samma banor.' },
+  { key: 'form',       label: 'Form',       weight: 25, value: 88,
+    desc: 'Senaste matcherna väger tyngst',
+    sentence: '13 spel i rad över snitt — ratingen pekar brant uppåt.' },
+  { key: 'tryck',      label: 'Tryck',      weight: 15, value: 80,
+    desc: 'Prestation i avgörande spel',
+    sentence: '+9 mot fältet när matchen står på spel — levererar under press.' },
+  { key: 'stabilitet', label: 'Stabilitet', weight: 10, value: 72,
+    desc: 'Jämnhet mot förhållandena',
+    sentence: 'Jämnare än de flesta — sällan långt under sin nivå, oavsett oljeprofil.' },
+] as const
+
 // Home = true, Away = false, by match index
 export const MATCH_HOME_AWAY: Record<number, boolean> = {
   0: false, 1: true,  2: false, 3: true,  4: false,

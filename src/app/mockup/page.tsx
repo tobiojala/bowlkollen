@@ -21,8 +21,9 @@ import ChallengesSheet from './_components/sheets/ChallengesSheet'
 import DuellSheet      from './_components/sheets/DuellSheet'
 import MatchSheet      from './_components/sheets/MatchSheet'
 import DnaInfoSheet    from './_components/sheets/DnaInfoSheet'
+import BkRatingSheet   from './_components/sheets/BkRatingSheet'
 
-type CardType = 'curve' | 'whatif' | 'challenges' | 'duell' | 'match'
+type CardType = 'curve' | 'whatif' | 'challenges' | 'duell' | 'match' | 'bkrating'
 
 export default function MockupPage() {
   const [expanded, setExpanded]         = useState<CardType | null>(null)
@@ -119,6 +120,7 @@ export default function MockupPage() {
             bkTopPct={bkTopPct}
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => setExpanded('challenges')}
+            onOpenBkRating={() => setExpanded('bkrating')}
           />
 
           {/* The identity artifact */}
@@ -192,6 +194,10 @@ export default function MockupPage() {
 
       {expanded === 'challenges' && (
         <ChallengesSheet onClose={close} />
+      )}
+
+      {expanded === 'bkrating' && (
+        <BkRatingSheet bkTopPct={bkTopPct} onClose={close} />
       )}
 
       {expanded === 'duell' && (

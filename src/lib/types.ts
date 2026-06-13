@@ -321,3 +321,34 @@ export type TeamNarrative = {
   headline: string   // e.g. "2 poäng från seriesegern — 3 matcher kvar"
   subtext: string    // secondary context line
 }
+
+// ── BK Rating ─────────────────────────────────────────────────────────────────
+
+/** Where a rated game came from — controls its confidence weight. */
+export type GameSource = 'sanctioned' | 'verified' | 'self_reported'
+
+/** One game as the BK Rating engine sees it. */
+export type RatedGame = {
+  score: number
+  /** Field average for the same hall, same oil, same night. */
+  fieldAvg: number
+  /** Chronological order, 0 = oldest. */
+  seq: number
+  /** True when this game could decide the match (e.g. S4 with the match level). */
+  decider?: boolean
+  source?: GameSource
+}
+
+export type BkPillars = {
+  grund: number       // 0-100 percentile
+  form: number        // 0-100 percentile
+  tryck: number       // 0-100 percentile
+  stabilitet: number  // 0-100 percentile
+}
+
+export type BkRatingResult = {
+  total: number          // 0-100
+  pillars: BkPillars
+  /** Season "mot fältet" — average pins above/below the field. */
+  motFaltet: number
+}

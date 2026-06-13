@@ -22,6 +22,25 @@ export const RATING = {
   // < 60 = ROOKIE
 } as const
 
+// ── BK Rating engine ──────────────────────────────────────────────────────────
+// Pillar weights must sum to 1. See BK_RATING_SPEC.md for the full design.
+export const BK_RATING = {
+  WEIGHTS: {
+    GRUND:      0.50,  // percentile of season "mot fältet"
+    FORM:       0.25,  // recency-weighted "mot fältet"
+    TRYCK:      0.15,  // "mot fältet" in deciding games
+    STABILITET: 0.10,  // consistency (low spread)
+  },
+  // Confidence weighting per data source. Self-reported scores only ever
+  // influence the Form pillar — never Grund.
+  SOURCE_WEIGHTS: {
+    SANCTIONED:    1.0,   // BITS league play + sanctioned competitions
+    VERIFIED:      0.5,   // non-sanctioned comps verified via hall / Bowlkollen live scoring
+    SELF_REPORTED: 0.2,
+  },
+  FORM_HALF_LIFE_GAMES: 8,  // a game 8 games ago counts half as much toward Form
+} as const
+
 // ── Season boundaries (Swedish bowling year: 1 Jul – 30 Jun) ─────────────────
 export const SEASON = {
   CURRENT: '2025-07-01',
