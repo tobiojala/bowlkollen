@@ -1,7 +1,7 @@
 'use client'
 
 import { Sheet } from '@/components/mockup/Sheet'
-import { PLAYER_BK_RATING, PLAYER_MOT_FALTET, PLAYER_BK_PILLARS, COLORS } from '../../data'
+import { PLAYER_BK_RATING, PLAYER_MOT_FALTET, PLAYER_BK_PILLARS, BK_READY, COLORS } from '../../data'
 
 const { GREEN } = COLORS
 const INK  = '#f4f5f7'
@@ -15,13 +15,33 @@ interface BkRatingSheetProps {
 }
 
 export default function BkRatingSheet({ bkTopPct, onClose }: BkRatingSheetProps) {
+  const ready = BK_READY
   return (
-    <Sheet title="BK Rating" subtitle="Så räknas betyget" onClose={onClose}>
+    <Sheet title="BK Rating" subtitle={ready ? 'Så räknas betyget' : 'Kommer snart — så här kommer det att fungera'} onClose={onClose}>
+
+      {/* Coming-soon banner */}
+      {!ready && (
+        <div className="rounded-2xl px-4 py-3 mb-4" style={{ background: 'rgba(93,202,165,0.10)' }}>
+          <p className="text-[13px]" style={{ color: INK2, lineHeight: 1.55 }}>
+            <span style={{ color: GREEN, fontWeight: 700 }}>Kommer snart.</span> BK Rating öppnar när vi
+            har tillräckligt med matchdata. Siffrorna nedan är exempel som visar hur betyget byggs upp.
+          </p>
+        </div>
+      )}
 
       {/* Hero */}
       <div className="flex items-baseline gap-3">
-        <span className="num tabular-nums" style={{ fontSize: 44, color: INK }}>{PLAYER_BK_RATING}</span>
-        <span className="text-[13px] font-semibold" style={{ color: GREEN }}>Top {bkTopPct}% i Elitserien Damer</span>
+        {ready ? (
+          <>
+            <span className="num tabular-nums" style={{ fontSize: 44, color: INK }}>{PLAYER_BK_RATING}</span>
+            <span className="text-[13px] font-semibold" style={{ color: GREEN }}>Top {bkTopPct}% i Elitserien Damer</span>
+          </>
+        ) : (
+          <>
+            <span className="num tabular-nums" style={{ fontSize: 44, color: INK4 }}>–</span>
+            <span className="text-[13px] font-semibold" style={{ color: GREEN }}>betyg 0–100</span>
+          </>
+        )}
       </div>
 
       {/* Mot fältet — the core concept gets prime placement */}

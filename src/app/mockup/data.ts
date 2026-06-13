@@ -47,6 +47,11 @@ export const ELITSERIEN_BK_RATINGS = [
 ]
 export const PLAYER_BK_RATING = 87
 
+// Launch state: BK Rating ships as a "kommer snart" teaser until the full
+// mot-fältet engine has dense enough data (see LAUNCH_PLAN.md). Flip to true
+// to preview the full live rating (the fast-follow vision).
+export const BK_READY = false
+
 // BK Rating breakdown (see BK_RATING_SPEC.md — worked example)
 export const PLAYER_MOT_FALTET = 12
 export const PLAYER_BK_PILLARS = [

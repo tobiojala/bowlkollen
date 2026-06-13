@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
 import { HeroCurve } from '@/components/mockup/Curves'
 import { HeroNumber, ActionRow, ActionButton } from '@/components/ui/primitives'
-import { ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, PLAYER_BK_RATING, MATCHES, BK_PROGRESS, RANKING_PTS, COLORS } from '../data'
+import { ACHIEVEMENTS, MOCK_FOLLOWERS, PLAYER_LEVEL, PLAYER_BK_RATING, BK_READY, MATCHES, BK_PROGRESS, RANKING_PTS, COLORS } from '../data'
 
 const { GOLD } = COLORS
 const INK  = '#f4f5f7'
@@ -63,7 +63,7 @@ export default function IdentitySection({
   const heroCards: {
     key: HeroMetric; label: string; value: number; delta: number; deltaSuffix: string
     caption: React.ReactNode; color: string; data: number[]; proj?: number
-    footer: React.ReactNode
+    footer: React.ReactNode; ready?: boolean
   }[] = [
     {
       key: 'snitt', label: 'Säsongssnitt', value: seasonAvg, delta: formDiff, deltaSuffix: ' form',
@@ -82,7 +82,7 @@ export default function IdentitySection({
     {
       key: 'bk', label: 'BK Rating', value: PLAYER_BK_RATING, delta: PLAYER_BK_RATING - BK_PROGRESS[0], deltaSuffix: ' i år',
       caption: <>Bowlkollens prestationsbetyg · Top {bkTopPct}% i ligan</>,
-      color: '#5dcaa5', data: BK_PROGRESS,
+      color: '#5dcaa5', data: BK_PROGRESS, ready: BK_READY,
       footer: (
         <>
           <span style={{ fontSize: 11, color: INK4 }}>{MATCHES[0].date}</span>
@@ -167,21 +167,45 @@ export default function IdentitySection({
             scrollbarWidth: 'none' } as React.CSSProperties}>
           {heroCards.map(c => (
             <div key={c.key} style={{ minWidth: '100%', scrollSnapAlign: 'center' }}>
-              <HeroNumber
-                label={c.label}
-                value={c.value}
-                delta={c.delta}
-                deltaSuffix={c.deltaSuffix}
-                caption={c.caption}
-              />
-              <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
-                style={{ marginTop: 18, cursor: 'pointer' }}>
-                <HeroCurve data={c.data} seasonAvg={c.key === 'snitt' ? seasonAvg : undefined}
-                  projAvg={c.proj} color={c.color} gid={`hero_${c.key}`} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-                  {c.footer}
+              {c.ready === false ? (
+                /* "Kommer snart" launch state — no live number until the engine has data */
+                <div onClick={onOpenBkRating} style={{ cursor: 'pointer' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{c.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 52, fontWeight: 900, color: INK4, letterSpacing: '-0.02em', lineHeight: 1 }}>–</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: c.color, background: `${c.color}1a`, borderRadius: 999, padding: '4px 12px' }}>Kommer snart</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: INK2, marginTop: 14, lineHeight: 1.5 }}>
+                    BK Rating öppnar när vi har tillräckligt med matchdata för att mäta dig mot fältet. Tryck för att se hur det räknas →
+                  </div>
+                  <div style={{ marginTop: 16, height: 84, borderRadius: 12, overflow: 'hidden',
+                    background: `linear-gradient(180deg, ${c.color}0f, transparent)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="100%" height="84" viewBox="0 0 360 84" preserveAspectRatio="none" style={{ display: 'block' }}>
+                      <line x1="2" y1="60" x2="358" y2="60" stroke="rgba(244,245,247,0.10)" strokeWidth="1" strokeDasharray="4,4" />
+                      <line x1="2" y1="42" x2="358" y2="42" stroke="rgba(244,245,247,0.07)" strokeWidth="1" strokeDasharray="4,4" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <HeroNumber
+                    label={c.label}
+                    value={c.value}
+                    delta={c.delta}
+                    deltaSuffix={c.deltaSuffix}
+                    caption={c.caption}
+                  />
+                  <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
+                    style={{ marginTop: 18, cursor: 'pointer' }}>
+                    <HeroCurve data={c.data} seasonAvg={c.key === 'snitt' ? seasonAvg : undefined}
+                      projAvg={c.proj} color={c.color} gid={`hero_${c.key}`} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
+                      {c.footer}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

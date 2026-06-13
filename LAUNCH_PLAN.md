@@ -66,6 +66,16 @@ full "mot fältet" BK Rating engine (see decision).
 **Days 15–16 — Buffer + invite**
 - Absorb overrun, then send invites
 
+## Decisions locked (2026-06-13)
+
+- **BK Rating at launch = "kommer snart" teaser.** The card is visible but in a
+  locked/coming-soon state (no live number) until the full mot-fältet engine
+  has dense enough data. Tapping it opens the explainer sheet as a preview of
+  what's coming. Full live rating is the fast-follow.
+- **Junior policy = public, no social until claimed.** Junior profiles show
+  results/stats (public competition data) but follow/react and social features
+  are disabled until a guardian/captain claims the profile.
+
 ## Critical risks (honest)
 
 1. **BK Rating data dependency** — full "mot fältet" needs dense per-session
