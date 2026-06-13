@@ -51,7 +51,8 @@ Read this first, then the linked docs as needed.
 ## IN PROGRESS — Player profile reconciliation (3 steps)
 
 Goal: port the mockup design onto the REAL `/players/[id]` route, sharing the
-same components so they never drift. **Steps 1 and 2 of 3 are done.**
+same components so they never drift. **All 3 steps are done — the redesigned
+profile is live on `/players/[id]` with real data.**
 
 - **[DONE] Step 1** — `src/lib/profile.ts`: canonical `ProfileData` shape +
   `buildProfileData()` (one home for stat math) + 9 tests. `IdentitySection`
@@ -68,15 +69,34 @@ same components so they never drift. **Steps 1 and 2 of 3 are done.**
   to `profile.ts`. Only `COLORS` (design tokens) still imported from `data.ts`,
   same as Step 1. `/mockup` renders identically; 91 tests + tsc + lint green.
   (`ChallengesSheet`/`BkRatingSheet` are out of scope — not match-data sheets.)
-- **[NEXT] Step 3** — real adapter + route: map Supabase `match_results` →
-  `ProfileMatch[]` (compute W/L, opponent, home/away from the player's
-  `team_id`), build `ProfileData`, and render the redesigned profile in
-  `/players/[id]`. The old `app/players/[id]/_components/PlayerClient.tsx`
-  (real data, OLD design) is the file being replaced — it already computes the
-  same stats, so it's a guide, not a throwaway.
+- **[DONE] Step 3** — real adapter + redesigned route:
+  - `src/lib/profile-adapter.ts`: `resultsToProfileMatches()` maps Supabase
+    `match_results` → `ProfileMatch[]` (W/L, opponent, home/away from the
+    player's `team_id`, oldest-first) + `buildProfileFromResults()`. 8 tests.
+  - `PlayerProfileView.tsx` (pure presentation, reuses the shared mockup
+    sections + sheets) and `PlayerProfileClient.tsx` (real data → adapter →
+    view, plus card / H2H / edit modals). `page.tsx` now renders
+    `PlayerProfileClient`. The dark redesign renders for real players.
+  - Also finished generalizing `ProfileDNA` (the chart Step 2 missed): it now
+    takes `highlights` + `initials` props instead of importing mock
+    `DNA_HIGHLIGHTS` / hardcoding "SH"; coords rounded to kill an SSR hydration
+    mismatch. `/mockup` still renders pixel-identical.
+  - 99 tests + tsc + lint + `next build` all green.
 
-NOTE: `/players/[id]` still shows the OLD design on purpose until Step 3.
-Only `/mockup` reflects the new design today.
+  LAUNCH-STATE / placeholders on the real profile (intentional, wire later):
+  • BK Rating = "kommer snart" (`bkRating={null}`) per the locked decision.
+  • Followers/following show `0` — no count source yet (`identity` TODO).
+  • Challenges/reactions/ranking/level are empty (no real data source yet).
+  • Achievements come from `player.achievements` (real strings → chips).
+
+  FOLLOW-UPS: the old `PlayerClient.tsx` + `PlayerDNA.tsx` + `PlayerMatchLog.tsx`
+  are now superseded but kept as reference — delete once avatar-upload and real
+  follower counts are ported into the new view. Optional: relocate the shared
+  sections out of `app/mockup/_components/` into `components/profile/` so the
+  real route doesn't import from a route folder.
+
+NOTE: `/players/[id]` now shows the NEW design. `/mockup` remains the design
+playground (mock data); the two share the same components.
 
 ## After the profile: the 16-day spine (LAUNCH_PLAN.md)
 

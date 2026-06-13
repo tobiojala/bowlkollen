@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DNA_HIGHLIGHTS } from '@/app/mockup/data'
+import type { ProfileHighlight } from '@/lib/profile'
 
 const SW = 360, SH = 300
 const CX = 180, CY = 160
@@ -10,9 +10,15 @@ const SPOKE_START = AVATAR_R + 6   // spoke lines start just outside avatar
 const rMin = 52, rMax = 122
 const LINE = 28                    // callout line length
 
-export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATap, isLive }: {
+const r2 = (v: number) => +v.toFixed(2)   // stable coords → no SSR/CSR hydration drift
+
+export default function ProfileDNA({ matchAvgs, overlayAvgs, highlights = [], initials = '', onTapSpoke, onDNATap, isLive }: {
   matchAvgs: number[]
   overlayAvgs?: number[]
+  /** Highlight markers placed on their matching spokes (idx → label/colour). */
+  highlights?: readonly ProfileHighlight[]
+  /** Center-glyph initials. */
+  initials?: string
   onTapSpoke: (i: number) => void
   onDNATap: () => void
   isLive?: boolean
@@ -25,7 +31,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
   const spokes = matchAvgs.map((avg, i) => {
     const angle = (2 * Math.PI * i / n) - Math.PI / 2
     const r = rMin + ((avg - mn) / (mx === mn ? 1 : mx - mn)) * (rMax - rMin)
-    return { x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle), r, angle }
+    return { x: r2(CX + r * Math.cos(angle)), y: r2(CY + r * Math.sin(angle)), r, angle }
   })
   const pathD = spokes.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
 
@@ -62,7 +68,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
         const pts = overlayAvgs.map((avg, i) => {
           const angle = (2 * Math.PI * i / overlayAvgs.length) - Math.PI / 2
           const r = rMin + ((avg - mn2) / (mx2 === mn2 ? 1 : mx2 - mn2)) * (rMax - rMin)
-          return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`
+          return `${r2(CX + r * Math.cos(angle))},${r2(CY + r * Math.sin(angle))}`
         })
         const d = `M ${pts.join(' L ')} Z`
         return (
@@ -106,7 +112,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
 
       {/* Floating spoke dots */}
       {spokes.map((p, i) => {
-        const hl    = DNA_HIGHLIGHTS.find(h => h.idx === i)
+        const hl    = highlights.find(h => h.idx === i)
         const cos   = Math.cos(p.angle), sin = Math.sin(p.angle)
         const dx    = (cos * amp).toFixed(2), dy = (sin * amp).toFixed(2)
         const dur   = `${2.0 + (i % 5) * 0.22}s`
@@ -134,11 +140,11 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
       })}
 
       {/* Callout labels */}
-      {DNA_HIGHLIGHTS.map(h => {
+      {highlights.map(h => {
         const p = spokes[h.idx]
         if (!p) return null
-        const ex = p.x + LINE * Math.cos(p.angle)
-        const ey = p.y + LINE * Math.sin(p.angle)
+        const ex = r2(p.x + LINE * Math.cos(p.angle))
+        const ey = r2(p.y + LINE * Math.sin(p.angle))
         const anchor: 'start' | 'end' | 'middle' =
           Math.cos(p.angle) > 0.25 ? 'start' : Math.cos(p.angle) < -0.25 ? 'end' : 'middle'
         const tx = ex + (anchor === 'start' ? 4 : anchor === 'end' ? -4 : 0)
@@ -164,7 +170,7 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, onTapSpoke, onDNATa
       <circle cx={CX} cy={CY} r={AVATAR_R} fill="#0b0d10"
         stroke="rgba(245,194,0,0.85)" strokeWidth="2" />
       <text x={CX} y={CY + 8} fill="#f5c200" fontSize="22" fontWeight="900"
-        textAnchor="middle" style={{ letterSpacing: '-0.5px' }}>SH</text>
+        textAnchor="middle" style={{ letterSpacing: '-0.5px' }}>{initials}</text>
     </svg>
   )
 }

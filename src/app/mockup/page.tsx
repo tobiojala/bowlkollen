@@ -138,6 +138,8 @@ export default function MockupPage() {
           <DnaSection
             matchAvgs={matchAvgs}
             overlayAvgs={LAST_SEASON}
+            highlights={DNA_HIGHLIGHTS}
+            initials={identity.initials}
             isLive={isLive}
             onTapSpoke={setDnaSpoke}
             onDnaTap={() => setDnaInfoOpen(true)}

@@ -36,14 +36,21 @@ interface IdentitySectionProps {
   /** Curve data for the BK card (when live) and the ranking card (when present). */
   bkProgress?: number[]
   rankingPts?: number[]
+  /** When the viewer owns this profile, hide the follow button. */
+  isOwner?: boolean
   onOpenCurve: (metric?: HeroMetric) => void
   onOpenChallenges: () => void
   onOpenBkRating: () => void
+  /** Optional real-action handlers wired by the live route (no-op in the mockup). */
+  onOpenCard?: () => void
+  onOpenH2H?: () => void
+  onShare?: () => void
 }
 
 export default function IdentitySection({
   data, identity, bkTopPct, bkRating, level, achievements = [],
-  bkProgress, rankingPts, onOpenCurve, onOpenChallenges, onOpenBkRating,
+  bkProgress, rankingPts, isOwner = false,
+  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
@@ -127,13 +134,15 @@ export default function IdentitySection({
           <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>
-        <button onClick={() => setFollowing(f => !f)}
-          style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
-            background: following ? '#1c2127' : INK,
-            color: following ? INK2 : '#0b0d10', fontSize: 13, fontWeight: 700,
-            transition: 'background 0.15s, color 0.15s' }}>
-          {following ? 'Följer' : 'Följ'}
-        </button>
+        {!isOwner && (
+          <button onClick={() => setFollowing(f => !f)}
+            style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
+              background: following ? '#1c2127' : INK,
+              color: following ? INK2 : '#0b0d10', fontSize: 13, fontWeight: 700,
+              transition: 'background 0.15s, color 0.15s' }}>
+            {following ? 'Följer' : 'Följ'}
+          </button>
+        )}
       </div>
       <div style={{ fontSize: 13, color: INK3, padding: '8px 0 0 62px' }}>
         <span style={{ color: INK2, fontWeight: 600 }}>{(identity.followers + (following ? 1 : 0)).toLocaleString('sv-SE')}</span> följare
@@ -221,10 +230,10 @@ export default function IdentitySection({
 
       {/* Action row */}
       <ActionRow className="mt-6 -mx-1">
-        <ActionButton icon={CreditCard} label="Spelarkort" />
-        <ActionButton icon={Swords}     label="H2H" />
+        <ActionButton icon={CreditCard} label="Spelarkort" onClick={onOpenCard} />
+        <ActionButton icon={Swords}     label="H2H"        onClick={onOpenH2H} />
         <ActionButton icon={Trophy}     label="Utmaningar" onClick={onOpenChallenges} />
-        <ActionButton icon={Share2}     label="Dela" />
+        <ActionButton icon={Share2}     label="Dela"       onClick={onShare} />
       </ActionRow>
     </div>
   )

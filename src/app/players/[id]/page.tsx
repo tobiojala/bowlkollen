@@ -2,7 +2,7 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { makeQueryClient } from '@/lib/query-client'
 import { createPublicSupabase } from '@/lib/supabase-public'
 import { keys } from '@/lib/queries'
-import PlayerClient from './_components/PlayerClient'
+import PlayerProfileClient from './_components/PlayerProfileClient'
 
 // Cookie-free — enables ISR via revalidate.
 export const revalidate = 300   // revalidate player data every 5 minutes
@@ -35,7 +35,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
 
   return (
     <HydrationBoundary state={dehydrate(qc)}>
-      <PlayerClient id={id} />
+      <PlayerProfileClient id={id} />
     </HydrationBoundary>
   )
 }
