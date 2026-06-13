@@ -203,10 +203,10 @@ export default function MatchClient({ id }: { id: string }) {
 
         {match.oil_profile && (
           <div style={{ padding: '10px 16px', borderBottom: `1px solid ${border}` }}>
-            <a href={`/oljeprofiler?q=${encodeURIComponent(match.oil_profile)}`}
+            <Link href={`/oljeprofiler?q=${encodeURIComponent(match.oil_profile)}`}
               style={{ fontSize: 12, color: C.accent, textDecoration: 'none', fontWeight: 600 }}>
               Oljeprofil: {match.oil_profile} ↗
-            </a>
+            </Link>
           </div>
         )}
 
