@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { Check, X, HelpCircle, MapPin } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 type Props = { params: Promise<{ id: string; matchid: string }> }
 
@@ -18,7 +19,7 @@ export default function TillganlighetPage({ params }: Props) {
   const [teamId, setTeamId] = useState<string | null>(null)
   const [matchId, setMatchId] = useState<string | null>(null)
   const [match, setMatch] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [poll, setPoll] = useState<any>(null)
   const [myResponse, setMyResponse] = useState<string | null>(null)
   const [responses, setResponses] = useState<any[]>([])

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Heart } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 type Props = {
   teamId?: string
@@ -15,7 +16,7 @@ type Props = {
 export default function FollowButton({ teamId, playerId, type, size = 'md', isDark = true }: Props) {
   const [following, setFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
 
   useEffect(() => {
     const supabase = createClient()

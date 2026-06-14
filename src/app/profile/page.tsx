@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
 import { Trophy, LogOut, User } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { shortName } from '@/lib/utils'
 import WidgetGrid from '@/components/widgets/WidgetGrid'
 
@@ -14,7 +15,7 @@ type ClubClaim = { id: string; team_id: string; role: string; status: string; te
 
 export default function ProfilePage() {
   const { C, isDark } = useColors()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [claim, setClaim] = useState<Claim | null>(null)
   const [searching, setSearching] = useState(false)
@@ -121,7 +122,7 @@ export default function ProfilePage() {
   const avatar = user?.user_metadata?.avatar_url
   const name = user?.user_metadata?.full_name || user?.email
   const email = user?.email
-  const hue = email?.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
+  const hue = (email ? email.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) : 0) % 360
   const tc = 'hsl(' + hue + ',50%,45%)'
   const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
 

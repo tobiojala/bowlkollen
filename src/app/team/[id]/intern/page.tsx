@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
 import { Lock } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -48,7 +49,7 @@ function roleColor(role: string, C: any) {
 export default function InternPage({ params }: Props) {
   const { C, isDark } = useColors()
   const [id, setId] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [myMembership, setMyMembership] = useState<Member | null>(null)
   const [team, setTeam] = useState<any>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -139,7 +140,7 @@ export default function InternPage({ params }: Props) {
   const isCapOrAdmin = myMembership?.role === 'captain' || myMembership?.role === 'admin'
 
   const submitPost = async () => {
-    if (!newPost.trim() || !id) return
+    if (!newPost.trim() || !id || !user) return
     setSubmitting(true)
     const supabase = createClient()
     const { data, error } = await supabase
@@ -165,6 +166,7 @@ export default function InternPage({ params }: Props) {
   }
 
   const respondToAvailability = async (pollId: string, response: string) => {
+    if (!user) return
     const supabase = createClient()
     await supabase.from('availability_responses').upsert({
       poll_id: pollId, user_id: user.id, response
