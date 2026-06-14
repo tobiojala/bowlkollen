@@ -38,7 +38,9 @@ export default function MatchHero({
   const muted  = isDark ? 'rgba(244,245,247,0.40)' : 'rgba(0,0,0,0.42)'
   const faint  = isDark ? 'rgba(244,245,247,0.24)' : 'rgba(0,0,0,0.28)'
   const gold   = '#f5c200'
-  const blue   = '#7ab4e8'
+  const green  = '#5dcaa5'
+  // Gold marks the live/now focal point; a settled win reads as a positive (green).
+  const resultC = isLive ? gold : green
   const pillBg = isDark ? 'rgba(244,245,247,0.06)' : 'rgba(0,0,0,0.05)'
   const divC   = divisionColor(division, isDark ? 'dark' : 'light')
 
@@ -77,8 +79,8 @@ export default function MatchHero({
           )}
           {status === 'upcoming' && (
             <span style={{
-              fontSize: 10, fontWeight: 700, color: blue,
-              background: 'rgba(122,180,232,0.12)', borderRadius: 999,
+              fontSize: 10, fontWeight: 700, color: muted,
+              background: pillBg, borderRadius: 999,
               padding: '4px 10px', letterSpacing: '0.08em',
             }}>
               KOMMANDE
@@ -117,11 +119,11 @@ export default function MatchHero({
           {hasScore ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
-                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: homeWin ? gold : faint }}>
+                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: homeWin ? resultC : faint }}>
                   {homeScore}
                 </span>
                 <span style={{ fontSize: 20, color: faint, fontWeight: 300, marginBottom: 4 }}>–</span>
-                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: awayWin ? gold : faint }}>
+                <span className="num" style={{ fontSize: 68, fontWeight: 900, lineHeight: 1, color: awayWin ? resultC : faint }}>
                   {awayScore}
                 </span>
               </div>

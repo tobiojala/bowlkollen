@@ -20,8 +20,8 @@ export const colors = {
   // Brand
   gold:         '#f5c200',   // achievements, active, milestones
   green:        '#5dcaa5',   // form, improvement, positive
-  blue:         '#7ab4e8',   // info, history, comparison
-  blueMuted:    '#5a82b4',   // action blue (buttons, upcoming)
+  blue:         '#7ab4e8',   // DEPRECATED — removed from the palette; do not use in new code (kept so the un-migrated long tail compiles)
+  blueMuted:    '#5a82b4',   // DEPRECATED — see above
   red:          '#e05555',   // danger, relegation
   pink:         '#d94a90',   // special events
 } as const

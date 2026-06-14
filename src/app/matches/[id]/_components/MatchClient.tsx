@@ -40,14 +40,14 @@ function ScoreChip({ score, C, shareData }: {
 }) {
   if (!score) return <span style={{ fontSize: 16, color: C.muted, opacity: 0.25, lineHeight: 1 }}>—</span>
 
-  const isElite  = score >= SCORE.ELITE          // ≥250 — white, largest
-  const isGold   = score >= SCORE.GREAT && score < SCORE.ELITE  // 220–249 — gold
-  const isGood   = score >= SCORE.GOOD  && score < SCORE.GREAT  // 200–219 — blue
-  const isNormal = score >= 150 && score < SCORE.GOOD            // 150–199 — muted text
-  // Below 150 stays even more faded
-  const color = isElite ? '#ffffff' : isGold ? '#f5c200' : isGood ? '#7ab4e8' : isNormal ? C.muted : C.muted
-  const size  = isElite ? 28 : isGold ? 25 : isGood ? 22 : isNormal ? 19 : 17
-  const opacity = isElite || isGold || isGood ? 1 : isNormal ? 0.75 : 0.45
+  const isElite  = score >= SCORE.ELITE          // ≥250 — gold milestone, largest
+  const isGreat  = score >= SCORE.GREAT && score < SCORE.ELITE  // 220–249 — green (positive)
+  const isGood   = score >= SCORE.GOOD  && score < SCORE.GREAT  // 200–219 — green (positive)
+  const isNormal = score >= 150 && score < SCORE.GOOD            // 150–199 — muted ink
+  // Below 150 stays even more faded. Gold is reserved for the 250+ milestone.
+  const color = isElite ? '#f5c200' : (isGreat || isGood) ? '#5dcaa5' : C.muted
+  const size  = isElite ? 28 : isGreat ? 25 : isGood ? 22 : isNormal ? 19 : 17
+  const opacity = isElite || isGreat || isGood ? 1 : isNormal ? 0.75 : 0.45
 
   const handleShare = () => {
     if (!shareData) return
@@ -66,7 +66,7 @@ function ScoreChip({ score, C, shareData }: {
         <button onClick={handleShare} title="Dela" style={{
           background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px',
           fontSize: 12, lineHeight: 1,
-          color: isElite ? 'rgba(255,255,255,0.4)' : 'rgba(245,194,0,0.45)',
+          color: isElite ? 'rgba(245,194,0,0.45)' : 'rgba(93,202,165,0.5)',
           WebkitTapHighlightColor: 'transparent',
         }}>↗</button>
       )}

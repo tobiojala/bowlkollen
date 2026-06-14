@@ -50,7 +50,7 @@ export default function MatchRow({ m, variant, now }: {
             </div>
           ) : now ? (
             <>
-              <div style={{ fontSize: 14, fontWeight: 800, color: cd ? HC.BLUE : HC.INK, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: HC.INK, fontVariantNumeric: 'tabular-nums' }}>
                 {cd ?? time}
               </div>
               {cd && <div style={{ fontSize: 10, color: HC.INK4, marginTop: 2 }}>{time}</div>}

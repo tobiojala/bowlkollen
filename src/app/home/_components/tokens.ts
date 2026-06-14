@@ -7,7 +7,7 @@ export const HC = {
   INK2: 'rgba(244,245,247,0.64)',
   INK3: 'rgba(244,245,247,0.40)',
   INK4: 'rgba(244,245,247,0.24)',
-  GOLD: '#f5c200', GREEN: '#5dcaa5', RED: '#e05555', BLUE: '#7ab4e8',
+  GOLD: '#f5c200', GREEN: '#5dcaa5', RED: '#e05555',
   HAIRLINE: 'rgba(244,245,247,0.07)',
 } as const
 
