@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Star } from 'lucide-react'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type Tavling = {
@@ -121,9 +120,7 @@ type Filter = 'alla' | 'pagaende' | 'kommande' | 'avslutad'
 const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
 
 export default function TavlingarPage() {
-  const { theme } = useTheme()
-  const C      = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [filter, setFilter]       = useState<Filter>('alla')
   const [favorites, setFavorites] = useState<Set<string>>(new Set())

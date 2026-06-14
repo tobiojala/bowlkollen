@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName, shortDiv } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -183,7 +182,7 @@ const BASELINE = 185
 
 function GameStrip({ games, label, align, isCurrentGame, C }: {
   games: number[]; label: string; align: 'left' | 'right'
-  isCurrentGame?: boolean; C: typeof dark
+  isCurrentGame?: boolean; C: ReturnType<typeof useColors>['C']
 }) {
   const barH = 36
   return (
@@ -219,9 +218,7 @@ function GameStrip({ games, label, align, isCurrentGame, C }: {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function PulsPage() {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-  const C = isDark ? dark : light
+  const { C, isDark } = useColors()
 
   const [matches, setMatches] = useState<Match[]>([])
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())

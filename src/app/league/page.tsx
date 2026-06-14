@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName, shortDiv } from '@/lib/utils'
 
 const DEMO = false
@@ -201,9 +200,7 @@ const TIER_GROUPS = [
 
 // ─── Component ───
 export default function LeaguePage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
   const teal = isDark ? '#38a088' : '#1a8870'
   const [division, setDivision] = useState('Elitserien Herrar')
   const [teams, setTeams]   = useState<Team[]>([])

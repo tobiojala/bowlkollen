@@ -1,14 +1,11 @@
 'use client'
 
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 const YEAR = new Date().getFullYear()
 
 export default function LegalPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{ marginBottom: 32 }}>

@@ -1,8 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { MapPin, ShoppingBag, Droplets } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -32,9 +31,7 @@ const ITEMS = [
 ]
 
 export default function MerPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, paddingBottom: 96 }}>
