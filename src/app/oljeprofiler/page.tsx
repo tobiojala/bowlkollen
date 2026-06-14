@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { FileText, ExternalLink } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -32,9 +31,7 @@ const CATEGORIES: { key: string; label: string; color: string; bg: string }[] = 
 ]
 
 function OljeprofilerarPageInner() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const searchParams = useSearchParams()
   const highlight = searchParams.get('q')?.toLowerCase() ?? null

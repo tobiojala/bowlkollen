@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { Trophy, LogOut, User } from 'lucide-react'
 import { shortName } from '@/lib/utils'
 import WidgetGrid from '@/components/widgets/WidgetGrid'
@@ -14,9 +13,7 @@ type Claim = { id: string; player_id: string; status: string; players: { name: s
 type ClubClaim = { id: string; team_id: string; role: string; status: string; teams: { name: string; club: string } }
 
 export default function ProfilePage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [claim, setClaim] = useState<Claim | null>(null)
