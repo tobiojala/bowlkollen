@@ -8,6 +8,7 @@ import { ChevronLeft, Search, X, Menu, MapPin, ShoppingBag, Droplets, User } fro
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import NotificationBell from '@/components/NotificationBell'
 
 type NavConfig = {
@@ -32,7 +33,7 @@ type TeamResult   = { kind: 'team';   id: string; name: string; club: string; ci
 
 export default function Nav() {
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null)
   const { theme } = useTheme()
   const isDark = theme === 'dark'
