@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
+import { useColors } from '@/components/ThemeProvider'
 import { useRouter } from 'next/navigation'
 
 type Club = {
@@ -110,8 +110,7 @@ function ClubAvatar({ bitsId, name, storedUrl, isDark, tc, tclo, ini }: {
 }
 
 export default function TeamsPage() {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const { isDark } = useColors()
   const router = useRouter()
 
   const [clubs, setClubs]           = useState<Club[]>([])

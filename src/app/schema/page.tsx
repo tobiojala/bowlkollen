@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -177,9 +176,7 @@ const SPRING = { type: 'spring', stiffness: 320, damping: 30 } as const
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function SchedulePage() {
-  const { theme } = useTheme()
-  const C    = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [matches, setMatches]       = useState<Match[]>([])
   const [loading, setLoading]       = useState(true)
@@ -412,8 +409,8 @@ export default function SchedulePage() {
                     return (
                       <div style={{ fontSize: 8, fontWeight: 800, lineHeight: '13px',
                         minWidth: 14, textAlign: 'center', padding: '0 3px', borderRadius: 3,
-                        color: isActive ? '#1a1400' : isDark ? 'hsl(210,50%,75%)' : 'hsl(210,40%,35%)',
-                        background: isActive ? C.accent : isDark ? 'hsl(210,30%,22%)' : 'hsl(210,40%,88%)' }}>
+                        color: isActive ? '#1a1400' : C.textMuted,
+                        background: isActive ? C.accent : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
                         {count}
                       </div>
                     )
