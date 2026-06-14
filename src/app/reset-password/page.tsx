@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 export default function ResetPasswordPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -87,13 +85,13 @@ export default function ResetPasswordPage() {
         <div style={{ background: C.card, borderRadius: 16, border: '1px solid ' + C.border, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {success && (
-            <div style={{ background: theme === 'dark' ? '#122a1a' : '#f0fff4', border: '1px solid #aaffcc', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: C.green, fontWeight: 600, textAlign: 'center' }}>
+            <div style={{ background: isDark ? '#122a1a' : '#f0fff4', border: '1px solid #aaffcc', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: C.green, fontWeight: 600, textAlign: 'center' }}>
               Losenord uppdaterat! Omdirigerar till admin...
             </div>
           )}
 
           {error && (
-            <div style={{ background: theme === 'dark' ? '#2a1212' : '#fff0f0', border: '1px solid #ffaaaa', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#e05555', fontWeight: 600 }}>
+            <div style={{ background: isDark ? '#2a1212' : '#fff0f0', border: '1px solid #ffaaaa', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#e05555', fontWeight: 600 }}>
               {error}
             </div>
           )}

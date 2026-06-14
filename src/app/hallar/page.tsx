@@ -4,8 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { Search, MapPin } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -33,9 +32,7 @@ type Hall = {
 
 export default function HallarPage() {
   const router = useRouter()
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [halls, setHalls] = useState<Hall[]>([])
   const [loading, setLoading] = useState(true)
@@ -239,8 +236,8 @@ export default function HallarPage() {
                       <span style={{
                         fontSize: 11, fontWeight: 600,
                         padding: '3px 8px', borderRadius: 10,
-                        background: 'rgba(91,130,180,0.13)',
-                        color: '#5a82b4',
+                        background: isDark ? 'rgba(244,245,247,0.06)' : 'rgba(0,0,0,0.05)',
+                        color: C.textMuted,
                       }}>
                         Online-bokning
                       </span>

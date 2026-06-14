@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { motion } from 'framer-motion'
 import { shortName } from '@/lib/utils'
 
@@ -76,9 +75,7 @@ function computeStats(matches: Match[], teamId: string): TeamStats {
 }
 
 export default function TeamComparePage({ params }: Props) {
-  const { theme } = useTheme()
-  const C      = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [ids,     setIds]     = useState<{ id1: string; id2: string } | null>(null)
   const [t1,      setT1]      = useState<Team | null>(null)

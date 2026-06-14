@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { Lock } from 'lucide-react'
 
 type Props = { params: Promise<{ id: string }> }
@@ -47,8 +46,7 @@ function roleColor(role: string, C: any) {
 }
 
 export default function InternPage({ params }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [id, setId] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
   const [myMembership, setMyMembership] = useState<Member | null>(null)
@@ -220,7 +218,7 @@ export default function InternPage({ params }: Props) {
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 0 48px' }}>
 
         {/* Header */}
-        <div style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '20px 20px 16px' }}>
+        <div style={{ background: isDark ? 'linear-gradient(135deg, #0d1a2e 0%, #1a2840 100%)' : 'linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 100%)', padding: '20px 20px 16px' }}>
           <a href={'/teams/' + id} style={{ fontSize: 12, color: C.textMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 16 }}>
             ← Lagprofilen
           </a>
@@ -438,7 +436,7 @@ export default function InternPage({ params }: Props) {
             {members.filter(m => m.status === 'active').map(m => {
               const hue = m.user_id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
               const tc = 'hsl(' + hue + ',50%,45%)'
-              const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+              const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
               const isMe = m.user_id === user?.id
 
               return (

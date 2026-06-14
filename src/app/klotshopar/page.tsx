@@ -3,8 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { MapPin, Phone, Smartphone, Mail, Globe, ExternalLink, Search, Award } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -29,8 +28,7 @@ function ContactRow({ icon: Icon, label, href, value }: {
   href?: string
   value: string
 }) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
 
   const content = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -64,9 +62,7 @@ function ContactRow({ icon: Icon, label, href, value }: {
 }
 
 export default function KlotshoparPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [shops, setShops] = useState<Shop[]>([])
   const [loading, setLoading] = useState(true)

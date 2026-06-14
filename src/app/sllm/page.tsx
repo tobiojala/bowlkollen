@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Squad  = { label: string; href: string }
@@ -79,9 +78,7 @@ function playerColors(name: string, isDark: boolean) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function SLLMPage() {
-  const { theme } = useTheme()
-  const C      = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [players,  setPlayers]  = useState<Player[]>([])
   const [apiReady, setApiReady] = useState(false)

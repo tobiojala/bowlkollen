@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
 
 type Props = { teamId: string }
@@ -20,8 +19,7 @@ type PlayerStat = {
 
 
 export default function TopPerformers({ teamId }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [stats, setStats] = useState<PlayerStat[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -91,7 +89,7 @@ export default function TopPerformers({ teamId }: Props) {
           if (!card.player) return null
           const hue = card.player.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
           const tc = 'hsl(' + hue + ',50%,45%)'
-          const tclo = theme === 'dark' ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
+          const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
           const ini = card.player.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
 
           return (

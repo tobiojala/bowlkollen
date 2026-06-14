@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { motion } from 'framer-motion'
 import { Search } from 'lucide-react'
 import { shortName } from '@/lib/utils'
@@ -22,9 +21,7 @@ function teamPalette(name: string, isDark: boolean) {
 }
 
 export default function TeamPickerPage({ params }: Props) {
-  const { theme } = useTheme()
-  const C      = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [id1,     setId1]     = useState<string | null>(null)
   const [team1,   setTeam1]   = useState<Team | null>(null)

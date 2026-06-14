@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
 import { SCORE } from '@/lib/constants'
 
@@ -14,8 +13,7 @@ type MatchResult = { id: string; player_id: string; team_id: string; games: numb
 
 
 export default function AdminPage() {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const inp = { background: C.surface, border: '1px solid ' + C.border, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, outline: 'none', width: '100%' } as React.CSSProperties
   const lbl = { fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: 1, marginBottom: 6, display: 'block' } as React.CSSProperties
 
@@ -168,7 +166,7 @@ export default function AdminPage() {
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px 60px' }}>
         {msg && (
-          <div style={{ background: msg.includes('Fel') ? (theme === 'dark' ? '#2a1212' : '#fff0f0') : (theme === 'dark' ? '#122a1a' : '#f0fff4'), border: '1px solid ' + (msg.includes('Fel') ? '#ffaaaa' : '#aaffcc'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? C.red : C.green }}>
+          <div style={{ background: msg.includes('Fel') ? (isDark ? '#2a1212' : '#fff0f0') : (isDark ? '#122a1a' : '#f0fff4'), border: '1px solid ' + (msg.includes('Fel') ? '#ffaaaa' : '#aaffcc'), borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, fontWeight: 600, color: msg.includes('Fel') ? C.red : C.green }}>
             {msg}
           </div>
         )}
@@ -427,7 +425,7 @@ export default function AdminPage() {
                         <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
                           {m.home?.name ? shortName(m.home.name) : ''} <span style={{ color: C.textMuted, fontWeight: 400 }}>vs</span> {m.away?.name ? shortName(m.away.name) : ''}
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: m.status === 'live' ? (theme === 'dark' ? '#0a3a1a' : '#e8f5ee') : (theme === 'dark' ? '#1a1a2a' : '#f0f2f5'), color: m.status === 'live' ? C.green : C.textMuted }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: m.status === 'live' ? (isDark ? '#0a3a1a' : '#e8f5ee') : (isDark ? '#1a1a2a' : '#f0f2f5'), color: m.status === 'live' ? C.green : C.textMuted }}>
                           {m.status === 'live' ? 'LIVE' : m.status === 'completed' ? 'AVSLUTAD' : 'KOMMANDE'}
                         </span>
                       </div>

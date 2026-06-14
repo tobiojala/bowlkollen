@@ -4,8 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { ArrowLeft, MapPin, Phone, Mail, Globe, ExternalLink, CalendarCheck, Monitor } from 'lucide-react'
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
@@ -34,8 +33,7 @@ type Hall = {
 }
 
 function InfoRow({ label, value, href }: { label: string; value: string; href?: string }) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
 
   return (
     <div style={{
@@ -63,9 +61,7 @@ function InfoRow({ label, value, href }: { label: string; value: string; href?: 
 export default function HallPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
-  const isDark = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [hall, setHall] = useState<Hall | null>(null)
   const [loading, setLoading] = useState(true)
@@ -194,9 +190,9 @@ export default function HallPage({ params }: { params: Promise<{ id: string }> }
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 14px', borderRadius: 12, textDecoration: 'none',
-                  background: 'rgba(91,130,180,0.13)',
-                  border: '1px solid rgba(91,130,180,0.30)',
-                  fontSize: 13, fontWeight: 700, color: '#5a82b4',
+                  background: isDark ? 'rgba(244,245,247,0.06)' : 'rgba(0,0,0,0.05)',
+                  border: '1px solid ' + C.border,
+                  fontSize: 13, fontWeight: 700, color: C.text,
                   display: 'flex', alignItems: 'center', gap: 5,
                 }}
               >

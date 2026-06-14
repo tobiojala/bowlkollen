@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 
 type Props = {
   streamUrl: string
@@ -21,8 +20,7 @@ function buildImageUrl(alleyID: string, folder: string, lane: number, bust: numb
 }
 
 export default function LiveLaneViewer({ streamUrl, matchName }: Props) {
-  const { theme } = useTheme()
-  const C = theme === 'dark' ? dark : light
+  const { C, isDark } = useColors()
   const [data, setData] = useState<ScoringData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

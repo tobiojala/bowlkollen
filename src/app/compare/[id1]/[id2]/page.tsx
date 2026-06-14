@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
-import { useTheme } from '@/components/ThemeProvider'
-import { dark, light } from '@/lib/colors'
+import { useColors } from '@/components/ThemeProvider'
 import { motion } from 'framer-motion'
 import { shortName, teamColor } from '@/lib/utils'
 
@@ -75,9 +74,7 @@ function Avatar({ player, tc, tclo }: { player: Player; tc: string; tclo: string
 }
 
 export default function ComparePage({ params }: Props) {
-  const { theme } = useTheme()
-  const C       = theme === 'dark' ? dark : light
-  const isDark  = theme === 'dark'
+  const { C, isDark } = useColors()
 
   const [ids,     setIds]     = useState<{ id1: string; id2: string } | null>(null)
   const [p1,      setP1]      = useState<Player | null>(null)
