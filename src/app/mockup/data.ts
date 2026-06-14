@@ -34,7 +34,7 @@ export const CHALLENGES = [
 ]
 
 export const DNA_HIGHLIGHTS = [
-  { idx: 13, label: '278',       sublabel: 'Pers. rekord', color: '#7ab4e8', iconName: 'Star'   },
+  { idx: 13, label: '278',       sublabel: 'Pers. rekord', color: '#5dcaa5', iconName: 'Star'   },
   { idx: 9,  label: '1:a i lag', sublabel: '',             color: '#f5c200', iconName: 'Trophy' },
   { idx: 4,  label: 'Streak',    sublabel: '',             color: '#5dcaa5', iconName: 'Flame'  },
 ]
@@ -82,7 +82,7 @@ export const PLAYER_LEVEL = { level: 12, xp: 2340, nextLevelXp: 2500, title: 'Pr
 
 export const ACHIEVEMENTS = [
   { icon: 'Star',      title: '250-klubben', sub: '10 × 250+',       earned: true,  near: false, color: '#f5c200' },
-  { icon: 'Lightning', title: 'Personbästa', sub: '278 poäng',        earned: true,  near: false, color: '#7ab4e8' },
+  { icon: 'Lightning', title: 'Personbästa', sub: '278 poäng',        earned: true,  near: false, color: '#5dcaa5' },
   { icon: 'Trophy',    title: 'Serierekord', sub: '1 013 / 1 050',    earned: false, near: true,  color: '#f5c200' },
   { icon: 'Fire',      title: 'Hetsviten',   sub: '5 i rad >220',      earned: false, near: true,  color: '#f5a623' },
   { icon: 'Target',    title: 'Precision',   sub: '±15p fem matcher',  earned: false, near: false, color: '#6b7a99' },
@@ -102,7 +102,7 @@ export const COLORS = {
   SURFACE: '#14171c',
   SURFACE2:'#1c2127',
   GOLD:    '#f5c200',
-  BLUE:    '#7ab4e8',
+  STEEL:   '#9ca5b3',   // neutral metric / season-comparison (blue removed)
   GREEN:   '#5dcaa5',
   RED:     '#e05555',
   MUTED:   'rgba(244,245,247,0.42)',

@@ -8,7 +8,7 @@ import { Pill, SectionHeader } from '@/components/ui/primitives'
 import { COLORS } from '../data'
 import type { ProfileData, ProfileChallenge, ProfileReactions } from '@/lib/profile'
 
-const { GOLD, GREEN, BLUE, RED } = COLORS
+const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
 const INK2 = 'rgba(244,245,247,0.64)'
 const INK3 = 'rgba(244,245,247,0.40)'
@@ -140,9 +140,9 @@ export default function FeedSection({
           onClick={onOpenDuell}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
             <div style={{ width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(122,180,232,0.12)',
+              background: 'rgba(244,245,247,0.06)',
               display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Swords size={16} color={BLUE} />
+              <Swords size={16} color={INK2} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>Säsongsduell</div>

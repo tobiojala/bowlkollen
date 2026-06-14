@@ -7,7 +7,7 @@ import { smooth } from '@/app/mockup/helpers'
 import { Card, CardLabel, CARD_W } from './Sheet'
 import { MiniCurve } from './Curves'
 
-const { GOLD, BLUE, GREEN, MUTED, BORDER } = COLORS
+const { GOLD, STEEL, GREEN, MUTED, BORDER } = COLORS
 
 const ICON_MAP = { Flame, Target, Trophy, Star } as const
 export function CIcon({ name, size = 16, color }: { name: string; size?: number; color?: string }) {
@@ -120,7 +120,7 @@ export function DuellCard({ matchAvgs, onExpand }: { matchAvgs: number[]; onExpa
   const thisAvg = Math.round(matchAvgs.reduce((a, b) => a + b) / matchAvgs.length)
   const lastAvg = Math.round(LAST_SEASON.reduce((a, b) => a + b) / LAST_SEASON.length)
   return (
-    <Card accent={BLUE} onExpand={onExpand}>
+    <Card accent={STEEL} onExpand={onExpand}>
       <CardLabel text="SÄSONGSDUELL" isNew />
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>I år vs förra säsongen</div>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>

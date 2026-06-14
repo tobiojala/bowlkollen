@@ -132,8 +132,8 @@ export default function PlayerClient({ id }: { id: string }) {
   const bkts = [
     { c: 'rgba(140,155,180,0.42)', v: allGames.filter(g => g < 180).length,             l: 'u.180'   },
     { c: 'rgba(160,175,200,0.65)', v: allGames.filter(g => g >= 180 && g < 200).length, l: '180–199' },
-    { c: C.accent,                 v: over200 - over250,                                 l: '200–249' },
-    { c: C.blue,                   v: over250,                                            l: '250+'    },
+    { c: C.green,                  v: over200 - over250,                                 l: '200–249' },
+    { c: C.accent,                 v: over250,                                            l: '250+'    },
   ].filter(b => b.v > 0)
   const n = allGames.length
 
@@ -285,7 +285,7 @@ export default function PlayerClient({ id }: { id: string }) {
                 <div key={b.l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: b.c, flexShrink: 0 }} />
                   <span style={{ fontSize: 11, color: C.muted }}>{b.l}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: b.c === C.accent ? C.accent : b.c === C.blue ? C.blue : 'rgba(255,255,255,0.55)' }}>{Math.round(b.v/n*100)}%</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: (b.c === C.accent || b.c === C.green) ? b.c : 'rgba(255,255,255,0.55)' }}>{Math.round(b.v/n*100)}%</span>
                 </div>
               ))}
             </div>
@@ -364,9 +364,9 @@ export default function PlayerClient({ id }: { id: string }) {
               <span style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>{bestSeries}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}` }}>
-              <Star size={13} color={C.blue} />
+              <Star size={13} color={C.green} />
               <span style={{ fontSize: 12, color: C.muted }}>200+-svit:</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.blue }}>{s200.best} spel</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>{s200.best} spel</span>
             </div>
             {player.style && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}` }}>

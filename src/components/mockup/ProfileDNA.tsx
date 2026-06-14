@@ -72,8 +72,8 @@ export default function ProfileDNA({ matchAvgs, overlayAvgs, highlights = [], in
         })
         const d = `M ${pts.join(' L ')} Z`
         return (
-          <path d={d} fill="rgba(122,180,232,0.07)"
-            stroke="rgba(122,180,232,0.5)" strokeWidth="1.5" strokeDasharray="5,3" />
+          <path d={d} fill="rgba(156,165,179,0.07)"
+            stroke="rgba(156,165,179,0.5)" strokeWidth="1.5" strokeDasharray="5,3" />
         )
       })()}
 

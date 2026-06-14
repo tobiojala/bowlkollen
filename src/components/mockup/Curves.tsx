@@ -6,7 +6,7 @@ import { norm, smooth } from '@/app/mockup/helpers'
 export type Metric = 'snitt' | 'ranking' | 'bk' | 'alla'
 export const MCFG: Record<Metric, { label: string; color: string }> = {
   snitt:   { label: 'Snitt',  color: '#f5c200' },
-  ranking: { label: 'Rank.',  color: '#7ab4e8' },
+  ranking: { label: 'Rank.',  color: '#9ca5b3' },
   bk:      { label: 'BK',     color: '#5dcaa5' },
   alla:    { label: 'Alla 3', color: 'white'   },
 }
@@ -168,7 +168,7 @@ export function FullCurve({ matchAvgs, seasonAvg, metric, tapped, onTap, upcomin
   if (metric === 'alla') {
     const series = [
       { d: norm(matchAvgs),   c: '#f5c200' },
-      { d: norm(RANKING_PTS), c: '#7ab4e8' },
+      { d: norm(RANKING_PTS), c: '#9ca5b3' },
       { d: norm(BK_PROGRESS), c: '#5dcaa5' },
     ]
     const cy = (v: number) => PAD.t + iH - (v / 100) * iH

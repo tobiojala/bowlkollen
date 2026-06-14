@@ -5,7 +5,7 @@ import ProfileDNA from '@/components/mockup/ProfileDNA'
 import { COLORS } from '../data'
 import type { ProfileHighlight } from '@/lib/profile'
 
-const { GOLD, BLUE, MUTED } = COLORS
+const { GOLD, STEEL, MUTED } = COLORS
 
 interface DnaSectionProps {
   matchAvgs: number[]
@@ -36,7 +36,7 @@ export default function DnaSection({ matchAvgs, overlayAvgs, highlights = [], in
           width: 340, height: 220,
           transform: 'translateX(-50%)',
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(245,194,0,0.09) 0%, rgba(122,180,232,0.04) 55%, transparent 80%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(245,194,0,0.09) 0%, transparent 72%)',
           filter: 'blur(28px)',
         }} />
       </div>
@@ -56,7 +56,7 @@ export default function DnaSection({ matchAvgs, overlayAvgs, highlights = [], in
               padding: '0 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
               background: '#1c2127' }}>
             <span style={{ fontSize: 12, fontWeight: 600,
-              color: showOverlay ? BLUE : 'rgba(244,245,247,0.64)' }}>
+              color: showOverlay ? STEEL : 'rgba(244,245,247,0.64)' }}>
               {showOverlay ? '2024/25' : '2025/26'}
             </span>
             <span style={{ fontSize: 9, color: 'rgba(244,245,247,0.24)',
@@ -72,7 +72,7 @@ export default function DnaSection({ matchAvgs, overlayAvgs, highlights = [], in
                 boxShadow: '0 12px 32px rgba(0,0,0,0.55)' }}>
               {[
                 { value: '2025', label: '2025/26', sub: 'Aktuell säsong', color: GOLD },
-                { value: '2024', label: '2024/25', sub: 'Overlay på DNA', color: BLUE },
+                { value: '2024', label: '2024/25', sub: 'Overlay på DNA', color: STEEL },
               ].map((opt, i) => {
                 const active = showOverlay ? opt.value === '2024' : opt.value === '2025'
                 return (

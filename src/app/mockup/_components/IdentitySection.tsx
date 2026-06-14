@@ -100,7 +100,7 @@ export default function IdentitySection({
       key: 'ranking' as const, label: 'Rankingpoäng', value: rankingPts.reduce((a, b) => a + b),
       delta: rankingPts[rankingPts.length - 1], deltaSuffix: ' senaste',
       caption: <>Poäng till seriens individuella ranking</>,
-      color: '#7ab4e8', data: rankingPts,
+      color: '#9ca5b3', data: rankingPts,
       footer: (
         <>
           <span style={{ fontSize: 11, color: INK4 }}>{firstDate}</span>
