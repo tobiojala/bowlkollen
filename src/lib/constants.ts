@@ -7,10 +7,35 @@ export const APP_LOCALE      = 'sv-SE'
 // A single place to change what counts as a "good", "great", or "perfect" game.
 export const SCORE = {
   HONOR_ROLL:  220,   // minimum single-game score for honor roll
-  GOOD:        200,   // green highlight
-  GREAT:       220,   // gold highlight
-  ELITE:       250,   // special highlight
-  PERFECT:     300,   // perfect game
+  GOOD:        200,   // green highlight (a positive game)
+  GREAT:       220,   // share-worthy game
+  ELITE:       250,   // gold milestone highlight
+  PERFECT:     300,   // perfect game — 12 strikes in a serie (Blåboken Kap C, §C 1)
+  MIN:           0,   // lowest possible game score
+} as const
+
+// A bowling serie (game) is ten frames (Blåboken Kap C, §C 1)
+export const FRAMES_PER_GAME = 10
+
+// ── Age classes — by CALENDAR YEAR, not birth date (Blåboken Kap K, §K 8) ─────
+// "till och med det kalenderår under vilket spelaren fyller X år" → a birth
+// YEAR is sufficient to classify; full birth date isn't required. See BLABOKEN.md.
+export const AGE_CLASS = {
+  UNGDOM_MAX:  16,   // ungdom (youth): through the year the player turns 16
+  JUNIOR_MAX:  21,   // junior: through the year they turn 21
+  OLDBOYS_MIN: 55,   // oldboys/girls: from the year they turn 55
+  VETERAN_MIN: 65,   // veteran: from the year they turn 65
+} as const
+
+// ── National series team match format (Blåboken Kap D, §D 201–202) ────────────
+export const MATCH_FORMAT = {
+  TEAM_SIZE:               8,   // start-åtta — eight players (8-man national series)
+  SERIES_PER_PLAYER:       4,   // four serier per player
+  BANPAR:                  4,   // four lane pairs
+  MAX_BANPOANG_PER_SERIE:  5,   // 4 delmatcher + 1 for highest combined pins
+  MAX_BANPOANG_PER_MATCH: 20,   // 4 serier × 5
+  MATCHPOANG_WIN:          2,   // most banpoäng → 2 matchpoäng …
+  MATCHPOANG_TIE:          1,   // … equal banpoäng → 1 each
 } as const
 
 // ── Player rating tier thresholds ─────────────────────────────────────────────

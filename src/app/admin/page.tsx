@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
 import { shortName } from '@/lib/utils'
+import { SCORE } from '@/lib/constants'
 
 type Team = { id: string; name: string }
 type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home: { name: string }; away: { name: string } }
@@ -266,13 +267,13 @@ export default function AdminPage() {
                                             <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 2 }}>S{gi + 1}</div>
                                             <input
                                               type="number"
-                                              min="0"
-                                              max="300"
+                                              min={SCORE.MIN}
+                                              max={SCORE.PERFECT}
                                               defaultValue={currentVal || ''}
                                               style={{ ...inp, textAlign: 'center', fontSize: 16, fontWeight: 800, padding: '6px 2px', color: currentVal > 0 ? C.accent : C.textMuted }}
                                               onBlur={e => {
                                                 const val = parseInt(e.target.value)
-                                                if (!isNaN(val) && val >= 0 && val <= 300) {
+                                                if (!isNaN(val) && val >= SCORE.MIN && val <= SCORE.PERFECT) {
                                                   saveScore(teamId, bord, pos, gi, val)
                                                 }
                                               }}
