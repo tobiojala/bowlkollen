@@ -1,14 +1,19 @@
 'use client'
 
 import { useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { motion, useInView, useScroll } from 'framer-motion'
 import SubscribeForm from './SubscribeForm'
 
-/* ─── Design tokens ─────────────────────────────────────────── */
-const C_PRIMARY   = '#ffffff'
-const C_BODY      = 'rgba(255,255,255,0.55)'
-const C_SUBTLE    = 'rgba(255,255,255,0.25)'
+/* ─── Design tokens — mirrors HC from home/tokens ───────────── */
+const C_PRIMARY   = '#f4f5f7'
+const C_BODY      = 'rgba(244,245,247,0.55)'
+const C_SUBTLE    = 'rgba(244,245,247,0.24)'
 const C_GOLD      = '#f5c200'
+const C_BG        = '#0b0d10'
+const C_SURFACE   = '#14171c'
+const C_HAIRLINE  = 'rgba(244,245,247,0.07)'
 
 /* ─── Content ───────────────────────────────────────────────── */
 const HEADLINE_WORDS_1 = ['Bowling.']
@@ -30,7 +35,7 @@ const FEATURES = [
     label: 'Statistik',
     title: 'Data som faktiskt spelar roll',
     desc: 'Snitt, form och ranking samlat. Se vem som verkligen levererar när det gäller.',
-    accent: '#7ab4e8',
+    accent: '#5dcaa5',
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -52,7 +57,7 @@ const FEATURES = [
     label: 'Notiser',
     title: 'Missa aldrig en match',
     desc: 'Push-notiser för ditt lag. Du vet exakt när de spelar — och hur det gick.',
-    accent: '#d94a90',
+    accent: 'rgba(244,245,247,0.55)',
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -81,7 +86,7 @@ const SOCIALS = [
     ),
   },
   {
-    name: 'Facebook', href: 'https://facebook.com/bowlkollen',
+    name: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61590369915218',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
         <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
@@ -130,8 +135,8 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
       whileHover={{ borderColor: `${feature.accent}35`, boxShadow: `0 0 24px ${feature.accent}0a` }}
       style={{
         padding: '20px 18px',
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: C_SURFACE,
+        border: `1px solid ${C_HAIRLINE}`,
         borderRadius: 14,
         position: 'relative',
         overflow: 'hidden',
@@ -176,7 +181,7 @@ export default function LandingPage() {
       ref={containerRef}
       style={{
         minHeight: '100vh',
-        background: '#070d15',
+        background: C_BG,
         color: C_PRIMARY,
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         overflowX: 'hidden',
@@ -207,7 +212,7 @@ export default function LandingPage() {
         <motion.div
           animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
           transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-          style={{ position: 'absolute', top: '40%', right: '-10%', width: 400, height: 400, background: 'radial-gradient(ellipse, rgba(90,130,180,0.06) 0%, transparent 65%)', borderRadius: '50%' }}
+          style={{ position: 'absolute', top: '40%', right: '-10%', width: 400, height: 400, background: 'radial-gradient(ellipse, rgba(93,202,165,0.035) 0%, transparent 65%)', borderRadius: '50%' }}
         />
         <motion.div
           animate={{ x: [0, 15, 0], y: [0, 25, 0] }}
@@ -227,8 +232,8 @@ export default function LandingPage() {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <img src="/logo-mark.png" alt="Bowlkollen" style={{ height: 64, width: 'auto' }} />
-              <img src="/logo-wordmark.png" alt="" aria-hidden="true" style={{ height: 42, width: 'auto' }} />
+              <Image src="/logo-mark.png" alt="Bowlkollen" width={64} height={64} style={{ height: 64, width: 'auto' }} priority />
+              <Image src="/logo-wordmark.png" alt="" aria-hidden="true" width={126} height={42} style={{ height: 42, width: 'auto' }} priority />
             </div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -382,7 +387,7 @@ export default function LandingPage() {
             </div>
             <p style={{ fontSize: 11, color: C_BODY, margin: 0 }}>
               © 2026 Bowlkollen ·{' '}
-              <a href="/legal" style={{ color: 'inherit', textDecoration: 'none' }}>Integritetspolicy</a>
+              <Link href="/legal" style={{ color: 'inherit', textDecoration: 'none' }}>Integritetspolicy</Link>
             </p>
           </motion.div>
         </footer>

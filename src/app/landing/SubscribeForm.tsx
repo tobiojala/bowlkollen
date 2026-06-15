@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function AnimatedCount({ target }: { target: number }) {
   const [displayed, setDisplayed] = useState(0)
@@ -34,7 +34,7 @@ export default function SubscribeForm() {
       .catch(() => {})
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!email.trim()) return
     setState('loading')
@@ -76,9 +76,9 @@ export default function SubscribeForm() {
                   position: 'relative', zIndex: 4 - i,
                   background: [
                     'linear-gradient(135deg,#f5c200,#c07800)',
-                    'linear-gradient(135deg,#5a82b4,#2d5080)',
                     'linear-gradient(135deg,#5dcaa5,#259070)',
-                    'linear-gradient(135deg,#d94a90,#901860)',
+                    'linear-gradient(135deg,#f4f5f7,#8a9ab5)',
+                    'linear-gradient(135deg,#e05555,#a02020)',
                   ][i],
                 }} />
               ))}
