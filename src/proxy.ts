@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { PROTECTED_PATHS } from '@/lib/constants'
+import { PROTECTED_PATHS, GATE_EXEMPT_PATHS } from '@/lib/constants'
+import { verifyInviteCookie } from '@/lib/invite-cookie'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -29,7 +30,21 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isProtected  = PROTECTED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+
+  // Soft-launch invite gate — flag defaults off, so this is a no-op until
+  // explicitly enabled for the invite-only window. Signed-in users always
+  // pass regardless of the cookie; everyone else needs a valid invite link.
+  const isGateExempt = GATE_EXEMPT_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+  if (process.env.ENABLE_INVITE_GATE === 'true' && !isGateExempt && !user) {
+    const inviteCookie = request.cookies.get('bk_invite')?.value ?? ''
+    if (!verifyInviteCookie(inviteCookie)) {
+      const landingUrl = request.nextUrl.clone()
+      landingUrl.pathname = '/landing'
+      return NextResponse.redirect(landingUrl)
+    }
+  }
+
+  const isProtected = PROTECTED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
 
   if (isProtected && !user) {
     const loginUrl = request.nextUrl.clone()

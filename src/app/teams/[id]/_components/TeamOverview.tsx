@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useColors } from '@/components/ThemeProvider'
+import { COLOR } from '@/lib/brand'
 import TeamEditorialBanner from './TeamEditorialBanner'
 import TeamSeasonArc       from './TeamSeasonArc'
 import TeamStoryCards      from './TeamStoryCards'
@@ -15,8 +15,6 @@ type Props = {
 }
 
 export default function TeamOverview({ id, matches, players, playerMomentum }: Props) {
-  const { C } = useColors()
-
   const completed = matches.filter(m => m.status === 'completed' && m.home_score !== null)
   const upcoming  = matches.filter(m => m.status === 'upcoming'  || m.status === 'live')
 
@@ -24,7 +22,7 @@ export default function TeamOverview({ id, matches, players, playerMomentum }: P
     <section
       id="team-overview"
       className="pb-2"
-      style={{ scrollMarginTop: 60, borderBottom: '1px solid ' + C.border }}
+      style={{ scrollMarginTop: 60, borderBottom: `1px solid ${COLOR.hairline}` }}
     >
       <TeamEditorialBanner teamId={id} completed={completed} upcoming={upcoming} />
       <TeamSeasonArc       teamId={id} matches={matches} />

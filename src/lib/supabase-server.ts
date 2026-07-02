@@ -1,11 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import type { Database } from '@/lib/database.types'
+
+// Cookie-free anon client — safe for ISR, no session, no RLS bypass.
+// Use for Server Components reading public data (no user context needed).
+export function createPublicSupabase() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}
 
 // Service-role client — bypasses RLS. Only call from Server Components / server-only code.
 // Uses SUPABASE_SERVICE_ROLE_KEY (no NEXT_PUBLIC_ prefix) so Next.js never bundles it client-side.
 export function createServiceSupabase() {
-  return createClient(
+  return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
@@ -13,7 +23,7 @@ export function createServiceSupabase() {
 
 export async function createServerSupabase() {
   const cookieStore = await cookies()
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

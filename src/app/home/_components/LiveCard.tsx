@@ -5,6 +5,7 @@ import { shortName } from '@/lib/utils'
 import type { Match } from '@/app/home/types'
 import { divColor, shortDiv, streamStyle } from '@/app/home/helpers'
 import { HC } from './tokens'
+import Reveal from '@/components/Reveal'
 
 /** A live match — score is the hero; the leading team is highlighted. */
 export default function LiveCard({ m }: { m: Match }) {
@@ -13,8 +14,7 @@ export default function LiveCard({ m }: { m: Match }) {
   const streams = m.streams ?? []
 
   return (
-    // Card is the Surface; the match link wraps only non-interactive content so
-    // the external stream <a> pills aren't nested inside another anchor.
+    <Reveal direction="scale" distance={0}>
     <div style={{ background: HC.SURFACE, borderRadius: 18, overflow: 'hidden' }}>
       <Link href={`/matches/${m.id}`}
         style={{ display: 'block', textDecoration: 'none', padding: streams.length > 0 ? '14px 16px 12px' : '14px 16px 16px' }}>
@@ -66,5 +66,6 @@ export default function LiveCard({ m }: { m: Match }) {
         </div>
       )}
     </div>
+    </Reveal>
   )
 }

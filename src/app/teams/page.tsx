@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { useColors } from '@/components/ThemeProvider'
+import { COLOR, SPACE, RADIUS, TYPE } from '@/lib/brand'
+import { divisionColor } from '@/lib/divisions'
 import { useRouter } from 'next/navigation'
 
 type Club = {
@@ -21,7 +24,6 @@ type BitsTeam = {
   team_type_desc: string | null
 }
 
-// A team from the `teams` table that has played matches — has a real division
 type RealTeam = {
   id: string
   name: string
@@ -38,23 +40,6 @@ function divTier(div: string | null): string {
   if (div.includes('Allsvenskan')) return 'Allsvenskan'
   if (div.startsWith('Div 1') || div.startsWith('Division 1')) return 'Division 1'
   return 'Division 2+'
-}
-
-function divColor(div: string | null): string {
-  const t = divTier(div)
-  if (t === 'Elitserien') return '#f5c200'
-  if (t === 'Allsvenskan') return '#5a82b4'
-  if (t === 'Division 1') return '#38a088'
-  if (t === 'Division 2+') return '#9b6dbd'
-  return 'rgba(160,175,200,0.55)'
-}
-
-function divFilterColor(f: string): string {
-  if (f === 'Elitserien') return '#f5c200'
-  if (f === 'Allsvenskan') return '#5a82b4'
-  if (f === 'Division 1') return '#38a088'
-  if (f === 'Division 2+') return '#9b6dbd'
-  return '#f5c200'
 }
 
 function divLabel(div: string | null): string {
@@ -83,61 +68,61 @@ function clubInitials(name: string) {
 
 const BITS_LOGO_BASE = 'https://bits.swebowl.se/images/ClubLogo'
 
-function ClubAvatar({ bitsId, name, storedUrl, isDark, tc, tclo, ini }: {
+function ClubAvatar({ bitsId, name, storedUrl }: {
   bitsId: number; name: string; storedUrl: string | null
-  isDark: boolean; tc: string; tclo: string; ini: string
 }) {
   const [imgFailed, setImgFailed] = useState(false)
-  const src = storedUrl ?? `${BITS_LOGO_BASE}/${bitsId}.png`
+  const src     = storedUrl ?? `${BITS_LOGO_BASE}/${bitsId}.png`
   const showImg = !imgFailed
+  const hue     = clubHue(name)
 
   return (
     <div style={{
-      width: 42, height: 42, borderRadius: 11, flexShrink: 0,
-      background: showImg ? (isDark ? 'rgba(255,255,255,0.06)' : '#fff') : tclo,
-      border: showImg ? (isDark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.08)') : `1.5px solid ${tc}`,
+      width: 44, height: 44, borderRadius: RADIUS.md, flexShrink: 0,
+      background: showImg ? `${COLOR.surface}` : `hsl(${hue},38%,14%)`,
+      border: showImg ? `1px solid ${COLOR.hairline}` : `1.5px solid hsl(${hue},45%,28%)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 10, fontWeight: 800, color: tc, letterSpacing: 0.5,
       overflow: 'hidden',
+      fontSize: 11, fontWeight: 800, color: `hsl(${hue},55%,65%)`, letterSpacing: 0.5,
     }}>
       {showImg
-        ? <Image src={src} alt={name} width={68} height={68} onError={() => setImgFailed(true)}
-            style={{ objectFit: 'contain', padding: 4 }} />
-        : ini
+        ? <Image src={src} alt={name} width={68} height={68}
+            onError={() => setImgFailed(true)}
+            style={{ objectFit: 'contain', padding: 6, width: '100%', height: '100%' }} />
+        : clubInitials(name)
       }
     </div>
   )
 }
 
 export default function TeamsPage() {
-  const { isDark } = useColors()
   const router = useRouter()
 
-  const [clubs, setClubs]           = useState<Club[]>([])
-  // Map bits_club_id → bits_teams (for fallback team names when no matches)
-  const [bitsTeams, setBitsTeams]   = useState<Record<number, BitsTeam[]>>({})
-  // Map club name (from teams.club) → real teams with division
-  const [realTeams, setRealTeams]   = useState<Record<string, RealTeam[]>>({})
-  const [loading, setLoading]       = useState(true)
-  const [search, setSearch]         = useState('')
-  const [county, setCounty]         = useState('Alla')
-  const [divFilter, setDivFilter]   = useState('Alla')
-  const [expanded, setExpanded]     = useState<Set<number>>(new Set())
+  const [clubs,       setClubs]       = useState<Club[]>([])
+  const [bitsTeams,   setBitsTeams]   = useState<Record<number, BitsTeam[]>>({})
+  const [realTeams,   setRealTeams]   = useState<Record<string, RealTeam[]>>({})
+  const [loading,     setLoading]     = useState(true)
+  const [search,      setSearch]      = useState('')
+  const [county,      setCounty]      = useState('Alla')
+  const [divFilter,   setDivFilter]   = useState('Alla')
+  const [expanded,    setExpanded]    = useState<Set<number>>(new Set())
+  const [filterOpen,  setFilterOpen]  = useState(false)
+
+  const hasActiveFilter = county !== 'Alla' || divFilter !== 'Alla'
+
+  const clearFilters = () => { setCounty('Alla'); setDivFilter('Alla') }
 
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      // Club metadata
       supabase.from('bits_clubs')
         .select('bits_id, name, county, hall_name, logo_url')
-        .eq('is_active', true).order('name'),
-      // Team names from BITS (correct columns)
+        .order('name'),
       supabase.from('bits_teams')
-        .select('bits_team_id, name, bits_club_id, team_type_desc'),
-      // Real teams with club name (to match back to bits_clubs)
+        .select('bits_team_id, name, bits_club_id, team_type_desc')
+        .limit(2000),
       supabase.from('teams')
         .select('id, name, club'),
-      // Recent matches to derive division per team
       supabase.from('matches')
         .select('home_team_id, away_team_id, division')
         .not('division', 'is', null)
@@ -146,7 +131,6 @@ export default function TeamsPage() {
     ]).then(([{ data: c }, { data: bt }, { data: t }, { data: m }]) => {
       if (c) setClubs(c as Club[])
 
-      // Build bits_teams map: bits_club_id → teams[]
       if (bt) {
         const map: Record<number, BitsTeam[]> = {}
         ;(bt as BitsTeam[]).forEach(team => {
@@ -156,10 +140,9 @@ export default function TeamsPage() {
         setBitsTeams(map)
       }
 
-      // Build teamId → division from matches
       const teamDiv: Record<string, string> = {}
       if (m) {
-        m.forEach((match: any) => {
+        m.forEach((match: { home_team_id: string | null; away_team_id: string | null; division: string | null }) => {
           if (match.division) {
             if (match.home_team_id) teamDiv[match.home_team_id] = match.division
             if (match.away_team_id) teamDiv[match.away_team_id] = match.division
@@ -167,20 +150,16 @@ export default function TeamsPage() {
         })
       }
 
-      // Build clubName → real teams[] with division
       if (t) {
         const map: Record<string, RealTeam[]> = {}
-        ;(t as any[]).forEach(team => {
-          const div = teamDiv[team.id] ?? null
+        ;(t as { id: string; name: string; club: string | null }[]).forEach(team => {
+          const div     = teamDiv[team.id] ?? null
           const clubName = team.club ?? ''
           if (!map[clubName]) map[clubName] = []
-          // Deduplicate: one entry per (name, division)
-          const alreadyExists = map[clubName].some(x => x.id === team.id)
-          if (!alreadyExists) {
+          if (!map[clubName].some(x => x.id === team.id)) {
             map[clubName].push({ id: team.id, name: team.name, club: clubName, division: div })
           }
         })
-        // Sort each club's teams by tier
         Object.keys(map).forEach(k => {
           map[k].sort((a, b) =>
             TIER_ORDER.indexOf(divTier(a.division)) - TIER_ORDER.indexOf(divTier(b.division))
@@ -199,12 +178,9 @@ export default function TeamsPage() {
     return ['Alla', ...Array.from(set).sort()]
   }, [clubs])
 
-  // For each club, get the best available teams list:
-  // prefer realTeams (have division), fall back to bitsTeams (just names)
   function getTeamsForClub(club: Club): { id: string; name: string; division: string | null; isReal: boolean }[] {
     const real = realTeams[club.name] ?? []
     if (real.length > 0) return real.map(t => ({ ...t, isReal: true }))
-    // Fallback: bits_teams (no division info)
     const bits = bitsTeams[club.bits_id] ?? []
     return bits.map(t => ({ id: String(t.bits_team_id), name: t.name, division: null, isReal: false }))
   }
@@ -220,6 +196,7 @@ export default function TeamsPage() {
       }
       return true
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubs, search, county, divFilter, realTeams, bitsTeams])
 
   const toggle = (id: number) => setExpanded(prev => {
@@ -228,260 +205,363 @@ export default function TeamsPage() {
     return next
   })
 
-  // Theme tokens
-  const bg         = isDark ? '#10161e' : '#f0f2f5'
-  const cardBg     = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.88)'
-  const cardBorder = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)'
-  const rowBorder  = isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)'
-  const expandBg   = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.03)'
-  const txt        = isDark ? '#ffffff' : '#1a2535'
-  const muted      = isDark ? 'rgba(255,255,255,0.42)' : 'rgba(0,0,0,0.42)'
-  const inputBg    = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
-  const inputBorder= isDark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.09)'
-
+  // ── Loading skeleton ──────────────────────────────────────────────────────────
   if (loading) {
-    const sk = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
-    const S = ({ w = '100%', h = 11, r = 5 }: { w?: string | number; h?: number; r?: number }) => (
-      <div style={{ width: w, height: h, borderRadius: r, background: sk, flexShrink: 0 }} />
-    )
     return (
-      <main style={{ minHeight: '100vh', background: bg, fontFamily: 'system-ui, sans-serif' }}>
-        <style>{`@keyframes sk{0%,100%{opacity:.4}50%{opacity:.9}}.sk>*{animation:sk 1.6s ease-in-out infinite}`}</style>
-        <div style={{ padding: '12px 16px 0' }}>
-          <div style={{ height: 44, borderRadius: 14, background: sk }} />
-        </div>
-        <div style={{ display: 'flex', gap: 8, padding: '10px 16px 0', overflow: 'hidden' }}>
-          {[56, 64, 72, 56, 68].map((w, i) => (
-            <div key={i} style={{ width: w, height: 28, borderRadius: 20, background: sk, flexShrink: 0 }} />
-          ))}
-        </div>
-        <div className="sk" style={{ maxWidth: 600, margin: '0 auto', padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[0,1,2,3,4,5].map(i => (
-            <div key={i} style={{ borderRadius: 16, padding: '13px 14px', background: cardBg, border: cardBorder, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 11, background: sk, flexShrink: 0 }} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <S w={`${45 + (i % 4) * 12}%`} h={13} />
-                <S w="35%" h={9} />
-                <div style={{ display: 'flex', gap: 5 }}>
-                  {[0, 1, ...(i % 3 === 0 ? [2] : [])].map(j => (
-                    <div key={j} style={{ width: 44, height: 18, borderRadius: 6, background: sk }} />
-                  ))}
+      <main style={{ minHeight: '100vh', background: COLOR.bg }}>
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px 0` }}>
+            <div style={{ height: 44, borderRadius: RADIUS.lg, background: COLOR.surface, border: `1px solid ${COLOR.hairline}` }} />
+          </div>
+          <div style={{ padding: `${SPACE[3]}px ${SPACE[4]}px`, display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+            {[0,1,2,3,4,5,6].map(i => (
+              <div key={i} style={{ borderRadius: RADIUS.lg, padding: `${SPACE[3]}px ${SPACE[4]}px`, background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                <div style={{ width: 44, height: 44, borderRadius: RADIUS.md, background: COLOR.bg, flexShrink: 0 }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+                  <div style={{ height: 13, width: `${45 + (i % 4) * 12}%`, borderRadius: 4, background: COLOR.bg }} />
+                  <div style={{ height: 9, width: '38%', borderRadius: 4, background: COLOR.bg }} />
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </main>
     )
   }
 
+  // ── Page ──────────────────────────────────────────────────────────────────────
   return (
-    <main style={{ minHeight: '100vh', background: bg, fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: COLOR.bg }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 80 }}>
 
-      {/* Search */}
-      <div style={{ padding: '12px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: inputBg, border: inputBorder, borderRadius: 14, padding: '10px 14px' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Sök klubb eller hall..."
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: txt }} />
-          {search && (
-            <button onClick={() => setSearch('')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: muted, fontSize: 18, lineHeight: 1 }}>×</button>
-          )}
+        {/* Search bar with filter icon */}
+        <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px 0` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, borderRadius: RADIUS.lg, padding: `${SPACE[3]}px ${SPACE[4]}px` }}>
+            <Search size={15} color={COLOR.ink3} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Sök klubb eller hall..."
+              style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: COLOR.ink }}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+                <X size={16} color={COLOR.ink3} />
+              </button>
+            )}
+            <div style={{ width: 1, height: 18, background: COLOR.hairline, flexShrink: 0 }} />
+            <button
+              onClick={() => setFilterOpen(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: `0 0 0 ${SPACE[1]}px`, display: 'flex', alignItems: 'center', position: 'relative' }}
+            >
+              <SlidersHorizontal size={17} color={hasActiveFilter ? COLOR.gold : COLOR.ink3} />
+              {hasActiveFilter && (
+                <div style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: COLOR.gold, border: `1.5px solid ${COLOR.bg}` }} />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* County chips */}
-      <div style={{ display: 'flex', gap: 7, padding: '10px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' } as React.CSSProperties}>
-        {counties.map(c => {
-          const active = county === c
-          return (
-            <button key={c} onClick={() => setCounty(c)} style={{
-              flexShrink: 0, padding: '5px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              border: active ? '1px solid rgba(245,194,0,0.50)' : isDark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.12)',
-              background: active ? 'rgba(245,194,0,0.10)' : 'transparent',
-              color: active ? '#f5c200' : muted,
-              WebkitTapHighlightColor: 'transparent',
-            }}>
-              {c}
-            </button>
-          )
-        })}
-      </div>
+        {/* Active filter chips — visible only when a filter is set */}
+        <AnimatePresence>
+          {hasActiveFilter && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18 }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ display: 'flex', gap: SPACE[2], padding: `${SPACE[2]}px ${SPACE[4]}px 0`, flexWrap: 'wrap' }}>
+                {divFilter !== 'Alla' && (
+                  <button onClick={() => setDivFilter('Alla')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: `4px ${SPACE[2]}px 4px ${SPACE[3]}px`, borderRadius: 99, background: `${COLOR.gold}14`, border: `1px solid ${COLOR.gold}44`, color: COLOR.gold, fontSize: TYPE.label, fontWeight: 700, cursor: 'pointer' }}>
+                    {divFilter} <X size={12} />
+                  </button>
+                )}
+                {county !== 'Alla' && (
+                  <button onClick={() => setCounty('Alla')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: `4px ${SPACE[2]}px 4px ${SPACE[3]}px`, borderRadius: 99, background: `${COLOR.gold}14`, border: `1px solid ${COLOR.gold}44`, color: COLOR.gold, fontSize: TYPE.label, fontWeight: 700, cursor: 'pointer' }}>
+                    {county} <X size={12} />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Division filter chips */}
-      <div style={{ display: 'flex', gap: 7, padding: '7px 16px 0', overflowX: 'auto', scrollbarWidth: 'none' } as React.CSSProperties}>
-        {DIV_FILTERS.map(f => {
-          const active = divFilter === f
-          const clr = divFilterColor(f)
-          return (
-            <button key={f} onClick={() => setDivFilter(f)} style={{
-              flexShrink: 0, padding: '5px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
-              border: active ? `1px solid ${clr}66` : isDark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.12)',
-              background: active ? `${clr}18` : 'transparent',
-              color: active ? clr : muted,
-              WebkitTapHighlightColor: 'transparent',
-            }}>
-              {f}
-            </button>
-          )
-        })}
-      </div>
+        {/* Result count */}
+        <div style={{ padding: `${SPACE[2]}px ${SPACE[4]}px ${SPACE[1]}px`, fontSize: TYPE.caption, color: COLOR.ink3, fontWeight: 500 }}>
+          {filtered.length} klubbar
+        </div>
 
-      {/* Count */}
-      <div style={{ padding: '8px 20px 4px', fontSize: 11, color: muted, fontWeight: 500 }}>
-        {filtered.length} klubbar{divFilter !== 'Alla' ? ` · ${divFilter}` : ''}{county !== 'Alla' ? ` · ${county}` : ''}
-      </div>
+        {/* Filter sheet */}
+        <AnimatePresence>
+          {filterOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setFilterOpen(false)}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 40 }}
+              />
+              {/* Sheet */}
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+                style={{
+                  position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+                  background: COLOR.surface, borderRadius: `${RADIUS.xl}px ${RADIUS.xl}px 0 0`,
+                  maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+                  border: `1px solid ${COLOR.hairline}`, borderBottom: 'none',
+                }}
+              >
+                {/* Handle */}
+                <div style={{ display: 'flex', justifyContent: 'center', padding: `${SPACE[3]}px 0 0` }}>
+                  <div style={{ width: 36, height: 4, borderRadius: 2, background: COLOR.ink3, opacity: 0.3 }} />
+                </div>
 
-      {/* Club list */}
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '4px 12px 32px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-
-        {filtered.map(club => {
-          const teams     = getTeamsForClub(club)
-          const isExpanded = expanded.has(club.bits_id)
-          const hue  = clubHue(club.name)
-          const tc   = `hsl(${hue},50%,45%)`
-          const tclo = isDark ? `hsl(${hue},40%,14%)` : `hsl(${hue},40%,92%)`
-          const ini  = clubInitials(club.name)
-
-          // Unique division badges — deduplicate same tier+gender
-          const seen = new Set<string>()
-          const badges = teams.filter(t => {
-            if (!t.division) return false
-            const key = t.division
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-          })
-
-          return (
-            <div key={club.bits_id} style={{
-              borderRadius: 16, overflow: 'hidden',
-              background: cardBg, border: cardBorder,
-              boxShadow: isDark ? '0 2px 10px rgba(0,0,0,0.3)' : '0 1px 5px rgba(0,0,0,0.06)',
-            }}>
-              {/* Club header */}
-              <button onClick={() => toggle(club.bits_id)} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px',
-                width: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
-                textAlign: 'left', WebkitTapHighlightColor: 'transparent',
-              }}>
-                {/* Avatar — BITS logo with color-initials fallback */}
-                <ClubAvatar bitsId={club.bits_id} name={club.name} storedUrl={club.logo_url} isDark={isDark} tc={tc} tclo={tclo} ini={ini} />
-
-                {/* Name + county + division badges */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: txt, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>
-                    {club.name}
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${SPACE[3]}px ${SPACE[4]}px` }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: COLOR.ink }}>Filtrera</span>
+                  <div style={{ display: 'flex', gap: SPACE[3], alignItems: 'center' }}>
+                    {hasActiveFilter && (
+                      <button onClick={clearFilters} style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.gold, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        Rensa
+                      </button>
+                    )}
+                    <button onClick={() => setFilterOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+                      <X size={20} color={COLOR.ink3} />
+                    </button>
                   </div>
-                  <div style={{ fontSize: 11, color: muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: badges.length > 0 ? 7 : 0 }}>
-                    {[club.county, club.hall_name].filter(Boolean).join(' · ')}
-                  </div>
-                  {badges.length > 0 && (
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {badges.map(t => {
-                        const clr = divColor(t.division)
+                </div>
+
+                {/* Scrollable content */}
+                <div style={{ overflowY: 'auto', padding: `0 ${SPACE[4]}px ${SPACE[8]}px`, flex: 1 }}>
+
+                  {/* Division section */}
+                  <div style={{ marginBottom: SPACE[6] }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em', marginBottom: SPACE[3] }}>
+                      Division
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+                      {DIV_FILTERS.map(f => {
+                        const active = divFilter === f
+                        const clr    = f === 'Alla' ? COLOR.gold : divisionColor(
+                          f === 'Elitserien' ? 'Elitserien' :
+                          f === 'Allsvenskan' ? 'Allsvenskan' :
+                          f === 'Division 1' ? 'Division 1 Norra' : 'Division 2 Norra'
+                        )
                         return (
-                          <span key={t.id} style={{
-                            fontSize: 9, fontWeight: 800, letterSpacing: 0.4,
-                            color: clr, background: `${clr}1a`, border: `1px solid ${clr}44`,
-                            borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap',
+                          <button key={f} onClick={() => setDivFilter(f)} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: `${SPACE[3]}px ${SPACE[4]}px`,
+                            borderRadius: RADIUS.lg, cursor: 'pointer',
+                            background: active ? `${clr}12` : COLOR.bg,
+                            border: `1px solid ${active ? clr + '44' : COLOR.hairline}`,
+                            WebkitTapHighlightColor: 'transparent',
                           }}>
-                            {divLabel(t.division)}
-                          </span>
+                            <span style={{ fontSize: TYPE.body, fontWeight: 600, color: active ? clr : COLOR.ink }}>
+                              {f === 'Alla' ? 'Alla divisioner' : f}
+                            </span>
+                            <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? clr : COLOR.ink3 + '55'}`, background: active ? clr : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              {active && <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />}
+                            </div>
+                          </button>
                         )
                       })}
                     </div>
-                  )}
-                </div>
-
-                {/* Team count + arrow */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  {teams.length > 0 && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 800, color: muted,
-                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                      borderRadius: 8, padding: '3px 8px',
-                    }}>
-                      {teams.length} lag
-                    </span>
-                  )}
-                  <div style={{
-                    color: muted, fontSize: 20, fontWeight: 300, lineHeight: 1,
-                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.18s ease',
-                  }}>
-                    ›
                   </div>
+
+                  {/* County section */}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em', marginBottom: SPACE[3] }}>
+                      Län
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[2] }}>
+                      {counties.map(c => {
+                        const active = county === c
+                        return (
+                          <button key={c} onClick={() => setCounty(c)} style={{
+                            padding: `6px ${SPACE[3]}px`, borderRadius: 99, cursor: 'pointer',
+                            fontSize: TYPE.label, fontWeight: 700,
+                            border: active ? `1px solid ${COLOR.gold}55` : `1px solid ${COLOR.hairline}`,
+                            background: active ? `${COLOR.gold}14` : COLOR.bg,
+                            color: active ? COLOR.gold : COLOR.ink3,
+                            WebkitTapHighlightColor: 'transparent',
+                          }}>
+                            {c}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
                 </div>
-              </button>
 
-              {/* Expanded team rows */}
-              {isExpanded && (
-                <div style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)' }}>
-                  {teams.length === 0 ? (
-                    <div style={{ padding: '14px 16px', fontSize: 12, color: muted }}>Inga registrerade lag</div>
-                  ) : teams.map((t, i) => {
-                    const clr = divColor(t.division)
-                    return (
-                      <button key={t.id}
-                        onClick={() => t.isReal ? router.push(`/teams/${t.id}`) : router.push(`/clubs/${club.bits_id}`)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          padding: '11px 14px 11px 16px', width: '100%',
-                          background: expandBg, border: 'none',
-                          borderTop: i > 0 ? rowBorder : 'none',
-                          cursor: 'pointer', textAlign: 'left',
-                          WebkitTapHighlightColor: 'transparent',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = expandBg)}
-                      >
-                        <div style={{ width: 3, height: 32, borderRadius: 2, background: clr, flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: txt, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {t.name}
-                          </div>
-                          <div style={{ fontSize: 11, marginTop: 1, fontWeight: 700, color: t.division ? clr : muted }}>
-                            {t.division ?? 'Inga matcher registrerade'}
-                          </div>
-                        </div>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                          <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                      </button>
-                    )
-                  })}
-
-                  {/* Club page link */}
+                {/* Done button */}
+                <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px`, borderTop: `1px solid ${COLOR.hairline}` }}>
                   <button
-                    onClick={() => router.push(`/clubs/${club.bits_id}`)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      width: '100%', padding: '10px 14px',
-                      background: 'transparent', border: 'none',
-                      borderTop: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)',
-                      cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                    }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: muted }}>Klubbsida</span>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
+                    onClick={() => setFilterOpen(false)}
+                    style={{ width: '100%', padding: `${SPACE[3]}px`, borderRadius: RADIUS.lg, background: COLOR.gold, border: 'none', color: '#1a1400', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    Visa {filtered.length} klubbar
                   </button>
                 </div>
-              )}
-            </div>
-          )
-        })}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
-        {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: muted, fontSize: 14 }}>
-            Inga klubbar hittades
-          </div>
-        )}
+        {/* Club list */}
+        <div style={{ padding: `0 ${SPACE[4]}px`, display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+
+          {filtered.map(club => {
+            const teams      = getTeamsForClub(club)
+            const isExpanded = expanded.has(club.bits_id)
+
+            // Deduplicate division badges
+            const seen   = new Set<string>()
+            const badges = teams.filter(t => {
+              if (!t.division) return false
+              if (seen.has(t.division)) return false
+              seen.add(t.division)
+              return true
+            })
+
+            return (
+              <div key={club.bits_id} style={{
+                borderRadius: RADIUS.lg, overflow: 'hidden',
+                background: COLOR.surface, border: `1px solid ${COLOR.hairline}`,
+              }}>
+
+                {/* Club row */}
+                <button
+                  onClick={() => toggle(club.bits_id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: SPACE[3],
+                    padding: `${SPACE[3]}px ${SPACE[4]}px`,
+                    width: '100%', background: 'transparent', border: 'none',
+                    cursor: 'pointer', textAlign: 'left',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <ClubAvatar bitsId={club.bits_id} name={club.name} storedUrl={club.logo_url} />
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                      {club.name}
+                    </div>
+                    <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: badges.length > 0 ? 6 : 0 }}>
+                      {[club.county, club.hall_name].filter(Boolean).join(' · ')}
+                    </div>
+                    {badges.length > 0 && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {badges.map(t => {
+                          const clr = divisionColor(t.division!)
+                          return (
+                            <span key={t.id} style={{
+                              fontSize: TYPE.caption, fontWeight: 700,
+                              color: clr, background: `${clr}18`, border: `1px solid ${clr}33`,
+                              borderRadius: RADIUS.sm, padding: '2px 7px', whiteSpace: 'nowrap',
+                            }}>
+                              {divLabel(t.division)}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], flexShrink: 0 }}>
+                    {teams.length > 0 && (
+                      <span style={{
+                        fontSize: TYPE.caption, fontWeight: 700, color: COLOR.ink3,
+                        background: `${COLOR.ink3}14`, borderRadius: RADIUS.sm, padding: '3px 8px',
+                      }}>
+                        {teams.length}
+                      </span>
+                    )}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease', flexShrink: 0 }}>
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Expanded team list */}
+                {isExpanded && (
+                  <div style={{ borderTop: `1px solid ${COLOR.hairline}` }}>
+                    {teams.length === 0 ? (
+                      <div style={{ padding: `${SPACE[3]}px ${SPACE[4]}px`, fontSize: TYPE.body, color: COLOR.ink3 }}>
+                        Inga registrerade lag
+                      </div>
+                    ) : teams.map((t, i) => {
+                      const clr = t.division ? divisionColor(t.division) : COLOR.ink3
+                      return (
+                        <button key={t.id}
+                          onClick={() => t.isReal ? router.push(`/teams/${t.id}`) : router.push(`/clubs/${club.bits_id}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: SPACE[3],
+                            padding: `${SPACE[3]}px ${SPACE[4]}px`, width: '100%',
+                            background: 'transparent', border: 'none',
+                            borderTop: i > 0 ? `1px solid ${COLOR.hairline}` : 'none',
+                            cursor: 'pointer', textAlign: 'left',
+                            WebkitTapHighlightColor: 'transparent',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = `${COLOR.ink}08`)}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <div style={{ width: 3, height: 28, borderRadius: 2, background: clr, flexShrink: 0, opacity: 0.7 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {t.name}
+                            </div>
+                            <div style={{ fontSize: TYPE.caption, marginTop: 1, fontWeight: 600, color: t.division ? clr : COLOR.ink3 }}>
+                              {t.division ?? 'Inga matcher registrerade'}
+                            </div>
+                          </div>
+                          {t.isReal && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                              <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                          )}
+                        </button>
+                      )
+                    })}
+
+                    {/* Club page link */}
+                    <button
+                      onClick={() => router.push(`/clubs/${club.bits_id}`)}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: SPACE[1],
+                        width: '100%', padding: `${SPACE[3]}px`,
+                        background: 'transparent', border: 'none',
+                        borderTop: `1px solid ${COLOR.hairline}`,
+                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <span style={{ fontSize: TYPE.caption, fontWeight: 700, color: COLOR.ink3 }}>Klubbsida</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {filtered.length === 0 && (
+            <div style={{ textAlign: 'center', padding: `${SPACE[8]}px 0`, color: COLOR.ink3, fontSize: TYPE.body }}>
+              Inga klubbar hittades
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   )

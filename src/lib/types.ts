@@ -64,6 +64,115 @@ export type Match = {
   highSeries?: { playerName: string; score: number; team: 'home' | 'away' }[]
 }
 
+// ── BITS (national SvBF data) ─────────────────────────────────────────────────
+
+export type BitsMatchFeed = {
+  bits_match_id:     number
+  match_date:        string          // 'YYYY-MM-DD'
+  division_name:     string | null
+  bits_division_id:  number | null
+  home_team_name:    string
+  away_team_name:    string
+  home_bits_team_id: number
+  away_bits_team_id: number
+  home_result:       number | null   // board points won (0-8)
+  away_result:       number | null
+  is_finished:       boolean
+  hall_name:         string | null
+  hall_city:         string | null
+}
+
+export type BitsMatchDetail = BitsMatchFeed & {
+  season_id:    number
+  home_score:   number | null   // total pins
+  away_score:   number | null
+  oil_pattern:  string | null
+  round_id:     number | null
+  scores_synced: boolean
+}
+
+export type BitsPlayerScore = {
+  id:            number
+  bits_match_id: number
+  player_name:   string   // full name when resolved server-side, else BITS abbreviation
+  serie:         number
+  board:         number
+  score:         number
+  order_index:   number
+  is_home_team:  boolean | null
+}
+
+// Exact per-player match result from BITS' own authoritative source
+// (matchResult/GetMatchResults) — full name + license number with zero
+// ambiguity, no name-guessing involved.
+export type BitsMatchPlayerResult = {
+  id:            number
+  bits_match_id: number
+  lic_nbr:       string   // BITS internal identity key — never shown in UI
+  player_name:   string   // full name, exact
+  is_home_team:  boolean
+  series:        number[]
+  total_result:  number
+  public_id?:    string | null  // bits_players.public_id, joined in for profile links
+}
+
+export type BitsTopScore = {
+  matchId:    number
+  playerName: string         // full name when resolved via bits_lic_nbr, else BITS abbreviation
+  average:    number | null  // registered SvBF average, when resolved — never the license number itself
+  total:      number
+  series:     number[]   // per-serie totals, length 1-4
+  isHome:     boolean
+  division:   string
+  opponent:   string
+  date:       string
+  publicId:   string | null  // bits_players.public_id, for linking to the profile page
+}
+
+// Public, non-PII player identity — result of get_player_identity(), which
+// joins on lic_nbr server-side. lic_nbr itself never appears in this shape.
+export type BitsPlayerIdentity = {
+  publicId:        string
+  name:            string
+  clubName:        string | null
+  licenceAverage:  number | null
+  licenceSkillLvl: number | null
+  isJunior:        boolean
+  isClaimed:       boolean
+}
+
+// One real match result for a player, from get_player_match_history().
+// homePoints/awayPoints are board points (0-8), not raw pin totals.
+export type BitsPlayerMatchRow = {
+  matchDate:     string
+  divisionName:  string | null
+  opponentName:  string
+  isHomeTeam:    boolean
+  series:        number[]
+  totalResult:   number
+  homePoints:    number | null
+  awayPoints:    number | null
+  seasonId:      number
+}
+
+// One real match from get_user_season_matches() — scoped to the divisions
+// the logged-in user's followed players/teams (or own verified claim)
+// appear in. Falls back to Elitserien (isPersonalized: false) when none
+// of those exist yet, rather than showing nothing.
+export type SeasonMatch = {
+  bitsMatchId:     number
+  matchDate:       string
+  roundId:         number | null
+  homeTeamName:    string
+  awayTeamName:    string
+  homeScore:       number | null
+  awayScore:       number | null
+  divisionName:    string | null
+  isFinished:      boolean
+  hallName:        string | null
+  isPersonalized:  boolean
+}
+
 export type MatchResult = {
   id: string
   player_id: string
@@ -203,6 +312,7 @@ export type MatchResultPayload = {
   division: string
   result: 'W' | 'D' | 'L'
   top_scorer: { player_id: string; name: string; high_game: number } | null
+  my_series?: number[]   // team pin totals per serie, used for bar chart
 }
 
 export type StreakPayload = {
@@ -232,6 +342,7 @@ export type FormRisingPayload = {
   delta: number
   recent_avg: number
   season_avg: number
+  match_avgs?: number[]   // per-match averages (oldest → newest) for the sparkline
 }
 
 export type DivisionClimbedPayload = {
@@ -289,6 +400,7 @@ export type TeamEventReaction = {
 export type TeamEvent = {
   id: string
   team_id: string
+  team?: { id: string; name: string }
   event_type: TeamEventType
   event_date: string        // ISO date string
   title: string
@@ -352,3 +464,79 @@ export type BkRatingResult = {
   /** Season "mot fältet" — average pins above/below the field. */
   motFaltet: number
 }
+
+// ── Follow system ─────────────────────────────────────────────────────────────
+
+export type FollowEntityType = 'player' | 'team'
+
+export type Follow = {
+  id: string
+  user_id: string
+  entity_type: FollowEntityType
+  entity_id: string
+  created_at: string
+}
+
+/** Enriched follow row — entity name resolved from the relevant table */
+export type FollowWithName = Follow & {
+  name: string
+}
+
+// ── Onboarding suggestions ──────────────────────────────────────────────────
+
+export type AnonViewSuggestion = {
+  entityType: FollowEntityType
+  entityId:   string
+  viewedAt:   string
+}
+
+export type TeamSuggestion = {
+  bitsTeamId: number
+  name:       string
+  clubName:   string | null
+  reason:     'division' | 'county'
+}
+
+export type PlayerSuggestionTier = 'teammate' | 'elitserien_regional' | 'division_rival'
+
+export type PlayerSuggestion = {
+  publicId:        string
+  name:            string
+  licenceAverage:  number | null
+  tier:            PlayerSuggestionTier
+}
+
+export type OnboardingSuggestions = {
+  teams:   TeamSuggestion[]
+  players: PlayerSuggestion[]
+}
+
+// ── Personalized feed ─────────────────────────────────────────────────────────
+
+export type FeedPlayerResult = {
+  kind: 'player_result'
+  playerId: string
+  playerName: string
+  matchId: string
+  date: string
+  total: number
+  games: number[]
+  division: string
+  opponent?: string
+}
+
+export type FeedTeamMatch = {
+  kind: 'team_match'
+  matchId: string
+  date: string
+  status: string
+  division: string
+  homeId: string
+  homeName: string
+  awayId: string
+  awayName: string
+  homeScore: number | null
+  awayScore: number | null
+}
+
+export type FeedItem = FeedPlayerResult | FeedTeamMatch

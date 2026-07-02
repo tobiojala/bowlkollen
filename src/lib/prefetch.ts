@@ -1,7 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
-import { keys } from '@/lib/queries'
-import type { MatchResult } from '@/lib/player-stats'
+import { keys, mapPlayerIdentityRow, mapPlayerMatchRows } from '@/lib/queries'
 
 // ── Prefetch functions — call these on hover/touchstart ───────────────────────
 // Each checks the cache first (staleTime) before firing a network request.
@@ -35,27 +34,22 @@ export async function prefetchMatch(qc: QueryClient, matchId: string) {
   ])
 }
 
-export async function prefetchPlayer(qc: QueryClient, playerId: string) {
+export async function prefetchPlayer(qc: QueryClient, publicId: string) {
   await Promise.all([
     qc.prefetchQuery({
-      queryKey: keys.player(playerId),
+      queryKey: keys.playerIdentity(publicId),
       queryFn: async () => {
-        const { data, error } = await createClient()
-          .from('players').select('*').eq('id', playerId).single()
+        const { data, error } = await createClient().rpc('get_player_identity', { p_public_id: publicId }).maybeSingle()
         if (error) throw error
-        return data
+        return mapPlayerIdentityRow(data)
       },
     }),
     qc.prefetchQuery({
-      queryKey: keys.playerResults(playerId),
+      queryKey: keys.playerBitsResults(publicId),
       queryFn: async () => {
-        const { data, error } = await createClient()
-          .from('match_results')
-          .select('id,player_id,match_id,games,matches:match_id(id,date,division,home_team_id,away_team_id,home_score,away_score,home:teams!home_team_id(name),away:teams!away_team_id(name))')
-          .eq('player_id', playerId)
-          .order('created_at', { ascending: false })
+        const { data, error } = await createClient().rpc('get_player_match_history', { p_public_id: publicId })
         if (error) throw error
-        return (data ?? []) as unknown as MatchResult[]
+        return mapPlayerMatchRows(data)
       },
     }),
   ])

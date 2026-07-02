@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import Reveal from '@/components/Reveal'
+import FollowButton from '@/components/FollowButton'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
@@ -23,11 +24,28 @@ const INK = '#f4f5f7'
 
 type SheetType = 'curve' | 'whatif' | 'duell' | 'match' | 'bkrating' | null
 
+const JUNIOR_NOTICE = 'Minderårig — följning öppnas när profilen är verifierad av vårdnadshavare eller lagledare.'
+
+/** Replaces FollowButton when a junior profile hasn't been claimed yet (locked launch policy). */
+function JuniorFollowNotice({ size }: { size: 'sm' | 'md' }) {
+  return (
+    <span style={{
+      fontSize: size === 'sm' ? 10 : 11, color: 'rgba(244,245,247,0.40)',
+      maxWidth: size === 'sm' ? 160 : 220, textAlign: 'right', lineHeight: 1.4,
+    }}>
+      {JUNIOR_NOTICE}
+    </span>
+  )
+}
+
 export interface PlayerProfileViewProps {
+  playerId: string
   data: ProfileData
   identity: ProfileIdentity
   /** Percentile band shown in the identity caption. */
   bkTopPct: number
+  /** Official BITS licence average — shown as the primary snitt hero. */
+  licenceAverage?: number | null
   firstName: string
   initials: string
   /** Previous-season per-match averages — DNA overlay + duel ghost line. */
@@ -40,7 +58,7 @@ export interface PlayerProfileViewProps {
 }
 
 export default function PlayerProfileView({
-  data, identity, bkTopPct, firstName, initials,
+  playerId, data, identity, bkTopPct, licenceAverage, firstName, initials,
   prevMatchAvgs, achievements = [], isOwner = false,
   onEdit, onOpenCard, onOpenH2H,
 }: PlayerProfileViewProps) {
@@ -85,12 +103,16 @@ export default function PlayerProfileView({
               <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
               <div style={{ fontSize: 13, color: 'rgba(244,245,247,0.64)', marginTop: 3 }}>{identity.teamLabel}</div>
             </div>
-            {isOwner && onEdit && (
+            {isOwner && onEdit ? (
               <button onClick={onEdit}
                 style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer',
                   border: '1px solid rgba(244,245,247,0.14)', background: 'transparent', color: INK, fontSize: 13, fontWeight: 700 }}>
                 Redigera
               </button>
+            ) : identity.isJunior && !identity.isClaimed ? (
+              <JuniorFollowNotice size="md" />
+            ) : (
+              <FollowButton entityType="player" entityId={playerId} size="md" />
             )}
           </div>
           <div style={{ marginTop: 40, textAlign: 'center', color: 'rgba(244,245,247,0.40)', fontSize: 14 }}>
@@ -116,21 +138,27 @@ export default function PlayerProfileView({
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 120 }}>
 
-          {isOwner && onEdit && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 20px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, padding: '12px 20px 0' }}>
+            {isOwner && onEdit && (
               <button onClick={onEdit}
                 style={{ minHeight: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
                   border: '1px solid rgba(244,245,247,0.14)', background: 'transparent',
                   color: 'rgba(244,245,247,0.64)', fontSize: 12, fontWeight: 700 }}>
                 Redigera profil
               </button>
-            </div>
-          )}
+            )}
+            {!isOwner && (
+              identity.isJunior && !identity.isClaimed
+                ? <JuniorFollowNotice size="sm" />
+                : <FollowButton entityType="player" entityId={playerId} size="sm" />
+            )}
+          </div>
 
           <IdentitySection
             data={data}
             identity={identity}
             bkTopPct={bkTopPct}
+            licenceAverage={licenceAverage ?? undefined}
             bkRating={null}                /* launch state: "kommer snart" */
             achievements={achievements}
             isOwner={isOwner}

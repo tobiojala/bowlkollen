@@ -8,6 +8,7 @@ import { useColors } from '@/components/ThemeProvider'
 import { teamColor, teamInitials, shortName } from '@/lib/utils'
 import { divisionColor } from '@/lib/divisions'
 import FollowButton from '@/components/FollowButton'
+import { useResolvedBitsTeamId } from '@/lib/queries'
 import type { Team, Match } from '@/lib/types'
 
 type ClubTeam = { id: string; name: string; club_slug: string | null; team_path: string | null }
@@ -32,6 +33,9 @@ export default function TeamHero({
   const { C, isDark } = useColors()
   const [logoFailed, setLogoFailed] = useState(false)
   const [copied,     setCopied]     = useState(false)
+  // The legacy team id has no connection to real bits_matches data — resolve
+  // to the real bits_team_id before offering to follow it (see resolve_bits_team_id).
+  const { data: bitsTeamId } = useResolvedBitsTeamId(id)
 
   const tc  = teamColor(team.name, isDark)
   const ini = teamInitials(team.name)
@@ -123,7 +127,9 @@ export default function TeamHero({
 
         {/* CTAs */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 16 }}>
-          <FollowButton teamId={id} type="team" isDark={isDark} />
+          {bitsTeamId != null && (
+            <FollowButton entityType="team" entityId={String(bitsTeamId)} variant="pill" />
+          )}
           {hasSession && (
             <Link href={'/team/' + id + '/intern'} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.accent, color: '#1a1400', borderRadius: 20, padding: '8px 16px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
               Lagets sida →

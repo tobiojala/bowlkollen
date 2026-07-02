@@ -3,8 +3,9 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User } from 'lucide-react'
+import { User, Flame } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
+import { COLOR, SPACE, RADIUS, TYPE, FONT } from '@/lib/brand'
 import { usePlayerCheers } from '@/lib/queries'
 import { createClient } from '@/lib/supabase'
 import { teamColor, teamInitials } from '@/lib/utils'
@@ -24,15 +25,15 @@ type Props = {
 function nodeColor(p: Player, momentum: PlayerMomentum | undefined, isDark: boolean): NodeColor {
   if (!momentum || momentum.level === 'stable') return teamColor(p.name, isDark)
   if (momentum.level === 'rising') return {
-    bg:     isDark ? 'rgba(34,197,94,0.16)' : 'rgba(34,197,94,0.12)',
-    border: '#22c55e',
-    text:   '#22c55e',
+    bg:     COLOR.green + (isDark ? '28' : '1e'),
+    border: COLOR.green,
+    text:   COLOR.green,
   }
   // slumping
   return {
-    bg:     isDark ? 'rgba(100,116,139,0.16)' : 'rgba(100,116,139,0.10)',
-    border: '#64748b',
-    text:   isDark ? '#94a3b8' : '#64748b',
+    bg:     COLOR.ink3 + (isDark ? '28' : '1a'),
+    border: COLOR.ink3,
+    text:   COLOR.ink3,
   }
 }
 
@@ -108,14 +109,14 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
 
   if (players.length === 0) {
     return (
-      <section id="team-squad" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + C.border }}>
+      <section id="team-squad" style={{ scrollMarginTop: 60, borderTop: `1px solid ${COLOR.hairline}` }}>
         <div style={{ padding: '20px 20px 12px' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 2 }}>TRUPPEN</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em' }}>Truppen</span>
         </div>
         <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-          <User size={28} color={C.muted} style={{ marginBottom: 12 }} />
-          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 6 }}>Inga spelare registrerade</div>
-          <div style={{ fontSize: 13, color: C.muted }}>Spelare läggs till via live scoring</div>
+          <User size={28} color={COLOR.ink3} style={{ marginBottom: 12 }} />
+          <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, marginBottom: 6 }}>Inga spelare registrerade</div>
+          <div style={{ fontSize: TYPE.body, color: COLOR.ink3 }}>Spelare läggs till via live scoring</div>
         </div>
       </section>
     )
@@ -137,12 +138,12 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
   const activeStat   = activeId ? playerStats[activeId] : undefined
 
   return (
-    <section id="team-squad" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + C.border }}>
+    <section id="team-squad" style={{ scrollMarginTop: 60, borderTop: `1px solid ${COLOR.hairline}` }}>
       <style>{HELIX_STYLES}</style>
 
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 2 }}>TRUPPEN</span>
-        <span style={{ fontSize: 11, color: C.muted }}>{players.length} spelare</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em' }}>Truppen</span>
+        <span style={{ fontSize: TYPE.body, color: COLOR.ink3 }}>{players.length} spelare</span>
       </div>
 
       {/* ── Helix canvas ── */}
@@ -210,7 +211,7 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
                 {/* Name label */}
                 <motion.text x={n.x} y={isTop ? n.y - R - 7 : n.y + R + 14}
                   textAnchor="middle" fontSize={9} fontWeight={isActive ? 800 : 600}
-                  fill={isActive ? tc.text : C.muted}
+                  fill={isActive ? tc.text : COLOR.ink3}
                   style={{ pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui,sans-serif' }}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.12 }}>
                   {label}
@@ -223,14 +224,14 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
                     textAnchor="middle" fontSize={8} fontWeight={700} fill="#f97316"
                     style={{ pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui,sans-serif' }}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.3 }}>
-                    🔥{cheerCounts[p.id]}
+                    +{cheerCounts[p.id]}
                   </motion.text>
                 )}
 
                 {/* Avg */}
                 {(playerStats[p.id]?.avg ?? 0) > 0 && (
                   <motion.text x={n.x} y={isTop ? n.y - R - 19 : n.y + R + 26}
-                    textAnchor="middle" fontSize={8} fontWeight={900} fill={C.accent}
+                    textAnchor="middle" fontSize={8} fontWeight={900} fill={COLOR.gold}
                     style={{ pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui,sans-serif' }}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.2 }}>
                     {playerStats[p.id].avg}
@@ -285,25 +286,25 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' as const }}>
-                      <span style={{ fontSize: 15, fontWeight: 900, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activePlayer.name}</span>
-                      {isCrown && <span style={{ fontSize: 9, background: '#f5c200', color: '#1a1400', borderRadius: 6, padding: '2px 7px', fontWeight: 800, flexShrink: 0 }}>★ Bäst snitt</span>}
+                      <span style={{ fontSize: 15, fontWeight: 900, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activePlayer.name}</span>
+                      {isCrown && <span style={{ fontSize: 9, background: COLOR.gold, color: '#1a1400', borderRadius: 6, padding: '2px 7px', fontWeight: 800, flexShrink: 0 }}>★ Bäst snitt</span>}
                       {isFire  && <span style={{ fontSize: 9, background: '#ff6b2b', color: '#fff',    borderRadius: 6, padding: '2px 7px', fontWeight: 800, flexShrink: 0 }}>▲ Mest aktiv</span>}
                     </div>
                     {activeStat && activeStat.avg > 0 ? (
                       <div style={{ display: 'flex', gap: 14 }}>
                         {[
-                          { v: activeStat.avg,     l: 'SNITT',   c: C.accent },
-                          { v: activeStat.high,    l: 'BÄST',    c: C.text   },
-                          { v: activeStat.matches, l: 'MATCHER', c: C.text   },
+                          { v: activeStat.avg,     l: 'Snitt',   c: COLOR.gold },
+                          { v: activeStat.high,    l: 'Bäst',    c: COLOR.ink  },
+                          { v: activeStat.matches, l: 'Matcher', c: COLOR.ink  },
                         ].map(s => (
                           <div key={s.l}>
                             <div style={{ fontSize: 18, fontWeight: 900, color: s.c, lineHeight: 1 }}>{s.v}</div>
-                            <div style={{ fontSize: 8, color: C.muted, letterSpacing: 1, marginTop: 1 }}>{s.l}</div>
+                            <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 1 }}>{s.l}</div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: 12, color: C.muted }}>Inga statistik än</div>
+                      <div style={{ fontSize: TYPE.body, color: COLOR.ink3 }}>Inga statistik än</div>
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', flexShrink: 0 }}>
@@ -315,10 +316,11 @@ export default function TeamSquad({ teamId, teamName, players, playerStats, play
                         background: myCheers.has(activePlayer.id) ? '#f97316' + '30' : tc.border + '22',
                         border: '1.5px solid ' + (myCheers.has(activePlayer.id) ? '#f97316' : tc.border + '66'),
                         color: myCheers.has(activePlayer.id) ? '#f97316' : tc.text,
-                        borderRadius: 12, padding: '7px 12px', fontSize: 12, fontWeight: 700,
+                        borderRadius: RADIUS.md, padding: '7px 12px', fontSize: 12, fontWeight: 700,
                         cursor: userId ? 'pointer' : 'default', opacity: cheeringId === activePlayer.id ? 0.6 : 1,
                       }}>
-                      🔥 {myCheers.has(activePlayer.id) ? `Hejar! ${cheerCounts[activePlayer.id] ?? 1}` : `Heja ${cheerCounts[activePlayer.id] ? '· ' + cheerCounts[activePlayer.id] : ''}`}
+                      <Flame size={13} />
+                      {myCheers.has(activePlayer.id) ? `Hejar! ${cheerCounts[activePlayer.id] ?? 1}` : `Heja${cheerCounts[activePlayer.id] ? ' · ' + cheerCounts[activePlayer.id] : ''}`}
                     </button>
                     <Link href={'/players/' + activePlayer.id}
                       style={{ display: 'inline-flex', alignItems: 'center', background: tc.border, color: isDark ? '#111' : '#fff', borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>

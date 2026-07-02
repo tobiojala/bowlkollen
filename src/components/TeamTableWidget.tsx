@@ -51,6 +51,7 @@ export default function TeamTableWidget({ teamId, division }: Props) {
       }
 
       matches.forEach(m => {
+        if (!m.home_team_id || !m.away_team_id) return
         initTeam(m.home_team_id)
         initTeam(m.away_team_id)
         const h = table[m.home_team_id]

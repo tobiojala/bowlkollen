@@ -18,6 +18,8 @@ export type ProfileIdentity = {
   teamLabel: string   // "Örebro BK · Elitserien"
   followers: number
   following: number
+  isJunior: boolean
+  isClaimed: boolean
 }
 
 // View-model types for the surrounding layers (match-data sheets, feed, DNA).

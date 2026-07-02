@@ -11,17 +11,17 @@ type Props = { params: Promise<{ id: string }> }
 
 type Member = {
   id: string
-  user_id: string
-  role: string
-  status: string
+  user_id: string | null
+  role: string | null
+  status: string | null
   profiles?: { full_name: string; avatar_url: string; email: string }
 }
 
 type Post = {
   id: string
   content: string
-  post_type: string
-  created_at: string
+  post_type: string | null
+  created_at: string | null
 }
 
 type Poll = {
@@ -115,7 +115,7 @@ export default function InternPage({ params }: Props) {
       if (m) {
         setMembers(m as Member[])
         // Load profiles for all members
-        const userIds = (m as Member[]).map(x => x.user_id)
+        const userIds = (m as Member[]).map(x => x.user_id).filter((id): id is string => id !== null)
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
             .from('profiles')
@@ -292,7 +292,7 @@ export default function InternPage({ params }: Props) {
                     {post.post_type === 'lineup' ? 'LAGUTTAGNING' : 'NYHET'}
                   </span>
                   <span style={{ fontSize: 11, color: C.textMuted, marginLeft: 'auto' }}>
-                    {new Date(post.created_at).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                    {post.created_at ? new Date(post.created_at).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }) : ''}
                   </span>
                 </div>
                 <div style={{ fontSize: 14, color: C.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' as const }}>
@@ -413,7 +413,7 @@ export default function InternPage({ params }: Props) {
                 {members.filter(m => m.status === 'pending').map(m => (
                   <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                     <div style={{ flex: 1, fontSize: 13, color: C.text }}>
-                    {profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Okänd'}
+                    {m.user_id ? (profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Okänd') : 'Okänd'}
                   </div>
                     <button onClick={async () => {
                       const supabase = createClient()
@@ -436,32 +436,33 @@ export default function InternPage({ params }: Props) {
 
             {/* Active members */}
             {members.filter(m => m.status === 'active').map(m => {
-              const hue = m.user_id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
+              const uid = m.user_id ?? ''
+              const hue = uid.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
               const tc = 'hsl(' + hue + ',50%,45%)'
               const tclo = isDark ? 'hsl(' + hue + ',40%,15%)' : 'hsl(' + hue + ',40%,92%)'
-              const isMe = m.user_id === user?.id
+              const isMe = uid === user?.id
 
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border }}>
-                  {profiles[m.user_id]?.avatar_url ? (
-                    <Image src={profiles[m.user_id].avatar_url} alt="" width={36} height={36} style={{ borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
+                  {profiles[uid]?.avatar_url ? (
+                    <Image src={profiles[uid].avatar_url} alt="" width={36} height={36} style={{ borderRadius: '50%', border: '1.5px solid ' + tc, objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: tclo, border: '1.5px solid ' + tc, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: tc, flexShrink: 0 }}>
-                      {(profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || '?')[0].toUpperCase()}
+                      {(profiles[uid]?.full_name || profiles[uid]?.email || '?')[0].toUpperCase()}
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                      {isMe ? 'Du' : (profiles[m.user_id]?.full_name || profiles[m.user_id]?.email || 'Lagmedlem')}
+                      {isMe ? 'Du' : (profiles[uid]?.full_name || profiles[uid]?.email || 'Lagmedlem')}
                     </div>
-                    <div style={{ fontSize: 11, color: C.textMuted }}>{roleLabel(m.role)}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>{roleLabel(m.role ?? '')}</div>
                   </div>
                   {isMe && (
                     <span style={{ fontSize: 10, fontWeight: 700, color: C.green, background: C.green + '18', borderRadius: 6, padding: '2px 8px' }}>Du</span>
                   )}
                   {isCapOrAdmin && !isMe && (
                     <select
-                      value={m.role}
+                      value={m.role ?? ''}
                       onChange={async e => {
                         const supabase = createClient()
                         await supabase.from('team_members').update({ role: e.target.value }).eq('id', m.id)

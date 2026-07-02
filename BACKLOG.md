@@ -1,82 +1,91 @@
-# Bowlkollen — Prioritized Backlog
+# Bowlkollen — Backlog
 
-> Goal: get the app ready to show real bowlers and get honest feedback.
-> Work top-to-bottom. Mark done with [x].
-
----
-
-## 🔴 Must fix before showing anyone
-
-- [x] **Flip DEMO flag to real data**
-  Done — `DEMO = false` in both `src/app/page.tsx` and `src/app/league/page.tsx`. Added `calcHomeStandings()` to compute live Elitserien standings from Supabase match data. Empty state already handled by the existing `isEmpty` check.
-
-- [x] **Player season average — calculate and display**
-  Already computed from `match_results.games[]` in the team squad tab. Confirmed working.
-
-- [x] **Player stats on team pages**
-  Squad tab now shows: average, high game (BÄST), and match count (MATCHER) per player. Added `high` field to `playerStats` state and computation.
-
-- [x] **Error boundaries + "something went wrong" UI**
-  Team page (`src/app/teams/[id]/page.tsx`) now has `.catch()` on the Promise.all and renders a "Kunde inte ladda laget / Försök igen" screen. Error check ordered before the `!team` guard so it's reachable.
-
-- [x] **Skeleton loaders on all detail pages**
-  Team page now has animated skeleton boxes (banner, stats bar, match rows) instead of "Laddar...". Home page already had a full skeleton. Player and match pages still use text — add when touching those pages next.
+> Work top-to-bottom within each tier. Updated 2026-07-01.
+> Filter: "Does this make match day better for a player, fan, or club?" — if not, park it.
 
 ---
 
-## 🟠 High — affects usability and trust
+## 🔴 High — missing features that matter to real users
 
-- [ ] **Fix the /teams route confusion**
-  `/teams` shows a list of clubs (Stockholms BK, etc.), not teams. Either rename the route to `/clubs` and update the bottom nav, or redesign it to actually show division standings / team list. A bowler clicking "Teams" expects to see their division table.
+### Competition / tournament depth
+`/tavlingar` exists as a thin overview. It needs:
+- SM-slutspel bracket detail (who plays who, results per round)
+- Per-competition standings table
+- Match cards that link to `/matches/[id]`
+This is the first "real" page a serious bowler or admin checks besides their own team.
 
-- [ ] **Admin: score validation**
-  In `src/app/admin/page.tsx` — no bounds checking on score input (max is 300 per game in bowling), no duplicate check when adding players to a lineup, no confirmation before overwriting an existing result. Easy fixes that prevent bad data.
+### Live match signal
+`isLive = false` is hardcoded everywhere. A match being live is the single most important event in the app. Options:
+- Poll BITS for status changes every 60–90 seconds when a match is scheduled today
+- Or hook into match start/end events from admin panel (manual trigger, simpler)
+Without this, the "live" visual language (red pulse, "NU" label, LiveCard hero) is decoration.
 
-- [ ] **Lock or remove the /schema route**
-  `src/app/schema/page.tsx` is a 719-line debug page visible to anyone. If it exposes schema or raw query output, either delete it or put it behind an admin auth check.
+### Season average sparkline on player profile
+Bowlers track their average obsessively. A small SVG line of rolling 10-game average under the player's stat block would be the most-checked feature on the profile page. Pure client-side math from existing `MatchLog` data — no new queries needed.
 
-- [ ] **Link oil pattern to match detail**
-  `matches.oil_profile` is a free-text string but `/oljeprofiler` has full profiles with descriptions. On the match detail page, make the oil pattern name a clickable link to the matching profile. Low effort, adds real value.
-
----
-
-## 🟡 Polish — improves quality and maintainability
-
-- [ ] **Native frame-by-frame score entry in admin**
-  New feature. Extend the admin scoring panel to support entering individual frames (10 frames × 2 balls) per player, not just 4 game totals. This is the only path to shot-by-shot scorecards independent of scoring.se/Lanetalk/QubicaAMF (none of which have public APIs). Stores in a new `match_frames` table. Powers:
-  - Detailed scorecard view on `/matches/[id]`
-  - Automatic spare/strike detection and cumulative scoring
-  - Pins left standing data (optional, for analytics later)
-
-- [ ] **Split src/app/page.tsx into components**
-  1,954 lines in one file. Extract: `HonorRoll`, `StandingsSection`, `RecentResults`, `HeroMatchCard` as separate components. The fetch logic can stay in the page but the render blocks need to move out. Makes it possible to work on one section without touching the others.
-
-- [x] **Centralize shared helper functions**
-  Added `shortDiv`, `dateLabel`, `countdown`, `divTierColor` to `src/lib/utils.ts`. Removed local copies from 8 files: all 4 shared components (TopPerformers, SeasonTimeline, TeamTableWidget, NextMatchPreview), Widgets.tsx, league/page, admin/page, puls/page, teams/[id]/page. `shortName` was already exported from utils — now properly imported everywhere.
-
-- [x] **Share high game (Web Share API)**
-  `ScoreChip` in `matches/[id]/page.tsx` now shows a ↗ share button for any score ≥220. Tapping opens the native share sheet with player name, score, and match URL. Falls back to clipboard copy on desktop. No extra dependencies.
+### Duplicate route cleanup
+`/league` and `/divisioner` both show division standings. `/matches/[id]` and `/matcher/[id]` both show the same match. Decide which URL is canonical, redirect the other, remove the dead code.
 
 ---
 
-## 🟢 Nice to have — retention features
+## 🟠 Medium — improves quality and trust
 
-- [ ] **Season average trend chart**
-  On the player profile page, show a small line chart of rolling average over the last 10–20 games. Bowlers check this obsessively. A simple SVG sparkline is enough — no chart library needed.
+### Competition page (SM, GP, SLLM)
+`/tavlingar` exists but is thin. Each major competition should have a dedicated page:
+- Current bracket / round results
+- Historical winners
+- Link to all matches in that competition
 
-- [ ] **Push notifications for followed teams**
-  Users follow teams but never get notified when a match starts or ends. Needs: Web Push API + a service worker + a Supabase edge function trigger on match status change. Biggest retention lever, but highest effort.
+### Atlas map view — needs a clearer reference
+Foundation is built (pinch to enter, per-division SVG grids, color-coded by division identity). The visual result was not satisfying without a concrete wireframe to build toward. **Do not iterate** until there's a Stitch mockup or sketch showing exactly what "zoom out and see all divisions glowing" should look like. Park until then.
 
-- [ ] **Handicap display**
-  Swedish club bowling often uses handicap (based on average vs. a target, e.g. 200). Show calculated handicap on the player profile and in match lineups. Formula: `max(0, (200 - average) × 0.8)` for typical Swedish rules.
+### Venue page
+Tappable venue pill on match cards → `/venues/[id]` with address, map, Google Maps link, upcoming matches at this hall. Blocked by: `venue_id` not yet in `MatchPreviewPayload`. Wire that first.
 
-- [ ] **Browse results from past seasons**
-  No way to see results older than the current season. Add a season selector (2023/24, 2024/25, 2025/26) to the league standings and team history pages.
+### Push notifications
+Web Push API + service worker + Supabase edge function trigger on match status change. Biggest retention lever, highest effort. Needs live signal (above) to be meaningful.
+
+### Oil pattern → match link
+`/oljeprofiler` has full profiles. Match detail shows the pattern name as a string. Make it a `<Link>` to the matching profile. Low effort, adds real navigation depth.
 
 ---
 
-## Waiting / blocked
+## 🟡 Polish — things that matter but aren't blockers
 
-- [ ] **SBF API integration** — Email sent to api@swebowl.se, waiting for authorization.
-- [ ] **Lanetalk frame data integration** — No public API. Best path is a formal partnership email to support@lanetalk.com. Pitch: Bowlkollen + Lanetalk = live frame-by-frame scores for every Bowlit alley in Sweden.
-- [ ] **Remotion video clips** — Code exists, no API route or UI trigger yet. Revisit after core features are stable.
+### Handicap display
+Swedish club bowling uses handicap frequently. Formula: `max(0, (200 - average) × 0.8)`. Show on player profile and in match lineups. Data is available (we have averages).
+
+### Past season browser
+No way to see results older than current season. Add a season selector to `/league`, `/divisioner`, and team history. Needs `season_id` param passed through queries.
+
+### Player ranking
+"Where do I rank vs. other players in my division by average?" — a simple leaderboard within a division/club. No new data needed, just a query sorted by computed average.
+
+### Weekday header removal on Atlas heatmap
+The day-letter row (M T O T F L S) above each month makes the heatmap read as a calendar app rather than an activity map. User intention is to remove it. Left pending because it's a one-line change once decided.
+
+---
+
+## 🟢 Future / deferred
+
+### Auto-Story Engine
+Narrative event detection: upsets, 300 games, derbies, promotion battles. Full spec in `AUTO_STORY_ENGINE_SPEC.md`. Phase 1 SQL schema drafted. This is what eventually makes Atlas cells mean something more than raw match count. **Do not build before the story detection data exists.**
+
+### Frame-by-frame scoring
+Enter individual frames (10 frames × 2 balls) per player instead of just 4 game totals. Powers detailed scorecard view, automatic strike/spare detection, pins-left analytics. Requires new `match_frames` table and admin UI extension.
+
+### BK Rating
+Full "mot fältet" performance rating system. Spec in `BK_RATING_SPEC.md`. Deferred — needs stable player averages at scale first.
+
+### Remotion video clips
+Code exists, no API route or UI trigger. Revisit after core features are stable.
+
+### Multi-sport / international
+Phase 2+ (see `VISION.md`). Not now.
+
+---
+
+## Waiting / blocked externally
+
+- **SBF API** — Email sent to api@swebowl.se. Would replace manual BITS import with real-time sync.
+- **Lanetalk frame data** — No public API. Formal partnership pitch to support@lanetalk.com needed.

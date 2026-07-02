@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { useColors } from '@/components/ThemeProvider'
+import { COLOR, SPACE, RADIUS, TYPE } from '@/lib/brand'
 import { useTeamMatches, useTeamDivisionMatches } from '@/lib/queries'
 import { computeTeamNarrative } from '@/lib/team-narrative'
-import type { TableRow, FormResult, StandingsMatch } from '@/lib/types'
+import type { TableRow, FormResult } from '@/lib/types'
 
 type Props = { id: string }
 
@@ -29,7 +30,7 @@ function buildTable(
 }
 
 export default function TeamNarrativeBanner({ id }: Props) {
-  const { C, isDark } = useColors()
+  const { isDark } = useColors()
   const { data: teamMatches = [] } = useTeamMatches(id)
 
   const completed = (teamMatches as any[]).filter((m: any) => m.status === 'completed' && m.home_score !== null)
@@ -46,13 +47,13 @@ export default function TeamNarrativeBanner({ id }: Props) {
     return my > opp ? 'W' : my < opp ? 'L' : 'D'
   })
 
-  const totalTeams    = table.length
-  const totalMatches  = totalTeams > 1 ? (totalTeams - 1) * 2 : 0
+  const totalTeams   = table.length
+  const totalMatches = totalTeams > 1 ? (totalTeams - 1) * 2 : 0
   const playedMatches = completed.length
 
-  const lastMatch     = completed[0]
-  const nextMatch     = upcoming[0]
-  const lastResult    = lastMatch
+  const lastMatch  = completed[0]
+  const nextMatch  = upcoming[0]
+  const lastResult = lastMatch
     ? (lastMatch.home_team_id === id ? lastMatch.home_score > lastMatch.away_score : lastMatch.away_score > lastMatch.home_score) ? 'W'
     : (lastMatch.home_team_id === id ? lastMatch.home_score < lastMatch.away_score : lastMatch.away_score < lastMatch.home_score) ? 'L' : 'D'
     : null
@@ -66,28 +67,26 @@ export default function TeamNarrativeBanner({ id }: Props) {
 
   if (!narrative.headline) return null
 
+  // Narrative archetype colors — categorical (like division colors, not UI decoration)
   const accentMap: Record<string, string> = {
-    promotion_chase:   C.accent,
-    playoff_push:      C.accent,
-    dominant_form:     '#f97316',
-    comeback_run:      C.green,
-    relegation_battle: '#ef4444',
-    survival_confirmed: C.green,
-    rivalry_match:     '#a855f7',
+    promotion_chase:     COLOR.gold,
+    playoff_push:        COLOR.gold,
+    dominant_form:       '#f97316',
+    comeback_run:        COLOR.green,
+    relegation_battle:   COLOR.red,
+    survival_confirmed:  COLOR.green,
+    rivalry_match:       '#a855f7',
     revenge_opportunity: '#f97316',
   }
-  const color = accentMap[narrative.archetype] ?? C.accent
+  const color = accentMap[narrative.archetype] ?? COLOR.gold
 
   return (
-    <div
-      className="mx-4 mb-4 rounded-2xl px-4 py-3"
-      style={{ background: color + (isDark ? '12' : '10'), border: '1px solid ' + color + '30' }}
-    >
-      <div className="text-base font-black leading-tight" style={{ color: isDark ? '#fff' : '#111' }}>
+    <div style={{ margin: `0 ${SPACE[4]}px ${SPACE[4]}px`, borderRadius: RADIUS.lg, padding: `${SPACE[3]}px ${SPACE[4]}px`, background: color + (isDark ? '12' : '10'), border: `1px solid ${color}30` }}>
+      <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.35, color: COLOR.ink }}>
         {narrative.headline}
       </div>
       {narrative.subtext && (
-        <div className="mt-0.5 text-xs" style={{ color: C.muted }}>{narrative.subtext}</div>
+        <div style={{ marginTop: 2, fontSize: TYPE.caption, color: COLOR.ink3 }}>{narrative.subtext}</div>
       )}
     </div>
   )

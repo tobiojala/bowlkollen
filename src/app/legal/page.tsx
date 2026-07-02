@@ -127,6 +127,79 @@ export default function LegalPage() {
           </P>
         </Section>
 
+        <Section title="PERSONUPPGIFTER & COOKIES">
+          <P>
+            Personuppgiftsansvarig är <strong style={{ color: C.text }}>Tobias Ek-Ojala</strong>,
+            kontaktbar enligt avsnittet KONTAKT nedan.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Konto.</strong> Vid inloggning (via Google eller
+            engångslänk till din e-post) sparar Supabase din e-postadress och, vid inloggning
+            med Google, ditt namn och din profilbild. Detta används för att applikationen ska
+            fungera — visa vem du är inloggad som, komma ihåg din session. Vilka lag och
+            spelare du följer kopplas till ditt konto.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Spelarkoppling.</strong> Om du kopplar ditt konto
+            till en spelarprofil kan du frivilligt ange ditt licensnummer för att verifiera
+            kopplingen direkt. Numret jämförs mot bowlingregistret men sparas aldrig — vare sig
+            kopplingen lyckas eller inte. Vad som sparas är enbart att kopplingen gjorts och
+            dess status (väntande eller verifierad).
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Cookies innan inloggning.</strong> En anonym,
+            slumpgenererad enhets-identifierare (cookien <code>bk_anon_id</code>) kommer ihåg
+            vilken spelar- eller lagsida du senast besökt, enbart för att kunna föreslå vem du
+            vill följa direkt efter att du skapat konto. Den är inte kopplad till namn, e-post
+            eller annan personuppgift, sparas i högst 30 dagar och raderas automatiskt så snart
+            den använts vid kontoskapande.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Inbjudningslänkar.</strong> Under en period med
+            begränsad åtkomst används en cookie (<code>bk_invite</code>) för att komma ihåg att
+            du kommit in via en giltig inbjudningslänk. Om du skapar konto via en sådan länk
+            sparas vilken inbjudningskod du använde, kopplad till ditt konto, för att vi ska
+            kunna se vilka inbjudningar som lett till nya konton.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Nyhetsbrev.</strong> Anmäler du dig till
+            nyhetsbrevet på landningssidan sparas din e-postadress hos oss och hos Mailchimp,
+            vår leverantör för utskick. Detta är skilt från ett vanligt konto.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Felrapportering.</strong> Om vi har aktiverat
+            automatisk felrapportering (Sentry) loggas tekniska felmeddelanden för att vi ska
+            kunna åtgärda buggar. Vid ett fel kan en kort skärminspelning av det som hände i
+            appen just då sparas, enbart i felsökningssyfte.
+          </P>
+          <P>
+            <strong style={{ color: C.text }}>Speldata.</strong> Matchresultat, serier och
+            licensnummer för svenska bowlare kommer från Svenska Bowlingförbundets officiella
+            register (BITS) — Bowlkollen samlar inte in denna information självt, se avsnittet
+            DATA OCH ANSVARSFRISKRIVNING. Licensnumret visas aldrig i appen och används enbart
+            internt, bland annat för att avgöra om en spelarprofil tillhör en minderårig — i så
+            fall är profilen synlig men kan inte följas förrän den verifierats av spelaren
+            själv (vid myndighetsålder), vårdnadshavare eller lagledare.
+          </P>
+        </Section>
+
+        <Section title="DINA RÄTTIGHETER">
+          <P>
+            Enligt EU:s dataskyddsförordning (GDPR) har du rätt att få veta vilka
+            personuppgifter vi har om dig, få felaktiga uppgifter rättade, begära att dina
+            uppgifter raderas, och invända mot eller begränsa vår behandling av dem.
+          </P>
+          <P>
+            Det finns för närvarande ingen funktion i appen för att radera kontot själv —
+            kontakta oss så raderar vi ditt konto och tillhörande data. Vi besvarar alla
+            sådana förfrågningar utan onödigt dröjsmål.
+          </P>
+          <P>
+            Detta avsnitt beskriver vår nuvarande praxis och kan komma att uppdateras i takt
+            med att appen utvecklas.
+          </P>
+        </Section>
+
         <Section title="TILLÄMPLIG LAG">
           <P>
             Dessa villkor lyder under svensk rätt. Eventuella tvister ska avgöras av svensk

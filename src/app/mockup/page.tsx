@@ -55,6 +55,7 @@ export default function MockupPage() {
   const identity: ProfileIdentity = {
     name: 'Sara Holmberg', initials: 'SH', teamLabel: 'Örebro BK · Elitserien',
     followers: MOCK_FOLLOWERS.followers, following: MOCK_FOLLOWERS.following,
+    isJunior: false, isClaimed: true,
   }
 
   // Projected avg using default slider value (210) — used in feed row

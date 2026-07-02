@@ -3,20 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { shortName } from '@/lib/utils'
 import PlayerCard from '@/components/PlayerCard'
-import PlayerEditSheet from './PlayerEditSheet'
 import PlayerProfileView from './PlayerProfileView'
-import { buildProfileFromResults } from '@/lib/profile-adapter'
-import {
-  seasonResults, validGames, matchAvgs as matchAvgsOf,
-  calcRating, bkTopPercent,
-} from '@/lib/player-stats'
-import { usePlayer, usePlayerResults, useSession } from '@/lib/queries'
-import type { Player, MatchResult } from '@/lib/types'
+import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
+import { calcRating, bkTopPercent } from '@/lib/player-stats'
+import { usePlayerIdentity, usePlayerBitsResults, usePlayerPercentile, useSession } from '@/lib/queries'
+import { useTrackAnonView } from '@/lib/use-track-anon-view'
 import type { ProfileIdentity } from '@/lib/profile'
 import type { Achievement } from '@/app/mockup/_components/IdentitySection'
-import { QUERY } from '@/lib/constants'
+import { SEASON, QUERY } from '@/lib/constants'
 
 const BG  = '#0b0d10'
 const INK = '#f4f5f7'
@@ -24,44 +19,40 @@ const INK = '#f4f5f7'
 function mean(a: number[]) { return a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0 }
 
 export default function PlayerProfileClient({ id }: { id: string }) {
-  const { data: playerRaw, isLoading: playerLoading } = usePlayer(id)
-  const { data: resultsRaw = [] }                      = usePlayerResults(id)
-  const { data: session }                              = useSession()
+  const { data: identityRaw, isLoading: identityLoading } = usePlayerIdentity(id)
+  const { data: rowsRaw = [] }                             = usePlayerBitsResults(id)
+  const { data: realPct }                                  = usePlayerPercentile(id)
+  const { data: session }                                  = useSession()
 
-  const player  = playerRaw as Player | undefined
-  const results = resultsRaw as MatchResult[]
+  const player = identityRaw
 
-  const [team,        setTeam]        = useState<{ id: string; name: string } | null>(null)
+  // Pre-signup signal for onboarding suggestions — junior profiles excluded
+  // (public, but no social/tracking surfaces until claimed, per launch policy).
+  useTrackAnonView('player', player ? id : null, player?.isJunior === true)
+
   const [isOwner,     setIsOwner]     = useState(false)
-  const [editing,     setEditing]     = useState(false)
   const [cardOpen,    setCardOpen]    = useState(false)
   const [compareOpen, setCompareOpen] = useState(false)
   const [compareQuery,   setCompareQuery]   = useState('')
   const [compareResults, setCompareResults] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
-    if (!player) return
-    const supabase = createClient()
-    if (player.team_id) {
-      supabase.from('teams').select('id,name').eq('id', player.team_id).single()
-        .then(({ data }) => { if (data) setTeam(data) })
-    }
-    if (session) {
-      supabase.from('player_claims').select('id').eq('user_id', session.user.id).eq('player_id', id).single()
-        .then(({ data }) => setIsOwner(!!data))
-    }
-    // Re-run only when the resolved player or signed-in user changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player?.id, session?.user?.id])
+    if (!session) { setIsOwner(false); return }
+    createClient().from('player_claims').select('id').eq('user_id', session.user.id).eq('player_id', id).maybeSingle()
+      .then(({ data }) => setIsOwner(!!data))
+  }, [id, session?.user?.id])
 
   const searchPlayers = async (q: string) => {
     setCompareQuery(q)
     if (q.trim().length < QUERY.SEARCH_MIN_CHARS) { setCompareResults([]); return }
-    const { data } = await createClient().from('players').select('id,name').ilike('name', `%${q.trim()}%`).neq('id', id).limit(6)
-    setCompareResults(data || [])
+    const { data } = await createClient()
+      .from('bits_players').select('public_id,first_name,sur_name')
+      .or(`first_name.ilike.%${q.trim()}%,sur_name.ilike.%${q.trim()}%`)
+      .neq('public_id', id).limit(6)
+    setCompareResults((data ?? []).map(p => ({ id: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim() })))
   }
 
-  if (playerLoading) return null  // loading.tsx handles the skeleton
+  if (identityLoading) return null  // loading.tsx handles the skeleton
   if (!player) return (
     <main style={{ minHeight: '100vh', background: BG, color: 'rgba(244,245,247,0.5)',
       display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -69,72 +60,74 @@ export default function PlayerProfileClient({ id }: { id: string }) {
     </main>
   )
 
-  // ── Build canonical ProfileData from real results ──────────────────────────
-  const currResults = seasonResults(results, 'current')
-  const prevResults = seasonResults(results, 'prev')
-  const activeRes   = currResults.length > 0 ? currResults : results
+  // ── Build canonical ProfileData from real BITS results ─────────────────────
+  const currRows = rowsRaw.filter(r => r.matchDate >= SEASON.CURRENT)
+  const prevRows = rowsRaw.filter(r => r.matchDate >= SEASON.PREV && r.matchDate < SEASON.CURRENT)
+  const activeRows = currRows.length > 0 ? currRows : rowsRaw
 
-  const activeAvg     = mean(validGames(activeRes))
-  const prevGames     = validGames(prevResults)
+  const activeAvg     = mean(activeRows.flatMap(r => r.series.filter(g => g > 0)))
+  const prevGames     = prevRows.flatMap(r => r.series.filter(g => g > 0))
   const lastSeasonAvg = prevGames.length > 0 ? mean(prevGames) : Math.max(0, activeAvg - 5)
 
-  const data          = buildProfileFromResults(activeRes, player.team_id, { lastSeasonAvg })
-  const prevMatchAvgs = matchAvgsOf(prevResults)
+  const data          = buildProfileFromBitsRows(activeRows, { lastSeasonAvg })
+  const prevMatchAvgs = prevRows
+    .map(r => { const g = r.series.filter(s => s > 0); return g.length ? mean(g) : null })
+    .filter((v): v is number => v !== null)
 
+  // Real percentile from BITS' own licence_average distribution when
+  // available; falls back to the simulated curve otherwise (e.g. a player
+  // with no registered average yet).
   const rating   = calcRating(data.seasonAvg, data.bestSeries, data.over200, data.hasData)
-  const bkTopPct = Math.max(1, bkTopPercent(rating))   // never show "Top 0%"
+  const bkTopPct = realPct ?? Math.max(1, bkTopPercent(rating))
 
   const firstName = player.name.split(' ')[0]
   const initials  = player.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  const division  = results[0]?.matches?.division ?? ''
-  const teamLabel = team ? [shortName(team.name), division].filter(Boolean).join(' · ') : division
+  const latestDivision = rowsRaw[rowsRaw.length - 1]?.divisionName ?? ''
+  const teamLabel = [player.clubName, latestDivision].filter(Boolean).join(' · ')
 
   const identity: ProfileIdentity = {
     name: player.name, initials, teamLabel,
     followers: 0, following: 0,   // TODO: wire real follower counts
+    isJunior: player.isJunior, isClaimed: player.isClaimed,
   }
 
-  const achievements: Achievement[] = (player.achievements ?? []).map(a => ({
-    icon: 'Trophy', title: a, earned: true, near: false, color: '#f5c200',
-  }))
+  // Bio/avatar/achievements live in a separate editable-extras table once
+  // the claim flow grows that far — not built yet, so these stay empty for
+  // every player until then.
+  const achievements: Achievement[] = []
 
   return (
     <>
       <PlayerProfileView
+        playerId={id}
         data={data}
         identity={identity}
         bkTopPct={bkTopPct}
+        licenceAverage={player.licenceAverage ?? undefined}
         firstName={firstName}
         initials={initials}
         prevMatchAvgs={prevMatchAvgs.length > 1 ? prevMatchAvgs : undefined}
         achievements={achievements}
         isOwner={isOwner}
-        onEdit={() => setEditing(true)}
         onOpenCard={() => setCardOpen(true)}
         onOpenH2H={() => { setCompareOpen(true); setCompareQuery(''); setCompareResults([]) }}
       />
 
-      {/* ── Modals ── */}
-      {editing && (
-        <PlayerEditSheet
-          player={player}
-          onSave={() => { /* React Query refetches on next window focus */ }}
-          onClose={() => setEditing(false)}
-          isDark
-        />
-      )}
-
+      {/* ── Modals ──
+          No onEdit: bio/avatar/hand/style/ball_brand have no equivalent yet
+          for real BITS-sourced players (would need a new editable-extras
+          table keyed by public_id once claiming is built out further). */}
       {cardOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.7)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
           onClick={() => setCardOpen(false)}>
           <div onClick={e => e.stopPropagation()}>
             <PlayerCard
-              name={player.name} teamName={team?.name || ''} avatarUrl={player.avatar_url}
-              avg={data.seasonAvg} bestSeries={data.bestSeries} over200={data.over200} matches={results.length}
-              division={division} hand={player.hand}
-              style={player.style} ballBrand={player.ball_brand} bio={player.bio}
-              achievements={player.achievements || []} isDark isOwner={isOwner}
+              name={player.name} teamName={player.clubName || ''} avatarUrl={null}
+              avg={data.seasonAvg} bestSeries={data.bestSeries} over200={data.over200} matches={data.matches.length}
+              division={latestDivision} hand={null}
+              style={null} ballBrand={null} bio={null}
+              achievements={[]} isDark isOwner={isOwner}
               onClose={() => setCardOpen(false)}
             />
           </div>

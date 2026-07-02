@@ -2,187 +2,187 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-
-import type { Match, HonorEntry, TableRow, StandingsMatch } from './home/types'
-import { calcHomeStandings } from './home/helpers'
 import {
-  MOCK_LIVE, MOCK_UPCOMING, MOCK_RECENT, MOCK_HONOR,
-  MOCK_TABLES, MOCK_MY_PLAYER, DIVISION_ZONES,
-} from './home/demoData'
-import { useHomeMatches, useHonorRoll, useStandings, useSession } from '@/lib/queries'
-import { createClient } from '@/lib/supabase'
-
-import { HC } from './home/_components/tokens'
-import HomeHero       from './home/_components/HomeHero'
-import LiveCard       from './home/_components/LiveCard'
-import MatchRow       from './home/_components/MatchRow'
-import HonorList      from './home/_components/HonorList'
-import StandingsCard  from './home/_components/StandingsCard'
-import TournamentCard from './home/_components/TournamentCard'
-
-const DEMO = true
-
-const DAY_LABELS = [
-  'Söndag', 'Ny vecka, ny chans', 'Laddar inför helgen', 'Mitt i veckan',
-  'Nästan helg', 'Det händer snart', 'Helg',
-] as const
-
-type Div = 'Elitserien Herrar' | 'Elitserien Damer'
+  useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
+  useMyTeamId, useBitsMatchFeed, useBitsTopScores,
+} from '@/lib/queries'
+import HomeTabRow, { type FeedFilterType } from './home/_components/HomeTabRow'
+import { LiveAlertBanner } from './home/_components/LiveAlertBanner'
+import { MatcherTab } from './home/_components/MatcherTab'
+import { FeedSection } from './home/_components/FeedSection'
+import { OnboardingCard } from './home/_components/OnboardingCard'
+import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { divisionTier, TIER_RANK } from '@/lib/division-standings'
+import { getLiveCompetitions } from '@/lib/competitions'
+import type { Match, FeedPlayerResult, BitsMatchFeed } from '@/lib/types'
 
 export default function Home() {
-  // ── Data ──────────────────────────────────────────────────────────────────
-  const { data: session }                              = useSession()
-  const { data: matchData }                            = useHomeMatches()
-  const recentLiveRaw = (matchData?.recentLive ?? []) as unknown as Match[]
-  const liveReal      = recentLiveRaw.filter(m => m.status === 'live')
-  const recentReal    = recentLiveRaw.filter(m => m.status === 'completed')
-  const upcomingReal  = (matchData?.upcoming ?? []) as unknown as Match[]
-  const { data: honorRaw = [] }                                  = useHonorRoll(recentLiveRaw.map(m => m.id))
-  const { data: eliteMatches = [], isLoading: standingsLoading } = useStandings()
-
-  // ── UI state ──────────────────────────────────────────────────────────────
-  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
-  const [now, setNow]                 = useState(0)   // set on mount — keeps render pure + SSR-stable
-  const [tableDiv, setTableDiv]       = useState<Div>('Elitserien Herrar')
+  const [filter, setFilter] = useState<FeedFilterType>('allt')
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    // Client-only clock: seed real time on mount, then tick every second.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNow(Date.now())
-    const ticker = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(ticker)
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
-    if (!session) return
-    const supabase = createClient()
-    Promise.all([
-      supabase.from('favorites').select('team_id').eq('user_id', session.user.id).eq('type', 'team'),
-      supabase.from('club_claims').select('team_id').eq('user_id', session.user.id).single(),
-    ]).then(([{ data: favs }, { data: claim }]) => {
-      const ids = new Set<string>()
-      favs?.forEach((f: { team_id: string }) => ids.add(f.team_id))
-      const cid = (claim as { team_id?: string } | null)?.team_id
-      if (cid) ids.add(cid)
-      setFollowedIds(ids)
-    })
-    // Re-run only when the signed-in user changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id])
+  const { data: follows = [] }   = useFollows()
+  const { data: matchData }      = useHomeMatches()
+  const { data: myTeamId }       = useMyTeamId()
+  const { data: bitsData, isLoading: bitsLoading } = useBitsMatchFeed()
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const live     = DEMO ? MOCK_LIVE     : liveReal
-  const recent   = DEMO ? MOCK_RECENT   : recentReal
-  const upcoming = DEMO ? MOCK_UPCOMING : upcomingReal
-  const honor    = DEMO ? MOCK_HONOR    : (honorRaw as HonorEntry[])
-  const myPlayer = DEMO ? MOCK_MY_PLAYER : null
+  const playerIds = follows.filter(f => f.entity_type === 'player').map(f => f.entity_id)
+  const teamIds   = follows.filter(f => f.entity_type === 'team').map(f => f.entity_id)
 
-  const recentSorted   = [...recent].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6)
-  const upcomingSorted = [...upcoming].sort((a, b) => a.date.localeCompare(b.date))
-  const nextMatch      = upcomingSorted[0] ?? null
-  const upcomingList   = upcomingSorted.slice(0, 6)
+  const { data: feedItems = [], isLoading: feedLoading }   = usePersonalizedFeed(playerIds, teamIds)
+  const { data: feedEvents = [], isLoading: eventsLoading } = useHomeFeed(teamIds)
+  const { data: topScores = [] } = useBitsTopScores()
 
-  const tableRows: TableRow[] = DEMO
-    ? (MOCK_TABLES[tableDiv] ?? [])
-    : (standingsLoading ? [] : calcHomeStandings(eliteMatches as unknown as StandingsMatch[], tableDiv))
+  const playerResults = feedItems.filter((f): f is FeedPlayerResult => f.kind === 'player_result')
 
-  const today      = new Date(now).toISOString().slice(0, 10)
-  const isMatchDay = live.length > 0 || upcoming.some(m => m.date.startsWith(today))
-  const dayLine    = isMatchDay ? 'Matchdag' : DAY_LABELS[new Date(now).getDay()]
-  const firstName  = myPlayer?.name?.split(' ')[0]
-    ?? (session ? session.user.email?.split('@')[0] : undefined)
+  const allRecent = (matchData?.recentLive ?? []) as unknown as Match[]
+  const live      = allRecent.filter(m => m.status === 'live')
 
-  const scrollToLive = () => document.getElementById('live')?.scrollIntoView({ behavior: 'smooth' })
+  const tierRank = (div: string | null) => TIER_RANK[divisionTier(div ?? '')] ?? 0
+
+  // All divisions sorted by tier — used for followedMatches so Div 4/5 followers still see their teams
+  const bitsRecentAll   = [...(bitsData?.recent   ?? [])].sort((a, b) => tierRank(b.division_name) - tierRank(a.division_name))
+  const bitsUpcomingAll = [...(bitsData?.upcoming ?? [])].sort((a, b) => tierRank(b.division_name) - tierRank(a.division_name))
+
+  const isFollowedMatch = (m: BitsMatchFeed) =>
+    teamIds.includes(String(m.home_bits_team_id)) || teamIds.includes(String(m.away_bits_team_id))
+  const followedMatches = teamIds.length > 0
+    ? [...bitsRecentAll.filter(isFollowedMatch), ...bitsUpcomingAll.filter(isFollowedMatch)]
+    : []
+
+  // Cold-start feed: cap at Div 3, same scope as Atlas (Elitserien → Div 3)
+  const FEED_TIERS = new Set(['Elitserien', 'Allsvenskan', 'Mellanallsvenskan', 'Division 1', 'Division 2', 'Division 3'])
+  const isHighTier = (m: BitsMatchFeed) => FEED_TIERS.has(divisionTier(m.division_name ?? ''))
+  const bitsRecent   = bitsRecentAll.filter(isHighTier)
+  const bitsUpcoming = bitsUpcomingAll.filter(isHighTier)
+
+  const liveCompetitions = getLiveCompetitions()
+  const hasNoFollows     = follows.length === 0
+  const showFeed         = filter === 'allt' || filter === 'spelare' || filter === 'lag'
+  const feedIsLoading    = eventsLoading || feedLoading
+  const effectiveMyTeamId = feedEvents.length > 0 ? (myTeamId ?? null) : null
+
+  const hour     = new Date().getHours()
+  const greeting = hour < 5 ? 'God natt' : hour < 10 ? 'God morgon' : hour < 17 ? 'God dag' : 'God kväll'
 
   return (
-    <main style={{ minHeight: '100vh', background: HC.BG, color: HC.INK }}>
-      <style>{`
-        @keyframes count-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .hero-in { animation: count-in 0.3s cubic-bezier(0.25,0.46,0.45,0.94); }
-        @keyframes live-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.82); } }
-        .live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
-      `}</style>
+    <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, paddingBottom: 100 }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 100 }}>
+        {/* Greeting — scrolls away naturally with the rest of the page */}
+        <div style={{ padding: '12px 20px 4px' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLOR.ink, letterSpacing: '-0.02em', lineHeight: 1 }}>
+            {greeting}
+          </div>
+          <div style={{ fontSize: TYPE.label, color: COLOR.ink3, marginTop: SPACE[2] }}>
+            {new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' })}
+          </div>
+        </div>
 
-        {DEMO && (
-          <div style={{ padding: '5px 20px', background: 'rgba(245,194,0,0.07)',
-            borderBottom: '1px solid rgba(245,194,0,0.18)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 8, fontWeight: 900, color: HC.GOLD, letterSpacing: 1.5 }}>DEMO</span>
-            <span style={{ fontSize: 9, color: HC.INK3 }}>Mock-data aktiv · sätt DEMO = false för live</span>
+        {/* Filter squircles */}
+        <HomeTabRow active={filter} onChange={setFilter} />
+
+        {/* Live ticker — sits tight under the filter row */}
+        <LiveAlertBanner matches={live} competitions={liveCompetitions} />
+
+        {/* Matcher tab */}
+        {filter === 'matcher' && (
+          <MatcherTab
+            live={live}
+            bitsRecent={bitsRecent}
+            bitsUpcoming={bitsUpcoming}
+            isLoading={bitsLoading}
+          />
+        )}
+
+        {/* Prediktion tab */}
+        {filter === 'prediktion' && (
+          <div style={{ padding: `${SPACE[6]}px ${SPACE[4]}px` }}>
+            <div style={{
+              background: COLOR.surface, border: `1px solid ${COLOR.hairline}`,
+              borderRadius: RADIUS.lg, padding: SPACE[6], textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: COLOR.gold, marginBottom: SPACE[3] }}>
+                TIPSLIGAN
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: COLOR.ink, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+                Tippa matchresultat
+              </div>
+              <div style={{ fontSize: 13, color: COLOR.ink3, marginTop: SPACE[2], lineHeight: 1.5 }}>
+                Tävla om vem som har bäst känsla för bowlingen.
+              </div>
+              <Link href="/prediktion" style={{
+                display: 'block', marginTop: SPACE[4], padding: '12px 0',
+                background: COLOR.gold, color: COLOR.bg, borderRadius: RADIUS.md,
+                fontSize: 13, fontWeight: 700, textDecoration: 'none',
+              }}>
+                Till tipsidan →
+              </Link>
+            </div>
           </div>
         )}
 
-        {/* Greeting + hero */}
-        <HomeHero
-          now={now}
-          userName={firstName}
-          dayLine={dayLine}
-          liveCount={live.length}
-          nextMatch={nextMatch}
-          onTapLive={scrollToLive}
-        />
-
-        {/* Live matches */}
-        {live.length > 0 && (
-          <div id="live" style={{ padding: '12px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: HC.INK3, marginBottom: 12 }}>
-              PÅGÅR NU
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {live.map(m => <LiveCard key={m.id} m={m} />)}
-            </div>
-          </div>
+        {/* Feed (Allt / Spelare / Lag) */}
+        {showFeed && (
+          <FeedSection
+            filter={filter}
+            feedEvents={feedEvents}
+            playerResults={playerResults}
+            followedMatches={followedMatches}
+            bitsRecent={bitsRecent}
+            topScores={topScores}
+            myTeamId={effectiveMyTeamId}
+            isLoading={feedIsLoading}
+            teamIds={teamIds}
+            playerIds={playerIds}
+          />
         )}
 
-        {/* Honor roll */}
-        <HonorList honor={honor} />
+        {/* Onboarding — shown when not following anyone */}
+        {showFeed && !feedIsLoading && hasNoFollows && <OnboardingCard filter={filter} />}
 
-        {/* Standings */}
-        <StandingsCard
-          rows={tableRows}
-          div={tableDiv}
-          setDiv={setTableDiv}
-          zone={DIVISION_ZONES[tableDiv]}
-          followedIds={followedIds}
-        />
-
-        {/* Recent results */}
-        {recentSorted.length > 0 && (
-          <div style={{ padding: '32px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: HC.INK3, marginBottom: 12 }}>
-              SENASTE RESULTAT
-            </div>
-            {recentSorted.map(m => <MatchRow key={m.id} m={m} variant="recent" now={now} />)}
-          </div>
-        )}
-
-        {/* Upcoming */}
-        {upcomingList.length > 0 && (
-          <div style={{ padding: '32px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: HC.INK3, marginBottom: 12 }}>
-              KOMMANDE MATCHER
-            </div>
-            {upcomingList.map(m => <MatchRow key={m.id} m={m} variant="upcoming" now={now} />)}
-          </div>
-        )}
-
-        {/* Tournament teaser */}
-        <TournamentCard />
-
-        {/* Login nudge (unauthenticated, live data only) */}
-        {!session && !DEMO && (
-          <div style={{ margin: '32px 20px 0', borderRadius: 18, background: HC.SURFACE, padding: '24px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: HC.INK, marginBottom: 6 }}>Håll koll på ditt lag</div>
-            <div style={{ fontSize: 13, color: HC.INK3, marginBottom: 18 }}>Logga in för att följa lag och få personlig feed</div>
-            <Link href="/login" style={{ display: 'inline-block', padding: '10px 28px', background: HC.GOLD,
-              color: HC.BG, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-              Logga in →
+        {/* Discovery nudge when following — smaller */}
+        {showFeed && !feedIsLoading && !hasNoFollows && (
+          <div style={{ padding: `${SPACE[8]}px ${SPACE[4]}px ${SPACE[4]}px`, textAlign: 'center' }}>
+            <Link href="/discover" style={{ fontSize: TYPE.caption, fontWeight: 600, color: COLOR.ink3, textDecoration: 'none' }}>
+              Följ fler lag och spelare →
             </Link>
           </div>
         )}
 
       </div>
+
+      {/* Top blur — fades in on scroll */}
+      <div style={{
+        position: 'fixed', top: 0,
+        left: 'max(0px, calc(50vw - 300px))',
+        right: 'max(0px, calc(50vw - 300px))',
+        height: 80,
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
+        maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
+        background: 'linear-gradient(to bottom, rgba(14,17,22,0.6) 0%, transparent 100%)',
+        pointerEvents: 'none', zIndex: 8,
+        opacity: scrolled ? 1 : 0, transition: 'opacity 0.25s ease',
+      } as React.CSSProperties} />
+
+      {/* Bottom blur — always visible */}
+      <div style={{
+        position: 'fixed', bottom: 0,
+        left: 'max(0px, calc(50vw - 300px))',
+        right: 'max(0px, calc(50vw - 300px))',
+        height: 100,
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        WebkitMaskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
+        maskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
+        background: 'linear-gradient(to top, rgba(14,17,22,0.6) 0%, transparent 100%)',
+        pointerEvents: 'none', zIndex: 8,
+      } as React.CSSProperties} />
     </main>
   )
 }

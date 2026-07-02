@@ -17,6 +17,7 @@ import type {
   LineupAnnouncedPayload,
   TableRow,
 } from '@/lib/types'
+import type { TablesInsert } from '@/lib/database.types'
 
 // ── Internal types (queries only, not exported) ───────────────────────────────
 
@@ -124,7 +125,7 @@ export async function syncTeamEvents(teamId: string): Promise<void> {
       event_date:        match.date.slice(0, 10),
       match_id:          match.id,
       featured_player_id: topScorer?.player_id ?? null,
-      title:             matchResultTitle(result, opponent.name),
+      title:             matchResultTitle(result, opponent.name, myScore, oppScore, isHome),
       body:              matchResultBody(result, myScore, oppScore, isHome, topScorer),
       payload,
       captain_note:      null,
@@ -168,8 +169,8 @@ export async function syncTeamEvents(teamId: string): Promise<void> {
             event_date:        r.date,
             match_id:          r.matchId,
             featured_player_id: null,
-            title:             `${winStreak} raka vinster`,
-            body:              `Säsongens bästa streak hittills.`,
+            title:             winStreakTitle(winStreak),
+            body:              winStreak >= 5 ? `Laget hittar sin bästa form. Varje match bygger vidare på den förra.` : `Momentum är på vår sida — håller vi det rullande?`,
             payload,
             captain_note:      null,
             is_pinned:         false,
@@ -217,8 +218,8 @@ export async function syncTeamEvents(teamId: string): Promise<void> {
               event_date:        match.date.slice(0, 10),
               match_id:          match.id,
               featured_player_id: r.player_id,
-              title:             `${r.player?.name ?? 'Okänd'}: nytt karriärrekord`,
-              body:              `Slog ${highGame} — ${highGame - prev} pins bättre än förra bästa.`,
+              title:             personalBestTitle(r.player?.name ?? 'Okänd', highGame, highGame - prev),
+              body:              `${highGame - prev} pins bättre än tidigare bästa på ${prev}. Kvällen tillhörde ${r.player?.name ?? 'spelaren'}.`,
               payload,
               captain_note:      null,
               is_pinned:         false,
@@ -314,11 +315,12 @@ export async function syncTeamEvents(teamId: string): Promise<void> {
       const key = eventKey('form_rising', null, playerId, lastMatchDate)
       if (!existingSet.has(key)) {
         const payload: FormRisingPayload = {
-          player_id:  playerId,
+          player_id:   playerId,
           player_name: name,
           delta,
-          recent_avg: recentAvg,
-          season_avg: seasonAvg,
+          recent_avg:  recentAvg,
+          season_avg:  seasonAvg,
+          match_avgs:  avgs.slice(-8),
         }
         inserts.push({
           team_id:           teamId,
@@ -326,8 +328,8 @@ export async function syncTeamEvents(teamId: string): Promise<void> {
           event_date:        lastMatchDate,
           match_id:          null,
           featured_player_id: playerId,
-          title:             `${name} i toppform`,
-          body:              `+${delta} pins jämfört med säsongssnitt de senaste 3 matcherna.`,
+          title:             formRisingTitle(name, delta, recentAvg),
+          body:              `Snittade ${recentAvg} de senaste tre matcherna — ${delta} pins över sitt säsongssnitt på ${seasonAvg}.`,
           payload,
           captain_note:      null,
           is_pinned:         false,
@@ -585,11 +587,32 @@ type RawLineup = {
   lineup_slots: { user_id: string; player_name: string; bord: number; position: number; is_reserve: boolean }[]
 }
 
+function formRisingTitle(name: string, delta: number, recentAvg: number): string {
+  if (delta >= 15) return `${name} i karriärbästa form just nu`
+  if (delta >= 10) return `${name} klättrar — ${delta} pins över snitt`
+  return `Tre raka över snitt för ${name}`
+}
+
+function winStreakTitle(n: number): string {
+  if (n >= 10) return `${n} raka — en historisk svit`
+  if (n >= 7)  return `Sju matcher utan förlust`
+  if (n === 5) return `Fem i rad — laget rullar`
+  if (n === 3) return `Tre matcher, tre segrar`
+  return `${n} raka utan förlust`
+}
+
+function personalBestTitle(name: string, newBest: number, delta: number): string {
+  if (delta >= 20) return `${name} slår rekord med ${delta} pins`
+  if (delta >= 10) return `${newBest} pins — ${name} skriver om rekordboken`
+  return `${newBest} pins — ${name} kniper eget rekord`
+}
+
 function matchPreviewTitle(opponentName: string, dateStr: string, isHome: boolean): string {
   const d    = new Date(dateStr)
   const days = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag']
   const day  = days[d.getDay()]
-  return `${isHome ? 'Hemma' : 'Borta'} mot ${opponentName} på ${day}`
+  if (isHome) return `${opponentName} kliver in på hemmaplan på ${day}`
+  return `Bortamatch mot ${opponentName} på ${day}`
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -608,7 +631,7 @@ async function flush(
   inserts: PendingInsert[]
 ): Promise<void> {
   if (!inserts.length) return
-  await svc.from('team_events').insert(inserts)
+  await svc.from('team_events').insert(inserts as unknown as TablesInsert<'team_events'>[])
 }
 
 function outcomeOf(my: number | null, opp: number | null): 'W' | 'D' | 'L' | null {
@@ -634,10 +657,25 @@ function bestScorer(
   return best
 }
 
-function matchResultTitle(result: 'W' | 'D' | 'L', opponentName: string): string {
-  if (result === 'W') return `Seger mot ${opponentName}`
-  if (result === 'L') return `Förlust mot ${opponentName}`
-  return `Oavgjort mot ${opponentName}`
+function matchResultTitle(
+  result: 'W' | 'D' | 'L',
+  opponentName: string,
+  myScore: number,
+  oppScore: number,
+  isHome: boolean,
+): string {
+  const margin = Math.abs(myScore - oppScore)
+  if (result === 'W') {
+    if (margin >= 4) return isHome ? `Dominerade hemma mot ${opponentName}` : `Tog hem det borta mot ${opponentName}`
+    if (margin >= 2) return `Stark insats — ${opponentName} stoppades`
+    return isHome ? `Höll undan hemma mot ${opponentName}` : `Kammade hem poängen borta mot ${opponentName}`
+  }
+  if (result === 'L') {
+    if (margin >= 4) return `${opponentName} var för starka ikväll`
+    if (margin >= 2) return isHome ? `${opponentName} vann på vår plan` : `Gick inte vägen borta mot ${opponentName}`
+    return `Millimetern skilde mot ${opponentName}`
+  }
+  return `Delade poängen med ${opponentName}`
 }
 
 function matchResultBody(
@@ -647,14 +685,21 @@ function matchResultBody(
   isHome: boolean,
   topScorer: { player_id: string; name: string; high: number } | null
 ): string {
-  const venue    = isHome ? 'hemma' : 'borta'
-  const scorePart = result === 'W'
-    ? `Vann med ${myScore}–${oppScore} ${venue}.`
-    : result === 'L'
-    ? `Förlorade med ${myScore}–${oppScore} ${venue}.`
-    : `Oavgjort ${myScore}–${oppScore} ${venue}.`
-  const heroStr = topScorer ? ` ${topScorer.name} toppade med ${topScorer.high}.` : ''
-  return scorePart + heroStr
+  const venue = isHome ? 'hemma' : 'borta'
+  const hero  = topScorer ? `${topScorer.name} toppade med ${topScorer.high} pins.` : null
+  if (result === 'W') {
+    const base = `Tre poäng ${venue} med ${myScore}–${oppScore}.`
+    return hero ? `${base} ${hero}` : base
+  }
+  if (result === 'L') {
+    const base = hero
+      ? `${hero} Räckte inte mot ${topScorer ? '' : ''}${myScore}–${oppScore} ${venue}.`
+      : `Svårt ${venue}möte — föll ${myScore}–${oppScore}.`
+    return base
+  }
+  return hero
+    ? `Oavgjort ${myScore}–${oppScore} ${venue}. ${hero}`
+    : `Delade poängen ${myScore}–${oppScore} ${venue}.`
 }
 
 function milestoneOrdinal(n: number): string {

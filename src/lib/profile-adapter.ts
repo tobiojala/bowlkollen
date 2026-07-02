@@ -6,7 +6,7 @@
 // off to buildProfileData() for the stat math. W/L, opponent and home/away are
 // derived the same way the old PlayerMatchLog did, so nothing drifts.
 
-import type { MatchResult } from '@/lib/types'
+import type { MatchResult, BitsPlayerMatchRow } from '@/lib/types'
 import { buildProfileData, type ProfileData, type ProfileMatch } from '@/lib/profile'
 
 /** Swedish short display date, e.g. "14 sep". */
@@ -62,4 +62,38 @@ export function buildProfileFromResults(
   opts: { lastSeasonAvg?: number } = {},
 ): ProfileData {
   return buildProfileData(resultsToProfileMatches(results, teamId), opts)
+}
+
+/**
+ * Map real BITS match-history rows (get_player_match_history()) to
+ * ProfileMatch[], oldest first. Result is "W 6–2" style from board points
+ * (homePoints/awayPoints), matching resultsToProfileMatches()'s convention —
+ * not the raw pin total.
+ */
+export function bitsRowsToProfileMatches(rows: BitsPlayerMatchRow[]): ProfileMatch[] {
+  return rows
+    .map(r => {
+      const games = r.series.filter(g => g > 0)
+      const hp = r.homePoints, ap = r.awayPoints
+      let result = ''
+      if (hp != null && ap != null) {
+        const mine   = r.isHomeTeam ? hp : ap
+        const theirs = r.isHomeTeam ? ap : hp
+        const letter = mine === theirs ? 'D' : mine > theirs ? 'W' : 'L'
+        result = `${letter} ${mine}–${theirs}`
+      }
+      const pm: ProfileMatch = { date: displayDate(r.matchDate), opp: r.opponentName, result, games, home: r.isHomeTeam }
+      return { iso: r.matchDate, pm }
+    })
+    .filter(x => x.pm.games.length > 0)
+    .sort((a, b) => a.iso.localeCompare(b.iso))
+    .map(x => x.pm)
+}
+
+/** Build canonical ProfileData straight from real BITS match-history rows. */
+export function buildProfileFromBitsRows(
+  rows: BitsPlayerMatchRow[],
+  opts: { lastSeasonAvg?: number } = {},
+): ProfileData {
+  return buildProfileData(bitsRowsToProfileMatches(rows), opts)
 }

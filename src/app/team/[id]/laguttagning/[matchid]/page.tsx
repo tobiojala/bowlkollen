@@ -197,7 +197,7 @@ export default function LaguttagningPage({ params }: Props) {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = '/login'; return }
       const { data: membership } = await supabase.from('team_members').select('role,status').eq('team_id', teamId).eq('user_id', session.user.id).single()
-      if (!membership || membership.status !== 'active' || !['captain','admin'].includes(membership.role)) { window.location.href = '/team/' + teamId + '/intern'; return }
+      if (!membership || membership.status !== 'active' || !membership.role || !['captain','admin'].includes(membership.role)) { window.location.href = '/team/' + teamId + '/intern'; return }
       const { data: m } = await supabase.from('matches').select('*, home:teams!home_team_id(id,name), away:teams!away_team_id(id,name)').eq('id', matchId).single()
       if (m) setMatch(m)
       const { data: teamPlayers } = await supabase.from('players').select('id, name, team_id, teams:team_id(name)').eq('team_id', teamId).order('name')

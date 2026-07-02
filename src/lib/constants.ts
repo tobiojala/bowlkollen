@@ -6,12 +6,14 @@ export const APP_LOCALE      = 'sv-SE'
 // ── Scoring thresholds ────────────────────────────────────────────────────────
 // A single place to change what counts as a "good", "great", or "perfect" game.
 export const SCORE = {
-  HONOR_ROLL:  220,   // minimum single-game score for honor roll
-  GOOD:        200,   // green highlight (a positive game)
-  GREAT:       220,   // share-worthy game
-  ELITE:       250,   // gold milestone highlight
-  PERFECT:     300,   // perfect game — 12 strikes in a serie (Blåboken Kap C, §C 1)
-  MIN:           0,   // lowest possible game score
+  HONOR_ROLL:   220,   // minimum single-game score for honor roll
+  GOOD:         200,   // green highlight (a positive game)
+  GREAT:        220,   // share-worthy game
+  ELITE:        250,   // gold milestone highlight
+  PERFECT:      300,   // perfect game — 12 strikes in a serie (Blåboken Kap C, §C 1)
+  MIN:            0,   // lowest possible game score
+  SERIES_HIGH:   840,  // 4-serie match averaging 210/game — gold highlight in feed
+  SERIES_STRONG: 720,  // 4-serie match averaging 180/game — green highlight in feed
 } as const
 
 // A bowling serie (game) is ten frames (Blåboken Kap C, §C 1)
@@ -99,6 +101,16 @@ export const PROTECTED_PATHS = [
   '/profile',
   '/admin',
   '/team',      // covers /team/[id]/intern, /team/[id]/laguttagning, etc.
+] as const
+
+// ── Soft-launch invite gate — reachable without an invite link or session ────
+export const GATE_EXEMPT_PATHS = [
+  '/landing',
+  '/legal',
+  '/login',
+  '/reset-password',
+  '/invite',
+  '/api',
 ] as const
 
 // ── Auto-Story Engine ─────────────────────────────────────────────────────────

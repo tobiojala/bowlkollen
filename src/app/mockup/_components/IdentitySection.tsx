@@ -29,6 +29,8 @@ interface IdentitySectionProps {
   data: ProfileData
   identity: ProfileIdentity
   bkTopPct: number
+  /** Official BITS licence average — primary hero display. Falls back to computed seasonAvg. */
+  licenceAverage?: number
   /** Live BK Rating, or null for the "kommer snart" launch state. */
   bkRating: number | null
   level?: { level: number } | null
@@ -48,7 +50,7 @@ interface IdentitySectionProps {
 }
 
 export default function IdentitySection({
-  data, identity, bkTopPct, bkRating, level, achievements = [],
+  data, identity, bkTopPct, licenceAverage, bkRating, level, achievements = [],
   bkProgress, rankingPts, isOwner = false,
   onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare,
 }: IdentitySectionProps) {
@@ -56,7 +58,10 @@ export default function IdentitySection({
   const [activeHero, setActiveHero] = useState(0)
   const heroRowRef = useRef<HTMLDivElement>(null)
 
-  const { matchAvgs, seasonAvg, formDiff, recentAvg, lastSeasonAvg, projSeasonAvg, projDiff, matches } = data
+  const { matchAvgs, seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, projDiff, matches } = data
+  // Hero snitt = official BITS licence_average; fall back to our computed seasonAvg.
+  const heroSnitt   = licenceAverage ?? seasonAvg
+  const heroFormDiff = recentAvg - heroSnitt
   const firstDate = matches[0]?.date ?? ''
   const lastDate  = matches[matches.length - 1]?.date ?? ''
 
@@ -68,7 +73,7 @@ export default function IdentitySection({
 
   const heroCards: HeroCard[] = [
     {
-      key: 'snitt', label: 'Säsongssnitt', value: seasonAvg, delta: formDiff, deltaSuffix: ' form',
+      key: 'snitt', label: 'BITS-snitt', value: heroSnitt, delta: heroFormDiff, deltaSuffix: ' form',
       caption: bkRating !== null
         ? <>Top {bkTopPct}% i ligan · BK Rating <span style={{ color: INK, fontWeight: 700 }}>{bkRating}</span></>
         : <>Top {bkTopPct}% i ligan</>,

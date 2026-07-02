@@ -12,6 +12,10 @@ import { useMatch, useMatchLineup, useMatchResults, keys } from '@/lib/queries'
 import { SCORE } from '@/lib/constants'
 import type { Lineup, MatchResult } from '@/lib/types'
 import MatchHero from './MatchHero'
+import Reveal from '@/components/Reveal'
+import PredictionBlock from './PredictionBlock'
+import { Surface, SectionHeader } from '@/components/ui/primitives'
+import { Trophy } from 'lucide-react'
 
 type MatchRow = {
   id: string; date: string; status: string; division: string
@@ -135,8 +139,11 @@ export default function MatchClient({ id }: { id: string }) {
   }, [match?.home_team_id, match?.away_team_id])
 
   if (matchLoading) return (
-    <main style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: C.muted }}>Laddar...</div>
+    <main style={{ minHeight: '100vh', background: C.bg, padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {[60, 100, 40, 80].map((w, i) => (
+        <div key={i} style={{ height: 12, width: `${w}%`, borderRadius: 8, background: 'rgba(244,245,247,0.06)', animation: `pulse 1.4s ${i * 0.15}s infinite alternate ease-in-out` }} />
+      ))}
+      <style>{`@keyframes pulse { from { opacity: 0.3 } to { opacity: 0.85 } }`}</style>
     </main>
   )
   if (!match) return (
@@ -147,8 +154,6 @@ export default function MatchClient({ id }: { id: string }) {
 
   const home = match.home, away = match.away
   const homeTotal = match.home_score, awayTotal = match.away_score
-  const homeWin = (homeTotal ?? 0) > (awayTotal ?? 0)
-  const awayWin = (awayTotal ?? 0) > (homeTotal ?? 0)
   const hasScore = homeTotal !== null && awayTotal !== null
   const isLive = match.status === 'live'
   const isUpcoming = match.status === 'upcoming'
@@ -184,12 +189,11 @@ export default function MatchClient({ id }: { id: string }) {
   const cdSeconds = msLeft !== null ? Math.floor((msLeft % 60_000) / 1_000) : null
 
   const border  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
-  const cardBg  = isDark ? 'rgba(255,255,255,0.03)' : '#ffffff'
   const divider = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const matchLabel = `${shortName(home?.name||'')} vs ${shortName(away?.name||'')}`
 
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui,sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
       <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 80 }}>
 
         <MatchHero
@@ -200,6 +204,22 @@ export default function MatchClient({ id }: { id: string }) {
           division={match.division} round={match.round}
           date={match.date} venue={match.venue}
         />
+
+        {/* Prediction — show for upcoming (voteable) and completed (show result) */}
+        {(isUpcoming || hasScore) && !isLive && (
+          <Reveal direction="up" distance={10} delay={0.05}>
+            <div style={{ paddingTop: 14 }}>
+              <PredictionBlock
+                matchId={match.id}
+                homeTeam={home}
+                awayTeam={away}
+                status={match.status as 'upcoming' | 'live' | 'completed'}
+                homeScore={homeTotal}
+                awayScore={awayTotal}
+              />
+            </div>
+          </Reveal>
+        )}
 
         {match.oil_profile && (
           <div style={{ padding: '10px 16px', borderBottom: `1px solid ${border}` }}>
@@ -282,7 +302,7 @@ export default function MatchClient({ id }: { id: string }) {
             </div>
 
             <div style={{ padding: '4px 12px 8px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[1,2,3,4].map(bord => {
+              {[1,2,3,4].map((bord, bi) => {
                 const homeP = [1,2].map(pos => ({ player: lineup.find(l => l.team_id === match.home_team_id && l.bord === bord && l.position === pos), score: getScore(match.home_team_id, bord, pos) }))
                 const awayP = [1,2].map(pos => ({ player: lineup.find(l => l.team_id === match.away_team_id && l.bord === bord && l.position === pos), score: getScore(match.away_team_id, bord, pos) }))
                 if (!homeP.some(p => p.player) && !awayP.some(p => p.player)) return null
@@ -291,17 +311,17 @@ export default function MatchClient({ id }: { id: string }) {
                 const homeWinsHere = homeSubtotal > 0 && homeSubtotal > awaySubtotal
                 const awayWinsHere = awaySubtotal > 0 && awaySubtotal > homeSubtotal
                 return (
-                  <div key={bord} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${border}` }}>
-                      <span className="section-label" style={{ color: C.muted }}>Banpar {bord}</span>
-                      {homeSubtotal > 0 && (
+                  <Reveal key={bord} direction="up" distance={12} delay={bi * 0.06}>
+                  <Surface level={1} className="overflow-hidden">
+                    <Surface level={2} className="px-3.5 py-2">
+                      <SectionHeader label={`Banpar ${bord}`} right={homeSubtotal > 0 ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span className="num" style={{ fontSize: 16, color: homeWinsHere ? C.accent : (isDark ? '#e8edf5' : '#1a2535') }}>{homeSubtotal}</span>
                           <span style={{ fontSize: 10, color: C.muted }}>–</span>
                           <span className="num" style={{ fontSize: 16, color: awayWinsHere ? C.accent : (isDark ? '#e8edf5' : '#1a2535') }}>{awaySubtotal}</span>
                         </div>
-                      )}
-                    </div>
+                      ) : undefined} />
+                    </Surface>
                     {[0,1].map(posIdx => {
                       const hp = homeP[posIdx], ap = awayP[posIdx]
                       const hWins = hp.score > 0 && ap.score > 0 && hp.score > ap.score
@@ -330,7 +350,8 @@ export default function MatchClient({ id }: { id: string }) {
                         </div>
                       )
                     })}
-                  </div>
+                  </Surface>
+                  </Reveal>
                 )
               })}
             </div>
@@ -339,12 +360,15 @@ export default function MatchClient({ id }: { id: string }) {
 
         {/* Best player achievement card */}
         {bestPlayer && bestPlayer.total > 0 && (
+          <Reveal direction="up" distance={12} delay={0.1}>
           <div style={{ margin: '0 12px 16px', background: isDark ? 'rgba(245,194,0,0.06)' : 'rgba(245,194,0,0.05)', border: '1px solid rgba(245,194,0,0.22)', borderRadius: 16, overflow: 'hidden' }}>
             <div style={{ padding: '8px 14px', borderBottom: '1px solid rgba(245,194,0,0.14)' }}>
               <span className="section-label" style={{ color: '#c8a830' }}>Bästa spelare</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: 'rgba(245,194,0,0.12)', border: '1.5px solid rgba(245,194,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏆</div>
+              <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: 'rgba(245,194,0,0.12)', border: '1.5px solid rgba(245,194,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Trophy size={22} color="#f5c200" />
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 {playerIds[bestPlayer.player_name] ? (
                   <Link href={`/players/${playerIds[bestPlayer.player_name]}`} style={{ fontSize: 15, fontWeight: 700, color: '#f5c200', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -363,15 +387,16 @@ export default function MatchClient({ id }: { id: string }) {
               </div>
             </div>
           </div>
+          </Reveal>
         )}
 
         {/* Upcoming: countdown + H2H */}
         {!hasLineup && isUpcoming && (
           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden' }}>
-              <div style={{ padding: '8px 14px', background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${border}` }}>
-                <span className="section-label" style={{ color: C.muted }}>{msLeft === 0 ? 'Matchen börjar snart' : 'Matchen börjar om'}</span>
-              </div>
+            <Surface level={1} className="overflow-hidden">
+              <Surface level={2} className="px-3.5 py-2">
+                <SectionHeader label={msLeft === 0 ? 'Matchen börjar snart' : 'Matchen börjar om'} />
+              </Surface>
               <div style={{ padding: '28px 20px', textAlign: 'center' }}>
                 {msLeft !== null && msLeft > 0 ? (
                   cdDays! > 0 ? (
@@ -400,13 +425,13 @@ export default function MatchClient({ id }: { id: string }) {
                   <div style={{ fontSize: 14, fontWeight: 500, color: C.muted }}>Lineup visas när matchen börjar</div>
                 )}
               </div>
-            </div>
+            </Surface>
 
             {h2h.length > 0 && (
-              <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden' }}>
-                <div style={{ padding: '8px 14px', background: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)', borderBottom: `1px solid ${border}` }}>
-                  <span className="section-label" style={{ color: C.muted }}>Tidigare möten</span>
-                </div>
+              <Surface level={1} className="overflow-hidden">
+                <Surface level={2} className="px-3.5 py-2">
+                  <SectionHeader label="Tidigare möten" />
+                </Surface>
                 {h2h.map((hm, i) => {
                   const hmHScore = hm.home_score ?? 0, hmAScore = hm.away_score ?? 0
                   const hmHWin = hmHScore > hmAScore, hmAWin = hmAScore > hmHScore
@@ -426,7 +451,7 @@ export default function MatchClient({ id }: { id: string }) {
                     </Link>
                   )
                 })}
-              </div>
+              </Surface>
             )}
           </div>
         )}

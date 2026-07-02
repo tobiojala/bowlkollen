@@ -1,24 +1,21 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useColors } from '@/components/ThemeProvider'
-import { teamColor } from '@/lib/utils'
+import { COLOR } from '@/lib/brand'
 
 const BASE_SECTIONS = [
-  { id: 'team-overview',   label: 'Säsong'    },
-  { id: 'team-squad',      label: 'Trupp'     },
-  { id: 'team-matches',    label: 'Matcher'   },
-  { id: 'team-community',  label: 'Community' },
-  { id: 'team-sponsors',   label: 'Sponsorer' },
+  { id: 'team-overview',  label: 'Säsong'    },
+  { id: 'team-squad',     label: 'Trupp'     },
+  { id: 'team-matches',   label: 'Matcher'   },
+  { id: 'team-community', label: 'Community' },
+  { id: 'team-sponsors',  label: 'Sponsorer' },
 ]
 
 type Props = { teamName: string; showSponsors: boolean }
 
-export default function TeamSectionNav({ teamName, showSponsors }: Props) {
+export default function TeamSectionNav({ showSponsors }: Props) {
   const sections = showSponsors ? BASE_SECTIONS : BASE_SECTIONS.slice(0, 4)
-  const { C, isDark } = useColors()
   const [active, setActive] = useState<string>('team-overview')
-  const tc = teamColor(teamName, isDark)
 
   useEffect(() => {
     const observers = sections.map(s => {
@@ -41,10 +38,10 @@ export default function TeamSectionNav({ teamName, showSponsors }: Props) {
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 50,
-      background: isDark ? 'rgba(8,12,20,0.92)' : 'rgba(252,252,254,0.92)',
+      background: 'rgba(14,17,22,0.92)',
       backdropFilter: 'blur(14px)',
       WebkitBackdropFilter: 'blur(14px)',
-      borderBottom: '1px solid ' + C.border,
+      borderBottom: `1px solid ${COLOR.hairline}`,
       display: 'flex',
     } as React.CSSProperties}>
       {sections.map(s => {
@@ -57,12 +54,12 @@ export default function TeamSectionNav({ teamName, showSponsors }: Props) {
               flex: 1,
               padding: '13px 4px',
               border: 'none',
-              borderBottom: '2.5px solid ' + (isActive ? tc.border : 'transparent'),
+              borderBottom: `2.5px solid ${isActive ? COLOR.gold : 'transparent'}`,
               background: 'transparent',
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: isActive ? 700 : 500,
-              color: isActive ? tc.text : C.muted,
+              color: isActive ? COLOR.gold : COLOR.ink3,
               WebkitTapHighlightColor: 'transparent',
               transition: 'color 0.15s, border-color 0.15s',
             } as React.CSSProperties}

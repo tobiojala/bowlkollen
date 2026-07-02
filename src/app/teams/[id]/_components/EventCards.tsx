@@ -3,82 +3,47 @@
 import React, { useState } from 'react'
 import {
   Flame, Trophy, TrendingUp, Star, MessageSquare,
-  Calendar, ArrowUp, Users, UserCheck,
+  Calendar, ArrowUp, Users, UserCheck, Zap,
 } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
 import { createClient } from '@/lib/supabase'
 import { usePredictions } from '@/lib/queries'
+import { FeedActions } from '@/components/FeedActions'
+import { COLOR, SPACE, RADIUS, TYPE, FONT } from '@/lib/brand'
 import type {
   TeamEvent, MatchResultPayload, StreakPayload, PersonalBestPayload,
   PlayerMilestonePayload, FormRisingPayload, MatchPreviewPayload,
   DivisionClimbedPayload, LineupAnnouncedPayload,
 } from '@/lib/types'
 
-type CC = ReturnType<typeof useColors>['C']
+// ── Label + value helpers ─────────────────────────────────────────────────────
 
-// ── Reaction bar ──────────────────────────────────────────────────────────────
-
-const REACTIONS = [
-  { key: 'fire',  emoji: '🔥' },
-  { key: 'heart', emoji: '❤️' },
-  { key: 'clap',  emoji: '👏' },
-  { key: 'sad',   emoji: '😢' },
-] as const
-
-type ReactionKey = typeof REACTIONS[number]['key']
-
-export function ReactionBar({ event, userId, C }: {
-  event: TeamEvent
-  userId: string | null
-  C: CC
-}) {
-  const counts = { fire: 0, heart: 0, clap: 0, sad: 0 } as Record<ReactionKey, number>
-  event.reactions?.forEach(r => { if (r.reaction in counts) counts[r.reaction as ReactionKey]++ })
-  const mine = event.reactions?.find(r => r.user_id === userId)?.reaction as ReactionKey | undefined
-
-  const react = async (key: ReactionKey) => {
-    if (!userId) return
-    const supabase = createClient()
-    if (mine === key) {
-      await supabase.from('team_event_reactions').delete()
-        .eq('event_id', event.id).eq('user_id', userId)
-    } else if (mine) {
-      await supabase.from('team_event_reactions').update({ reaction: key })
-        .eq('event_id', event.id).eq('user_id', userId)
-    } else {
-      await supabase.from('team_event_reactions').insert({ event_id: event.id, user_id: userId, reaction: key })
-    }
-  }
-
+function EventLabel({ text, color }: { text: string; color: string }) {
   return (
-    <div className="mt-2 flex gap-2">
-      {REACTIONS.map(({ key, emoji }) => (
-        <button
-          key={key}
-          onClick={() => react(key)}
-          className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-all"
-          style={{
-            background: mine === key ? C.accent + '25' : C.bg,
-            border: '1px solid ' + (mine === key ? C.accent + '50' : C.border),
-            color: mine === key ? C.accent : C.muted,
-            cursor: userId ? 'pointer' : 'default',
-          }}
-        >
-          <span>{emoji}</span>
-          {counts[key] > 0 && <span>{counts[key]}</span>}
-        </button>
-      ))}
+    <div style={{ fontSize: TYPE.label, fontWeight: 700, letterSpacing: '0.04em', color, marginBottom: SPACE[1] }}>
+      {text}
+    </div>
+  )
+}
+
+function IconBadge({ children, color }: { children: React.ReactNode; color: string }) {
+  return (
+    <div style={{
+      width: 40, height: 40, borderRadius: RADIUS.md, flexShrink: 0,
+      background: color + '18', border: `1px solid ${color}30`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {children}
     </div>
   )
 }
 
 // ── Hero tap (admin only, on match_result) ────────────────────────────────────
 
-export function HeroTap({ event, teamId, onHeroSet, C }: {
+export function HeroTap({ event, teamId, onHeroSet }: {
   event: TeamEvent
   teamId: string
   onHeroSet: (eventId: string, playerId: string, playerName: string) => void
-  C: CC
 }) {
   const [open,    setOpen]    = useState(false)
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([])
@@ -95,10 +60,9 @@ export function HeroTap({ event, teamId, onHeroSet, C }: {
       .select('player_id, player:players!player_id(id, name)')
       .eq('match_id', event.match_id!)
       .eq('team_id', teamId)
-    const list = (data ?? []).map((r: any) => {
-      const p = Array.isArray(r.player) ? r.player[0] : r.player
-      return { id: p?.id ?? r.player_id, name: p?.name ?? 'Okänd' }
-    }).filter(p => p.name !== 'Okänd')
+    const list = (data ?? []).map((r: { player_id: string | null; player: { id: string; name: string } | null }) => {
+      return { id: r.player?.id ?? r.player_id ?? '', name: r.player?.name ?? 'Okänd' }
+    }).filter(p => p.name !== 'Okänd' && p.id !== '')
     setPlayers(list)
     setLoading(false)
     setOpen(true)
@@ -106,38 +70,33 @@ export function HeroTap({ event, teamId, onHeroSet, C }: {
 
   const pick = async (p: { id: string; name: string }) => {
     setSaving(true)
-    await createClient()
-      .from('team_events')
-      .update({ featured_player_id: p.id })
-      .eq('id', event.id)
+    await createClient().from('team_events').update({ featured_player_id: p.id }).eq('id', event.id)
     onHeroSet(event.id, p.id, p.name)
     setSaving(false)
     setOpen(false)
   }
 
   return (
-    <div className="mt-2">
+    <div style={{ marginTop: SPACE[2] }}>
       <button
         onClick={openPicker}
-        className="flex items-center gap-1.5 text-xs font-semibold"
-        style={{ color: C.accent }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: TYPE.label, fontWeight: 700, color: COLOR.gold, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
-        <UserCheck className="h-3.5 w-3.5" />
+        <UserCheck size={14} />
         {current ? `Hjälte: ${current}` : 'Utse matchhjälte'}
       </button>
       {open && (
-        <div className="mt-2 rounded-xl p-2" style={{ background: C.bg, border: '1px solid ' + C.border }}>
+        <div style={{ marginTop: SPACE[2], borderRadius: RADIUS.md, padding: SPACE[2], background: COLOR.bg, border: `1px solid ${COLOR.hairline}` }}>
           {loading ? (
-            <div className="py-2 text-center text-xs" style={{ color: C.muted }}>Laddar...</div>
+            <div style={{ padding: `${SPACE[2]}px 0`, textAlign: 'center', fontSize: TYPE.caption, color: COLOR.ink3 }}>Laddar...</div>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[2] }}>
               {players.map(p => (
                 <button
                   key={p.id}
                   onClick={() => pick(p)}
                   disabled={saving}
-                  className="rounded-lg px-3 py-1.5 text-xs font-semibold"
-                  style={{ background: C.card, border: '1px solid ' + C.border, color: C.text, cursor: 'pointer' }}
+                  style={{ borderRadius: RADIUS.sm, padding: `${SPACE[1]}px ${SPACE[3]}px`, fontSize: TYPE.label, fontWeight: 600, background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, color: COLOR.ink, cursor: 'pointer' }}
                 >
                   {p.name.split(' ')[0]}
                 </button>
@@ -152,99 +111,93 @@ export function HeroTap({ event, teamId, onHeroSet, C }: {
 
 // ── Individual card bodies ────────────────────────────────────────────────────
 
-export function MatchResultCard({ event, C }: { event: TeamEvent; C: CC }) {
-  const p = event.payload as MatchResultPayload
-  const rc = p.result === 'W' ? C.green : p.result === 'L' ? '#ef4444' : C.muted
-  const rl = p.result === 'W' ? 'SEGER' : p.result === 'L' ? 'FÖRLUST' : 'OAVGJORT'
+export function MatchResultCard({ event }: { event: TeamEvent }) {
+  const p  = event.payload as MatchResultPayload
+  const rc = p.result === 'W' ? COLOR.green : p.result === 'L' ? COLOR.red : COLOR.ink3
+  const rl = p.result === 'W' ? 'Seger' : p.result === 'L' ? 'Förlust' : 'Oavgjort'
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black" style={{ background: rc + '20', color: rc }}>{p.result}</div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold tracking-wider" style={{ color: rc }}>{rl}</span>
-          <span className="text-xs" style={{ color: C.muted }}>{p.is_home ? 'hemma' : 'borta'}</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[3] }}>
+      <div style={{ width: 40, height: 40, borderRadius: RADIUS.md, flexShrink: 0, background: rc + '18', border: `1px solid ${rc}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: rc }}>
+        {p.result}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
+          <EventLabel text={rl} color={rc} />
+          <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{p.is_home ? 'hemma' : 'borta'}</span>
         </div>
-        <div className="mt-0.5 text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-        <div className="mt-0.5 text-xs" style={{ color: C.muted }}>
-          <span className="text-base font-black" style={{ color: C.text }}>{p.my_score}</span>
-          <span className="mx-1">–</span>
-          <span className="text-base font-black">{p.opp_score}</span>
-          {p.top_scorer && <span className="ml-2">· {p.top_scorer.name} {p.top_scorer.high_game}</span>}
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, marginBottom: 2 }}>{event.title}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>
+          <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 900, color: COLOR.ink }}>{p.my_score}</span>
+          <span style={{ margin: '0 4px', color: COLOR.ink3 }}>–</span>
+          <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 900 }}>{p.opp_score}</span>
+          {p.top_scorer && <span style={{ marginLeft: SPACE[2] }}>· {p.top_scorer.name} {p.top_scorer.high_game}</span>}
         </div>
       </div>
     </div>
   )
 }
 
-export function StreakCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function StreakCard({ event }: { event: TeamEvent }) {
   const p = event.payload as StreakPayload
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: '#f9731620' }}>
-        <Flame className="h-5 w-5" style={{ color: '#f97316' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color="#f97316"><Flame size={18} color="#f97316" /></IconBadge>
+      <div style={{ flex: 1 }}>
+        <EventLabel text="Streak" color="#f97316" />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{event.title}</div>
+        {event.body && <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{event.body}</div>}
       </div>
-      <div>
-        <div className="text-xs font-bold tracking-wider" style={{ color: '#f97316' }}>STREAK</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-        {event.body && <div className="text-xs" style={{ color: C.muted }}>{event.body}</div>}
-      </div>
-      <div className="ml-auto text-3xl font-black tabular-nums" style={{ color: '#f97316' }}>{p.streak_length}</div>
+      <div style={{ fontFamily: FONT.display, fontSize: 32, fontWeight: 900, color: '#f97316', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{p.streak_length}</div>
     </div>
   )
 }
 
-export function PersonalBestCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function PersonalBestCard({ event }: { event: TeamEvent }) {
   const p = event.payload as PersonalBestPayload
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.accent + '20' }}>
-        <Trophy className="h-5 w-5" style={{ color: C.accent }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.gold}><Trophy size={18} color={COLOR.gold} /></IconBadge>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <EventLabel text="Karriärrekord" color={COLOR.gold} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{p.player_name}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Förra bästa: {p.previous_best}</div>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold tracking-wider" style={{ color: C.accent }}>KARRIÄRREKORD</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{p.player_name}</div>
-        <div className="text-xs" style={{ color: C.muted }}>Förra bästa: {p.previous_best}</div>
-      </div>
-      <div className="text-3xl font-black tabular-nums" style={{ color: C.accent }}>{p.new_best}</div>
+      <div style={{ fontFamily: FONT.display, fontSize: 32, fontWeight: 900, color: COLOR.gold, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{p.new_best}</div>
     </div>
   )
 }
 
-export function MilestoneCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function MilestoneCard({ event }: { event: TeamEvent }) {
   const p = event.payload as PlayerMilestonePayload
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.green + '20' }}>
-        <Star className="h-5 w-5" style={{ color: C.green }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.green}><Star size={18} color={COLOR.green} /></IconBadge>
+      <div style={{ flex: 1 }}>
+        <EventLabel text="Milstolpe" color={COLOR.green} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{p.player_name}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{event.body}</div>
       </div>
-      <div>
-        <div className="text-xs font-bold tracking-wider" style={{ color: C.green }}>MILSTOLPE</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{p.player_name}</div>
-        <div className="text-xs" style={{ color: C.muted }}>{event.body}</div>
-      </div>
-      <div className="ml-auto text-3xl font-black tabular-nums" style={{ color: C.green }}>{p.milestone}</div>
+      <div style={{ fontFamily: FONT.display, fontSize: 32, fontWeight: 900, color: COLOR.green, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{p.milestone}</div>
     </div>
   )
 }
 
-export function FormRisingCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function FormRisingCard({ event }: { event: TeamEvent }) {
   const p = event.payload as FormRisingPayload
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: '#a855f720' }}>
-        <TrendingUp className="h-5 w-5" style={{ color: '#a855f7' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.green}><TrendingUp size={18} color={COLOR.green} /></IconBadge>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <EventLabel text="Toppform" color={COLOR.green} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{p.player_name}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Säsongssnitt: {p.season_avg} · Senaste 3: {p.recent_avg}</div>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold tracking-wider" style={{ color: '#a855f7' }}>TOPPFORM</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{p.player_name}</div>
-        <div className="text-xs" style={{ color: C.muted }}>Säsongssnitt: {p.season_avg} · Senaste 3: {p.recent_avg}</div>
-      </div>
-      <div className="text-xl font-black" style={{ color: '#a855f7' }}>+{p.delta}</div>
+      <div style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 900, color: COLOR.green, flexShrink: 0 }}>+{p.delta}</div>
     </div>
   )
 }
 
-function PredictionBar({ matchId, C }: { matchId: string | null; C: CC }) {
+function PredictionBar({ matchId }: { matchId: string | null }) {
   const { data, refetch } = usePredictions(matchId)
   const counts = data?.counts ?? { W: 0, D: 0, L: 0 }
   const mine   = data?.mine ?? null
@@ -266,39 +219,41 @@ function PredictionBar({ matchId, C }: { matchId: string | null; C: CC }) {
   const pct = (k: 'W' | 'D' | 'L') => total > 0 ? Math.round((counts[k] / total) * 100) : 0
 
   const opts: { key: 'W' | 'D' | 'L'; label: string; color: string }[] = [
-    { key: 'W', label: 'Vinst',    color: C.green   },
-    { key: 'D', label: 'Oavgjort', color: C.muted   },
-    { key: 'L', label: 'Förlust',  color: '#ef4444' },
+    { key: 'W', label: 'Vinst',    color: COLOR.green },
+    { key: 'D', label: 'Oavgjort', color: COLOR.ink3  },
+    { key: 'L', label: 'Förlust',  color: COLOR.red   },
   ]
 
   return (
-    <div className="mt-3">
+    <div style={{ marginTop: SPACE[3] }}>
       {total > 0 && (
-        <div className="mb-2 flex h-1.5 overflow-hidden rounded-full">
+        <div style={{ height: 4, borderRadius: 2, overflow: 'hidden', background: COLOR.surface, marginBottom: SPACE[2], display: 'flex' }}>
           {opts.map(o => pct(o.key) > 0 && (
             <div key={o.key} style={{ width: pct(o.key) + '%', background: o.color, transition: 'width 0.4s ease' }} />
           ))}
         </div>
       )}
-      <div className="flex gap-2">
+      <div style={{ display: 'flex', gap: SPACE[2] }}>
         {opts.map(o => (
           <button
             key={o.key}
             onClick={() => predict(o.key)}
-            className="flex flex-1 flex-col items-center rounded-xl py-2 text-xs font-semibold transition-all"
             style={{
-              background: mine === o.key ? o.color + '25' : C.bg,
-              border: '1px solid ' + (mine === o.key ? o.color + '60' : C.border),
-              color: mine === o.key ? o.color : C.muted,
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              padding: `${SPACE[2]}px 0`, borderRadius: RADIUS.md,
+              background: mine === o.key ? o.color + '20' : COLOR.bg,
+              border: `1px solid ${mine === o.key ? o.color + '55' : COLOR.hairline}`,
+              color: mine === o.key ? o.color : COLOR.ink3,
+              fontSize: TYPE.label, fontWeight: 700, cursor: 'pointer',
             }}
           >
-            <span className="font-bold">{o.label}</span>
-            {total > 0 && <span className="mt-0.5 text-xs opacity-70">{pct(o.key)}%</span>}
+            {o.label}
+            {total > 0 && <span style={{ fontSize: TYPE.caption, opacity: 0.7, marginTop: 2 }}>{pct(o.key)}%</span>}
           </button>
         ))}
       </div>
       {total > 0 && (
-        <div className="mt-1.5 text-center text-xs" style={{ color: C.muted }}>
+        <div style={{ marginTop: SPACE[1], textAlign: 'center', fontSize: TYPE.caption, color: COLOR.ink3 }}>
           {total} {total === 1 ? 'fan' : 'fans'} har röstat
         </div>
       )}
@@ -306,106 +261,95 @@ function PredictionBar({ matchId, C }: { matchId: string | null; C: CC }) {
   )
 }
 
-export function MatchPreviewCard({ event, C }: { event: TeamEvent; C: CC }) {
-  const p = event.payload as MatchPreviewPayload
+export function MatchPreviewCard({ event }: { event: TeamEvent }) {
+  const p        = event.payload as MatchPreviewPayload
   const matchDay = new Date(p.match_date).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'short' })
   const h2hTotal = p.h2h_wins + p.h2h_losses + p.h2h_draws
   return (
     <div>
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.accent + '20' }}>
-          <Calendar className="h-5 w-5" style={{ color: C.accent }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold tracking-wider" style={{ color: C.accent }}>NÄSTA MATCH</div>
-          <div className="mt-0.5 text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-          <div className="mt-0.5 text-xs" style={{ color: C.muted }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[3] }}>
+        <IconBadge color={COLOR.gold}><Calendar size={18} color={COLOR.gold} /></IconBadge>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <EventLabel text="Nästa match" color={COLOR.gold} />
+          <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, marginBottom: 2 }}>{event.title}</div>
+          <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>
             {matchDay}
-            {h2hTotal > 0 && <span className="ml-2">· {p.h2h_wins}V {p.h2h_losses}F {p.h2h_draws}O</span>}
+            {h2hTotal > 0 && <span style={{ marginLeft: SPACE[2] }}>· {p.h2h_wins}V {p.h2h_losses}F {p.h2h_draws}O</span>}
           </div>
         </div>
-        <div className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold" style={{ background: p.is_home ? C.green + '20' : C.muted + '20', color: p.is_home ? C.green : C.muted }}>
+        <div style={{ flexShrink: 0, borderRadius: RADIUS.sm, padding: `${SPACE[1]}px ${SPACE[2]}px`, fontSize: TYPE.label, fontWeight: 700, background: p.is_home ? COLOR.green + '18' : COLOR.surface, color: p.is_home ? COLOR.green : COLOR.ink3 }}>
           {p.is_home ? 'Hemma' : 'Borta'}
         </div>
       </div>
-      <PredictionBar matchId={event.match_id} C={C} />
+      <PredictionBar matchId={event.match_id} />
     </div>
   )
 }
 
-export function EmotionalWinCard({ event, C }: { event: TeamEvent; C: CC }) {
-  const isRevenge    = event.event_type === 'revenge_win'
-  const isGiantKiller = event.event_type === 'giant_killer'
-  const color  = isRevenge ? '#f97316' : '#a855f7'
-  const label  = isRevenge ? 'REVANSCH' : 'JÄTTEDÖDARE'
-  const emoji  = isRevenge ? '⚡' : '🏆'
-  const p      = event.payload as { my_score: number; opp_score: number; opponent_name: string; rank_gap?: number }
+export function EmotionalWinCard({ event }: { event: TeamEvent }) {
+  const isRevenge = event.event_type === 'revenge_win'
+  const color     = isRevenge ? '#f97316' : COLOR.gold
+  const label     = isRevenge ? 'Revansch' : 'Jättedödare'
+  const Icon      = isRevenge ? Zap : Trophy
+  const p         = event.payload as { my_score: number; opp_score: number; opponent_name: string; rank_gap?: number }
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg" style={{ background: color + '20' }}>
-        {emoji}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold tracking-wider" style={{ color }}>{label}</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-        <div className="text-xs" style={{ color: C.muted }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color={color}><Icon size={18} color={color} /></IconBadge>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <EventLabel text={label} color={color} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{event.title}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>
           {p.my_score}–{p.opp_score}
-          {isGiantKiller && p.rank_gap && <span className="ml-1">· {p.rank_gap} platser högre upp</span>}
+          {!isRevenge && p.rank_gap && <span style={{ marginLeft: SPACE[1] }}>· {p.rank_gap} platser högre upp</span>}
         </div>
       </div>
     </div>
   )
 }
 
-export function DivisionClimbedCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function DivisionClimbedCard({ event }: { event: TeamEvent }) {
   const p = event.payload as DivisionClimbedPayload
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.green + '20' }}>
-        <ArrowUp className="h-5 w-5" style={{ color: C.green }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.green}><ArrowUp size={18} color={COLOR.green} /></IconBadge>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <EventLabel text="Tabellklättring" color={COLOR.green} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>{event.title}</div>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{p.points} poäng · {p.division}</div>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold tracking-wider" style={{ color: C.green }}>TABELLKLÄTTRING</div>
-        <div className="text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-        <div className="text-xs" style={{ color: C.muted }}>{p.points} poäng · {p.division}</div>
-      </div>
-      <div className="text-3xl font-black tabular-nums" style={{ color: C.green }}>{p.new_position}</div>
+      <div style={{ fontFamily: FONT.display, fontSize: 32, fontWeight: 900, color: COLOR.green, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{p.new_position}</div>
     </div>
   )
 }
 
-export function LineupAnnouncedCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function LineupAnnouncedCard({ event }: { event: TeamEvent }) {
   const p = event.payload as LineupAnnouncedPayload
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.accent + '15' }}>
-        <Users className="h-5 w-5" style={{ color: C.accent }} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold tracking-wider" style={{ color: C.accent }}>TRUPPEN KLAR</div>
-        <div className="mt-0.5 text-sm font-semibold" style={{ color: C.text }}>{event.title}</div>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.gold}><Users size={18} color={COLOR.gold} /></IconBadge>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <EventLabel text="Truppen klar" color={COLOR.gold} />
+        <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, marginBottom: SPACE[2] }}>{event.title}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[1] }}>
           {p.players.slice(0, 8).map(pl => (
-            <span key={pl.id} className="rounded-lg px-2 py-0.5 text-xs font-medium" style={{ background: C.card, border: '1px solid ' + C.border, color: C.text }}>
+            <span key={pl.id} style={{ borderRadius: RADIUS.sm, padding: `2px ${SPACE[2]}px`, fontSize: TYPE.caption, fontWeight: 600, background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, color: COLOR.ink }}>
               {pl.name.split(' ')[0]}
             </span>
           ))}
-          {p.players.length > 8 && <span className="rounded-lg px-2 py-0.5 text-xs" style={{ color: C.muted }}>+{p.players.length - 8}</span>}
+          {p.players.length > 8 && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>+{p.players.length - 8}</span>}
         </div>
       </div>
     </div>
   )
 }
 
-export function CaptainPostCard({ event, C }: { event: TeamEvent; C: CC }) {
+export function CaptainPostCard({ event }: { event: TeamEvent }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.border }}>
-        <MessageSquare className="h-5 w-5" style={{ color: C.muted }} />
-      </div>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[3] }}>
+      <IconBadge color={COLOR.ink3}><MessageSquare size={18} color={COLOR.ink3} /></IconBadge>
       <div>
-        <div className="text-xs font-bold tracking-wider" style={{ color: C.muted }}>KAPTENENS RÖST</div>
-        <div className="mt-0.5 text-sm leading-relaxed" style={{ color: C.text }}>{(event.payload as { text: string }).text}</div>
+        <EventLabel text="Kaptenens röst" color={COLOR.ink3} />
+        <div style={{ fontSize: 14, lineHeight: 1.55, color: COLOR.ink }}>{(event.payload as { text: string }).text}</div>
       </div>
     </div>
   )
@@ -418,7 +362,7 @@ export function EventCard({ event, isAdmin, teamId, userId, C, onNoteAdded, onHe
   isAdmin: boolean
   teamId: string
   userId: string | null
-  C: CC
+  C: ReturnType<typeof useColors>['C']
   onNoteAdded: (id: string, note: string) => void
   onHeroSet: (id: string, playerId: string, playerName: string) => void
 }) {
@@ -438,57 +382,71 @@ export function EventCard({ event, isAdmin, teamId, userId, C, onNoteAdded, onHe
   const dateStr = new Date(event.event_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: event.is_pinned ? C.accent + '08' : C.card, border: '1px solid ' + (event.is_pinned ? C.accent + '30' : C.border) }}>
-      {event.event_type === 'match_result'      && <MatchResultCard     event={event} C={C} />}
-      {event.event_type === 'win_streak'        && <StreakCard           event={event} C={C} />}
-      {event.event_type === 'unbeaten_run'      && <StreakCard           event={event} C={C} />}
-      {event.event_type === 'personal_best'     && <PersonalBestCard    event={event} C={C} />}
-      {event.event_type === 'player_milestone'  && <MilestoneCard       event={event} C={C} />}
-      {event.event_type === 'form_rising'       && <FormRisingCard      event={event} C={C} />}
-      {event.event_type === 'match_preview'     && <MatchPreviewCard    event={event} C={C} />}
-      {event.event_type === 'division_climbed'  && <DivisionClimbedCard event={event} C={C} />}
-      {event.event_type === 'lineup_announced'  && <LineupAnnouncedCard event={event} C={C} />}
-      {event.event_type === 'revenge_win'       && <EmotionalWinCard    event={event} C={C} />}
-      {event.event_type === 'giant_killer'      && <EmotionalWinCard    event={event} C={C} />}
-      {event.event_type === 'captain_post'      && <CaptainPostCard     event={event} C={C} />}
+    <div style={{
+      background: event.is_pinned ? `${COLOR.gold}08` : COLOR.surface,
+      border: `1px solid ${event.is_pinned ? COLOR.gold + '35' : COLOR.hairline}`,
+      borderRadius: RADIUS.lg,
+      padding: SPACE[4],
+    }}>
+      {event.event_type === 'match_result'      && <MatchResultCard     event={event} />}
+      {event.event_type === 'win_streak'        && <StreakCard           event={event} />}
+      {event.event_type === 'unbeaten_run'      && <StreakCard           event={event} />}
+      {event.event_type === 'personal_best'     && <PersonalBestCard    event={event} />}
+      {event.event_type === 'player_milestone'  && <MilestoneCard       event={event} />}
+      {event.event_type === 'form_rising'       && <FormRisingCard      event={event} />}
+      {event.event_type === 'match_preview'     && <MatchPreviewCard    event={event} />}
+      {event.event_type === 'division_climbed'  && <DivisionClimbedCard event={event} />}
+      {event.event_type === 'lineup_announced'  && <LineupAnnouncedCard event={event} />}
+      {event.event_type === 'revenge_win'       && <EmotionalWinCard    event={event} />}
+      {event.event_type === 'giant_killer'      && <EmotionalWinCard    event={event} />}
+      {event.event_type === 'captain_post'      && <CaptainPostCard     event={event} />}
 
-      {/* Admin: hero tap on match_result */}
       {isAdmin && event.event_type === 'match_result' && event.match_id && (
-        <HeroTap event={event} teamId={teamId} onHeroSet={onHeroSet} C={C} />
+        <HeroTap event={event} teamId={teamId} onHeroSet={onHeroSet} />
       )}
 
-      {/* Captain note */}
       {event.captain_note && !editingNote && (
-        <div className="mt-3 rounded-xl px-3 py-2 text-sm italic leading-relaxed" style={{ background: C.bg, color: C.muted, borderLeft: '3px solid ' + C.accent + '60' }}>
+        <div style={{ marginTop: SPACE[3], borderRadius: RADIUS.sm, padding: `${SPACE[2]}px ${SPACE[3]}px`, fontSize: TYPE.body, fontStyle: 'italic', lineHeight: 1.55, background: COLOR.bg, color: COLOR.ink3 }}>
           &ldquo;{event.captain_note}&rdquo;
         </div>
       )}
 
       {isAdmin && editingNote && (
-        <div className="mt-3">
-          <textarea value={noteText} onChange={e => setNoteText(e.target.value.slice(0, 140))} placeholder="Kommentar... (140 tecken)" rows={2}
-            className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none"
-            style={{ background: C.bg, border: '1px solid ' + C.accent + '60', color: C.text, fontFamily: 'system-ui' }} />
-          <div className="mt-2 flex justify-end gap-2">
+        <div style={{ marginTop: SPACE[3] }}>
+          <textarea
+            value={noteText}
+            onChange={e => setNoteText(e.target.value.slice(0, 140))}
+            placeholder="Kommentar... (140 tecken)"
+            rows={2}
+            style={{ width: '100%', resize: 'none', borderRadius: RADIUS.sm, padding: `${SPACE[2]}px ${SPACE[3]}px`, fontSize: TYPE.body, outline: 'none', background: COLOR.bg, border: `1px solid ${COLOR.gold}55`, color: COLOR.ink, boxSizing: 'border-box' } as React.CSSProperties}
+          />
+          <div style={{ marginTop: SPACE[2], display: 'flex', justifyContent: 'flex-end', gap: SPACE[2] }}>
             <button onClick={() => { setEditingNote(false); setNoteText(event.captain_note ?? '') }}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ color: C.muted, border: '1px solid ' + C.border }}>Avbryt</button>
+              style={{ borderRadius: RADIUS.sm, padding: `6px ${SPACE[3]}px`, fontSize: TYPE.label, fontWeight: 600, color: COLOR.ink3, border: `1px solid ${COLOR.hairline}`, background: 'transparent', cursor: 'pointer' }}>
+              Avbryt
+            </button>
             <button onClick={saveNote} disabled={saving}
-              className="rounded-lg px-3 py-1.5 text-xs font-bold" style={{ background: C.accent, color: '#1a1400', opacity: saving ? 0.7 : 1 }}>
+              style={{ borderRadius: RADIUS.sm, padding: `6px ${SPACE[3]}px`, fontSize: TYPE.label, fontWeight: 700, background: COLOR.gold, color: '#1a1400', border: 'none', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Sparar...' : 'Spara'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Reaction bar */}
-      <ReactionBar event={event} userId={userId} C={C} />
+      <FeedActions
+        eventId={event.id}
+        reactions={event.reactions ?? []}
+        saveKey={`team_event_${event.id}`}
+        shareTitle={event.title}
+      />
 
-      {/* Footer */}
-      <div className="mt-2 flex items-center gap-3">
-        <span className="text-xs" style={{ color: C.muted }}>{dateStr}</span>
-        {event.is_pinned && <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: C.accent + '20', color: C.accent }}>Fäst</span>}
+      <div style={{ marginTop: SPACE[2], display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+        <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{dateStr}</span>
+        {event.is_pinned && (
+          <span style={{ borderRadius: 99, padding: `2px ${SPACE[2]}px`, fontSize: TYPE.caption, fontWeight: 700, background: `${COLOR.gold}18`, color: COLOR.gold }}>Fäst</span>
+        )}
         {isAdmin && !editingNote && (
-          <button onClick={() => setEditingNote(true)} className="ml-auto text-xs font-semibold" style={{ color: C.accent }}>
+          <button onClick={() => setEditingNote(true)} style={{ marginLeft: 'auto', fontSize: TYPE.label, fontWeight: 600, color: COLOR.gold, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             {event.captain_note ? 'Redigera kommentar' : '+ Kommentar'}
           </button>
         )}

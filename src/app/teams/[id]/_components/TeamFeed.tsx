@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Award } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
+import { COLOR, SPACE, TYPE } from '@/lib/brand'
 import { useTeamEvents, useSession } from '@/lib/queries'
 import { EventCard } from './EventCards'
 import TeamNarrativeBanner from './TeamNarrativeBanner'
@@ -38,29 +39,29 @@ export default function TeamFeed({ id, isAdmin }: Props) {
   }
 
   return (
-    <section id="team-community" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + C.border }}>
-      <div className="px-5 pb-3 pt-5">
-        <span className="text-xs font-black tracking-widest" style={{ color: C.muted }}>
-          SÄSONGENS BERÄTTELSE
+    <section id="team-community" style={{ scrollMarginTop: 60, borderTop: `1px solid ${COLOR.hairline}` }}>
+      <div style={{ padding: `${SPACE[6]}px ${SPACE[4]}px ${SPACE[3]}px` }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em' }}>
+          Säsongens berättelse
         </span>
       </div>
 
       <TeamNarrativeBanner id={id} />
 
       {isLoading ? (
-        <div className="space-y-3 px-5 pb-8">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], padding: `0 ${SPACE[4]}px ${SPACE[8]}px` }}>
           {[0, 1, 2].map(i => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl" style={{ background: C.card }} />
+            <div key={i} className="skeleton" style={{ height: 80, borderRadius: 16, background: COLOR.surface, border: `1px solid ${COLOR.hairline}` }} />
           ))}
         </div>
       ) : displayEvents.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <Award className="mx-auto mb-3 h-8 w-8 opacity-30" style={{ color: C.muted }} />
-          <div className="text-sm font-semibold" style={{ color: C.text }}>Inga händelser än</div>
-          <div className="mt-1 text-xs" style={{ color: C.muted }}>Händelser genereras automatiskt när matcher spelas</div>
+        <div style={{ padding: `${SPACE[8]}px ${SPACE[4]}px`, textAlign: 'center' }}>
+          <Award size={28} style={{ color: COLOR.ink3, opacity: 0.4, display: 'block', margin: `0 auto ${SPACE[3]}px` }} />
+          <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink }}>Inga händelser än</div>
+          <div style={{ marginTop: SPACE[1], fontSize: TYPE.caption, color: COLOR.ink3 }}>Händelser genereras automatiskt när matcher spelas</div>
         </div>
       ) : (
-        <div className="space-y-3 px-4 pb-12">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], padding: `0 ${SPACE[4]}px ${SPACE[8]}px` }}>
           {displayEvents.map(event => (
             <EventCard
               key={event.id}

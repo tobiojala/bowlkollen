@@ -189,7 +189,7 @@ export default function TeamClient({ id }: { id: string }) {
   const todayMatch = upcoming.find(m => m.date?.slice(0, 10) === today) ?? null
 
   return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
         <TeamHero

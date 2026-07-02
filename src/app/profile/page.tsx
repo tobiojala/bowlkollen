@@ -6,11 +6,11 @@ import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
 import { Trophy, LogOut, User } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
-import { shortName } from '@/lib/utils'
 import WidgetGrid from '@/components/widgets/WidgetGrid'
+import FollowingSection from './_components/FollowingSection'
 
 type Player = { id: string; name: string; teamName?: string }
-type Claim = { id: string; player_id: string; status: string; players: { name: string; team_id: string } }
+type Claim = { id: string; player_id: string; status: string; player: { first_name: string; sur_name: string; club_name: string | null } | null }
 type ClubClaim = { id: string; team_id: string; role: string; status: string; teams: { name: string; club: string } }
 
 export default function ProfilePage() {
@@ -22,7 +22,8 @@ export default function ProfilePage() {
   const [searchQ, setSearchQ] = useState('')
   const [searchResults, setSearchResults] = useState<Player[]>([])
   const [claiming, setClaiming] = useState(false)
-  const [teams, setTeams] = useState<Record<string, string>>({})
+  const [licNbr, setLicNbr] = useState('')
+  const [claimFeedback, setClaimFeedback] = useState<'verified' | 'pending' | null>(null)
   const [clubClaims, setClubClaims] = useState<ClubClaim[]>([])
   const [searchingClub, setSearchingClub] = useState(false)
   const [clubSearchQ, setClubSearchQ] = useState('')
@@ -38,7 +39,7 @@ export default function ProfilePage() {
 
       const { data: claimData } = await supabase
         .from('player_claims')
-        .select('id, player_id, status, players:player_id(name, team_id)')
+        .select('id, player_id, status, player:player_id(first_name, sur_name, club_name)')
         .eq('user_id', session.user.id)
         .single()
       if (claimData) setClaim(claimData as any)
@@ -49,13 +50,6 @@ export default function ProfilePage() {
         .eq('user_id', session.user.id)
       if (clubClaimData) setClubClaims(clubClaimData as any)
 
-      const { data: teamsData } = await supabase.from('teams').select('id, name')
-      if (teamsData) {
-        const map: Record<string, string> = {}
-        teamsData.forEach((t: any) => { map[t.id] = shortName(t.name) })
-        setTeams(map)
-      }
-
       setLoading(false)
     })
   }, [])
@@ -63,19 +57,28 @@ export default function ProfilePage() {
   const search = async () => {
     if (!searchQ.trim()) return
     const supabase = createClient()
-    const { data } = await supabase.from('players').select('id, name, team_id').ilike('name', '%' + searchQ + '%').limit(10)
-    setSearchResults(data?.map((p: any) => ({ ...p, teamName: teams[p.team_id] || '' })) || [])
+    const { data } = await supabase.from('bits_players')
+      .select('public_id, first_name, sur_name, club_name')
+      .or(`first_name.ilike.%${searchQ}%,sur_name.ilike.%${searchQ}%`).limit(10)
+    setSearchResults((data ?? []).map(p => ({
+      id: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim(), teamName: p.club_name ?? '',
+    })))
   }
 
   const claimPlayer = async (player: Player) => {
     setClaiming(true)
     const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-    const { data, error } = await supabase.from('player_claims')
-      .insert({ user_id: session.user.id, player_id: player.id, status: 'pending' })
-      .select('id, player_id, status, players:player_id(name, team_id)').single()
-    if (!error && data) { setClaim(data as any); setSearching(false); setSearchResults([]); setSearchQ('') }
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('submit_player_claim', { p_public_id: player.id, p_lic_nbr: licNbr.trim() })
+    const result = rpcData as { claim_id: string; status: 'verified' | 'pending' } | null
+    if (!rpcError && result) {
+      const { data } = await supabase.from('player_claims')
+        .select('id, player_id, status, player:player_id(first_name, sur_name, club_name)')
+        .eq('id', result.claim_id).single()
+      if (data) setClaim(data as any)
+      setClaimFeedback(result.status)
+      setSearching(false); setSearchResults([]); setSearchQ(''); setLicNbr('')
+    }
     setClaiming(false)
   }
 
@@ -83,6 +86,7 @@ export default function ProfilePage() {
     if (!claim) return
     await createClient().from('player_claims').delete().eq('id', claim.id)
     setClaim(null)
+    setClaimFeedback(null)
   }
 
   const searchClubs = async () => {
@@ -161,7 +165,7 @@ export default function ProfilePage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Spelarprofil</div>
               <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>
-                {claim ? 'Kopplad till ' + (claim.players as any)?.name : 'Länka till din spelarprofil'}
+                {claim && claim.player ? 'Kopplad till ' + `${claim.player.first_name} ${claim.player.sur_name}`.trim() : claim ? 'Kopplad' : 'Länka till din spelarprofil'}
               </div>
             </div>
             {!claim && !searching && (
@@ -208,10 +212,30 @@ export default function ProfilePage() {
               {searchResults.length === 0 && searchQ && (
                 <div style={{ fontSize: 12, color: C.textMuted, padding: '8px 0' }}>Inga spelare hittades — prova ett annat namn</div>
               )}
-              <button onClick={() => { setSearching(false); setSearchResults([]); setSearchQ('') }}
+              {searchResults.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6 }}>
+                    Har du ditt licensnummer? Då verifieras kopplingen direkt — annars granskas den manuellt.
+                  </div>
+                  <input value={licNbr} onChange={e => setLicNbr(e.target.value)}
+                    placeholder="Licensnummer (frivilligt)"
+                    style={{ width: '100%', background: C.surface, border: '1px solid ' + C.border, borderRadius: 10, padding: '9px 12px', color: C.text, fontSize: 13, outline: 'none', marginBottom: 4 }} />
+                </div>
+              )}
+              <button onClick={() => { setSearching(false); setSearchResults([]); setSearchQ(''); setLicNbr('') }}
                 style={{ marginTop: 8, background: 'transparent', border: 'none', color: C.textMuted, fontSize: 12, cursor: 'pointer', padding: 0 }}>
                 Avbryt
               </button>
+            </div>
+          )}
+
+          {claimFeedback && claim && (
+            <div style={{
+              padding: '8px 16px', margin: '0 16px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+              color: claimFeedback === 'verified' ? C.green : C.accent,
+              background: (claimFeedback === 'verified' ? C.green : C.accent) + '14',
+            }}>
+              {claimFeedback === 'verified' ? 'Verifierad direkt — licensnumret stämde!' : 'Skickad för granskning — vi hör av oss.'}
             </div>
           )}
 
@@ -309,6 +333,9 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Following */}
+        <FollowingSection />
 
         {/* Sign out */}
         <button onClick={signOut}

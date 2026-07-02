@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useColors } from '@/components/ThemeProvider'
+import { COLOR } from '@/lib/brand'
 import { teamColor, teamInitials, shortName, shortDiv } from '@/lib/utils'
 import { divisionColor } from '@/lib/divisions'
 import TeamTableWidget from '@/components/TeamTableWidget'
@@ -49,7 +50,7 @@ export default function TeamMatches({ id, matches }: Props) {
     <button
       key={key}
       onClick={() => setTab(key)}
-      style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (tab === key ? C.accent : C.border), background: tab === key ? C.accent + '18' : 'transparent', color: tab === key ? C.accent : C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
+      style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (tab === key ? COLOR.gold : COLOR.hairline), background: tab === key ? COLOR.gold + '18' : 'transparent', color: tab === key ? COLOR.gold : COLOR.ink3, fontSize: 12, fontWeight: 700, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
       {label} {count > 0 && <span style={{ opacity: 0.65 }}>({count})</span>}
     </button>
@@ -64,7 +65,7 @@ export default function TeamMatches({ id, matches }: Props) {
     const lost       = myScore !== null && oppScore !== null && myScore < oppScore
     const drew       = myScore !== null && oppScore !== null && myScore === oppScore
     const label      = won ? 'V' : lost ? 'F' : drew ? 'O' : null
-    const labelColor = won ? C.green : lost ? '#e05555' : C.muted
+    const labelColor = won ? COLOR.green : lost ? '#e05555' : COLOR.ink3
     const isLive     = m.status === 'live'
     const divC       = divisionColor(m.division)
     const tc         = teamColor(opp?.name || '', isDark)
@@ -72,11 +73,11 @@ export default function TeamMatches({ id, matches }: Props) {
     return (
       <Link
         href={'/matches/' + m.id}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + C.border, textDecoration: 'none' }}
-        onMouseEnter={e => (e.currentTarget.style.background = C.card)}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: '1px solid ' + COLOR.hairline, textDecoration: 'none' }}
+        onMouseEnter={e => (e.currentTarget.style.background = COLOR.surface)}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
-        <div style={{ width: 28, height: 28, borderRadius: 8, background: label ? labelColor + '22' : C.card, border: '1.5px solid ' + (label ? labelColor : C.border), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: label ? labelColor : C.muted, flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: label ? labelColor + '22' : COLOR.surface, border: '1.5px solid ' + (label ? labelColor : COLOR.hairline), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: label ? labelColor : COLOR.ink3, flexShrink: 0 }}>
           {isLive ? '●' : label || '—'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
@@ -84,17 +85,17 @@ export default function TeamMatches({ id, matches }: Props) {
             {teamInitials(opp?.name || '')}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 1 }}>
-              <span style={{ fontSize: 10, color: C.muted }}>{home ? 'Hemma' : 'Borta'} · {m.date?.slice(0, 10)}</span>
+              <span style={{ fontSize: 10, color: COLOR.ink3 }}>{home ? 'Hemma' : 'Borta'} · {m.date?.slice(0, 10)}</span>
               {m.division && <span style={{ fontSize: 9, fontWeight: 700, color: divC, background: divC + '18', borderRadius: 4, padding: '1px 5px' }}>{shortDiv(m.division)}</span>}
             </div>
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {myScore !== null
-            ? <><div style={{ fontSize: 16, fontWeight: 800, color: won ? C.accent : C.text }}>{myScore} – {oppScore}</div><div style={{ fontSize: 9, color: C.muted }}>MP</div></>
-            : <div style={{ fontSize: 11, color: isLive ? '#e05555' : C.muted, fontWeight: isLive ? 700 : 400 }}>{isLive ? '● LIVE' : m.date ? new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '—'}</div>
+            ? <><div style={{ fontSize: 16, fontWeight: 800, color: won ? COLOR.gold : COLOR.ink }}>{myScore} – {oppScore}</div><div style={{ fontSize: 9, color: COLOR.ink3 }}>MP</div></>
+            : <div style={{ fontSize: 11, color: isLive ? '#e05555' : COLOR.ink3, fontWeight: isLive ? 700 : 400 }}>{isLive ? '● LIVE' : m.date ? new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '—'}</div>
           }
         </div>
       </Link>
@@ -104,13 +105,13 @@ export default function TeamMatches({ id, matches }: Props) {
   const division = completed[0]?.division ?? upcoming[0]?.division ?? null
 
   return (
-    <section id="team-matches" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + C.border }}>
+    <section id="team-matches" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + COLOR.hairline }}>
       {/* Deep-stats — league table + top performers */}
       {division && <TeamTableWidget teamId={id} division={division} />}
       <TopPerformers teamId={id} />
 
-      <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid ' + C.border }}>
-        <span style={{ fontSize: 10, fontWeight: 800, color: C.muted, letterSpacing: 2 }}>MATCHER</span>
+      <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${COLOR.hairline}` }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em' }}>Matcher</span>
         <div style={{ display: 'flex', gap: 6 }}>
           {pill('results',  'Resultat', completed.length)}
           {pill('upcoming', 'Kommande', upcoming.length)}
@@ -122,13 +123,13 @@ export default function TeamMatches({ id, matches }: Props) {
       {tab !== 'h2h' && (
         <div>
           {displayMatches.length === 0
-            ? <div style={{ padding: '40px 24px', textAlign: 'center', color: C.muted, fontSize: 13 }}>Inga matcher att visa</div>
+            ? <div style={{ padding: '40px 24px', textAlign: 'center', color: COLOR.ink3, fontSize: 13 }}>Inga matcher att visa</div>
             : <>
                 {(showAll ? displayMatches : displayMatches.slice(0, PREVIEW)).map(m => <MatchRow key={m.id} m={m} />)}
                 {displayMatches.length > PREVIEW && (
                   <button
                     onClick={() => setShowAll(v => !v)}
-                    style={{ width: '100%', padding: '13px', background: 'transparent', border: 'none', borderTop: '1px solid ' + C.border, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: C.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    style={{ width: '100%', padding: '13px', background: 'transparent', border: 'none', borderTop: '1px solid ' + COLOR.hairline, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: COLOR.ink3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   >
                     {showAll
                       ? <>↑ Visa färre</>
@@ -145,31 +146,31 @@ export default function TeamMatches({ id, matches }: Props) {
       {tab === 'h2h' && (
         <div>
           {h2hList.length === 0
-            ? <div style={{ padding: '40px 24px', textAlign: 'center', color: C.muted, fontSize: 13 }}>Inga matchade möten registrerade</div>
+            ? <div style={{ padding: '40px 24px', textAlign: 'center', color: COLOR.ink3, fontSize: 13 }}>Inga matchade möten registrerade</div>
             : h2hList.map(opp => {
                 const isExp  = expandedOpp === opp.team.id
                 const tc     = teamColor(opp.team.name || '', isDark)
                 const total  = opp.matches.length
                 const winPct = total > 0 ? Math.round((opp.w / total) * 100) : 0
                 return (
-                  <div key={opp.team.id} style={{ borderBottom: '1px solid ' + C.border }}>
+                  <div key={opp.team.id} style={{ borderBottom: '1px solid ' + COLOR.hairline }}>
                     <div onClick={() => setExpandedOpp(isExp ? null : opp.team.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
                       <div style={{ width: 38, height: 38, borderRadius: 10, background: tc.bg, border: '1.5px solid ' + tc.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: tc.text, flexShrink: 0 }}>
                         {teamInitials(opp.team.name || '')}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp.team.name || '')}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp.team.name || '')}</div>
                         <div style={{ display: 'flex', gap: 8, marginTop: 3, alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: C.green }}>{opp.w}V</span>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>{opp.d}O</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: COLOR.green }}>{opp.w}V</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: COLOR.ink3 }}>{opp.d}O</span>
                           <span style={{ fontSize: 12, fontWeight: 800, color: '#e05555' }}>{opp.l}F</span>
-                          <span style={{ fontSize: 10, color: C.muted }}>· {total} matcher · {winPct}%</span>
+                          <span style={{ fontSize: 10, color: COLOR.ink3 }}>· {total} matcher · {winPct}%</span>
                         </div>
                       </div>
-                      <Link href={`/compare/teams/${id}/${opp.team.id}`} onClick={e => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accent + '18', border: '1px solid ' + C.accent + '44', borderRadius: 8, padding: '5px 10px', textDecoration: 'none', flexShrink: 0 }}>
+                      <Link href={`/compare/teams/${id}/${opp.team.id}`} onClick={e => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: COLOR.gold, background: COLOR.gold + '18', border: '1px solid ' + COLOR.gold + '44', borderRadius: 8, padding: '5px 10px', textDecoration: 'none', flexShrink: 0 }}>
                         Jämför →
                       </Link>
-                      <motion.div animate={{ rotate: isExp ? 90 : 0 }} transition={SPRING} style={{ color: C.muted, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</motion.div>
+                      <motion.div animate={{ rotate: isExp ? 90 : 0 }} transition={SPRING} style={{ color: COLOR.ink3, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</motion.div>
                     </div>
                     <motion.div initial={false} animate={{ height: isExp ? 'auto' : 0, opacity: isExp ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
                       <div style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
@@ -181,13 +182,13 @@ export default function TeamMatches({ id, matches }: Props) {
                           const lost2    = myScore !== null && thScore !== null && myScore < thScore
                           const drew2    = myScore !== null && thScore !== null && myScore === thScore
                           const label2   = won2 ? 'V' : lost2 ? 'F' : drew2 ? 'O' : null
-                          const lColor   = won2 ? C.green : lost2 ? '#e05555' : C.muted
+                          const lColor   = won2 ? COLOR.green : lost2 ? '#e05555' : COLOR.ink3
                           const dateStr  = m.date ? new Date(m.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
                           return (
-                            <Link key={m.id} href={'/matches/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px 10px 28px', borderTop: mi === 0 ? '1px solid ' + C.border : '1px solid ' + (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'), textDecoration: 'none' }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 6, background: label2 ? lColor + '22' : C.card, border: '1px solid ' + (label2 ? lColor : C.border), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: label2 ? lColor : C.muted, flexShrink: 0 }}>{label2 || '—'}</div>
-                              <div style={{ flex: 1, fontSize: 12, color: C.muted }}>{dateStr} · {home2 ? 'Hemma' : 'Borta'}</div>
-                              {myScore !== null && <div style={{ fontSize: 13, fontWeight: 800, color: won2 ? C.accent : C.text }}>{myScore} – {thScore}</div>}
+                            <Link key={m.id} href={'/matches/' + m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px 10px 28px', borderTop: mi === 0 ? '1px solid ' + COLOR.hairline : '1px solid ' + (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'), textDecoration: 'none' }}>
+                              <div style={{ width: 24, height: 24, borderRadius: 6, background: label2 ? lColor + '22' : COLOR.surface, border: '1px solid ' + (label2 ? lColor : COLOR.hairline), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: label2 ? lColor : COLOR.ink3, flexShrink: 0 }}>{label2 || '—'}</div>
+                              <div style={{ flex: 1, fontSize: 12, color: COLOR.ink3 }}>{dateStr} · {home2 ? 'Hemma' : 'Borta'}</div>
+                              {myScore !== null && <div style={{ fontSize: 13, fontWeight: 800, color: won2 ? COLOR.gold : COLOR.ink }}>{myScore} – {thScore}</div>}
                             </Link>
                           )
                         })}

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useColors } from '@/components/ThemeProvider'
+import { COLOR, SPACE, TYPE } from '@/lib/brand'
 import { shortName } from '@/lib/utils'
 import type { Match } from '@/lib/types'
 
@@ -12,32 +12,28 @@ type Props = {
 }
 
 export default function TeamEditorialBanner({ teamId, completed, upcoming }: Props) {
-  const { C } = useColors()
-
   if (completed.length === 0 && upcoming.length === 0) return null
 
   const isHome = (m: Match) => m.home_team_id === teamId
 
-  // Win streak
   let winStreak = 0
   for (const m of completed) {
     const won = isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!
     if (won) winStreak++; else break
   }
 
-  // Unbeaten streak
   let unbeatenStreak = 0
   for (const m of completed) {
     const lost = isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!
     if (!lost) unbeatenStreak++; else break
   }
 
-  const last5   = completed.slice(0, 5)
-  const wins    = last5.filter(m => isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!).length
-  const losses  = last5.filter(m => isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!).length
+  const last5  = completed.slice(0, 5)
+  const wins   = last5.filter(m => isHome(m) ? m.home_score! > m.away_score! : m.away_score! > m.home_score!).length
+  const losses = last5.filter(m => isHome(m) ? m.home_score! < m.away_score! : m.away_score! < m.home_score!).length
 
   let headline = ''
-  if (winStreak >= 3)          headline = `${winStreak} raka vinster`
+  if (winStreak >= 3)           headline = `${winStreak} raka vinster`
   else if (unbeatenStreak >= 4) headline = `${unbeatenStreak} matcher utan förlust`
   else if (wins >= 4)           headline = `${wins}V av ${last5.length} senaste`
   else if (losses >= 4)         headline = `Tufft — ${losses} av ${last5.length} förlorade`
@@ -57,12 +53,12 @@ export default function TeamEditorialBanner({ teamId, completed, upcoming }: Pro
   }
 
   return (
-    <div className="px-5 pt-5 pb-2">
-      <h2 className="text-2xl font-black tracking-tight leading-tight" style={{ color: C.text }}>
+    <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px ${SPACE[2]}px` }}>
+      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2, color: COLOR.ink }}>
         {headline}
       </h2>
       {sub.length > 0 && (
-        <p className="mt-1 text-[13px]" style={{ color: C.muted }}>
+        <p style={{ margin: `${SPACE[1]}px 0 0`, fontSize: TYPE.body, color: COLOR.ink3 }}>
           {sub.join('  ·  ')}
         </p>
       )}

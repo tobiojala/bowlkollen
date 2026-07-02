@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
 import { shortName } from '@/lib/utils'
 import { SCORE } from '@/lib/constants'
+import { calcBanpoang } from '@/lib/scoring'
 
 type Team = { id: string; name: string }
-type Match = { id: string; home_team_id: string; away_team_id: string; date: string; status: string; home: { name: string }; away: { name: string } }
+type Match = { id: string; home_team_id: string; away_team_id: string; date: string; round: string | null; status: string; home: { name: string }; away: { name: string } }
 type Lineup = { id: string; team_id: string; player_name: string; bord: number; position: number }
 type MatchResult = { id: string; player_id: string; team_id: string; games: number[]; bord: number; position: number }
 
@@ -42,7 +44,7 @@ export default function AdminPage() {
   const loadData = () => {
     const supabase = createClient()
     supabase.from('teams').select('id, name').order('name').then(({ data }) => { if (data) setTeams(data) })
-    supabase.from('matches').select('id, home_team_id, away_team_id, date, status, home:teams!home_team_id(name), away:teams!away_team_id(name)').order('date', { ascending: false }).limit(30).then(({ data }) => { if (data) setMatches(data as unknown as Match[]) })
+    supabase.from('matches').select('id, home_team_id, away_team_id, date, round, status, home:teams!home_team_id(name), away:teams!away_team_id(name)').order('date', { ascending: false }).limit(30).then(({ data }) => { if (data) setMatches(data as unknown as Match[]) })
   }
 
   useEffect(() => { loadData() }, [])
@@ -88,7 +90,7 @@ export default function AdminPage() {
     } else {
       const games = [0, 0, 0, 0]
       games[gameIndex] = score
-      await supabase.from('match_results').insert({ match_id: liveMatch, team_id: teamId, bord, position, games, total: score, type: 'league' })
+      await supabase.from('match_results').insert({ match_id: liveMatch, team_id: teamId, bord, position, games, total: score, type: 'league', date: selectedMatch?.date ?? new Date().toISOString().slice(0, 10), round: selectedMatch?.round ?? '1' })
     }
     await loadLiveData(liveMatch)
 
@@ -99,23 +101,11 @@ export default function AdminPage() {
   const updateMatchScore = async () => {
     if (!selectedMatch) return
     const supabase = createClient()
-    const homeResults = results.filter(r => r.team_id === selectedMatch.home_team_id)
-    const awayResults = results.filter(r => r.team_id === selectedMatch.away_team_id)
-    // Count banp (wins per game per pair)
-    let homeScore = 0, awayScore = 0
-    for (let bord = 1; bord <= 4; bord++) {
-      for (let pos = 1; pos <= 2; pos++) {
-        const hr = homeResults.find(r => r.bord === bord && r.position === pos)
-        const ar = awayResults.find(r => r.bord === bord && r.position === pos)
-        if (!hr || !ar) continue
-        for (let g = 0; g < 4; g++) {
-          const hg = (hr.games || [])[g] || 0
-          const ag = (ar.games || [])[g] || 0
-          if (hg > ag) homeScore++
-          else if (ag > hg) awayScore++
-        }
-      }
-    }
+    const [homeScore, awayScore] = calcBanpoang(
+      selectedMatch.home_team_id,
+      selectedMatch.away_team_id,
+      results,
+    )
     await supabase.from('matches').update({ home_score: homeScore, away_score: awayScore, status: 'live' }).eq('id', liveMatch)
   }
 
@@ -177,6 +167,12 @@ export default function AdminPage() {
               {t.label}
             </button>
           ))}
+          <Link href="/admin/players" style={{ flex: 1, background: 'transparent', border: '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            Spelare
+          </Link>
+          <Link href="/admin/bits" style={{ flex: 1, background: 'transparent', border: '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            BITS
+          </Link>
         </div>
 
         {/* LIVE SCORING TAB */}
