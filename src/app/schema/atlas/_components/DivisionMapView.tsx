@@ -50,7 +50,7 @@ function buildRects(months: SeasonMonth[], dates: string[], palette: readonly st
   months.slice(0, n).forEach((m, mi) => {
     const bx  = mi * (mW + MGAP)
     const end = new Date(m.year, m.month + 1, 0)
-    let cur   = isoMonday(new Date(m.year, m.month, 1))
+    const cur = isoMonday(new Date(m.year, m.month, 1))
     let row   = 0
     while (cur <= end && row < MAX_ROWS) {
       const wk    = cur.toISOString().slice(0, 10)

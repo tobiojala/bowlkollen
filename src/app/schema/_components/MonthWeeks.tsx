@@ -5,12 +5,15 @@ import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, getISOWeek 
 import { motion } from 'framer-motion'
 import { COLOR, FONT } from '@/lib/brand'
 import { heatmapColor, heatmapLevel, buildHeatmapPalette } from './week'
+import { PinGlyph } from './pin'
 
 type Props = {
   year:          number
   month:         number   // 0-indexed, JS Date convention
   dates:         string[]
   accent?:       string
+  /** The Atlas pin's date — draws the pin glyph on that day cell. */
+  pinDate?:      string | null
   onPreviewWeek: (weekKey: string) => void
   onCommitWeek:  (weekKey: string) => void
 }
@@ -56,7 +59,7 @@ function buildMonthWeeks(year: number, month: number, dates: string[]): { weeks:
  * background, identity carried by the month name and the accent tint.
  * Cells are a true fluid grid (1fr columns), not fixed-px — they fill the
  * full width instead of leaving dead space on wider phones. */
-export function MonthWeeks({ year, month, dates, accent, onPreviewWeek, onCommitWeek }: Props) {
+export function MonthWeeks({ year, month, dates, accent, pinDate, onPreviewWeek, onCommitWeek }: Props) {
   const [active, setActive] = useState<ActiveRow | null>(null)
   const dragging  = useRef(false)
 
@@ -155,6 +158,7 @@ export function MonthWeeks({ year, month, dates, accent, onPreviewWeek, onCommit
                       key={j}
                       title={`${format(day, 'd MMM')}: ${count} matcher`}
                       style={{
+                        position: 'relative',
                         aspectRatio: '1 / 1', width: '100%', borderRadius: 6,
                         backgroundColor: heatmapColor(count, maxCount, isFuture, palette),
                         opacity: isFuture ? 0.35 : 1,
@@ -172,6 +176,12 @@ export function MonthWeeks({ year, month, dates, accent, onPreviewWeek, onCommit
                         <span style={{ fontSize: 9, fontWeight: 800, color: heatmapLevel(count, maxCount, isFuture) >= 3 ? '#1a1400' : COLOR.ink }}>
                           {format(day, 'd')}
                         </span>
+                      )}
+                      {dateStr === pinDate && (
+                        <div style={{ position: 'absolute', left: '50%', bottom: '40%',
+                          transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none' }}>
+                          <PinGlyph size={15} />
+                        </div>
                       )}
                     </div>
                   )
