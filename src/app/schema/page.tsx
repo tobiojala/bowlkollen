@@ -430,9 +430,10 @@ export default function SchedulePage() {
             <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: 2 }}>
               SÄSONGSATLAS
             </span>
-            <span style={{ fontSize: 9, color: C.textMuted, marginLeft: 'auto' }}>
-              Hela säsongen i ett svep
-            </span>
+            <a href="/atlas" style={{ fontSize: 10, fontWeight: 700, color: C.accent,
+              textDecoration: 'none', marginLeft: 'auto' }}>
+              Utforska atlasen →
+            </a>
           </div>
           <SeasonAtlas matches={matches} tavMap={TAV_MAP} C={C} isDark={isDark}
             onJumpToDate={jumpToDate} />
