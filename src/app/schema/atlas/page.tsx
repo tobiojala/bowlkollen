@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LayoutGrid, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutGrid, Map as MapIcon, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { COLOR } from '@/lib/brand'
 import { useSeasonMatchDates, useAllDivisions } from '@/lib/queries'
@@ -154,6 +155,11 @@ export default function AtlasPage() {
               </span>
             </button>
           )}
+
+          <Link href="/schema/atlas/karta" aria-label="Öppna Kartan"
+            style={{ display: 'flex', padding: 4 }}>
+            <MapIcon size={17} color={COLOR.ink4} />
+          </Link>
 
           <button
             onClick={() => setMapMode(v => !v)}
