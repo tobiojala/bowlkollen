@@ -1,23 +1,32 @@
 'use client'
 
-// Atlas — the season as a zoomable mosaic. Tiles, not lists: size = hierarchy + heat.
-// Zoom levels: Sverige → division (months + teams) → round matches / team heat map.
+// Atlas — the season as a zoomable map. The terrain is the calendar itself:
+// one GitHub-style grid per month, laid out on a canvas you pan and pinch like
+// Google Earth. Level-of-detail: year → month → day → matches. A pin anchors
+// you (today by default, or drop it anywhere) and stays visible at every zoom.
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTheme } from '@/components/ThemeProvider'
 import { dark, light } from '@/lib/colors'
-import { shortName, teamInitials } from '@/lib/utils'
-import { DIVISIONS, divisionTier, divisionColor, divisionShort, hexAlpha } from '@/lib/divisions'
-import { mondayOf } from '@/lib/weeks'
-import { TAVLINGAR, TAV_MAP, type Tavling } from '@/lib/tavlingar'
-import { motion, AnimatePresence } from 'framer-motion'
+import { shortName } from '@/lib/utils'
+import { divisionTier, divisionColor, hexAlpha } from '@/lib/divisions'
+import { TAV_MAP, type Tavling } from '@/lib/tavlingar'
+import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion'
 
-const GOLD   = '#f5c200'
-const SPRING = { type: 'spring', stiffness: 280, damping: 30 } as const
-const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
+const GOLD = '#f5c200'
+const MONTHS   = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december']
 const MONTHS_S = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
-const DAYS = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör']
+const DOW      = ['M', 'T', 'O', 'T', 'F', 'L', 'S']
+const DAYS     = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag']
+
+// ── Canvas geometry (design units, scaled by the zoom transform) ─────────────
+const CELL = 26, GAP = 3
+const MONTH_PAD = 10, TITLE_H = 24, DOW_H = 16
+const GRID_W  = 7 * CELL + 6 * GAP
+const MONTH_W = MONTH_PAD * 2 + GRID_W
+const MONTH_H = MONTH_PAD * 2 + TITLE_H + DOW_H + 6 * CELL + 5 * GAP
+const COLS = 3, COL_GAP = 20, ROW_GAP = 20
 
 type Team = { id: string; name: string }
 type Match = {
@@ -27,13 +36,26 @@ type Match = {
   home_team_id: string; away_team_id: string
   home: Team; away: Team
 }
+type DayInfo = { count: number; color: string; live: boolean; tav: boolean; tier: number }
 
-type Level =
-  | { type: 'root' }
-  | { type: 'division'; div: string }
-  | { type: 'month'; div: string; month: string }  // month = 'YYYY-MM'
-  | { type: 'team'; div: string; teamId: string }
-  | { type: 'tav' }
+function monthKeys(from: string, to: string): string[] {
+  const out: string[] = []
+  let [y, m] = [+from.slice(0, 4), +from.slice(5, 7)]
+  const [ey, em] = [+to.slice(0, 4), +to.slice(5, 7)]
+  while (y < ey || (y === ey && m <= em)) {
+    out.push(`${y}-${String(m).padStart(2, '0')}`)
+    m++; if (m > 12) { m = 1; y++ }
+  }
+  return out
+}
+// Mon-first weekday index of the 1st of a month
+function firstDow(mo: string): number {
+  return (new Date(mo + '-01T12:00:00').getDay() + 6) % 7
+}
+function daysInMonth(mo: string): number {
+  const [y, m] = [+mo.slice(0, 4), +mo.slice(5, 7)]
+  return new Date(y, m, 0).getDate()
+}
 
 export default function AtlasPage() {
   const { theme } = useTheme()
@@ -42,11 +64,16 @@ export default function AtlasPage() {
 
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
-  const [path, setPath]       = useState<Level[]>([{ type: 'root' }])
+  const [dayOpen, setDayOpen] = useState<string | null>(null)
+  const [pin, setPin] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('bk-atlas-pin')
+      if (saved) return saved
+    }
+    return new Date().toISOString().slice(0, 10)
+  })
 
-  const level = path[path.length - 1]
-  const push  = (l: Level) => setPath(p => [...p, l])
-  const pop   = () => setPath(p => (p.length > 1 ? p.slice(0, -1) : p))
+  const today = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,63 +88,199 @@ export default function AtlasPage() {
       })
   }, [])
 
-  const today   = new Date().toISOString().slice(0, 10)
-  const curWeek = mondayOf(today)
-
-  // ── Derived model ───────────────────────────────────────────────────────────
+  // ── World model: months + per-day info ─────────────────────────────────────
   const model = useMemo(() => {
-    const divisions = [...new Set(matches.map(m => m.division))]
-    const regIdx = (d: string) => {
-      const i = DIVISIONS.findIndex(x => x.name === d)
-      return i < 0 ? 999 : i
-    }
-    divisions.sort((a, b) => divisionTier(a) - divisionTier(b) || regIdx(a) - regIdx(b))
+    const dates = [...matches.map(m => m.date.slice(0, 10)), ...TAV_MAP.keys(), today].sort()
+    const months = monthKeys(dates[0].slice(0, 7), dates[dates.length - 1].slice(0, 7))
 
-    const byDiv = new Map<string, Match[]>()
-    divisions.forEach(d => byDiv.set(d, []))
-    matches.forEach(m => byDiv.get(m.division)?.push(m))
-
-    const live = matches.filter(m => m.status === 'live')
-    return { divisions, byDiv, live }
-  }, [matches])
-
-  const divMatches = (div: string) => model.byDiv.get(div) ?? []
-
-  const isHotDiv = (div: string) => {
-    const in7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
-    return divMatches(div).some(m => {
+    const days = new Map<string, DayInfo>()
+    let maxCount = 1
+    matches.forEach(m => {
       const d = m.date.slice(0, 10)
-      return m.status === 'live' || (d >= today && d <= in7)
+      const tier = divisionTier(m.division)
+      const cur = days.get(d) ?? { count: 0, color: divisionColor(m.division), live: false, tav: false, tier }
+      cur.count++
+      if (m.status === 'live') cur.live = true
+      if (tier < cur.tier) { cur.tier = tier; cur.color = divisionColor(m.division) }
+      days.set(d, cur)
+      if (cur.count > maxCount) maxCount = cur.count
     })
-  }
-  const hasLiveDiv = (div: string) => divMatches(div).some(m => m.status === 'live')
-
-  const nextMatchOf = (ms: Match[]) => ms.find(m => m.date.slice(0, 10) >= today && m.home_score === null)
-
-  // Season week intensities for a set of matches → micro heat strip (bucketed)
-  const heatStrip = (ms: Match[], buckets = 14): { v: number; past: boolean }[] => {
-    if (ms.length === 0) return []
-    const weeks = [...new Set(ms.map(m => mondayOf(m.date.slice(0, 10))))].sort()
-    if (weeks.length === 0) return []
-    const perWeek = new Map<string, number>()
-    ms.forEach(m => {
-      const wk = mondayOf(m.date.slice(0, 10))
-      perWeek.set(wk, (perWeek.get(wk) ?? 0) + 1)
+    TAV_MAP.forEach((_, d) => {
+      const cur = days.get(d) ?? { count: 0, color: GOLD, live: false, tav: false, tier: 9 }
+      cur.tav = true
+      days.set(d, cur)
     })
-    const n = Math.min(buckets, weeks.length)
-    const out: { v: number; past: boolean }[] = []
-    for (let i = 0; i < n; i++) {
-      const slice = weeks.slice(Math.floor(i * weeks.length / n), Math.floor((i + 1) * weeks.length / n))
-      const count = slice.reduce((s, wk) => s + (perWeek.get(wk) ?? 0), 0)
-      out.push({ v: count, past: slice[slice.length - 1] < curWeek })
+
+    const rows = Math.ceil(months.length / COLS)
+    const worldW = COLS * MONTH_W + (COLS - 1) * COL_GAP
+    const worldH = rows * MONTH_H + (rows - 1) * ROW_GAP
+    return { months, days, maxCount, worldW, worldH }
+  }, [matches, today])
+
+  const monthOrigin = (idx: number) => ({
+    x: (idx % COLS) * (MONTH_W + COL_GAP),
+    y: Math.floor(idx / COLS) * (MONTH_H + ROW_GAP),
+  })
+  // Canvas-space center of a date's cell
+  const cellCenter = (date: string) => {
+    const idx = model.months.indexOf(date.slice(0, 7))
+    if (idx < 0) return null
+    const o = monthOrigin(idx)
+    const slot = firstDow(date.slice(0, 7)) + (+date.slice(8, 10) - 1)
+    return {
+      x: o.x + MONTH_PAD + (slot % 7) * (CELL + GAP) + CELL / 2,
+      y: o.y + MONTH_PAD + TITLE_H + DOW_H + Math.floor(slot / 7) * (CELL + GAP) + CELL / 2,
     }
-    const max = Math.max(1, ...out.map(o => o.v))
-    return out.map(o => ({ v: o.v / max, past: o.past }))
   }
 
-  const fmtNext = (m: Match) => {
-    const d = new Date(m.date)
-    return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS_S[d.getMonth()]} · ${d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}`
+  // ── The camera: pan/zoom via motion values ──────────────────────────────────
+  const viewRef  = useRef<HTMLDivElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const s = useMotionValue(1)
+  const [vp, setVp] = useState({ w: 0, h: 0 })
+  const [lod, setLod] = useState<'year' | 'month' | 'day'>('month')
+  const initRef = useRef(false)
+
+  useEffect(() => {
+    const el = viewRef.current
+    if (!el) return
+    const measure = () => setVp({ w: el.clientWidth, h: el.clientHeight })
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [loading])
+
+  const minScale = vp.w > 0
+    ? Math.min(vp.w / (model.worldW + 40), vp.h / (model.worldH + 40))
+    : 0.3
+  const maxScale = 2.6
+  const clampS = (v: number) => Math.max(minScale, Math.min(maxScale, v))
+
+  // LOD from effective cell size on screen
+  useEffect(() => {
+    const update = (v: number) => {
+      const px = v * CELL
+      const next = px < 13 ? 'year' : px < 30 ? 'month' : 'day'
+      setLod(prev => (prev === next ? prev : next))
+    }
+    update(s.get())
+    return s.on('change', update)
+  }, [s])
+
+  const clampPan = (nx: number, ny: number, sc: number) => {
+    const pad = 60
+    const minX = Math.min(pad, vp.w - model.worldW * sc - pad)
+    const minY = Math.min(pad, vp.h - model.worldH * sc - pad)
+    return {
+      x: Math.max(minX, Math.min(pad, nx)),
+      y: Math.max(minY, Math.min(pad, ny)),
+    }
+  }
+
+  // Fly the camera so canvas point (cx, cy) sits at viewport center, at scale ts
+  const flyTo = (cx: number, cy: number, ts: number) => {
+    const sc = clampS(ts)
+    const t = clampPan(vp.w / 2 - cx * sc, vp.h / 2.4 - cy * sc, sc)
+    const spring = { type: 'spring', stiffness: 170, damping: 26 } as const
+    animate(s, sc, spring); animate(x, t.x, spring); animate(y, t.y, spring)
+  }
+  const flyToDate = (date: string, ts?: number) => {
+    const c = cellCenter(date)
+    if (c) flyTo(c.x, c.y, ts ?? Math.max(vp.w / (MONTH_W + 30), 1.1))
+  }
+  const flyToYear = () => flyTo(model.worldW / 2, model.worldH / 2, minScale)
+
+  // Initial view: month zoom centered on the pin
+  useEffect(() => {
+    if (loading || vp.w === 0 || initRef.current) return
+    initRef.current = true
+    const sc = clampS(Math.max(vp.w / (MONTH_W + 30), 1.1))
+    const c = cellCenter(pin) ?? { x: model.worldW / 2, y: model.worldH / 2 }
+    const t = clampPan(vp.w / 2 - c.x * sc, vp.h / 2.4 - c.y * sc, sc)
+    s.set(sc); x.set(t.x); y.set(t.y)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, vp.w])
+
+  // ── Gestures: drag pan, pinch zoom, wheel zoom, tap ─────────────────────────
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  const gesture  = useRef({ moved: false, startDist: 0, startScale: 1 })
+
+  const zoomAround = (px: number, py: number, nextS: number) => {
+    const sc = clampS(nextS)
+    const k = sc / s.get()
+    const t = clampPan(px - (px - x.get()) * k, py - (py - y.get()) * k, sc)
+    s.set(sc); x.set(t.x); y.set(t.y)
+  }
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    gesture.current.moved = false
+    if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()]
+      gesture.current.startDist = Math.hypot(a.x - b.x, a.y - b.y)
+      gesture.current.startScale = s.get()
+    }
+  }
+  const onPointerMove = (e: React.PointerEvent) => {
+    const prev = pointers.current.get(e.pointerId)
+    if (!prev) return
+    const cur = { x: e.clientX, y: e.clientY }
+    if (pointers.current.size === 1) {
+      const dx = cur.x - prev.x, dy = cur.y - prev.y
+      if (Math.abs(dx) + Math.abs(dy) > 3) gesture.current.moved = true
+      const t = clampPan(x.get() + dx, y.get() + dy, s.get())
+      x.set(t.x); y.set(t.y)
+    }
+    pointers.current.set(e.pointerId, cur)
+    if (pointers.current.size === 2) {
+      gesture.current.moved = true
+      const [a, b] = [...pointers.current.values()]
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      if (gesture.current.startDist > 0) {
+        const rect = viewRef.current!.getBoundingClientRect()
+        zoomAround((a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top,
+          gesture.current.startScale * (dist / gesture.current.startDist))
+      }
+    }
+  }
+  const onPointerUp = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId)
+    if (pointers.current.size > 0 || gesture.current.moved) return
+    // Tap: day cell → open day (or zoom to month first when far out)
+    const target = (e.target as Element).closest('[data-date], [data-month]')
+    if (!target) return
+    const date  = target.getAttribute('data-date')
+    const month = target.getAttribute('data-month')
+    if (date) {
+      if (lod === 'year') flyToDate(date)
+      else if (model.days.has(date)) setDayOpen(date)
+      else flyToDate(date)
+    } else if (month) {
+      flyToDate(month + '-15')
+    }
+  }
+
+  useEffect(() => {
+    const el = viewRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      zoomAround(e.clientX - rect.left, e.clientY - rect.top, s.get() * Math.exp(-e.deltaY * 0.0016))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, vp.w, minScale])
+
+  // Pin stays constant size on screen: counter-scale
+  const pinScale = useTransform(s, v => 1 / v)
+
+  const dropPin = (date: string) => {
+    setPin(date)
+    localStorage.setItem('bk-atlas-pin', date)
   }
 
   if (loading) return (
@@ -126,510 +289,261 @@ export default function AtlasPage() {
     </main>
   )
 
-  // ── Shared tile chrome ──────────────────────────────────────────────────────
-  const tileBase = (color: string, hot: boolean): React.CSSProperties => ({
-    position: 'relative', borderRadius: 18, overflow: 'hidden', cursor: 'pointer',
-    border: `1px solid ${hexAlpha(color, hot ? 0.55 : 0.28)}`,
-    background: isDark
-      ? `linear-gradient(145deg, ${hexAlpha(color, hot ? 0.22 : 0.12)}, ${hexAlpha(color, 0.04)})`
-      : `linear-gradient(145deg, ${hexAlpha(color, hot ? 0.16 : 0.09)}, ${hexAlpha(color, 0.02)})`,
-    boxShadow: hot ? `0 0 18px ${hexAlpha(color, 0.25)}` : 'none',
-    WebkitTapHighlightColor: 'transparent',
-    textAlign: 'left', padding: 0, display: 'block', width: '100%',
-  })
+  const pinPos = cellCenter(pin)
+  const dayMatches = dayOpen
+    ? matches.filter(m => m.date.slice(0, 10) === dayOpen)
+        .sort((a, b) => divisionTier(a.division) - divisionTier(b.division) || a.date.localeCompare(b.date))
+    : []
+  const dayTavs: Tavling[] = dayOpen ? (TAV_MAP.get(dayOpen) ?? []) : []
 
-  const MicroHeat = ({ strip, color }: { strip: { v: number; past: boolean }[]; color: string }) => (
-    <div style={{ display: 'flex', gap: 2.5, alignItems: 'flex-end' }}>
-      {strip.map((s, i) => (
-        <div key={i} style={{ flex: 1, maxWidth: 10, borderRadius: 2,
-          height: 4 + s.v * 10,
-          background: s.v === 0
-            ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)')
-            : hexAlpha(color, (0.25 + s.v * 0.75) * (s.past ? 0.35 : 1)) }} />
-      ))}
-    </div>
-  )
-
-  // ── LEVEL 0: Sverige — the mosaic ───────────────────────────────────────────
-  const RootLevel = () => {
-    const upcomingTavs = TAVLINGAR.filter(t => t.status !== 'avslutad')
-    const tavHot = [...TAV_MAP.keys()].some(d => mondayOf(d) === curWeek)
-
-    const DivTile = ({ div, size }: { div: string; size: 'l' | 'm' | 's' }) => {
-      const ms    = divMatches(div)
-      const color = divisionColor(div)
-      const hot   = isHotDiv(div)
-      const live  = hasLiveDiv(div)
-      const next  = nextMatchOf(ms)
-      const strip = heatStrip(ms, size === 's' ? 8 : 14)
-      return (
-        <motion.button layoutId={'tile-div-' + div} onClick={() => push({ type: 'division', div })}
-          whileTap={{ scale: 0.97 }} transition={SPRING}
-          style={{ ...tileBase(color, hot), gridColumn: size === 's' ? 'span 1' : 'span 2',
-            aspectRatio: size === 'l' ? '1.05' : size === 'm' ? '1.9' : '1' } as any}>
-          <div style={{ position: 'absolute', inset: 0, padding: size === 's' ? 10 : 14,
-            display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {live && (
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#e05555',
-                  boxShadow: '0 0 6px #e05555' }} />
-              )}
-              <span style={{ fontSize: size === 's' ? 10 : 12, fontWeight: 800, color: C.text,
-                lineHeight: 1.15 }}>
-                {size === 's' ? divisionShort(div) : div}
-              </span>
-            </div>
-            {size !== 's' && next && (
-              <span style={{ fontSize: 9.5, color: C.textMuted, marginTop: 3 }}>
-                Nästa: {fmtNext(next)}
-              </span>
-            )}
-            {live && size !== 's' && (
-              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#e05555', marginTop: 3 }}>
-                LIVE just nu
-              </span>
-            )}
-            <div style={{ marginTop: 'auto' }}>
-              <MicroHeat strip={strip} color={color} />
-            </div>
-          </div>
-        </motion.button>
-      )
-    }
-
-    const tier1 = model.divisions.filter(d => divisionTier(d) === 1)
-    const tier2 = model.divisions.filter(d => divisionTier(d) === 2)
-    const tier3 = model.divisions.filter(d => divisionTier(d) === 3)
-
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, padding: '4px 12px 32px' }}>
-
-        {/* Live hero — only exists while something is live: the hottest tile */}
-        {model.live.length > 0 && (
-          <motion.button layoutId="tile-live" whileTap={{ scale: 0.98 }} transition={SPRING}
-            onClick={() => push({ type: 'division', div: model.live[0].division })}
-            style={{ ...tileBase('#e05555', true), gridColumn: 'span 4', aspectRatio: '3.2' } as any}>
-            <div style={{ position: 'absolute', inset: 0, padding: 14, display: 'flex',
-              flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#e05555',
-                  boxShadow: '0 0 8px #e05555' }} />
-                <span style={{ fontSize: 10, fontWeight: 900, color: '#e05555', letterSpacing: 1.5 }}>
-                  LIVE JUST NU
-                </span>
-              </div>
-              {model.live.slice(0, 2).map(m => (
-                <div key={m.id} style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-                  {shortName(m.home?.name || '')} <span style={{ color: C.accent }}>{m.home_score}–{m.away_score}</span> {shortName(m.away?.name || '')}
-                </div>
-              ))}
-            </div>
-          </motion.button>
-        )}
-
-        {tier1.map(d => <DivTile key={d} div={d} size="l" />)}
-
-        {/* Tävlingar — gold tile */}
-        {upcomingTavs.length > 0 && (
-          <motion.button layoutId="tile-tav" whileTap={{ scale: 0.97 }} transition={SPRING}
-            onClick={() => push({ type: 'tav' })}
-            style={{ ...tileBase(GOLD, tavHot), gridColumn: 'span 2', aspectRatio: '1.9' } as any}>
-            <div style={{ position: 'absolute', inset: 0, padding: 14, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, transform: 'rotate(45deg)', background: GOLD }} />
-                <span style={{ fontSize: 12, fontWeight: 800, color: C.text }}>Tävlingar</span>
-              </div>
-              <span style={{ fontSize: 9.5, color: C.textMuted, marginTop: 3 }}>
-                {upcomingTavs.length} pågående & kommande
-              </span>
-              <div style={{ marginTop: 'auto', display: 'flex', gap: 3 }}>
-                {upcomingTavs.slice(0, 8).map(t => (
-                  <div key={t.id} style={{ width: 8, height: 8, borderRadius: 2, transform: 'rotate(45deg)',
-                    background: hexAlpha(GOLD, t.status === 'pagaende' ? 1 : 0.4) }} />
-                ))}
-              </div>
-            </div>
-          </motion.button>
-        )}
-
-        {tier2.map(d => <DivTile key={d} div={d} size={isHotDiv(d) ? 'l' : 'm'} />)}
-        {tier3.map(d => <DivTile key={d} div={d} size={isHotDiv(d) ? 'm' : 's'} />)}
-      </div>
-    )
+  const fmtDay = (d: string) => {
+    const dt = new Date(d + 'T12:00:00')
+    return `${DAYS[dt.getDay()]} ${dt.getDate()} ${MONTHS[dt.getMonth()]}`
   }
 
-  // ── LEVEL 1: a division — months mosaic + team tiles ────────────────────────
-  const DivisionLevel = ({ div }: { div: string }) => {
-    const ms    = divMatches(div)
-    const color = divisionColor(div)
-    const curMonth = today.slice(0, 7)
+  // ── Render ──────────────────────────────────────────────────────────────────
+  return (
+    <main style={{ height: '100dvh', display: 'flex', flexDirection: 'column',
+      background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif', overflow: 'hidden' }}>
 
-    const months = [...new Set(ms.map(m => m.date.slice(0, 7)))].sort()
-    const perMonth = new Map<string, Match[]>()
-    months.forEach(mo => perMonth.set(mo, ms.filter(m => m.date.slice(0, 7) === mo)))
-    const maxMonth = Math.max(1, ...months.map(mo => perMonth.get(mo)!.length))
-
-    // Teams with W-L records
-    const teams = new Map<string, { team: Team; w: number; l: number; d: number }>()
-    ms.forEach(m => {
-      ;[m.home, m.away].forEach(t => {
-        if (t && !teams.has(t.id)) teams.set(t.id, { team: t, w: 0, l: 0, d: 0 })
-      })
-      if (m.home_score === null) return
-      const h = teams.get(m.home?.id), a = teams.get(m.away?.id)
-      if (!h || !a) return
-      if (m.home_score! > m.away_score!) { h.w++; a.l++ }
-      else if (m.home_score! < m.away_score!) { a.w++; h.l++ }
-      else { h.d++; a.d++ }
-    })
-    const teamList = [...teams.values()].sort((x, y) => y.w - x.w)
-
-    return (
-      <motion.div layoutId={'tile-div-' + div} transition={SPRING}
-        style={{ margin: '4px 12px 32px', borderRadius: 18, overflow: 'hidden',
-          border: `1px solid ${hexAlpha(color, 0.35)}`,
-          background: isDark ? hexAlpha(color, 0.05) : hexAlpha(color, 0.04) }}>
-        <div style={{ height: 3, background: color }} />
-        <div style={{ padding: '14px 14px 6px' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>{div}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>
-            {ms.length} matcher · {teamList.length} lag
-          </div>
+      {/* Control bar */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8,
+        padding: '66px 14px 8px', borderBottom: '1px solid ' + C.border, zIndex: 20, background: C.bg }}>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: C.textMuted }}>ATLAS</span>
+        <span style={{ fontSize: 9, color: C.textMuted }}>
+          {lod === 'year' ? 'Säsong' : lod === 'month' ? 'Månad' : 'Dag'}
+        </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+          <button onClick={flyToYear} aria-label="Zooma ut till säsong"
+            style={{ border: '1px solid ' + C.border, background: 'transparent', color: C.textMuted,
+              borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 800, cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent' } as any}>
+            Säsong
+          </button>
+          <button onClick={() => flyToDate(pin)} aria-label="Flyg till nålen"
+            style={{ border: `1px solid ${hexAlpha(GOLD, 0.5)}`, background: hexAlpha(GOLD, 0.1),
+              color: C.text, borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 800,
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as any}>
+            📍 {pin === today ? 'Idag' : `${+pin.slice(8, 10)} ${MONTHS_S[+pin.slice(5, 7) - 1]}`}
+          </button>
         </div>
+      </div>
 
-        {/* Months mosaic — current month is the big one */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '8px 12px' }}>
-          {months.map(mo => {
-            const mms   = perMonth.get(mo)!
-            const heat  = mms.length / maxMonth
-            const isCur = mo === curMonth
-            const past  = mo < curMonth
-            const big   = isCur || heat > 0.85
-            const played = mms.filter(m => m.home_score !== null).length
+      {/* ── The map viewport ──────────────────────────────────────────────────── */}
+      <div ref={viewRef}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
+        style={{ flex: 1, position: 'relative', overflow: 'hidden', touchAction: 'none',
+          cursor: 'grab' }}>
+
+        <motion.div style={{ x, y, scale: s, transformOrigin: '0 0', position: 'absolute',
+          width: model.worldW, height: model.worldH }}>
+
+          {model.months.map((mo, idx) => {
+            const o = monthOrigin(idx)
+            const dim  = daysInMonth(mo)
+            const off  = firstDow(mo)
+            const isCurMonth = mo === today.slice(0, 7)
             return (
-              <motion.button key={mo} layoutId={'tile-month-' + div + mo} transition={SPRING}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => push({ type: 'month', div, month: mo })}
-                style={{ ...tileBase(color, isCur), gridColumn: big ? 'span 2' : 'span 1',
-                  aspectRatio: big ? '1.9' : '1', opacity: past && !isCur ? 0.55 : 1 } as any}>
-                <div style={{ position: 'absolute', inset: 0, padding: 10, display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: big ? 12 : 10, fontWeight: 800, color: C.text }}>
+              <div key={mo} data-month={mo}
+                style={{ position: 'absolute', left: o.x, top: o.y, width: MONTH_W, height: MONTH_H,
+                  borderRadius: 12, background: C.surface,
+                  border: `1px solid ${isCurMonth ? hexAlpha(GOLD, 0.45) : C.border}`,
+                  boxShadow: isCurMonth ? `0 0 14px ${hexAlpha(GOLD, 0.12)}` : 'none',
+                  padding: MONTH_PAD }}>
+                <div style={{ height: TITLE_H, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: C.text }}>
                     {MONTHS[+mo.slice(5, 7) - 1]}
                   </span>
-                  <span style={{ fontSize: 9, color: C.textMuted }}>{mo.slice(0, 4)}</span>
-                  <span style={{ marginTop: 'auto', fontSize: big ? 16 : 12, fontWeight: 900,
-                    color: hexAlpha(color, 0.4 + heat * 0.6) }}>
-                    {mms.length}
-                  </span>
-                  {big && (
-                    <span style={{ fontSize: 8.5, color: C.textMuted }}>
-                      {played < mms.length ? `${mms.length - played} kvar att spela` : 'färdigspelad'}
-                    </span>
-                  )}
+                  <span style={{ fontSize: 10, color: C.textMuted }}>{mo.slice(0, 4)}</span>
                 </div>
-              </motion.button>
+                <div style={{ height: DOW_H, display: 'flex', gap: GAP }}>
+                  {DOW.map((d, i) => (
+                    <span key={i} style={{ width: CELL, fontSize: 8.5, fontWeight: 700,
+                      color: C.textMuted, textAlign: 'center' }}>
+                      {lod !== 'year' ? d : ''}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP, width: GRID_W }}>
+                  {Array.from({ length: 42 }, (_, slot) => {
+                    const dayNum = slot - off + 1
+                    if (dayNum < 1 || dayNum > dim)
+                      return <div key={slot} style={{ width: CELL, height: CELL }} />
+                    const date = `${mo}-${String(dayNum).padStart(2, '0')}`
+                    const info = model.days.get(date)
+                    const isPast  = date < today
+                    const isToday = date === today
+                    const intensity = info ? 0.3 + 0.7 * Math.min(info.count / model.maxCount, 1) : 0
+                    const bg = info && info.count > 0
+                      ? (info.color.startsWith('#')
+                          ? hexAlpha(info.color, intensity * (isPast ? 0.4 : 1))
+                          : info.color)
+                      : info?.tav
+                        ? hexAlpha(GOLD, isPast ? 0.25 : 0.5)
+                        : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                    return (
+                      <div key={slot} data-date={date}
+                        style={{ width: CELL, height: CELL, borderRadius: 5, background: bg,
+                          position: 'relative', cursor: info ? 'pointer' : 'default',
+                          outline: isToday ? `1.5px solid ${GOLD}` : 'none', outlineOffset: 1,
+                          boxShadow: info?.live ? `0 0 7px ${hexAlpha(GOLD, 0.8)}` : 'none',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {lod === 'day' && (
+                          <span style={{ fontSize: 8, fontWeight: 700, pointerEvents: 'none',
+                            color: info && info.count > 0
+                              ? (isDark ? '#fff' : '#1a2535')
+                              : C.textMuted,
+                            opacity: info && info.count > 0 ? 0.95 : 0.5 }}>
+                            {info && info.count > 0 ? info.count : dayNum}
+                          </span>
+                        )}
+                        {info?.tav && info.count > 0 && (
+                          <div style={{ position: 'absolute', top: 2, right: 2, width: 5, height: 5,
+                            borderRadius: 1, transform: 'rotate(45deg)', background: GOLD,
+                            pointerEvents: 'none' }} />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             )
           })}
-        </div>
 
-        {/* Team tiles — each opens the team's heat map */}
-        <div style={{ padding: '8px 12px 16px' }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: C.textMuted,
-            padding: '6px 2px' }}>
-            LAG — TRYCK FÖR VÄRMEKARTA
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-            {teamList.map(({ team, w, l, d }) => {
-              const total = w + l + d
-              const ratio = total > 0 ? w / total : 0
-              return (
-                <motion.button key={team.id} layoutId={'tile-team-' + team.id} transition={SPRING}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => push({ type: 'team', div, teamId: team.id })}
-                  style={{ ...tileBase(color, false), aspectRatio: '1' } as any}>
-                  <div style={{ position: 'absolute', inset: 0, padding: 8, display: 'flex',
-                    flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                    <span style={{ fontSize: 13, fontWeight: 900, color: C.text }}>
-                      {teamInitials(team.name)}
-                    </span>
-                    <span style={{ fontSize: 8.5, color: C.textMuted, textAlign: 'center',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                      {shortName(team.name)}
-                    </span>
-                    {total > 0 && (
-                      <div style={{ width: '80%', height: 3, borderRadius: 2, overflow: 'hidden',
-                        background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}>
-                        <div style={{ width: `${ratio * 100}%`, height: '100%', background: C.green }} />
-                      </div>
-                    )}
-                  </div>
-                </motion.button>
-              )
-            })}
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  // ── LEVEL 2a: a month in a division — rounds & matches (the leaf list) ──────
-  const MonthLevel = ({ div, month }: { div: string; month: string }) => {
-    const color = divisionColor(div)
-    const ms = divMatches(div).filter(m => m.date.slice(0, 7) === month)
-      .sort((a, b) => a.date.localeCompare(b.date))
-    const rounds: [number, Match[]][] = []
-    ms.forEach(m => {
-      const last = rounds[rounds.length - 1]
-      if (last && last[0] === m.round) last[1].push(m)
-      else rounds.push([m.round, [m]])
-    })
-    return (
-      <motion.div layoutId={'tile-month-' + div + month} transition={SPRING}
-        style={{ margin: '4px 12px 32px', borderRadius: 18, overflow: 'hidden',
-          border: `1px solid ${hexAlpha(color, 0.35)}`, background: C.surface }}>
-        <div style={{ height: 3, background: color }} />
-        <div style={{ padding: '14px 14px 4px' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>
-            {MONTHS[+month.slice(5, 7) - 1].charAt(0).toUpperCase() + MONTHS[+month.slice(5, 7) - 1].slice(1)} {month.slice(0, 4)}
-          </div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{div}</div>
-        </div>
-        {rounds.map(([round, rms]) => (
-          <div key={round}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px 4px' }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color, letterSpacing: 1 }}>
-                OMGÅNG {round}
-              </span>
-              <span style={{ fontSize: 9, color: C.textMuted }}>
-                {(() => { const d = new Date(rms[0].date); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS_S[d.getMonth()]}` })()}
-              </span>
-            </div>
-            {rms.map(m => {
-              const done    = m.home_score !== null
-              const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
-              const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
-              return (
-                <a key={m.id} href={'/matches/' + m.id}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
-                    textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
-                  <div style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, background: hexAlpha(color, 0.6) }} />
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 13, textAlign: 'right',
-                    fontWeight: homeWin ? 700 : 400,
-                    color: done && !homeWin ? C.textMuted : C.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {shortName(m.home?.name || '')}
-                  </div>
-                  <div style={{ flexShrink: 0, width: 56, textAlign: 'center' }}>
-                    {m.status === 'live' ? (
-                      <span style={{ fontSize: 12, fontWeight: 900, color: '#e05555' }}>
-                        {m.home_score}–{m.away_score}
-                      </span>
-                    ) : done ? (
-                      <span style={{ fontSize: 13, fontWeight: 900, color: C.text }}>
-                        {m.home_score}–{m.away_score}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 10, fontWeight: 600, color: C.textMuted }}>
-                        {new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: awayWin ? 700 : 400,
-                    color: done && !awayWin ? C.textMuted : C.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {shortName(m.away?.name || '')}
-                  </div>
-                </a>
-              )
-            })}
-          </div>
-        ))}
-        <div style={{ height: 12 }} />
-      </motion.div>
-    )
-  }
-
-  // ── LEVEL 2b: a team — full season heat map of wins/losses ──────────────────
-  const TeamLevel = ({ div, teamId }: { div: string; teamId: string }) => {
-    const color = divisionColor(div)
-    const ms = divMatches(div)
-      .filter(m => m.home?.id === teamId || m.away?.id === teamId)
-      .sort((a, b) => a.date.localeCompare(b.date))
-    const team = ms[0]?.home?.id === teamId ? ms[0]?.home : ms[0]?.away
-    const results = ms.map(m => {
-      const isHome = m.home?.id === teamId
-      const my  = isHome ? m.home_score : m.away_score
-      const opp = isHome ? m.away_score : m.home_score
-      const res = m.home_score === null ? 'upcoming'
-        : my! > opp! ? 'win' : my! < opp! ? 'loss' : 'draw'
-      return { m, res, isHome, opp: isHome ? m.away : m.home, my, oppScore: opp }
-    })
-    const w = results.filter(r => r.res === 'win').length
-    const l = results.filter(r => r.res === 'loss').length
-    const d = results.filter(r => r.res === 'draw').length
-    const resColor = (res: string) =>
-      res === 'win' ? C.green : res === 'loss' ? C.red : res === 'draw' ? C.textMuted : 'transparent'
-
-    return (
-      <motion.div layoutId={'tile-team-' + teamId} transition={SPRING}
-        style={{ margin: '4px 12px 32px', borderRadius: 18, overflow: 'hidden',
-          border: `1px solid ${hexAlpha(color, 0.35)}`, background: C.surface }}>
-        <div style={{ height: 3, background: color }} />
-        <div style={{ padding: '14px 14px 10px' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>{shortName(team?.name || '')}</div>
-          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>
-            {div} · <span style={{ color: C.green, fontWeight: 700 }}>{w}V</span>{' '}
-            {d > 0 && <span>{d}O </span>}
-            <span style={{ color: C.red, fontWeight: 700 }}>{l}F</span>
-          </div>
-        </div>
-
-        {/* The heat map: one cell per round */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6, padding: '0 14px 10px' }}>
-          {results.map(({ m, res }) => (
-            <a key={m.id} href={'/matches/' + m.id}
-              title={`Omgång ${m.round}`}
-              style={{ aspectRatio: '1', borderRadius: 6, textDecoration: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: res === 'upcoming'
-                  ? 'transparent'
-                  : hexAlpha(resColor(res).startsWith('#') ? resColor(res) : '#888888', 0.18),
-                border: res === 'upcoming'
-                  ? `1px dashed ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)'}`
-                  : `1px solid ${hexAlpha(resColor(res).startsWith('#') ? resColor(res) : '#888888', 0.4)}`,
-                WebkitTapHighlightColor: 'transparent' } as any}>
-              <span style={{ fontSize: 10, fontWeight: 900,
-                color: res === 'upcoming' ? C.textMuted : resColor(res) }}>
-                {res === 'win' ? 'V' : res === 'loss' ? 'F' : res === 'draw' ? 'O' : m.round}
-              </span>
-            </a>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 12, padding: '0 14px 14px', fontSize: 9, color: C.textMuted }}>
-          <span><span style={{ color: C.green, fontWeight: 800 }}>V</span> vinst</span>
-          <span><span style={{ color: C.red, fontWeight: 800 }}>F</span> förlust</span>
-          <span>streckad = kommande (visar omgång)</span>
-        </div>
-      </motion.div>
-    )
-  }
-
-  // ── Tävlingar level ─────────────────────────────────────────────────────────
-  const TavLevel = () => {
-    const ts = TAVLINGAR.filter(t => t.status !== 'avslutad')
-    const order = { pagaende: 0, kommande: 1, avslutad: 2 } as const
-    const sorted = [...ts].sort((a, b) =>
-      order[a.status] - order[b.status] || (a.dateFrom ?? '9999').localeCompare(b.dateFrom ?? '9999'))
-    return (
-      <motion.div layoutId="tile-tav" transition={SPRING}
-        style={{ margin: '4px 12px 32px', borderRadius: 18, overflow: 'hidden',
-          border: `1px solid ${hexAlpha(GOLD, 0.35)}`, background: C.surface }}>
-        <div style={{ height: 3, background: GOLD }} />
-        <div style={{ padding: '14px 14px 6px' }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>Tävlingar</div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, padding: '4px 12px 16px' }}>
-          {sorted.map((t: Tavling) => (
-            <a key={t.id} href={t.href}
-              style={{ ...tileBase(GOLD, t.status === 'pagaende'), aspectRatio: '1.35',
-                textDecoration: 'none' } as any}>
-              <div style={{ position: 'absolute', inset: 0, padding: 10, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1,
-                  color: t.status === 'pagaende' ? GOLD : C.textMuted }}>
-                  {t.status === 'pagaende' ? 'PÅGÅENDE' : 'KOMMANDE'}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: C.text, marginTop: 3, lineHeight: 1.25 }}>
-                  {t.name}
-                </span>
-                <span style={{ marginTop: 'auto', fontSize: 8.5, color: C.textMuted }}>
-                  {t.dateLabel} · {t.venue}
-                </span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </motion.div>
-    )
-  }
-
-  // ── Breadcrumb ──────────────────────────────────────────────────────────────
-  const crumbs: string[] = ['Sverige']
-  path.slice(1).forEach(l => {
-    if (l.type === 'division') crumbs.push(divisionShort(l.div))
-    if (l.type === 'month')    crumbs.push(MONTHS_S[+l.month.slice(5, 7) - 1])
-    if (l.type === 'team') {
-      const m = matches.find(x => x.home?.id === l.teamId || x.away?.id === l.teamId)
-      const t = m?.home?.id === l.teamId ? m?.home : m?.away
-      crumbs.push(teamInitials(t?.name || '?'))
-    }
-    if (l.type === 'tav') crumbs.push('Tävlingar')
-  })
-
-  return (
-    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
-
-        {/* Breadcrumb bar — the "altitude meter" */}
-        <div style={{ position: 'sticky', top: 56, zIndex: 30, background: C.bg,
-          display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px',
-          borderBottom: '1px solid ' + C.border }}>
-          {path.length > 1 && (
-            <button onClick={pop}
-              style={{ border: '1px solid ' + C.border, background: 'transparent', color: C.text,
-                borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 800,
-                cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as any}>
-              ←
-            </button>
+          {/* The pin — counter-scaled so it stays the same size at every altitude */}
+          {pinPos && (
+            <motion.div style={{ position: 'absolute', left: pinPos.x, top: pinPos.y,
+              scale: pinScale, transformOrigin: '50% 100%', pointerEvents: 'none', zIndex: 5,
+              x: '-50%', y: '-100%' }}>
+              <svg width="26" height="34" viewBox="0 0 26 34">
+                <path d="M13 0C5.8 0 0 5.8 0 13c0 9.8 13 21 13 21s13-11.2 13-21C26 5.8 20.2 0 13 0z"
+                  fill={GOLD} stroke={isDark ? '#10161e' : '#fff'} strokeWidth="2" />
+                <circle cx="13" cy="12.5" r="4.5" fill={isDark ? '#10161e' : '#fff'} />
+              </svg>
+            </motion.div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
-            {crumbs.map((c, i) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
-                {i > 0 && <span style={{ fontSize: 10, color: C.textMuted }}>›</span>}
-                <button onClick={() => setPath(p => p.slice(0, i + 1))}
-                  style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
-                    fontSize: 12, fontWeight: i === crumbs.length - 1 ? 800 : 600,
-                    color: i === crumbs.length - 1 ? C.text : C.textMuted,
-                    WebkitTapHighlightColor: 'transparent' } as any}>
-                  {c}
-                </button>
-              </span>
-            ))}
-          </div>
-          <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: 2, color: C.textMuted }}>
-            ATLAS
-          </span>
-        </div>
+        </motion.div>
 
-        <div style={{ paddingTop: 10 }}>
-          <AnimatePresence mode="popLayout" initial={false}>
-            {level.type === 'root' && (
-              <motion.div key="root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <RootLevel />
-              </motion.div>
-            )}
-            {level.type === 'division' && (
-              <motion.div key={'div-' + level.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <DivisionLevel div={level.div} />
-              </motion.div>
-            )}
-            {level.type === 'month' && (
-              <motion.div key={'mo-' + level.month} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <MonthLevel div={level.div} month={level.month} />
-              </motion.div>
-            )}
-            {level.type === 'team' && (
-              <motion.div key={'team-' + level.teamId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <TeamLevel div={level.div} teamId={level.teamId} />
-              </motion.div>
-            )}
-            {level.type === 'tav' && (
-              <motion.div key="tav" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <TavLevel />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Zoom buttons */}
+        <div style={{ position: 'absolute', right: 12, bottom: 110, display: 'flex',
+          flexDirection: 'column', gap: 8, zIndex: 10 }}>
+          {(['+', '−'] as const).map(op => (
+            <button key={op} aria-label={op === '+' ? 'Zooma in' : 'Zooma ut'}
+              onClick={() => zoomAround(vp.w / 2, vp.h / 2, s.get() * (op === '+' ? 1.55 : 0.65))}
+              style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid ' + C.border,
+                background: C.surface, color: C.text, fontSize: 18, fontWeight: 700,
+                cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+                WebkitTapHighlightColor: 'transparent' } as any}>
+              {op}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* ── Day sheet — the deepest zoom: matches ─────────────────────────────── */}
+      <AnimatePresence>
+        {dayOpen && (
+          <>
+            <motion.div key="sheet-bd" onClick={() => setDayOpen(null)}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, zIndex: 80,
+                background: isDark ? 'rgba(6,10,16,0.6)' : 'rgba(26,37,53,0.35)' }} />
+            <motion.div key="sheet"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+              style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 81,
+                maxWidth: 600, margin: '0 auto', maxHeight: '62dvh', overflowY: 'auto',
+                background: C.surface, borderRadius: '18px 18px 0 0',
+                border: '1px solid ' + C.border, borderBottom: 'none',
+                paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: C.border,
+                margin: '8px auto 4px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px 4px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{fmtDay(dayOpen)}</div>
+                  <div style={{ fontSize: 10, color: C.textMuted }}>
+                    {dayMatches.length > 0 && `${dayMatches.length} matcher`}
+                    {dayMatches.length > 0 && dayTavs.length > 0 && ' · '}
+                    {dayTavs.length > 0 && `${dayTavs.length} ${dayTavs.length === 1 ? 'tävling' : 'tävlingar'}`}
+                  </div>
+                </div>
+                <button onClick={() => { dropPin(dayOpen); }}
+                  style={{ border: `1px solid ${hexAlpha(GOLD, 0.5)}`,
+                    background: pin === dayOpen ? hexAlpha(GOLD, 0.18) : 'transparent',
+                    color: C.text, borderRadius: 20, padding: '4px 12px', fontSize: 11,
+                    fontWeight: 700, cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent' } as any}>
+                  📍 {pin === dayOpen ? 'Nålen sitter här' : 'Fäst nålen'}
+                </button>
+              </div>
+
+              {dayTavs.map(t => (
+                <a key={t.id} href={t.href}
+                  style={{ display: 'block', margin: '8px 16px 0', padding: '10px 12px',
+                    borderRadius: 10, textDecoration: 'none',
+                    background: hexAlpha(GOLD, isDark ? 0.07 : 0.05),
+                    border: `1px solid ${hexAlpha(GOLD, 0.25)}`,
+                    WebkitTapHighlightColor: 'transparent' } as any}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{t.name}</div>
+                  <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>
+                    {t.dateLabel} · {t.venue}
+                  </div>
+                </a>
+              ))}
+
+              {dayMatches.map(m => {
+                const done    = m.home_score !== null
+                const live    = m.status === 'live'
+                const homeWin = (m.home_score ?? 0) > (m.away_score ?? 0)
+                const awayWin = (m.away_score ?? 0) > (m.home_score ?? 0)
+                const color   = divisionColor(m.division)
+                return (
+                  <a key={m.id} href={'/matches/' + m.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px',
+                      textDecoration: 'none', WebkitTapHighlightColor: 'transparent' } as any}>
+                    <div style={{ width: 3, alignSelf: 'stretch', borderRadius: 2,
+                      background: hexAlpha(color, 0.7) }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 8.5, fontWeight: 700, color, letterSpacing: 0.5 }}>
+                        {m.division.toUpperCase()}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, textAlign: 'right',
+                          fontWeight: homeWin ? 700 : 400,
+                          color: done && !homeWin ? C.textMuted : C.text,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {shortName(m.home?.name || '')}
+                        </span>
+                        <span style={{ flexShrink: 0, width: 52, textAlign: 'center',
+                          fontSize: live || done ? 13 : 10, fontWeight: live || done ? 900 : 600,
+                          color: live ? '#e05555' : done ? C.text : C.textMuted }}>
+                          {live || done
+                            ? `${m.home_score}–${m.away_score}`
+                            : new Date(m.date).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13,
+                          fontWeight: awayWin ? 700 : 400,
+                          color: done && !awayWin ? C.textMuted : C.text,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {shortName(m.away?.name || '')}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
+
+              <div style={{ padding: '10px 16px' }}>
+                <a href={'/schema?date=' + dayOpen}
+                  style={{ fontSize: 12, fontWeight: 700, color: C.accent, textDecoration: 'none' }}>
+                  Öppna dagen i schemat →
+                </a>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
