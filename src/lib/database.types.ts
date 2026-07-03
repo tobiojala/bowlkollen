@@ -1862,6 +1862,15 @@ export type Database = {
           viewed_at: string
         }[]
       }
+      get_discover_most_followed: {
+        Args: { p_limit?: number }
+        Returns: {
+          club_name: string
+          follower_count: number
+          name: string
+          public_id: string
+        }[]
+      }
       get_discover_recent_players: {
         Args: { p_limit?: number }
         Returns: {
@@ -1871,6 +1880,17 @@ export type Database = {
           last_total: number
           name: string
           public_id: string
+        }[]
+      }
+      get_discover_top_series: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          club_name: string
+          hall_name: string
+          match_date: string
+          name: string
+          public_id: string
+          total: number
         }[]
       }
       get_division_rivals: {

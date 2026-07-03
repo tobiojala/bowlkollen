@@ -1,6 +1,7 @@
 'use client'
 
 import { Heart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useSession, useIsFollowing, useToggleFollow } from '@/lib/queries'
 import type { FollowEntityType } from '@/lib/types'
 import { COLOR } from '@/lib/brand'
@@ -14,11 +15,17 @@ interface Props {
 }
 
 export default function FollowButton({ entityType, entityId, variant = 'icon', size = 'md' }: Props) {
+  const router = useRouter()
   const { data: session }              = useSession()
   const isFollowing                    = useIsFollowing(entityType, entityId)
   const { mutate, isPending, error }   = useToggleFollow(entityType, entityId)
 
-  if (!session) return null
+  // Logged out, the heart still shows — the follow tap is the single best
+  // reason to create an account, so it leads to login instead of vanishing.
+  const onPress = () => {
+    if (!session) { router.push('/login'); return }
+    mutate()
+  }
 
   const dim      = size === 'sm' ? 32 : 40
   const iconSize = size === 'sm' ? 15 : 18
@@ -34,7 +41,7 @@ export default function FollowButton({ entityType, entityId, variant = 'icon', s
     return (
       <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
       <button
-        onClick={() => mutate()}
+        onClick={onPress}
         disabled={isPending}
         aria-label={isFollowing ? 'Sluta följa' : 'Följ'}
         style={{
@@ -72,7 +79,7 @@ export default function FollowButton({ entityType, entityId, variant = 'icon', s
   return (
     <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
       <button
-        onClick={() => mutate()}
+        onClick={onPress}
         disabled={isPending}
         aria-label={isFollowing ? 'Sluta följa' : 'Följ'}
         style={{
