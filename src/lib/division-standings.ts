@@ -13,6 +13,7 @@ export type MatchRow = {
   is_finished:       boolean | null
   match_date:        string
   round_id:          number | null
+  hall_name:         string | null
 }
 
 export type TeamStanding = {

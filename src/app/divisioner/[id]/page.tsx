@@ -2,31 +2,17 @@ import { notFound } from 'next/navigation'
 import { createPublicSupabase } from '@/lib/supabase-server'
 import { computeStandings } from '@/lib/division-standings'
 import { SEASON } from '@/lib/constants'
+import { toMatchRow, type DbMatchRow } from '@/lib/bits-matches'
 import { DivisionClient } from './_components/DivisionClient'
-import type { MatchRow } from '@/lib/division-standings'
-import type { Database } from '@/lib/database.types'
 
 export const revalidate = 300
 
-type DbMatchRow = Database['public']['Tables']['bits_matches']['Row']
-
-function toMatchRow(m: DbMatchRow): MatchRow {
-  return {
-    bits_match_id:     m.bits_match_id,
-    home_bits_team_id: m.home_bits_team_id,
-    away_bits_team_id: m.away_bits_team_id,
-    home_team_name:    m.home_team_name,
-    away_team_name:    m.away_team_name,
-    home_result:       m.home_result,
-    away_result:       m.away_result,
-    is_finished:       m.is_finished,
-    match_date:        m.match_date,
-    round_id:          m.round_id,
-  }
-}
-
-export default async function DivisionPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DivisionPage(
+  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ team?: string }> },
+) {
   const { id } = await params
+  const sp = await searchParams
+  const teamFilter = sp?.team ? Number(sp.team) : null
   const divisionId = parseInt(id, 10)
   if (isNaN(divisionId)) notFound()
 
@@ -50,8 +36,21 @@ export default async function DivisionPage({ params }: { params: Promise<{ id: s
 
   if (!division) notFound()
 
-  const matches = (rawMatches ?? []).map(m => toMatchRow(m as unknown as DbMatchRow))
-  const standings = computeStandings(matches)
+  const allMatches = (rawMatches ?? []).map(m => toMatchRow(m as unknown as DbMatchRow))
+  // Standings always reflect the whole division, even in a team lens.
+  const standings = computeStandings(allMatches)
+
+  // Team lens — tapping a team inside the division filters to that team's games
+  // (keeps you in this division; the club page would scatter you across squads).
+  const filtered = teamFilter != null && !isNaN(teamFilter)
+  const matches = filtered
+    ? allMatches.filter(m => m.home_bits_team_id === teamFilter || m.away_bits_team_id === teamFilter)
+    : allMatches
+  const teamFilterName = filtered
+    ? (allMatches.find(m => m.home_bits_team_id === teamFilter)?.home_team_name
+       ?? allMatches.find(m => m.away_bits_team_id === teamFilter)?.away_team_name
+       ?? null)
+    : null
 
   return (
     <DivisionClient
@@ -60,6 +59,8 @@ export default async function DivisionPage({ params }: { params: Promise<{ id: s
       seasonYear={seasonYear}
       matches={matches}
       standings={standings}
+      teamFilterName={teamFilterName}
+      teamFilterId={filtered ? teamFilter : null}
     />
   )
 }
