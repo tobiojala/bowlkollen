@@ -1,7 +1,27 @@
 import { describe, it, expect } from 'vitest'
 import {
-  shortName, teamInitials, shortDiv, countdown, divTierColor, dateLabel,
+  shortName, teamInitials, shortDiv, countdown, divTierColor, dateLabel, primaryDivision,
 } from '@/lib/utils'
+
+describe('primaryDivision', () => {
+  it('picks the most-frequent division (league over playoff)', () => {
+    const matches = [
+      ...Array(18).fill({ division: 'Elitserien Herrar' }),
+      ...Array(4).fill({ division: 'SM-slutspel Herrar' }),
+    ]
+    expect(primaryDivision(matches)).toBe('Elitserien Herrar')
+  })
+
+  it('ignores null divisions', () => {
+    expect(primaryDivision([{ division: null }, { division: 'Division 1 Norra' }, { division: null }]))
+      .toBe('Division 1 Norra')
+  })
+
+  it('returns null when there are no divisions', () => {
+    expect(primaryDivision([])).toBeNull()
+    expect(primaryDivision([{ division: null }])).toBeNull()
+  })
+})
 
 describe('shortName', () => {
   it('strips team-suffix tokens', () => {

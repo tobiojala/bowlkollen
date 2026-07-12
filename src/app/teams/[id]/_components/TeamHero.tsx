@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, Globe, Mail, Share2, Link as LinkIcon } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
-import { teamColor, teamInitials, shortName } from '@/lib/utils'
+import { teamColor, teamInitials, shortName, primaryDivision } from '@/lib/utils'
 import { divisionColor } from '@/lib/divisions'
 import FollowButton from '@/components/FollowButton'
 import { useResolvedBitsTeamId } from '@/lib/queries'
@@ -52,7 +52,7 @@ export default function TeamHero({
     return won ? 'V' : lost ? 'F' : 'O'
   })
 
-  const division = completed[0]?.division || upcoming[0]?.division || null
+  const division = primaryDivision([...completed, ...upcoming])
   const divC     = divisionColor(division)
   const fColor   = (f: string) => f === 'V' ? C.green : f === 'F' ? '#e05555' : C.muted
 
@@ -112,7 +112,7 @@ export default function TeamHero({
 
         {team.description && (
           <p style={{ fontSize: 13, color: overlayColor + '0.58)', fontStyle: 'italic', margin: '0 0 16px', lineHeight: 1.55, maxWidth: 420 }}>
-            "{team.description}"
+            &ldquo;{team.description}&rdquo;
           </p>
         )}
 
@@ -146,7 +146,9 @@ export default function TeamHero({
             <span style={{ fontSize: 10, color: overlayColor + '0.40)', alignSelf: 'center' }}>Fler lag:</span>
             {clubTeams.map(ct => {
               const label = ct.team_path === 'herrar' ? 'Herrar' : ct.team_path === 'damer' ? 'Damer' : ct.team_path === 'allsvenskan' ? 'Allsvenskan' : ct.name
-              const url   = ct.club_slug && ct.team_path ? '/' + ct.club_slug + '/' + ct.team_path : '/teams/' + ct.id
+              // Link straight to the team page — the two-segment
+              // /{club_slug}/{team_path} URL has no route and 404s.
+              const url   = '/teams/' + ct.id
               return (
                 <Link key={ct.id} href={url} style={{ fontSize: 11, fontWeight: 700, color: overlayColor + '0.65)', background: overlayColor + '0.10)', border: '1px solid ' + overlayColor + '0.15)', borderRadius: 20, padding: '4px 12px', textDecoration: 'none' }}>
                   {label} ›

@@ -4,6 +4,7 @@ import React from 'react'
 import { useColors } from '@/components/ThemeProvider'
 import { COLOR, SPACE, RADIUS, TYPE } from '@/lib/brand'
 import { useTeamMatches, useTeamDivisionMatches } from '@/lib/queries'
+import { primaryDivision } from '@/lib/utils'
 import { computeTeamNarrative } from '@/lib/team-narrative'
 import type { TableRow, FormResult } from '@/lib/types'
 
@@ -35,7 +36,7 @@ export default function TeamNarrativeBanner({ id }: Props) {
 
   const completed = (teamMatches as any[]).filter((m: any) => m.status === 'completed' && m.home_score !== null)
   const upcoming  = (teamMatches as any[]).filter((m: any) => m.status === 'upcoming' || m.status === 'live')
-  const division  = completed[0]?.division ?? upcoming[0]?.division ?? null
+  const division  = primaryDivision(teamMatches as { division: string | null }[])
 
   const { data: divMatches = [] } = useTeamDivisionMatches(division)
   const table = buildTable(divMatches)

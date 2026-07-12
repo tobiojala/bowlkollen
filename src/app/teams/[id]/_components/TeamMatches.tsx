@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useColors } from '@/components/ThemeProvider'
 import { COLOR } from '@/lib/brand'
-import { teamColor, teamInitials, shortName, shortDiv } from '@/lib/utils'
+import { teamColor, teamInitials, shortName, shortDiv, primaryDivision } from '@/lib/utils'
 import { divisionColor } from '@/lib/divisions'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import TopPerformers   from '@/components/TopPerformers'
@@ -22,7 +22,7 @@ const SPRING   = { type: 'spring', stiffness: 300, damping: 30 } as const
 const PREVIEW  = 5
 
 export default function TeamMatches({ id, matches }: Props) {
-  const { C, isDark } = useColors()
+  const { isDark } = useColors()
   const [tab,         setTab]         = useState<Tab>('results')
   const [expandedOpp, setExpandedOpp] = useState<string | null>(null)
   const [showAll,     setShowAll]     = useState(false)
@@ -102,7 +102,7 @@ export default function TeamMatches({ id, matches }: Props) {
     )
   }
 
-  const division = completed[0]?.division ?? upcoming[0]?.division ?? null
+  const division = primaryDivision(matches)
 
   return (
     <section id="team-matches" style={{ scrollMarginTop: 60, borderTop: '1px solid ' + COLOR.hairline }}>

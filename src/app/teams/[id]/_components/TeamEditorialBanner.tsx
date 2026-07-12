@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { COLOR, SPACE, TYPE } from '@/lib/brand'
-import { shortName } from '@/lib/utils'
+import { shortName, primaryDivision } from '@/lib/utils'
 import type { Match } from '@/lib/types'
 
 type Props = {
@@ -41,7 +41,7 @@ export default function TeamEditorialBanner({ teamId, completed, upcoming }: Pro
 
   if (!headline) return null
 
-  const division = completed[0]?.division ?? upcoming[0]?.division ?? null
+  const division = primaryDivision([...completed, ...upcoming])
   const sub: string[] = []
   if (division) sub.push(division)
   if (upcoming.length > 0) {

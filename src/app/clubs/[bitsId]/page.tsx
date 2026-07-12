@@ -196,9 +196,9 @@ export default function ClubPage({ params }: Props) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
                 {bitsTeams.map(bt => {
                   const ourTeam  = findOurTeam(bt)
-                  const href     = ourTeam?.club_slug && ourTeam?.team_path
-                    ? `/${ourTeam.club_slug}/${ourTeam.team_path}`
-                    : ourTeam ? `/teams/${ourTeam.id}` : null
+                  // Link straight to the team page — the two-segment
+                  // /{club_slug}/{team_path} URL has no route and 404s.
+                  const href     = ourTeam ? `/teams/${ourTeam.id}` : null
                   const typeLabel = teamTypeLabel(bt)
                   const divC      = ourTeam?.division ? divisionColor(ourTeam.division) : null
 

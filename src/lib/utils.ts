@@ -2,6 +2,25 @@ export function shortName(n: string) {
   return (n || '').replace(/ A$/, '').replace(/ H A$/, '').replace(/ DA$/, '').replace(/ F$/, '').trim()
 }
 
+/**
+ * A team's "home" division for the header badge — the league it mainly plays in.
+ * Picking the *latest* match's division was wrong: for top teams the last game
+ * of the season is the SM-slutspel playoff, so they'd show an SM-slutspel badge
+ * instead of Elitserien. The most-frequent division is the real league.
+ */
+export function primaryDivision(matches: { division: string | null }[]): string | null {
+  const counts = new Map<string, number>()
+  for (const m of matches) {
+    if (m.division) counts.set(m.division, (counts.get(m.division) ?? 0) + 1)
+  }
+  let best: string | null = null
+  let max = 0
+  for (const [div, n] of counts) {
+    if (n > max) { max = n; best = div }
+  }
+  return best
+}
+
 export function teamInitials(n: string) {
   return shortName(n).split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase()
 }
