@@ -14,9 +14,9 @@ type Props = {
 }
 
 // ── Geography from division names — Swedish bowling is literally regional ────
-type Region = 'norrland' | 'norra' | 'svealand' | 'elit' | 'gotaland' | 'sodra'
+type Region = 'norrland' | 'norra' | 'svealand' | 'gotaland' | 'sodra'
 
-function regionOf(name: string): Region {
+function regionOf(name: string): Region | 'elit' {
   if (name.includes('Elitserien'))       return 'elit'
   if (/norrland/i.test(name))            return 'norrland'
   if (/svealand|mellan|östra|västra/i.test(name)) return 'svealand'
@@ -26,21 +26,23 @@ function regionOf(name: string): Region {
   return 'svealand'
 }
 
-// Bands top→bottom trace Sweden's silhouette: Norrland leans northeast,
-// the country narrows through Svealand, widens over Götaland, tapers in Skåne.
-const BANDS: { key: Region; label: string; padLeft: string; padRight: string }[] = [
-  { key: 'norrland', label: 'NORRLAND',   padLeft: '26%', padRight: '4%'  },
-  { key: 'norra',    label: 'NORRA',      padLeft: '18%', padRight: '8%'  },
-  { key: 'svealand', label: 'SVEALAND',   padLeft: '10%', padRight: '10%' },
-  { key: 'elit',     label: 'ELITSERIEN', padLeft: '14%', padRight: '14%' },
-  { key: 'gotaland', label: 'GÖTALAND',   padLeft: '4%',  padRight: '6%'  },
-  { key: 'sodra',    label: 'SÖDRA',      padLeft: '12%', padRight: '20%' },
+// Bands run north→south. `inset` traces Sweden's width at that latitude:
+// narrow in the far north, widest through Götaland, tapering into Skåne — and
+// swaying east/west so the column of squares reads as a coastline, not a list.
+const BANDS: { key: Region; label: string; insetL: string; insetR: string }[] = [
+  { key: 'norrland', label: 'Norrland', insetL: '30%', insetR: '12%' },
+  { key: 'norra',    label: 'Norra',    insetL: '22%', insetR: '9%'  },
+  { key: 'svealand', label: 'Svealand', insetL: '12%', insetR: '8%'  },
+  { key: 'gotaland', label: 'Götaland', insetL: '5%',  insetR: '13%' },
+  { key: 'sodra',    label: 'Södra',    insetL: '20%', insetR: '24%' },
 ]
 
+// Size = tier. Pushed harder than before so altitude reads instantly.
 const TIER_SIZE: Record<string, number> = {
-  'Elitserien': 76, 'Allsvenskan': 60, 'Mellanallsvenskan': 56,
+  'Elitserien': 84, 'Allsvenskan': 62,
   'Division 1': 48, 'Division 2': 40, 'Division 3': 34,
 }
+const CROWN_SIZE = 88
 
 function alpha(hex: string, a: number): string {
   const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16)
@@ -50,22 +52,89 @@ function alpha(hex: string, a: number): string {
 // "Division 1 Norra Svealand" → "Norra Svealand"; "Elitserien Herrar" → "Herrar"
 function squareLabel(name: string): string {
   return name
-    .replace(/^(Division\s*\d|Div\s*\d|Mellanallsvenskan|Allsvenskan|Elitserien)\s*/i, '')
+    .replace(/^(Division\s*\d|Div\s*\d|Mellanallsvenskan|Nordallsvenskan|Sydallsvenskan|Allsvenskan|Elitserien)\s*/i, '')
     .trim() || name
 }
 function initials(label: string): string {
   return label.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase()
 }
 
-const todayStr = new Date().toISOString().slice(0, 10)
+const todayStr  = new Date().toISOString().slice(0, 10)
 const weekAhead = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
 
-/** Level 0 — Sverige. Every square IS a division (never a date), placed
- * roughly where it lives in the country. Size = tier, glow = hot right now.
- * Tapping a square splits it open into the division's omgångar. */
+// Stylized Sweden silhouette — a faint watermark that anchors the whole map as
+// a country, not a stack of rows. Pointed north, Bothnian bulge, Skåne tail.
+function SwedenBackdrop() {
+  return (
+    <svg
+      viewBox="0 0 200 460" preserveAspectRatio="xMidYMid meet"
+      aria-hidden
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%',
+        pointerEvents: 'none' }}
+    >
+      <defs>
+        <linearGradient id="sv-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0"   stopColor={COLOR.gold} stopOpacity="0.07" />
+          <stop offset="0.55" stopColor={COLOR.gold} stopOpacity="0.02" />
+          <stop offset="1"   stopColor={COLOR.ink}  stopOpacity="0.015" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M96 12 C108 40 120 70 122 105 C124 140 138 165 140 200 C142 235 150 260 144 292
+           C138 320 128 345 112 372 C104 388 96 402 88 388 C80 372 74 350 66 320
+           C60 292 50 268 54 232 C58 196 46 168 50 132 C54 98 62 58 78 30 C84 20 90 14 96 12 Z"
+        fill="url(#sv-fill)"
+        stroke={COLOR.ink3}
+        strokeOpacity="0.28"
+        strokeWidth="1.2"
+      />
+    </svg>
+  )
+}
+
+function DivisionSquare({ d, size, big, onOpen }: { d: MapDivision; size: number; big?: boolean; onOpen: (d: MapDivision) => void }) {
+  const label = squareLabel(d.name)
+  return (
+    <motion.button
+      layoutId={`karta-div-${d.id}`}
+      whileTap={{ scale: 0.92 }}
+      onClick={() => onOpen(d)}
+      style={{
+        width: size, height: size, borderRadius: big ? 16 : 12,
+        // Size = tier, glow = hot. Fill/border intensity carries "now", not scale.
+        background: alpha(d.color, d.hot ? 0.32 : 0.13),
+        border: `1px solid ${alpha(d.color, d.hot ? 0.9 : 0.32)}`,
+        boxShadow: d.hot ? `0 0 18px ${alpha(d.color, 0.4)}, inset 0 0 12px ${alpha(d.color, 0.15)}` : 'none',
+        cursor: 'pointer', position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 4, WebkitTapHighlightColor: 'transparent',
+      } as React.CSSProperties}
+      aria-label={d.name}
+    >
+      {d.live && (
+        <span style={{ position: 'absolute', top: 5, right: 5, width: 6, height: 6,
+          borderRadius: '50%', background: COLOR.red, boxShadow: `0 0 6px ${COLOR.red}` }}>
+          <span style={{ position: 'absolute', inset: 0, borderRadius: '50%',
+            background: COLOR.red, animation: 'kartaPulse 1.4s ease-in-out infinite' }} />
+        </span>
+      )}
+      <span style={{
+        fontSize: big ? 11 : size >= 58 ? 10 : 8, fontWeight: 800, lineHeight: 1.2,
+        color: d.hot ? d.color : alpha(d.color, 0.85), textAlign: 'center', overflow: 'hidden',
+      }}>
+        {size >= 46 ? label : initials(label)}
+      </span>
+    </motion.button>
+  )
+}
+
+/** Level 0 — Sverige. Every square IS a division (never a date), placed roughly
+ * where it lives in the country. Elitserien crowns the map as the national tier;
+ * everything else falls into a geographic band. Size = tier, glow = live now. */
 export function SverigeMosaic({ divisions, datesByDivision, onOpen }: Props) {
-  const byRegion = useMemo(() => {
-    const m = new Map<Region, MapDivision[]>()
+  const { crown, byRegion } = useMemo(() => {
+    const crown: MapDivision[] = []
+    const byRegion = new Map<Region, MapDivision[]>()
     for (const d of divisions) {
       const tier = divisionTier(d.name)
       if (!(MOSAIC_TIERS as readonly string[]).includes(tier)) continue
@@ -79,66 +148,67 @@ export function SverigeMosaic({ divisions, datesByDivision, onOpen }: Props) {
         hot, live,
       }
       const r = regionOf(d.name)
-      if (!m.has(r)) m.set(r, [])
-      m.get(r)!.push(div)
+      if (r === 'elit') { crown.push(div); continue }
+      if (!byRegion.has(r)) byRegion.set(r, [])
+      byRegion.get(r)!.push(div)
     }
     // Bigger tiers first within each band
-    m.forEach(list => list.sort((a, b) =>
+    byRegion.forEach(list => list.sort((a, b) =>
       (TIER_SIZE[divisionTier(b.name)] ?? 30) - (TIER_SIZE[divisionTier(a.name)] ?? 30)))
-    return m
-  }, [divisions, datesByDivision])
+    return { crown, byRegion }
+  }, [divisions, datesByDivision, onOpen])
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '8px 12px 90px',
-      scrollbarWidth: 'none' } as React.CSSProperties}>
-      {BANDS.map(band => {
-        const divs = byRegion.get(band.key) ?? []
-        if (divs.length === 0) return null
-        return (
-          <div key={band.key} style={{ paddingLeft: band.padLeft, paddingRight: band.padRight,
-            marginBottom: 18 }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 2, color: COLOR.ink4,
-              marginBottom: 6 }}>
-              {band.label}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end' }}>
-              {divs.map(d => {
-                const size  = TIER_SIZE[divisionTier(d.name)] ?? 34
-                const label = squareLabel(d.name)
-                return (
-                  <motion.button key={d.id} layoutId={`karta-div-${d.id}`}
-                    onClick={() => onOpen(d)} whileTap={{ scale: 0.92 }}
-                    animate={{ scale: d.hot ? 1.06 : 1 }}
-                    style={{
-                      width: size, height: size, borderRadius: 12,
-                      background: alpha(d.color, d.hot ? 0.30 : 0.14),
-                      border: `1px solid ${alpha(d.color, d.hot ? 0.8 : 0.35)}`,
-                      boxShadow: d.hot ? `0 0 14px ${alpha(d.color, 0.35)}` : 'none',
-                      cursor: 'pointer', position: 'relative',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: 3, WebkitTapHighlightColor: 'transparent',
-                    } as React.CSSProperties}
-                    aria-label={d.name}>
-                    {d.live && (
-                      <span style={{ position: 'absolute', top: 4, right: 4, width: 5, height: 5,
-                        borderRadius: '50%', background: COLOR.red, boxShadow: `0 0 5px ${COLOR.red}` }} />
-                    )}
-                    <span style={{
-                      fontSize: size >= 60 ? 9.5 : 8, fontWeight: 800, lineHeight: 1.2,
-                      color: d.color, textAlign: 'center', overflow: 'hidden',
-                    }}>
-                      {size >= 48 ? label : initials(label)}
-                    </span>
-                  </motion.button>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
+    <div style={{ position: 'relative', height: '100%' }}>
+      <style>{`@keyframes kartaPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(2.4);opacity:0}}`}</style>
+      <SwedenBackdrop />
 
-      <div style={{ padding: '4px 8px', fontSize: 10, color: COLOR.ink4 }}>
-        Varje ruta är en division — glöd = matcher inom 7 dagar. Tryck för att öppna.
+      <div style={{ position: 'absolute', inset: 0, overflowY: 'auto',
+        padding: '4px 16px 96px', scrollbarWidth: 'none' } as React.CSSProperties}>
+
+        {/* Elitserien — the national crown, above the geography */}
+        {crown.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
+            padding: '10px 0 18px', position: 'relative' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: COLOR.gold,
+              opacity: 0.85, marginBottom: 10 }}>
+              ELITSERIEN
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {crown.map(d => <DivisionSquare key={d.id} d={d} size={CROWN_SIZE} big onOpen={onOpen} />)}
+            </div>
+            {/* hairline tying the crown to the map below */}
+            <div style={{ width: 1, height: 16, marginTop: 8,
+              background: `linear-gradient(${alpha(COLOR.gold, 0.4)}, transparent)` }} />
+          </div>
+        )}
+
+        {/* Geographic bands, north → south */}
+        {BANDS.map(band => {
+          const divs = byRegion.get(band.key) ?? []
+          if (divs.length === 0) return null
+          return (
+            <div key={band.key} style={{ marginLeft: band.insetL, marginRight: band.insetR,
+              marginBottom: 22 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: COLOR.ink3, opacity: 0.5 }} />
+                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2.5, color: COLOR.ink3 }}>
+                  {band.label.toUpperCase()}
+                </span>
+                <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${alpha(COLOR.ink3, 0.18)}, transparent)` }} />
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end' }}>
+                {divs.map(d => (
+                  <DivisionSquare key={d.id} d={d} size={TIER_SIZE[divisionTier(d.name)] ?? 34} onOpen={onOpen} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        <div style={{ padding: '8px 4px 0', fontSize: 10, color: COLOR.ink4, textAlign: 'center' }}>
+          Varje ruta är en division · storlek = nivå · glöd = spelas inom 7 dagar
+        </div>
       </div>
     </div>
   )
