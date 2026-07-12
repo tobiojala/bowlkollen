@@ -467,7 +467,7 @@ export type BkRatingResult = {
 
 // ── Follow system ─────────────────────────────────────────────────────────────
 
-export type FollowEntityType = 'player' | 'team'
+export type FollowEntityType = 'player' | 'team' | 'division'
 
 export type Follow = {
   id: string
