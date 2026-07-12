@@ -70,8 +70,8 @@ export const BK_RATING = {
 
 // ── Season boundaries (Swedish bowling year: 1 Jul – 30 Jun) ─────────────────
 export const SEASON = {
-  CURRENT: '2025-07-01',
-  PREV:    '2024-07-01',
+  CURRENT: '2026-07-01',
+  PREV:    '2025-07-01',
 } as const
 
 // ── Divisions shown in the main standings table ───────────────────────────────

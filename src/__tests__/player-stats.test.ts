@@ -250,17 +250,22 @@ describe('bkBarPercent', () => {
 // ── seasonResults ─────────────────────────────────────────────────────────────
 
 describe('seasonResults', () => {
+  // Derived from the season constants so this survives every season rollover.
+  const curYear     = Number(SEASON_CURRENT.slice(0, 4))
+  const currentDate = `${curYear}-09-15`     // after SEASON_CURRENT
+  const prevDate    = `${curYear - 1}-09-15` // in the previous season window
+
   it('filters current season results', () => {
-    const current = makeResult([200, 200, 200, 200], '2025-09-15') // after SEASON_CURRENT
-    const prev    = makeResult([180, 180, 180, 180], '2024-09-15') // before SEASON_CURRENT
+    const current = makeResult([200, 200, 200, 200], currentDate)
+    const prev    = makeResult([180, 180, 180, 180], prevDate)
     const results = [current, prev]
     expect(seasonResults(results, 'current')).toContain(current)
     expect(seasonResults(results, 'current')).not.toContain(prev)
   })
 
   it('filters previous season results', () => {
-    const current = makeResult([200, 200, 200, 200], '2025-09-15')
-    const prev    = makeResult([180, 180, 180, 180], '2024-09-15')
+    const current = makeResult([200, 200, 200, 200], currentDate)
+    const prev    = makeResult([180, 180, 180, 180], prevDate)
     const results = [current, prev]
     expect(seasonResults(results, 'prev')).toContain(prev)
     expect(seasonResults(results, 'prev')).not.toContain(current)

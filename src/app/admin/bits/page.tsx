@@ -20,7 +20,7 @@ export default function BitsAdminPage() {
   const { C } = useColors()
   const [loading, setLoading] = useState<string | null>(null)
   const [logs, setLogs] = useState<Log[]>([])
-  const [season, setSeason] = useState(2025)
+  const [season, setSeason] = useState(2026)
   const [matchId, setMatchId] = useState('')
 
   const inp = {
@@ -87,7 +87,7 @@ export default function BitsAdminPage() {
         <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: 14, padding: 20, marginBottom: 20 }}>
           <label style={lbl}>SÄSONG</label>
           <select style={inp} value={season} onChange={e => setSeason(Number(e.target.value))}>
-            {[2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005, 2004, 2003, 2002].map(y => (
+            {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005, 2004, 2003, 2002].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
