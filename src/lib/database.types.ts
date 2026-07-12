@@ -536,6 +536,36 @@ export type Database = {
         }
         Relationships: []
       }
+      team_claims: {
+        Row: {
+          bits_team_id: number
+          claimed_at: string | null
+          id: string
+          role: string | null
+          status: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          bits_team_id: number
+          claimed_at?: string | null
+          id?: string
+          role?: string | null
+          status?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          bits_team_id?: number
+          claimed_at?: string | null
+          id?: string
+          role?: string | null
+          status?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       club_claims: {
         Row: {
           claimed_at: string | null
@@ -1974,6 +2004,14 @@ export type Database = {
       submit_player_claim: {
         Args: { p_lic_nbr: string; p_public_id: string }
         Returns: Json
+      }
+      submit_team_claim: {
+        Args: { p_bits_team_id: number; p_lic_nbr: string }
+        Returns: Json
+      }
+      set_team_role: {
+        Args: { p_bits_team_id: number; p_role: string }
+        Returns: undefined
       }
       team_current_division: {
         Args: { p_bits_team_id: number }

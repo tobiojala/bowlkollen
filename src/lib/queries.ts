@@ -11,6 +11,7 @@ export const keys = {
   playerBitsResults: (publicId: string) => ['player', publicId, 'bits-results'] as const,
   playerPercentile: (publicId: string) => ['player', publicId, 'percentile']  as const,
   playerClaim:   (id: string) => ['player', id, 'claim']   as const,
+  teamClaim:     (bitsTeamId: number) => ['team-claim', bitsTeamId] as const,
   team:          (id: string) => ['team', id]              as const,
   teamMatches:   (id: string) => ['team', id, 'matches']   as const,
   teamEvents:    (id: string) => ['team', id, 'events']    as const,
@@ -300,6 +301,60 @@ export function usePlayerClaim(playerId: string, userId: string | undefined) {
     },
     enabled: !!playerId && !!userId,
     staleTime: STALE.LONG,
+  })
+}
+
+export type TeamRole = 'player' | 'captain' | 'lagledare' | 'reserv'
+export type TeamClaimState = { status: 'verified' | 'pending' | 'rejected'; role: TeamRole } | null
+
+/** This user's membership of a BITS team — status + their private role. */
+export function useTeamClaim(bitsTeamId: number) {
+  return useQuery({
+    queryKey: keys.teamClaim(bitsTeamId),
+    queryFn: async (): Promise<TeamClaimState> => {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return null
+      const { data } = await supabase
+        .from('team_claims')
+        .select('status, role')
+        .eq('user_id', session.user.id)
+        .eq('bits_team_id', bitsTeamId)
+        .maybeSingle()
+      if (!data) return null
+      return { status: data.status as 'verified' | 'pending' | 'rejected', role: (data.role ?? 'player') as TeamRole }
+    },
+    enabled: !!bitsTeamId,
+    staleTime: STALE.MEDIUM,
+  })
+}
+
+/** Claim your spot in a team (license → auto-verify adult, else pending review).
+ * Membership only — role starts as 'player'; captaincy is chosen afterwards. */
+export function useSubmitTeamClaim(bitsTeamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (licNbr: string): Promise<'verified' | 'pending'> => {
+      const { data, error } = await createClient()
+        .rpc('submit_team_claim', { p_bits_team_id: bitsTeamId, p_lic_nbr: licNbr })
+      if (error) throw error
+      const res = data as { status: 'verified' | 'pending' }
+      return res.status
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
+  })
+}
+
+/** A verified member sets their own (private) role. 'captain' gates lineup tools. */
+export function useSetTeamRole(bitsTeamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (role: TeamRole) => {
+      const { error } = await createClient()
+        .rpc('set_team_role', { p_bits_team_id: bitsTeamId, p_role: role })
+      if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
   })
 }
 
