@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { useTeam, useTeamMatches, useSession, keys } from '@/lib/queries'
 import type { Team, Match, Player, PlayerMomentum } from '@/lib/types'
 import TeamHero         from './TeamHero'
+import { TeamActions }  from './TeamActions'
 import TeamSectionNav   from './TeamSectionNav'
 import TeamOverview     from './TeamOverview'
 import TeamSquad        from './TeamSquad'
@@ -200,6 +201,11 @@ export default function TeamClient({ id }: { id: string }) {
           todayMatch={todayMatch}
           onEditClick={() => setEditingTeam(v => !v)}
         />
+
+        {/* Calendar subscribe + CSV export (Follow lives in the hero) */}
+        <div style={{ padding: '0 20px 16px' }}>
+          <TeamActions teamId={id} teamName={team.name} matches={matches} />
+        </div>
 
         {/* Admin edit panel */}
         {editingTeam && isAdmin && (
