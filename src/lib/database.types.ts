@@ -1930,6 +1930,17 @@ export type Database = {
           public_id: string
         }[]
       }
+      get_pending_team_claims: {
+        Args: never
+        Returns: {
+          bits_team_id: number
+          claim_id: string
+          claimed_at: string
+          club_name: string
+          team_name: string
+          user_email: string
+        }[]
+      }
       get_player_identity: {
         Args: { p_public_id: string }
         Returns: {
@@ -2021,6 +2032,10 @@ export type Database = {
         }[]
       }
       update_claim_status: {
+        Args: { p_claim_id: string; p_status: string }
+        Returns: undefined
+      }
+      update_team_claim_status: {
         Args: { p_claim_id: string; p_status: string }
         Returns: undefined
       }
