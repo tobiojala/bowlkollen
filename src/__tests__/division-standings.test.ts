@@ -92,7 +92,12 @@ describe('divisionTier', () => {
     ['Elitserien Herrar',              'Elitserien'],
     ['Elitserien Damer',               'Elitserien'],
     ['Allsvenskan Herrar Norra',       'Allsvenskan'],
-    ['Mellanallsvenskan Herrar Väst',  'Mellanallsvenskan'],
+    // All Allsvenskan variants share one tier, regardless of casing/spacing:
+    // the men's one-word forms have a lowercase 'a'.
+    ['Mellanallsvenskan Herrar Väst',  'Allsvenskan'],
+    ['Sydallsvenskan Herrar',          'Allsvenskan'],
+    ['Nordallsvenskan Herrar',         'Allsvenskan'],
+    ['Södra Allsvenskan Damer',        'Allsvenskan'],
     ['Division 1 Herrar Norra',        'Division 1'],
     ['Division 2 Herrar Syd',          'Division 2'],
     ['Division 5 Damer',               'Division 5'],

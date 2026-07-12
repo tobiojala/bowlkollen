@@ -70,7 +70,6 @@ export function computeStandings(matches: MatchRow[]): TeamStanding[] {
 const TIER_ORDER = [
   'Elitserien',
   'Allsvenskan',
-  'Mellanallsvenskan',
   'Division 1',
   'Division 2',
   'Division 3',
@@ -80,9 +79,12 @@ const TIER_ORDER = [
 ]
 
 export function divisionTier(name: string): string {
-  if (name.includes('Elitserien'))       return 'Elitserien'
-  if (name.includes('Allsvenskan'))      return 'Allsvenskan'
-  if (name.includes('Mellanallsvenskan') || name.includes('Mellan')) return 'Mellanallsvenskan'
+  // Case-insensitive: the men's leagues are one word ("Sydallsvenskan",
+  // "Nordallsvenskan", "Mellanallsvenskan") with a lowercase 'a', while the
+  // women's are spaced ("Norra Allsvenskan"). All belong to the same tier.
+  const n = name.toLowerCase()
+  if (n.includes('elitserien'))  return 'Elitserien'
+  if (n.includes('allsvensk'))   return 'Allsvenskan'
   // Anchored at the start — regional district leagues like "Värmlands P4
   // Div 4" also contain "Div 4" as a substring but aren't the national tier.
   for (let i = 5; i >= 1; i--) {
