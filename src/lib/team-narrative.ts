@@ -1,5 +1,32 @@
+import { Trophy, Target, Flame, TrendingUp, ShieldAlert, ShieldCheck, Swords, Minus, type LucideIcon } from 'lucide-react'
 import { NARRATIVE } from '@/lib/constants'
+import { COLOR } from '@/lib/brand'
 import type { TableRow, TeamNarrative, NarrativeArchetype, FormResult } from '@/lib/types'
+
+// Categorical — one color per story, like division colors, not decoration.
+export const NARRATIVE_COLOR: Record<NarrativeArchetype, string> = {
+  promotion_chase:     COLOR.gold,
+  playoff_push:        COLOR.gold,
+  dominant_form:       '#f97316',
+  comeback_run:        COLOR.green,
+  relegation_battle:   COLOR.red,
+  survival_confirmed:  COLOR.green,
+  rivalry_match:       '#a855f7',
+  revenge_opportunity: '#f97316',
+  midseason:           COLOR.ink2,
+}
+
+export const NARRATIVE_ICON: Record<NarrativeArchetype, LucideIcon> = {
+  promotion_chase:     Trophy,
+  playoff_push:        Target,
+  dominant_form:       Flame,
+  comeback_run:        TrendingUp,
+  relegation_battle:   ShieldAlert,
+  survival_confirmed:  ShieldCheck,
+  rivalry_match:       Swords,
+  revenge_opportunity: Swords,
+  midseason:           Minus,
+}
 
 type NarrativeInput = {
   teamId:        string

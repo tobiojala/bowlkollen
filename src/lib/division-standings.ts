@@ -1,6 +1,7 @@
 // Pure functions — no DB access, fully testable
 
 import { hexToHsl, hslToHex, hashStr } from './color'
+import type { TableRow, FormResult } from './types'
 
 export type MatchRow = {
   bits_match_id:     number
@@ -64,6 +65,51 @@ export function computeStandings(matches: MatchRow[]): TeamStanding[] {
     if (netB !== netA) return netB - netA
     return b.boardWins - a.boardWins
   })
+}
+
+/** The `n` teams above and below `teamId` in the standings (inclusive), window
+ * clamped to stay in-bounds rather than shrinking near the top or bottom. */
+export function standingsNeighbors(standings: TeamStanding[], teamId: number, radius = 2): TeamStanding[] {
+  const idx = standings.findIndex(s => s.teamId === teamId)
+  if (idx === -1) return []
+  const windowSize = radius * 2 + 1
+  const start = Math.max(0, Math.min(idx - radius, standings.length - windowSize))
+  return standings.slice(start, start + windowSize)
+}
+
+/** Shapes this team's BITS season into the input the (data-source-agnostic)
+ * narrative engine expects — see lib/team-narrative.ts. */
+export function buildTeamNarrativeInput(teamId: number, matches: MatchRow[], standings: TeamStanding[]) {
+  const table: TableRow[] = standings.map((s, i) => ({
+    rank: i + 1, teamId: String(s.teamId), teamName: s.teamName,
+    played: s.played, won: s.won, drawn: s.drawn, lost: s.lost, points: s.points, form: [],
+  }))
+
+  const played   = matches.filter(m => m.is_finished && m.home_result != null && m.away_result != null)
+  const upcoming = matches.filter(m => !m.is_finished)
+
+  // Most recent first — the opposite chronological order to the hero's form chips.
+  const form: FormResult[] = played.slice(-5).reverse().map(m => {
+    const home = m.home_bits_team_id === teamId
+    const my   = home ? m.home_result! : m.away_result!
+    const opp  = home ? m.away_result! : m.home_result!
+    return my > opp ? 'W' : my < opp ? 'L' : 'D'
+  })
+
+  const opponentId = (m: MatchRow) => String(m.home_bits_team_id === teamId ? m.away_bits_team_id : m.home_bits_team_id)
+  const lastMatch = played[played.length - 1] ?? null
+  const nextMatch = upcoming[0] ?? null
+
+  return {
+    teamId:             String(teamId),
+    table,
+    totalMatches:       matches.length,
+    playedMatches:      played.length,
+    form,
+    upcomingOpponentId: nextMatch ? opponentId(nextMatch) : null,
+    lastOpponentId:     lastMatch ? opponentId(lastMatch) : null,
+    lastMatchResult:    form[0] ?? null,
+  }
 }
 
 // ── Tier detection ────────────────────────────────────────────────────────────

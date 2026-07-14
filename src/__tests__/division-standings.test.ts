@@ -1,8 +1,12 @@
+import { describe, it, expect } from 'vitest'
 import {
   computeStandings,
   divisionTier,
   groupDivisionsByTier,
+  standingsNeighbors,
+  buildTeamNarrativeInput,
   type MatchRow,
+  type TeamStanding,
 } from '@/lib/division-standings'
 
 function match(overrides: Partial<MatchRow> & Pick<MatchRow, 'home_bits_team_id' | 'away_bits_team_id' | 'home_result' | 'away_result'>): MatchRow {
@@ -13,6 +17,7 @@ function match(overrides: Partial<MatchRow> & Pick<MatchRow, 'home_bits_team_id'
     is_finished:    true,
     match_date:     '2025-01-01',
     round_id:       1,
+    hall_name:      null,
     ...overrides,
   }
 }
@@ -122,5 +127,64 @@ describe('groupDivisionsByTier', () => {
     expect(groups.get('Elitserien')).toHaveLength(1)
     expect(groups.get('Division 1')).toHaveLength(2)
     expect(groups.has('Allsvenskan')).toBe(false)
+  })
+})
+
+function standing(teamId: number, points: number): TeamStanding {
+  return { teamId, teamName: `Team ${teamId}`, played: 0, won: 0, drawn: 0, lost: 0, boardWins: 0, boardLosses: 0, points }
+}
+
+describe('standingsNeighbors', () => {
+  const table = [1, 2, 3, 4, 5, 6, 7, 8].map(id => standing(id, 100 - id))
+
+  it('centers a window around the team', () => {
+    expect(standingsNeighbors(table, 4, 2).map(r => r.teamId)).toEqual([2, 3, 4, 5, 6])
+  })
+
+  it('clamps the window at the top of the table', () => {
+    expect(standingsNeighbors(table, 1, 2).map(r => r.teamId)).toEqual([1, 2, 3, 4, 5])
+  })
+
+  it('clamps the window at the bottom of the table', () => {
+    expect(standingsNeighbors(table, 8, 2).map(r => r.teamId)).toEqual([4, 5, 6, 7, 8])
+  })
+
+  it('returns everyone when the division is smaller than the window', () => {
+    const small = [1, 2, 3].map(id => standing(id, 10 - id))
+    expect(standingsNeighbors(small, 2, 2)).toHaveLength(3)
+  })
+
+  it('returns empty when the team is not in the standings', () => {
+    expect(standingsNeighbors(table, 999, 2)).toEqual([])
+  })
+})
+
+describe('buildTeamNarrativeInput', () => {
+  it('builds the table, most-recent-first form, and opponent context', () => {
+    const matches: MatchRow[] = [
+      match({ home_bits_team_id: 1, away_bits_team_id: 2, home_result: 6, away_result: 2, match_date: '2025-01-01' }),
+      match({ home_bits_team_id: 3, away_bits_team_id: 1, home_result: 5, away_result: 3, match_date: '2025-01-08' }),
+      match({ home_bits_team_id: 1, away_bits_team_id: 4, home_result: null, away_result: null, match_date: '2025-01-15', is_finished: false }),
+    ]
+    const standings = computeStandings(matches)
+    const input = buildTeamNarrativeInput(1, matches, standings)
+
+    expect(input.teamId).toBe('1')
+    expect(input.totalMatches).toBe(3)
+    expect(input.playedMatches).toBe(2)
+    // Most recent first: lost the second match (to team 3), won the first.
+    expect(input.form).toEqual(['L', 'W'])
+    expect(input.lastMatchResult).toBe('L')
+    expect(input.lastOpponentId).toBe('3')
+    expect(input.upcomingOpponentId).toBe('4')
+    expect(input.table.find(r => r.teamId === '1')).toBeDefined()
+  })
+
+  it('is null/empty-safe when the team has no match history', () => {
+    const input = buildTeamNarrativeInput(1, [], [])
+    expect(input.form).toEqual([])
+    expect(input.lastOpponentId).toBeNull()
+    expect(input.upcomingOpponentId).toBeNull()
+    expect(input.lastMatchResult).toBeNull()
   })
 })
