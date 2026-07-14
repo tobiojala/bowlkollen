@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
@@ -18,13 +18,6 @@ import type { Match, FeedPlayerResult, BitsMatchFeed } from '@/lib/types'
 
 export default function Home() {
   const [filter, setFilter] = useState<FeedFilterType>('allt')
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   const { data: follows = [] }   = useFollows()
   const { data: matchData }      = useHomeMatches()
@@ -156,33 +149,6 @@ export default function Home() {
         )}
 
       </div>
-
-      {/* Top blur — fades in on scroll */}
-      <div style={{
-        position: 'fixed', top: 0,
-        left: 'max(0px, calc(50vw - 300px))',
-        right: 'max(0px, calc(50vw - 300px))',
-        height: 80,
-        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
-        maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
-        background: 'linear-gradient(to bottom, rgba(14,17,22,0.6) 0%, transparent 100%)',
-        pointerEvents: 'none', zIndex: 8,
-        opacity: scrolled ? 1 : 0, transition: 'opacity 0.25s ease',
-      } as React.CSSProperties} />
-
-      {/* Bottom blur — always visible */}
-      <div style={{
-        position: 'fixed', bottom: 0,
-        left: 'max(0px, calc(50vw - 300px))',
-        right: 'max(0px, calc(50vw - 300px))',
-        height: 100,
-        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        WebkitMaskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
-        maskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
-        background: 'linear-gradient(to top, rgba(14,17,22,0.6) 0%, transparent 100%)',
-        pointerEvents: 'none', zIndex: 8,
-      } as React.CSSProperties} />
     </main>
   )
 }
