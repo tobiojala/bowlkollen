@@ -442,7 +442,7 @@ export function useSubmitAvailability(bitsTeamId: number, bitsMatchId: number) {
   })
 }
 
-export type LineupSlot = { publicId: string; playerName: string; bord: number; position: number; isReserve: boolean }
+export type LineupSlot = { publicId: string; playerName: string; bord: number; pos: number; isReserve: boolean }
 export type TeamLineup = { status: 'draft' | 'published'; slots: LineupSlot[] } | null
 
 /** The lineup for one match — published is public (visible on /lag), a
@@ -458,7 +458,7 @@ export function useTeamLineup(bitsTeamId: number, bitsMatchId: number) {
       return {
         status: data[0].status as 'draft' | 'published',
         slots: data.map(r => ({
-          publicId: r.public_id, playerName: r.player_name, bord: r.bord, position: r.position, isReserve: r.is_reserve,
+          publicId: r.public_id, playerName: r.player_name, bord: r.bord, pos: r.pos, isReserve: r.is_reserve,
         })),
       }
     },
@@ -473,7 +473,7 @@ export function useSaveTeamLineup(bitsTeamId: number, bitsMatchId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ slots, publish }: { slots: LineupSlot[]; publish: boolean }) => {
-      const payload = slots.map(s => ({ public_id: s.publicId, bord: s.bord, position: s.position, is_reserve: s.isReserve }))
+      const payload = slots.map(s => ({ public_id: s.publicId, bord: s.bord, pos: s.pos, is_reserve: s.isReserve }))
       const { data, error } = await createClient().rpc('save_team_lineup', {
         p_bits_team_id: bitsTeamId, p_bits_match_id: bitsMatchId, p_slots: payload, p_publish: publish,
       })

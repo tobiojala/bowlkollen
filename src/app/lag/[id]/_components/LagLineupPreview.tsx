@@ -17,7 +17,7 @@ export function LagLineupPreview({ teamId, nextMatch }: Props) {
 
   const boards = [1, 2, 3, 4].map(bord => ({
     bord,
-    players: lineup.slots.filter(s => s.bord === bord && !s.isReserve).sort((a, b) => a.position - b.position),
+    players: lineup.slots.filter(s => s.bord === bord && !s.isReserve).sort((a, b) => a.pos - b.pos),
   }))
   const reserves = lineup.slots.filter(s => s.isReserve)
 

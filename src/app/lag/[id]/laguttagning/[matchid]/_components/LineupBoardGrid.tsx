@@ -6,11 +6,11 @@ import type { LineupSlot } from '@/lib/queries'
 type Props = {
   slots:        LineupSlot[]
   editable:     boolean
-  onSlotClick?: (bord: number, position: number, isReserve: boolean) => void
+  onSlotClick?: (bord: number, pos: number, isReserve: boolean) => void
 }
 
-function findSlot(slots: LineupSlot[], bord: number, position: number, isReserve: boolean): LineupSlot | null {
-  return slots.find(s => s.bord === bord && s.position === position && s.isReserve === isReserve) ?? null
+function findSlot(slots: LineupSlot[], bord: number, pos: number, isReserve: boolean): LineupSlot | null {
+  return slots.find(s => s.bord === bord && s.pos === pos && s.isReserve === isReserve) ?? null
 }
 
 function SlotCell({ label, slot, editable, onClick }: {

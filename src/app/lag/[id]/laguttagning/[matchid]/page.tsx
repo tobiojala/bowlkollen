@@ -14,7 +14,7 @@ import { LineupBoardGrid } from './_components/LineupBoardGrid'
 import { PlayerPickerSheet } from './_components/PlayerPickerSheet'
 
 type Props = { params: Promise<{ id: string; matchid: string }> }
-type ActiveSlot = { bord: number; position: number; isReserve: boolean }
+type ActiveSlot = { bord: number; pos: number; isReserve: boolean }
 
 // Lineup builder for a BITS team's match — works for every team, unlike the
 // legacy /team/[id]/laguttagning pages this replaces. Captain edits; a
@@ -68,19 +68,19 @@ export default function LaguttagningPage({ params }: Props) {
   const usedPublicIds = slots.map(s => s.publicId)
   const complete = isLineupComplete(slots)
 
-  const onSlotClick = (bord: number, position: number, isReserve: boolean) => {
-    const existing = slots.find(s => s.bord === bord && s.position === position && s.isReserve === isReserve)
+  const onSlotClick = (bord: number, pos: number, isReserve: boolean) => {
+    const existing = slots.find(s => s.bord === bord && s.pos === pos && s.isReserve === isReserve)
     if (existing) {
-      setSlots(prev => prev.filter(s => !(s.bord === bord && s.position === position && s.isReserve === isReserve)))
+      setSlots(prev => prev.filter(s => !(s.bord === bord && s.pos === pos && s.isReserve === isReserve)))
     } else {
-      setActiveSlot({ bord, position, isReserve })
+      setActiveSlot({ bord, pos, isReserve })
     }
   }
 
   const onPick = (publicId: string, playerName: string) => {
     if (!activeSlot) return
     setSlots(prev => [
-      ...prev.filter(s => !(s.bord === activeSlot.bord && s.position === activeSlot.position && s.isReserve === activeSlot.isReserve)),
+      ...prev.filter(s => !(s.bord === activeSlot.bord && s.pos === activeSlot.pos && s.isReserve === activeSlot.isReserve)),
       { publicId, playerName, ...activeSlot },
     ])
     setActiveSlot(null)

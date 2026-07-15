@@ -2,18 +2,18 @@
 
 import type { RosterPlayer } from './queries'
 
-export type SlotPosition = { bord: number; position: number; isReserve: boolean }
+export type SlotPosition = { bord: number; pos: number; isReserve: boolean }
 
 const STARTING_SLOTS: SlotPosition[] = [1, 2, 3, 4].flatMap(bord =>
-  [1, 2].map(position => ({ bord, position, isReserve: false })),
+  [1, 2].map(pos => ({ bord, pos, isReserve: false })),
 )
 
-/** All 8 starting slots (bord 1-4 × position 1-2) filled — reserves don't
- * count. Mirrors save_team_lineup's server-side publish check, so the UI can
+/** All 8 starting slots (bord 1-4 × pos 1-2) filled — reserves don't count.
+ * Mirrors save_team_lineup's server-side publish check, so the UI can
  * disable "Publish" before the round-trip confirms it. */
 export function isLineupComplete(slots: SlotPosition[]): boolean {
   return STARTING_SLOTS.every(req =>
-    slots.some(s => s.bord === req.bord && s.position === req.position && !s.isReserve),
+    slots.some(s => s.bord === req.bord && s.pos === req.pos && !s.isReserve),
   )
 }
 

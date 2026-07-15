@@ -13,17 +13,17 @@ describe('isLineupComplete', () => {
 
   it('is false when a single starting slot is missing', () => {
     const slots: SlotPosition[] = [1, 2, 3, 4].flatMap(bord =>
-      [1, 2].map(position => ({ bord, position, isReserve: false })),
+      [1, 2].map(pos => ({ bord, pos, isReserve: false })),
     ).slice(0, 7)
     expect(isLineupComplete(slots)).toBe(false)
   })
 
   it('is true when all 8 starting slots are filled, reserves irrelevant', () => {
     const slots: SlotPosition[] = [1, 2, 3, 4].flatMap(bord =>
-      [1, 2].map(position => ({ bord, position, isReserve: false })),
+      [1, 2].map(pos => ({ bord, pos, isReserve: false })),
     )
     expect(isLineupComplete(slots)).toBe(true)
-    expect(isLineupComplete([...slots, { bord: 0, position: 1, isReserve: true }])).toBe(true)
+    expect(isLineupComplete([...slots, { bord: 0, pos: 1, isReserve: true }])).toBe(true)
   })
 })
 

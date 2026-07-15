@@ -632,7 +632,7 @@ export type Database = {
           id: string
           is_reserve: boolean
           lineup_id: string
-          position: number
+          pos: number
           public_id: string
         }
         Insert: {
@@ -640,7 +640,7 @@ export type Database = {
           id?: string
           is_reserve?: boolean
           lineup_id: string
-          position: number
+          pos: number
           public_id: string
         }
         Update: {
@@ -648,7 +648,7 @@ export type Database = {
           id?: string
           is_reserve?: boolean
           lineup_id?: string
-          position?: number
+          pos?: number
           public_id?: string
         }
         Relationships: [
@@ -2098,7 +2098,7 @@ export type Database = {
           bord: number
           is_reserve: boolean
           player_name: string
-          position: number
+          pos: number
           public_id: string
           status: string
         }[]

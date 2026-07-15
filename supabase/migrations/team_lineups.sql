@@ -8,6 +8,11 @@
 -- and writes go through the SECURITY DEFINER functions below, not row
 -- policies, since "public once published, private until then" isn't
 -- expressible as a simple RLS predicate alongside "captain-only writes."
+--
+-- Column named `pos`, not `position` — POSITION is special in Postgres'
+-- grammar (POSITION(x IN y)) and breaks inside RETURNS TABLE(...) and
+-- jsonb_to_recordset(...) AS s(...) column lists, even though it's fine as a
+-- plain CREATE TABLE column name.
 
 CREATE TABLE IF NOT EXISTS public.team_lineups (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -24,9 +29,9 @@ CREATE TABLE IF NOT EXISTS public.team_lineup_slots (
   lineup_id  uuid NOT NULL REFERENCES team_lineups(id) ON DELETE CASCADE,
   public_id  uuid NOT NULL REFERENCES bits_players(public_id),
   bord       integer NOT NULL,             -- 0 = reserve
-  position   integer NOT NULL,             -- 1 or 2
+  pos        integer NOT NULL,             -- 1 or 2
   is_reserve boolean NOT NULL DEFAULT false,
-  UNIQUE (lineup_id, bord, position, is_reserve)
+  UNIQUE (lineup_id, bord, pos, is_reserve)
 );
 
 ALTER TABLE public.team_lineups      ENABLE ROW LEVEL SECURITY;
@@ -57,9 +62,9 @@ BEGIN
   END IF;
 
   IF p_publish THEN
-    SELECT count(DISTINCT (bord, position)) INTO v_filled
-    FROM jsonb_to_recordset(p_slots) AS s(public_id uuid, bord integer, position integer, is_reserve boolean)
-    WHERE s.is_reserve = false AND s.bord BETWEEN 1 AND 4 AND s.position IN (1, 2);
+    SELECT count(DISTINCT (bord, pos)) INTO v_filled
+    FROM jsonb_to_recordset(p_slots) AS s(public_id uuid, bord integer, pos integer, is_reserve boolean)
+    WHERE s.is_reserve = false AND s.bord BETWEEN 1 AND 4 AND s.pos IN (1, 2);
 
     IF v_filled < 8 THEN
       RAISE EXCEPTION 'lineup_incomplete';
@@ -74,9 +79,9 @@ BEGIN
 
   DELETE FROM team_lineup_slots WHERE lineup_id = v_lineup_id;
 
-  INSERT INTO team_lineup_slots (lineup_id, public_id, bord, position, is_reserve)
-  SELECT v_lineup_id, s.public_id, s.bord, s.position, s.is_reserve
-  FROM jsonb_to_recordset(p_slots) AS s(public_id uuid, bord integer, position integer, is_reserve boolean);
+  INSERT INTO team_lineup_slots (lineup_id, public_id, bord, pos, is_reserve)
+  SELECT v_lineup_id, s.public_id, s.bord, s.pos, s.is_reserve
+  FROM jsonb_to_recordset(p_slots) AS s(public_id uuid, bord integer, pos integer, is_reserve boolean);
 
   RETURN jsonb_build_object('lineup_id', v_lineup_id, 'status', CASE WHEN p_publish THEN 'published' ELSE 'draft' END);
 END;
@@ -93,7 +98,7 @@ RETURNS TABLE (
   public_id   uuid,
   player_name text,
   bord        integer,
-  position    integer,
+  pos         integer,
   is_reserve  boolean
 )
 LANGUAGE sql
@@ -105,7 +110,7 @@ AS $$
     l.status, s.public_id,
     CASE WHEN bp.first_name IS NULL OR bp.first_name = '' THEN bp.sur_name
          ELSE bp.first_name || ' ' || bp.sur_name END AS player_name,
-    s.bord, s.position, s.is_reserve
+    s.bord, s.pos, s.is_reserve
   FROM team_lineups l
   JOIN team_lineup_slots s ON s.lineup_id = l.id
   JOIN bits_players bp ON bp.public_id = s.public_id
@@ -117,7 +122,7 @@ AS $$
         WHERE tc.user_id = auth.uid() AND tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
       )
     )
-  ORDER BY s.is_reserve, s.bord, s.position;
+  ORDER BY s.is_reserve, s.bord, s.pos;
 $$;
 
 GRANT EXECUTE ON FUNCTION get_team_lineup(integer, integer) TO anon, authenticated;
