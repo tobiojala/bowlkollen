@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
-import type { TeamEvent, TeamEventReaction, Follow, FollowEntityType, FeedItem, ReactionType, BitsMatchFeed, BitsTopScore, BitsPlayerIdentity, BitsPlayerMatchRow, AnonViewSuggestion, OnboardingSuggestions, TeamSuggestion, PlayerSuggestion, SeasonMatch } from '@/lib/types'
+import type { TeamEvent, TeamEventReaction, Follow, FollowEntityType, FeedItem, ReactionType, BitsMatchFeed, BitsMatchDetail, BitsTopScore, BitsPlayerIdentity, BitsPlayerMatchRow, AnonViewSuggestion, OnboardingSuggestions, TeamSuggestion, PlayerSuggestion, SeasonMatch } from '@/lib/types'
 import { QUERY, STALE, SCORE, SEASON, STANDINGS_DIVISIONS } from '@/lib/constants'
 import { composePlayerSuggestions } from '@/lib/onboarding-suggestions'
 
@@ -12,6 +12,8 @@ export const keys = {
   playerPercentile: (publicId: string) => ['player', publicId, 'percentile']  as const,
   playerClaim:   (id: string) => ['player', id, 'claim']   as const,
   teamClaim:     (bitsTeamId: number) => ['team-claim', bitsTeamId] as const,
+  teamAvailability: (bitsTeamId: number, bitsMatchId: number) => ['team-availability', bitsTeamId, bitsMatchId] as const,
+  teamLineup:       (bitsTeamId: number, bitsMatchId: number) => ['team-lineup', bitsTeamId, bitsMatchId] as const,
   team:          (id: string) => ['team', id]              as const,
   teamMatches:   (id: string) => ['team', id, 'matches']   as const,
   teamEvents:    (id: string) => ['team', id, 'events']    as const,
@@ -29,6 +31,7 @@ export const keys = {
   allDivisions:          ['divisions', 'all']                                                     as const,
   divisionMatches:       (id: number) => ['division', id, 'matches']                              as const,
   seasonMatchDates:      ['schema', 'season-match-dates']                                          as const,
+  bitsMatch:             (bitsMatchId: number) => ['bits-match', bitsMatchId]                       as const,
 }
 
 export function useSession() {
@@ -355,6 +358,129 @@ export function useSetTeamRole(bitsTeamId: number) {
       if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
+  })
+}
+
+/** One match's header info (opponent, date, venue) — used by the captain
+ * availability/lineup pages, which are fully client-rendered (session-gated,
+ * not the public SEO page) so this fetches client-side rather than prefetching
+ * server-side like /matcher/[id] does. */
+export function useBitsMatch(bitsMatchId: number) {
+  return useQuery({
+    queryKey: keys.bitsMatch(bitsMatchId),
+    queryFn: async (): Promise<BitsMatchDetail | null> => {
+      const { data, error } = await createClient()
+        .from('bits_matches')
+        .select('bits_match_id,match_date,division_name,bits_division_id,season_id,home_team_name,away_team_name,home_bits_team_id,away_bits_team_id,home_result,away_result,home_score,away_score,is_finished,hall_name,hall_city,oil_pattern,round_id,scores_synced')
+        .eq('bits_match_id', bitsMatchId)
+        .maybeSingle()
+      if (error) throw error
+      return data as BitsMatchDetail | null
+    },
+    enabled: !!bitsMatchId,
+    staleTime: STALE.MEDIUM,
+  })
+}
+
+export type RosterPlayer = { publicId: string; name: string; licenceAverage: number | null; appearances: number }
+
+/** A team's roster — the same source /lag's Trupp section and the lineup
+ * picker both draw from, so "who's on the team" never drifts between them. */
+export function useTeamRoster(bitsTeamId: number, limit = 30) {
+  return useQuery({
+    queryKey: ['team-roster', bitsTeamId, limit] as const,
+    queryFn: async (): Promise<RosterPlayer[]> => {
+      const { data, error } = await createClient()
+        .rpc('get_team_roster', { p_bits_team_id: bitsTeamId, p_limit: limit })
+      if (error) throw error
+      return (data ?? []).map(p => ({
+        publicId: p.public_id, name: p.name, licenceAverage: p.licence_average, appearances: p.appearances,
+      }))
+    },
+    enabled: !!bitsTeamId,
+    staleTime: STALE.MEDIUM,
+  })
+}
+
+export type AvailabilityResponseValue = 'yes' | 'maybe' | 'no'
+export type TeamAvailabilityRow = {
+  userId: string; response: AvailabilityResponseValue; note: string | null
+  respondedAt: string; displayName: string; publicId: string | null
+}
+
+/** The team's answers to "Kan du spela?" for one match — team-private
+ * (get_team_availability only returns rows to a verified teammate). */
+export function useTeamAvailability(bitsTeamId: number, bitsMatchId: number) {
+  return useQuery({
+    queryKey: keys.teamAvailability(bitsTeamId, bitsMatchId),
+    queryFn: async (): Promise<TeamAvailabilityRow[]> => {
+      const { data, error } = await createClient()
+        .rpc('get_team_availability', { p_bits_team_id: bitsTeamId, p_bits_match_id: bitsMatchId })
+      if (error) throw error
+      return (data ?? []).map(r => ({
+        userId: r.user_id, response: r.response as AvailabilityResponseValue, note: r.note,
+        respondedAt: r.responded_at, displayName: r.display_name, publicId: r.public_id,
+      }))
+    },
+    enabled: !!bitsTeamId && !!bitsMatchId,
+    staleTime: STALE.SHORT,
+  })
+}
+
+/** Respond "Kan du spela?" — only a verified member can (enforced server-side
+ * by submit_availability_response). */
+export function useSubmitAvailability(bitsTeamId: number, bitsMatchId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ response, note }: { response: AvailabilityResponseValue; note?: string }) => {
+      const { error } = await createClient().rpc('submit_availability_response', {
+        p_bits_team_id: bitsTeamId, p_bits_match_id: bitsMatchId, p_response: response, p_note: note,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.teamAvailability(bitsTeamId, bitsMatchId) }),
+  })
+}
+
+export type LineupSlot = { publicId: string; playerName: string; bord: number; position: number; isReserve: boolean }
+export type TeamLineup = { status: 'draft' | 'published'; slots: LineupSlot[] } | null
+
+/** The lineup for one match — published is public (visible on /lag), a
+ * draft is visible only to verified teammates (enforced by get_team_lineup). */
+export function useTeamLineup(bitsTeamId: number, bitsMatchId: number) {
+  return useQuery({
+    queryKey: keys.teamLineup(bitsTeamId, bitsMatchId),
+    queryFn: async (): Promise<TeamLineup> => {
+      const { data, error } = await createClient()
+        .rpc('get_team_lineup', { p_bits_team_id: bitsTeamId, p_bits_match_id: bitsMatchId })
+      if (error) throw error
+      if (!data || data.length === 0) return null
+      return {
+        status: data[0].status as 'draft' | 'published',
+        slots: data.map(r => ({
+          publicId: r.public_id, playerName: r.player_name, bord: r.bord, position: r.position, isReserve: r.is_reserve,
+        })),
+      }
+    },
+    enabled: !!bitsTeamId && !!bitsMatchId,
+    staleTime: STALE.SHORT,
+  })
+}
+
+/** Captain-only save/publish — save_team_lineup rejects non-captains and
+ * blocks publishing an incomplete lineup server-side. */
+export function useSaveTeamLineup(bitsTeamId: number, bitsMatchId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ slots, publish }: { slots: LineupSlot[]; publish: boolean }) => {
+      const payload = slots.map(s => ({ public_id: s.publicId, bord: s.bord, position: s.position, is_reserve: s.isReserve }))
+      const { data, error } = await createClient().rpc('save_team_lineup', {
+        p_bits_team_id: bitsTeamId, p_bits_match_id: bitsMatchId, p_slots: payload, p_publish: publish,
+      })
+      if (error) throw error
+      return data as { lineup_id: string; status: 'draft' | 'published' }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.teamLineup(bitsTeamId, bitsMatchId) }),
   })
 }
 

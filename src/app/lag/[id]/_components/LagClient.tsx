@@ -3,10 +3,13 @@
 import Link from 'next/link'
 import Reveal from '@/components/Reveal'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
+import { useTeamClaim } from '@/lib/queries'
 import type { MatchRow, TeamStanding } from '@/lib/division-standings'
 import { DivisionMatches } from '@/app/divisioner/[id]/_components/DivisionMatches'
 import { LagHero } from './LagHero'
 import { StandingsLadder } from './StandingsLadder'
+import { CaptainToolbar } from './CaptainToolbar'
+import { LagLineupPreview } from './LagLineupPreview'
 
 type Standing      = { rank: number; total: number; points: number; played: number }
 type SeasonSummary = { seasonLabel: string; divisionId: number; divisionName: string | null; standing: Standing; standings: TeamStanding[] }
@@ -29,11 +32,15 @@ type Props = {
 
 export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, hallId, hallName, matches, standing, standings, prevSeason, roster }: Props) {
   const teamHref = (bitsId: number) => bitsId === teamId ? `/lag/${teamId}` : `/lag/${bitsId}`
+  const { data: claim } = useTeamClaim(teamId)
 
   // Early season — no finished matches yet. Fall back to last season's table.
   const ladderHistorical  = standings.length === 0 && !!prevSeason
   const ladderStandings   = ladderHistorical ? prevSeason!.standings : standings
   const ladderDivisionId  = ladderHistorical ? prevSeason!.divisionId : divisionId
+
+  const upcoming  = matches.filter(m => !m.is_finished)
+  const nextMatch = upcoming[0] ?? null
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
@@ -52,6 +59,11 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
           standings={standings}
           prevSeason={prevSeason}
         />
+
+        <div style={{ padding: '0 20px' }}>
+          <LagLineupPreview teamId={teamId} nextMatch={nextMatch} />
+          <CaptainToolbar teamId={teamId} claim={claim ?? null} upcoming={upcoming.slice(0, 2)} />
+        </div>
 
         <StandingsLadder teamId={teamId} divisionId={ladderDivisionId} standings={ladderStandings} historical={ladderHistorical} />
 

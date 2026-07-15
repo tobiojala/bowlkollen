@@ -541,6 +541,7 @@ export type Database = {
           bits_team_id: number
           claimed_at: string | null
           id: string
+          matched_public_id: string | null
           role: string | null
           status: string
           user_id: string
@@ -550,6 +551,7 @@ export type Database = {
           bits_team_id: number
           claimed_at?: string | null
           id?: string
+          matched_public_id?: string | null
           role?: string | null
           status?: string
           user_id: string
@@ -559,12 +561,105 @@ export type Database = {
           bits_team_id?: number
           claimed_at?: string | null
           id?: string
+          matched_public_id?: string | null
           role?: string | null
           status?: string
           user_id?: string
           verified_at?: string | null
         }
         Relationships: []
+      }
+      team_match_availability: {
+        Row: {
+          bits_match_id: number
+          bits_team_id: number
+          id: string
+          note: string | null
+          responded_at: string | null
+          response: string
+          user_id: string
+        }
+        Insert: {
+          bits_match_id: number
+          bits_team_id: number
+          id?: string
+          note?: string | null
+          responded_at?: string | null
+          response: string
+          user_id: string
+        }
+        Update: {
+          bits_match_id?: number
+          bits_team_id?: number
+          id?: string
+          note?: string | null
+          responded_at?: string | null
+          response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      team_lineups: {
+        Row: {
+          bits_match_id: number
+          bits_team_id: number
+          created_by: string | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          bits_match_id: number
+          bits_team_id: number
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          bits_match_id?: number
+          bits_team_id?: number
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      team_lineup_slots: {
+        Row: {
+          bord: number
+          id: string
+          is_reserve: boolean
+          lineup_id: string
+          position: number
+          public_id: string
+        }
+        Insert: {
+          bord: number
+          id?: string
+          is_reserve?: boolean
+          lineup_id: string
+          position: number
+          public_id: string
+        }
+        Update: {
+          bord?: number
+          id?: string
+          is_reserve?: boolean
+          lineup_id?: string
+          position?: number
+          public_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_lineup_slots_lineup_id_fkey"
+            columns: ["lineup_id"]
+            isOneToOne: false
+            referencedRelation: "team_lineups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       club_claims: {
         Row: {
@@ -1986,6 +2081,28 @@ export type Database = {
           public_id: string
         }[]
       }
+      get_team_availability: {
+        Args: { p_bits_team_id: number; p_bits_match_id: number }
+        Returns: {
+          display_name: string
+          note: string
+          public_id: string
+          responded_at: string
+          response: string
+          user_id: string
+        }[]
+      }
+      get_team_lineup: {
+        Args: { p_bits_team_id: number; p_bits_match_id: number }
+        Returns: {
+          bord: number
+          is_reserve: boolean
+          player_name: string
+          position: number
+          public_id: string
+          status: string
+        }[]
+      }
       get_user_season_matches: {
         Args: never
         Returns: {
@@ -2023,6 +2140,14 @@ export type Database = {
       set_team_role: {
         Args: { p_bits_team_id: number; p_role: string }
         Returns: undefined
+      }
+      submit_availability_response: {
+        Args: { p_bits_team_id: number; p_bits_match_id: number; p_response: string; p_note?: string }
+        Returns: undefined
+      }
+      save_team_lineup: {
+        Args: { p_bits_team_id: number; p_bits_match_id: number; p_slots: Json; p_publish: boolean }
+        Returns: Json
       }
       team_current_division: {
         Args: { p_bits_team_id: number }
