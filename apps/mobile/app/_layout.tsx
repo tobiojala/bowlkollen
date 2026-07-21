@@ -15,15 +15,21 @@ function RootNavigator() {
   const segments = useSegments();
   const router = useRouter();
 
+  const onboarded = !!session?.user?.user_metadata?.onboarding_seen;
+
   useEffect(() => {
     if (loading) return;
-    const inAuthGroup = segments[0] === 'login';
-    if (!session && !inAuthGroup) {
-      router.replace('/login');
-    } else if (session && inAuthGroup) {
+    const inAuth = segments[0] === 'login';
+    const inOnboarding = segments[0] === 'onboarding';
+
+    if (!session) {
+      if (!inAuth) router.replace('/login');
+    } else if (!onboarded) {
+      if (!inOnboarding) router.replace('/onboarding');
+    } else if (inAuth || inOnboarding) {
       router.replace('/');
     }
-  }, [session, loading, segments, router]);
+  }, [session, onboarded, loading, segments, router]);
 
   if (loading) {
     return (
