@@ -57,6 +57,18 @@ Client component uses React Query hooks — data arrives pre-hydrated.
 
 Never call `createClient()` in an async Server Component — it accesses browser APIs (`window`, `localStorage`) server-side.
 
+## Security rules
+The client is untrusted — a mobile app's bundle can be inspected, its requests replayed, its state faked. Every read, write, and privileged action must be authorized at the database or server boundary, never by what the UI shows or hides.
+
+1. Never place service-role keys, provider secrets, or admin credentials in client code — client-visible code only ever gets the publishable/anon key.
+2. Every new Supabase table gets RLS enabled with policies scoped to the actual owner/relationship (`auth.uid() = user_id`, not a blanket `auth.uid() is not null`) — see `team_claims`/`team_match_availability` for the pattern.
+3. UI visibility is not authorization. A hidden button is a UX nicety; the RPC/policy behind it is the real gate — always re-check role/status server-side inside the function body (see `save_team_lineup`'s captain check for the pattern), never trust a client-passed flag like `isCaptain`/`isPro`.
+4. Privileged actions (role changes, invite-code creation, claim approval, admin actions) execute through `SECURITY DEFINER` functions that independently verify the caller's identity and standing — never accept a client-supplied value as proof of permission.
+5. Never grant identity or elevated role (e.g. captain) from a license/ID number alone — it's a findable, not-secret identifier. Pair it with vouching (an invite code from an already-verified party) or admin review. See `project_claim_identity_hardening` memory for the incident this rule comes from.
+6. Don't create generic URL-proxy endpoints (`fetch(searchParams.get('url'))` with no allowlist) — that's SSRF. If a proxy is genuinely needed, allowlist the exact host(s) and reject everything else.
+7. Native app sessions (when that exists) go in Expo `SecureStore`, never `AsyncStorage` — SecureStore uses Keychain/encrypted Android storage, AsyncStorage does not.
+8. Personal/private content (notes, team communication, availability responses) is private by default — never assume that because official match data is public, everything attached to a player is too.
+
 ## Images — always `next/image`
 ```tsx
 import Image from 'next/image'

@@ -24,7 +24,7 @@ Without this, the "live" visual language (red pulse, "NU" label, LiveCard hero) 
 Bowlers track their average obsessively. A small SVG line of rolling 10-game average under the player's stat block would be the most-checked feature on the profile page. Pure client-side math from existing `MatchLog` data — no new queries needed.
 
 ### Duplicate route cleanup
-`/league` and `/divisioner` both show division standings. `/matches/[id]` and `/matcher/[id]` both show the same match. Decide which URL is canonical, redirect the other, remove the dead code.
+`/league` and `/divisioner` both show division standings. `/matches/[id]` and `/matcher/[id]` both show the same match. `/teams`/`/team` (legacy, uuid-keyed, ~10% coverage) and `/lag` (canonical, works for every team, now has the full captain toolkit `/team` had) are now the biggest one — `/lag` should win and the legacy routes redirect/retire. Decide canonical URLs, redirect the others, remove dead code.
 
 ---
 
@@ -56,7 +56,7 @@ Web Push API + service worker + Supabase edge function trigger on match status c
 Swedish club bowling uses handicap frequently. Formula: `max(0, (200 - average) × 0.8)`. Show on player profile and in match lineups. Data is available (we have averages).
 
 ### Past season browser
-No way to see results older than current season. Add a season selector to `/league`, `/divisioner`, and team history. Needs `season_id` param passed through queries.
+~~No way to see results older than current season.~~ Partially done: `/lag` falls back to last season's final table when the current season has no finished matches yet, and 5 historical seasons (2021–2025) are now backfilled. Still missing: a season selector on `/league`/`/divisioner` and team history for seasons further back than "previous."
 
 ### Player ranking
 "Where do I rank vs. other players in my division by average?" — a simple leaderboard within a division/club. No new data needed, just a query sorted by computed average.
@@ -81,7 +81,7 @@ Full "mot fältet" performance rating system. Spec in `BK_RATING_SPEC.md`. Defer
 Code exists, no API route or UI trigger. Revisit after core features are stable.
 
 ### Multi-sport / international
-Phase 2+ (see `VISION.md`). Not now.
+Phase 2+ (see `VISION_FUTURE.md`). Not now.
 
 ---
 
