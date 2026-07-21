@@ -86,10 +86,10 @@ export default function Login() {
               style={[styles.input, styles.codeInput]}
               value={code}
               onChangeText={setCode}
-              placeholder="000000"
+              placeholder="00000000"
               placeholderTextColor={COLOR.ink4}
               keyboardType="number-pad"
-              maxLength={6}
+              maxLength={8}
               autoFocus
             />
           )}
