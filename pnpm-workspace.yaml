@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Native/postinstall build scripts pnpm is allowed to run (blocked by default).
+# All four are legitimate build-time tools used by the web app.
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - esbuild
+  - sharp
+  - unrs-resolver
