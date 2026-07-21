@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main, "claude/**", "wip/**"]
   pull_request:
 
 # Cancel superseded runs on the same ref
@@ -17,26 +17,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
       - name: Install
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # Hard gates — these are green today and must stay green.
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: pnpm --filter @bowlkollen/web exec tsc --noEmit
 
       - name: Unit tests
-        run: npm run test
+        run: pnpm --filter @bowlkollen/web test
 
       # Soft gate — surfaces lint findings without blocking while the
       # pre-existing set-state-in-effect warnings are cleaned up. Flip to a
       # hard gate (drop continue-on-error) once lint is clean.
       - name: Lint
-        run: npm run lint
+        run: pnpm --filter @bowlkollen/web lint
         continue-on-error: true
 
   # Build needs Supabase env. Add NEXT_PUBLIC_SUPABASE_URL + _ANON_KEY as repo
@@ -47,12 +49,13 @@ jobs:
     if: false
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @bowlkollen/web build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
