@@ -35,6 +35,9 @@ ALTER TABLE public.team_claims ADD COLUMN IF NOT EXISTS captain_requested_at tim
 -- The one existing caller (app/invite/[code]/route.ts) only reads `.valid`,
 -- so this is behavior-compatible for the flat site-access gate — just
 -- richer for the new claim-scoped callers.
+-- Return type changes boolean -> jsonb, so the old function must be dropped
+-- first (CREATE OR REPLACE cannot change a function's return type).
+DROP FUNCTION IF EXISTS validate_and_redeem_invite_code(text);
 CREATE OR REPLACE FUNCTION validate_and_redeem_invite_code(p_code text)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -429,6 +432,9 @@ GRANT EXECUTE ON FUNCTION get_verified_team_members(integer) TO authenticated;
 -- ─── get_team_availability: surface vouched so the UI can show a trust badge ─
 -- Same query as team_availability.sql, plus a.vouched → tc.vouched. Not a new
 -- table, just a richer view onto the same data.
+-- Adds the `vouched` column to the return table; changing a TABLE function's
+-- column set also requires dropping the old function first (42P13).
+DROP FUNCTION IF EXISTS get_team_availability(integer, integer);
 CREATE OR REPLACE FUNCTION get_team_availability(p_bits_team_id integer, p_bits_match_id integer)
 RETURNS TABLE (
   user_id      uuid,
