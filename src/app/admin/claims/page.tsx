@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
+import { usePendingCaptainRequests, useAdminBootstrapCaptain, useCreateBootstrapCode } from '@/lib/queries'
 import { COLOR, SPACE, TYPE, RADIUS } from '@/lib/brand'
 
 type PendingClaim = { claimId: string; publicId: string; playerName: string; clubName: string | null; claimedAt: string }
@@ -116,11 +117,52 @@ function SectionTitle({ children, first }: { children: React.ReactNode; first?: 
   )
 }
 
+/** Tier-1 gate — a brand-new team with no verified members yet needs one
+ * admin-vetted link to found it. Bounded by number of teams, not players. */
+function BootstrapLinkTool() {
+  const [teamId, setTeamId] = useState('')
+  const [link, setLink]     = useState<string | null>(null)
+  const { mutate, isPending, error } = useCreateBootstrapCode()
+
+  const create = () => {
+    const id = Number(teamId)
+    if (!id) return
+    setLink(null)
+    mutate(id, { onSuccess: code => setLink(`${location.origin}/invite/${code}`) })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+      <div style={{ display: 'flex', gap: SPACE[2] }}>
+        <input
+          value={teamId} onChange={e => setTeamId(e.target.value)}
+          placeholder="bits_team_id"
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: RADIUS.md, border: `1px solid ${COLOR.hairline}`,
+            background: COLOR.surface, color: COLOR.ink, fontSize: TYPE.body, outline: 'none',
+          }}
+        />
+        <button
+          onClick={create}
+          disabled={isPending || !teamId}
+          style={{ padding: '8px 14px', borderRadius: RADIUS.md, border: 'none', background: COLOR.gold, color: '#1a1400', fontSize: TYPE.caption, fontWeight: 700, cursor: 'pointer' }}
+        >
+          {isPending ? 'Skapar…' : 'Skapa länk'}
+        </button>
+      </div>
+      {error && <div style={{ fontSize: TYPE.caption, color: COLOR.red }}>Något gick fel — försök igen.</div>}
+      {link && <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, wordBreak: 'break-all' }}>{link}</div>}
+    </div>
+  )
+}
+
 export default function AdminClaimsPage() {
   const { data: claims = [], isLoading } = usePendingClaims()
   const { data: teamClaims = [], isLoading: teamsLoading } = usePendingTeamClaims()
+  const { data: captainRequests = [], isLoading: captainsLoading } = usePendingCaptainRequests()
   const player = useUpdateClaimStatus()
   const team = useUpdateTeamClaimStatus()
+  const bootstrapCaptain = useAdminBootstrapCaptain()
   const [acting, setActing] = useState<string | null>(null)
 
   function act(kind: 'player' | 'team', claimId: string, status: 'verified' | 'rejected') {
@@ -176,6 +218,51 @@ export default function AdminClaimsPage() {
             onReject={() => act('team', c.claimId, 'rejected')}
           />
         ))}
+
+        <SectionTitle>Kaptensförfrågningar</SectionTitle>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginBottom: SPACE[6] }}>
+          Ingen kapten finns än för laget — bounded av antal lag som frågar, inte antal spelare.
+        </div>
+
+        {captainsLoading && <div style={{ color: COLOR.ink3, fontSize: TYPE.body }}>Laddar…</div>}
+        {!captainsLoading && captainRequests.length === 0 && (
+          <div style={{ color: COLOR.ink3, fontSize: TYPE.body }}>Inga väntande förfrågningar.</div>
+        )}
+
+        {captainRequests.map(r => (
+          <div key={r.claimId} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3],
+            padding: SPACE[3], borderBottom: `1px solid ${COLOR.hairline}`,
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: TYPE.body, fontWeight: 600 }}>
+                <Link href={`/lag/${r.bitsTeamId}`} style={{ color: COLOR.ink, textDecoration: 'none' }}>
+                  {r.teamName ?? `Lag #${r.bitsTeamId}`}
+                </Link>
+              </div>
+              <div style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>
+                {[r.clubName, r.userEmail, new Date(r.captainRequestedAt).toLocaleDateString('sv-SE')].filter(Boolean).join(' · ')}
+              </div>
+            </div>
+            <button
+              onClick={() => bootstrapCaptain.mutate(r.claimId)}
+              disabled={bootstrapCaptain.isPending}
+              style={{
+                padding: '8px 14px', borderRadius: RADIUS.md, border: 'none', cursor: 'pointer',
+                background: COLOR.gold, color: '#1a1400', fontSize: TYPE.caption, fontWeight: 700,
+                opacity: bootstrapCaptain.isPending ? 0.6 : 1, flexShrink: 0,
+              }}
+            >
+              Godkänn som kapten
+            </button>
+          </div>
+        ))}
+
+        <SectionTitle>Bootstrap-länk för nytt lag</SectionTitle>
+        <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginBottom: SPACE[4] }}>
+          Ger den som löser in länken kaptenskap direkt när deras licens matchar laget/klubben.
+        </div>
+        <BootstrapLinkTool />
       </div>
     </main>
   )

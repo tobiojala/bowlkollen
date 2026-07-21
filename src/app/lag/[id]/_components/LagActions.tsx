@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShieldCheck, Clock, Share2, CalendarPlus } from 'lucide-react'
-import { useSession, useTeamClaim } from '@/lib/queries'
+import { ShieldCheck, Clock, Share2, CalendarPlus, UserPlus, Repeat } from 'lucide-react'
+import { useSession, useTeamClaim, useCreateTeamInviteCode } from '@/lib/queries'
 import FollowButton from '@/components/FollowButton'
 import { DownloadMenu, type CsvScope } from '@/components/DownloadMenu'
 import { COLOR, SPACE } from '@/lib/brand'
@@ -11,6 +11,7 @@ import { toCsv, downloadText, fileStem } from '@/lib/csv'
 import type { MatchRow } from '@/lib/division-standings'
 import { ClaimTeamSheet } from './ClaimTeamSheet'
 import { RolePicker } from './RolePicker'
+import { CaptainTransferSheet } from './CaptainTransferSheet'
 
 type Props = {
   teamId:   number
@@ -31,9 +32,11 @@ function fmtDate(iso: string) {
 }
 
 export function LagActions({ teamId, teamName, clubId, matches }: Props) {
-  const { data: session }         = useSession()
-  const { data: claim }           = useTeamClaim(teamId)
-  const [claimOpen, setClaimOpen] = useState(false)
+  const { data: session }           = useSession()
+  const { data: claim }             = useTeamClaim(teamId)
+  const [claimOpen, setClaimOpen]   = useState(false)
+  const [transferOpen, setTransferOpen] = useState(false)
+  const { mutate: createInvite, isPending: inviting } = useCreateTeamInviteCode(teamId)
 
   const subscribe = () => {
     window.location.href = `webcal://${window.location.host}/api/calendar/lag/${teamId}`
@@ -43,6 +46,19 @@ export function LagActions({ teamId, teamName, clubId, matches }: Props) {
     if (typeof navigator !== 'undefined' && navigator.share) {
       navigator.share({ title: teamName, url: location.href }).catch(() => {})
     }
+  }
+
+  const inviteTeammate = () => {
+    createInvite(undefined, {
+      onSuccess: code => {
+        const url = `${location.origin}/invite/${code}`
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          navigator.share({ title: `Gå med i ${teamName}`, url }).catch(() => {})
+        } else if (typeof navigator !== 'undefined') {
+          navigator.clipboard.writeText(url).catch(() => {})
+        }
+      },
+    })
   }
 
   const downloadCsv = (scope: CsvScope) => {
@@ -82,6 +98,19 @@ export function LagActions({ teamId, teamName, clubId, matches }: Props) {
           </button>
         )}
 
+        {/* Peer-vouching — sharing this link IS the vouch for whoever uses it. */}
+        {session && claim?.status === 'verified' && (
+          <button onClick={inviteTeammate} disabled={inviting} style={ghost()}>
+            <UserPlus size={16} strokeWidth={2} color={COLOR.ink2} /> Bjud in lagkompis
+          </button>
+        )}
+
+        {session && claim?.status === 'verified' && claim.role === 'captain' && (
+          <button onClick={() => setTransferOpen(true)} style={ghost()}>
+            <Repeat size={16} strokeWidth={2} color={COLOR.ink2} /> Föra över kaptensrollen
+          </button>
+        )}
+
         <button onClick={share} style={ghost()}>
           <Share2 size={16} strokeWidth={2} color={COLOR.ink2} />
           Dela
@@ -98,6 +127,7 @@ export function LagActions({ teamId, teamName, clubId, matches }: Props) {
       </div>
 
       <ClaimTeamSheet open={claimOpen} onClose={() => setClaimOpen(false)} teamId={teamId} teamName={teamName} />
+      <CaptainTransferSheet open={transferOpen} onClose={() => setTransferOpen(false)} bitsTeamId={teamId} />
     </>
   )
 }

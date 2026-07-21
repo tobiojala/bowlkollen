@@ -539,6 +539,7 @@ export type Database = {
       team_claims: {
         Row: {
           bits_team_id: number
+          captain_requested_at: string | null
           claimed_at: string | null
           id: string
           matched_public_id: string | null
@@ -546,9 +547,11 @@ export type Database = {
           status: string
           user_id: string
           verified_at: string | null
+          vouched: boolean
         }
         Insert: {
           bits_team_id: number
+          captain_requested_at?: string | null
           claimed_at?: string | null
           id?: string
           matched_public_id?: string | null
@@ -556,9 +559,11 @@ export type Database = {
           status?: string
           user_id: string
           verified_at?: string | null
+          vouched?: boolean
         }
         Update: {
           bits_team_id?: number
+          captain_requested_at?: string | null
           claimed_at?: string | null
           id?: string
           matched_public_id?: string | null
@@ -566,6 +571,7 @@ export type Database = {
           status?: string
           user_id?: string
           verified_at?: string | null
+          vouched?: boolean
         }
         Relationships: []
       }
@@ -804,26 +810,35 @@ export type Database = {
         Row: {
           click_count: number
           code: string
+          code_type: string
           created_at: string
           id: string
           invitee_name: string | null
           is_active: boolean
+          issued_by: string | null
+          scope_bits_team_id: number | null
         }
         Insert: {
           click_count?: number
           code: string
+          code_type?: string
           created_at?: string
           id?: string
           invitee_name?: string | null
           is_active?: boolean
+          issued_by?: string | null
+          scope_bits_team_id?: number | null
         }
         Update: {
           click_count?: number
           code?: string
+          code_type?: string
           created_at?: string
           id?: string
           invitee_name?: string | null
           is_active?: boolean
+          issued_by?: string | null
+          scope_bits_team_id?: number | null
         }
         Relationships: []
       }
@@ -2090,6 +2105,7 @@ export type Database = {
           responded_at: string
           response: string
           user_id: string
+          vouched: boolean
         }[]
       }
       get_team_lineup: {
@@ -2134,12 +2150,51 @@ export type Database = {
         Returns: Json
       }
       submit_team_claim: {
-        Args: { p_bits_team_id: number; p_lic_nbr: string }
+        Args: { p_bits_team_id: number; p_lic_nbr: string; p_invite_code?: string }
         Returns: Json
       }
       set_team_role: {
         Args: { p_bits_team_id: number; p_role: string }
         Returns: undefined
+      }
+      request_captain: {
+        Args: { p_bits_team_id: number }
+        Returns: undefined
+      }
+      admin_bootstrap_captain: {
+        Args: { p_claim_id: string }
+        Returns: undefined
+      }
+      transfer_captain: {
+        Args: { p_bits_team_id: number; p_to_user_id: string }
+        Returns: undefined
+      }
+      create_team_invite_code: {
+        Args: { p_bits_team_id: number }
+        Returns: string
+      }
+      admin_create_bootstrap_code: {
+        Args: { p_bits_team_id: number }
+        Returns: string
+      }
+      get_invite_scope: {
+        Args: { p_code: string }
+        Returns: { code_type: string; scope_bits_team_id: number; team_name: string }[]
+      }
+      get_pending_captain_requests: {
+        Args: never
+        Returns: {
+          bits_team_id: number
+          captain_requested_at: string
+          claim_id: string
+          club_name: string
+          team_name: string
+          user_email: string
+        }[]
+      }
+      get_verified_team_members: {
+        Args: { p_bits_team_id: number }
+        Returns: { display_name: string; public_id: string; role: string; user_id: string }[]
       }
       submit_availability_response: {
         Args: { p_bits_team_id: number; p_bits_match_id: number; p_response: string; p_note?: string }
@@ -2166,7 +2221,7 @@ export type Database = {
       }
       validate_and_redeem_invite_code: {
         Args: { p_code: string }
-        Returns: boolean
+        Returns: Json
       }
     }
     Enums: {

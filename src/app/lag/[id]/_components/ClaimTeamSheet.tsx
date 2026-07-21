@@ -9,20 +9,23 @@ import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 const COL = 'max(0px, calc(50vw - 300px))'
 
 type Props = {
-  open:     boolean
-  onClose:  () => void
-  teamId:   number
-  teamName: string
+  open:       boolean
+  onClose:    () => void
+  teamId:     number
+  teamName:   string
+  /** A team_claim/new_team_bootstrap invite code, if the user arrived via a
+   * scoped share link — marks the claim vouched (see submit_team_claim). */
+  inviteCode?: string
 }
 
-export function ClaimTeamSheet({ open, onClose, teamId, teamName }: Props) {
+export function ClaimTeamSheet({ open, onClose, teamId, teamName, inviteCode }: Props) {
   const [lic,    setLic]    = useState('')
   const [result, setResult] = useState<'verified' | 'pending' | null>(null)
   const { mutate, isPending, error } = useSubmitTeamClaim(teamId)
 
   const submit = () => {
     if (!lic.trim() || isPending) return
-    mutate(lic.trim(), { onSuccess: status => setResult(status) })
+    mutate({ licNbr: lic.trim(), inviteCode }, { onSuccess: status => setResult(status) })
   }
 
   const close = () => { setLic(''); setResult(null); onClose() }

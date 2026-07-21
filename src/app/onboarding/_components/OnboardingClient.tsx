@@ -10,7 +10,10 @@ import { COLOR, SPACE, TYPE, RADIUS } from '@/lib/brand'
 import FollowButton from '@/components/FollowButton'
 import TeamPicker from './TeamPicker'
 import SuggestionTiers from './SuggestionTiers'
+import { ClaimTeamSheet } from '@/app/lag/[id]/_components/ClaimTeamSheet'
 import type { AnonViewSuggestion, FollowEntityType } from '@/lib/types'
+
+type InviteTeam = { id: number; name: string }
 
 type ResolvedSuggestion = { entityType: FollowEntityType; entityId: string; name: string }
 
@@ -42,10 +45,11 @@ function useResolveAnonSuggestions(suggestions: AnonViewSuggestion[]) {
   })
 }
 
-export default function OnboardingClient() {
+export default function OnboardingClient({ inviteTeam, inviteCode }: { inviteTeam: InviteTeam | null; inviteCode: string | null }) {
   const router = useRouter()
   const [anonId, setAnonId]       = useState<string | null>(null)
-  const [pickedTeam, setPickedTeam] = useState<{ id: number; name: string } | null>(null)
+  const [pickedTeam, setPickedTeam] = useState<{ id: number; name: string } | null>(inviteTeam)
+  const [claimOpen, setClaimOpen] = useState(false)
 
   useEffect(() => { setAnonId(getAnonId()) }, [])
 
@@ -107,9 +111,37 @@ export default function OnboardingClient() {
               </button>
             </div>
           )}
+
+          {/* Arrived via a teammate's or admin's invite link — the vouch
+              already happened, so skip straight to claiming instead of just
+              following. */}
+          {inviteTeam && pickedTeam?.id === inviteTeam.id && (
+            <div style={{ marginTop: SPACE[3], padding: '12px 14px', background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.25)', borderRadius: RADIUS.md }}>
+              <div style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink }}>Du blev inbjuden till {inviteTeam.name}</div>
+              <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 2, marginBottom: SPACE[2] }}>
+                Gör anspråk på din plats i laget — det tar bara ditt licensnummer.
+              </div>
+              <button
+                onClick={() => setClaimOpen(true)}
+                style={{ padding: '8px 14px', borderRadius: RADIUS.md, border: 'none', background: COLOR.gold, color: '#1a1400', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Gör anspråk
+              </button>
+            </div>
+          )}
         </section>
 
         {pickedTeam && <SuggestionTiers bitsTeamId={pickedTeam.id} />}
+
+        {inviteTeam && (
+          <ClaimTeamSheet
+            open={claimOpen}
+            onClose={() => setClaimOpen(false)}
+            teamId={inviteTeam.id}
+            teamName={inviteTeam.name}
+            inviteCode={inviteCode ?? undefined}
+          />
+        )}
 
         <div style={{ marginTop: SPACE[12], display: 'flex', flexDirection: 'column', gap: SPACE[3] }}>
           {pickedTeam && (

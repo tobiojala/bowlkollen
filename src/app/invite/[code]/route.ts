@@ -6,7 +6,8 @@ const MAX_AGE_DAYS = 365
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params
-  const { data: valid } = await createPublicSupabase().rpc('validate_and_redeem_invite_code', { p_code: code })
+  const { data } = await createPublicSupabase().rpc('validate_and_redeem_invite_code', { p_code: code })
+  const valid = (data as { valid: boolean } | null)?.valid
 
   const origin = request.nextUrl.origin
   if (!valid) {

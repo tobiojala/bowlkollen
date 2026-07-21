@@ -308,9 +308,12 @@ export function usePlayerClaim(playerId: string, userId: string | undefined) {
 }
 
 export type TeamRole = 'player' | 'captain' | 'lagledare' | 'reserv'
-export type TeamClaimState = { status: 'verified' | 'pending' | 'rejected'; role: TeamRole } | null
+export type TeamClaimState = { status: 'verified' | 'pending' | 'rejected'; role: TeamRole; vouched: boolean } | null
 
-/** This user's membership of a BITS team — status + their private role. */
+/** This user's membership of a BITS team — status + their private role.
+ * `vouched` means the claim arrived via a team-scoped invite code (from an
+ * already-verified teammate, or an admin bootstrap code) rather than just a
+ * license-number match — see submit_team_claim / invite_scoped_claims.sql. */
 export function useTeamClaim(bitsTeamId: number) {
   return useQuery({
     queryKey: keys.teamClaim(bitsTeamId),
@@ -320,12 +323,16 @@ export function useTeamClaim(bitsTeamId: number) {
       if (!session) return null
       const { data } = await supabase
         .from('team_claims')
-        .select('status, role')
+        .select('status, role, vouched')
         .eq('user_id', session.user.id)
         .eq('bits_team_id', bitsTeamId)
         .maybeSingle()
       if (!data) return null
-      return { status: data.status as 'verified' | 'pending' | 'rejected', role: (data.role ?? 'player') as TeamRole }
+      return {
+        status: data.status as 'verified' | 'pending' | 'rejected',
+        role: (data.role ?? 'player') as TeamRole,
+        vouched: data.vouched,
+      }
     },
     enabled: !!bitsTeamId,
     staleTime: STALE.MEDIUM,
@@ -333,13 +340,15 @@ export function useTeamClaim(bitsTeamId: number) {
 }
 
 /** Claim your spot in a team (license → auto-verify adult, else pending review).
- * Membership only — role starts as 'player'; captaincy is chosen afterwards. */
+ * Membership only — role starts as 'player'; captaincy is chosen afterwards.
+ * An invite code (from a teammate's share link, or an admin bootstrap link)
+ * marks the claim vouched and, for a bootstrap code, grants captain instantly. */
 export function useSubmitTeamClaim(bitsTeamId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (licNbr: string): Promise<'verified' | 'pending'> => {
+    mutationFn: async ({ licNbr, inviteCode }: { licNbr: string; inviteCode?: string }): Promise<'verified' | 'pending'> => {
       const { data, error } = await createClient()
-        .rpc('submit_team_claim', { p_bits_team_id: bitsTeamId, p_lic_nbr: licNbr })
+        .rpc('submit_team_claim', { p_bits_team_id: bitsTeamId, p_lic_nbr: licNbr, p_invite_code: inviteCode })
       if (error) throw error
       const res = data as { status: 'verified' | 'pending' }
       return res.status
@@ -348,7 +357,10 @@ export function useSubmitTeamClaim(bitsTeamId: number) {
   })
 }
 
-/** A verified member sets their own (private) role. 'captain' gates lineup tools. */
+/** A verified member sets their own (private) role. 'captain' is gated —
+ * only succeeds for a bootstrap-vouched founding claim; anyone else gets
+ * 'captain_exists_use_transfer' or 'captain_needs_request' back, which the UI
+ * should catch and redirect to useTransferCaptain / useRequestCaptain. */
 export function useSetTeamRole(bitsTeamId: number) {
   const qc = useQueryClient()
   return useMutation({
@@ -358,6 +370,132 @@ export function useSetTeamRole(bitsTeamId: number) {
       if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
+  })
+}
+
+/** Mint a shareable team_claim invite code — any verified member can invite a
+ * teammate. Sharing the link is the vouch; no separate confirm/deny UI. */
+export function useCreateTeamInviteCode(bitsTeamId: number) {
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data, error } = await createClient()
+        .rpc('create_team_invite_code', { p_bits_team_id: bitsTeamId })
+      if (error) throw error
+      return data as string
+    },
+  })
+}
+
+/** A verified member with no captain yet asks for the role — surfaces in the
+ * admin's get_pending_captain_requests queue. */
+export function useRequestCaptain(bitsTeamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await createClient().rpc('request_captain', { p_bits_team_id: bitsTeamId })
+      if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
+  })
+}
+
+/** The current captain hands the role directly to another verified member —
+ * the only way captaincy changes hands after the founding claim. */
+export function useTransferCaptain(bitsTeamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (toUserId: string) => {
+      const { error } = await createClient()
+        .rpc('transfer_captain', { p_bits_team_id: bitsTeamId, p_to_user_id: toUserId })
+      if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: keys.teamClaim(bitsTeamId) }) },
+  })
+}
+
+export type VerifiedTeamMember = { userId: string; role: TeamRole; displayName: string; publicId: string | null }
+
+/** Verified members of a team — team-private, used by the captain-transfer
+ * picker. Only callable by another verified member of the same team. */
+export function useVerifiedTeamMembers(bitsTeamId: number) {
+  return useQuery({
+    queryKey: ['team-members', bitsTeamId] as const,
+    queryFn: async (): Promise<VerifiedTeamMember[]> => {
+      const { data, error } = await createClient()
+        .rpc('get_verified_team_members', { p_bits_team_id: bitsTeamId })
+      if (error) throw error
+      return (data ?? []).map(r => ({
+        userId: r.user_id, role: r.role as TeamRole, displayName: r.display_name, publicId: r.public_id,
+      }))
+    },
+    enabled: !!bitsTeamId,
+    staleTime: STALE.SHORT,
+  })
+}
+
+export type InviteScope = { codeType: 'site_access' | 'team_claim' | 'new_team_bootstrap'; bitsTeamId: number | null; teamName: string | null }
+
+/** Read-only peek at what a code unlocks — used to pre-fill onboarding when
+ * someone arrives via a team-scoped link. No side effect (unlike redeeming). */
+export function useInviteScope(code: string | null) {
+  return useQuery({
+    queryKey: ['invite-scope', code] as const,
+    queryFn: async (): Promise<InviteScope | null> => {
+      const { data, error } = await createClient().rpc('get_invite_scope', { p_code: code! })
+      if (error) throw error
+      const row = data?.[0]
+      if (!row) return null
+      return { codeType: row.code_type as InviteScope['codeType'], bitsTeamId: row.scope_bits_team_id, teamName: row.team_name }
+    },
+    enabled: !!code,
+    staleTime: STALE.LONG,
+  })
+}
+
+/** Admin: mint the Tier-1 founding code for a brand-new team with no
+ * verified members yet. Bounded by number of teams, not players. */
+export function useCreateBootstrapCode() {
+  return useMutation({
+    mutationFn: async (bitsTeamId: number): Promise<string> => {
+      const { data, error } = await createClient()
+        .rpc('admin_create_bootstrap_code', { p_bits_team_id: bitsTeamId })
+      if (error) throw error
+      return data as string
+    },
+  })
+}
+
+export type PendingCaptainRequest = {
+  claimId: string; bitsTeamId: number; teamName: string | null; clubName: string | null
+  userEmail: string | null; captainRequestedAt: string
+}
+
+/** Admin review queue for request_captain — bounded by number of teams
+ * asking, not number of players. */
+export function usePendingCaptainRequests() {
+  return useQuery<PendingCaptainRequest[]>({
+    queryKey: ['admin', 'pending-captain-requests'],
+    queryFn: async () => {
+      const { data, error } = await createClient().rpc('get_pending_captain_requests')
+      if (error) throw error
+      return (data ?? []).map(r => ({
+        claimId: r.claim_id, bitsTeamId: r.bits_team_id, teamName: r.team_name, clubName: r.club_name,
+        userEmail: r.user_email, captainRequestedAt: r.captain_requested_at,
+      }))
+    },
+  })
+}
+
+/** Admin action on a captain request — approves by setting the requester as
+ * captain directly. */
+export function useAdminBootstrapCaptain() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (claimId: string) => {
+      const { error } = await createClient().rpc('admin_bootstrap_captain', { p_claim_id: claimId })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'pending-captain-requests'] }),
   })
 }
 
@@ -405,7 +543,7 @@ export function useTeamRoster(bitsTeamId: number, limit = 30) {
 export type AvailabilityResponseValue = 'yes' | 'maybe' | 'no'
 export type TeamAvailabilityRow = {
   userId: string; response: AvailabilityResponseValue; note: string | null
-  respondedAt: string; displayName: string; publicId: string | null
+  respondedAt: string; displayName: string; publicId: string | null; vouched: boolean
 }
 
 /** The team's answers to "Kan du spela?" for one match — team-private
@@ -419,7 +557,7 @@ export function useTeamAvailability(bitsTeamId: number, bitsMatchId: number) {
       if (error) throw error
       return (data ?? []).map(r => ({
         userId: r.user_id, response: r.response as AvailabilityResponseValue, note: r.note,
-        respondedAt: r.responded_at, displayName: r.display_name, publicId: r.public_id,
+        respondedAt: r.responded_at, displayName: r.display_name, publicId: r.public_id, vouched: r.vouched,
       }))
     },
     enabled: !!bitsTeamId && !!bitsMatchId,

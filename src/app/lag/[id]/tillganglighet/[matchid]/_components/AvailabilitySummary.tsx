@@ -42,7 +42,14 @@ export function AvailabilitySummary({ responses }: { responses: TeamAvailability
                   display: 'flex', alignItems: 'center', gap: SPACE[2],
                   padding: `${SPACE[2]}px ${SPACE[3]}px`, background: `${g.color}10`, borderRadius: RADIUS.md,
                 }}>
-                  <span style={{ fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, flex: 1 }}>{r.displayName}</span>
+                  <span style={{ fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, flex: 1 }}>
+                    {r.displayName}
+                    {!r.vouched && (
+                      <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.04em' }}>
+                        OBEKRÄFTAD
+                      </span>
+                    )}
+                  </span>
                   {r.note && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, fontStyle: 'italic' }}>{r.note}</span>}
                 </div>
               ))}

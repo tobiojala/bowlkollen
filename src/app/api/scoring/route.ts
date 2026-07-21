@@ -1,9 +1,26 @@
 import { NextResponse } from 'next/server'
 
+// Only ever proxies live-scoring pages for LiveLaneViewer, which always
+// builds a scoring.se URL itself — this allowlist stops it being reused as
+// an open SSRF proxy for anything else (see api/fetch, deleted for the same
+// reason it had no allowlist at all and, worse, zero real callers).
+const ALLOWED_HOSTS = new Set(['scoring.se'])
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const url = searchParams.get('url')
   if (!url) return NextResponse.json({ error: 'No URL' }, { status: 400 })
+
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+  }
+  if (parsed.protocol !== 'https:' || !ALLOWED_HOSTS.has(parsed.hostname)) {
+    return NextResponse.json({ error: 'Host not allowed' }, { status: 400 })
+  }
+
   try {
     const res = await fetch(url, {
       headers: {
