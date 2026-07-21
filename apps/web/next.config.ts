@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
+  // Shared workspace package ships raw TS — Next must transpile it.
+  transpilePackages: ['@bowlkollen/core'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },

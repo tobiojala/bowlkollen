@@ -1,43 +1,84 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '@/lib/supabase';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
 
-const PILLARS = ['Förbered', 'Spela', 'Förbättra', 'Minns'] as const;
+const SEASON_ID = 2026; // 2026/27 season, per the data-source convention
+
+function useDivisions() {
+  return useQuery({
+    queryKey: ['divisions', SEASON_ID],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bits_divisions')
+        .select('bits_division_id, name, season_id')
+        .eq('season_id', SEASON_ID)
+        .order('name', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
 
 export default function Home() {
+  const { data, isLoading, error } = useDivisions();
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.hero}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.header}>
         <Text style={styles.kicker}>BOWLKOLLEN</Text>
-        <Text style={styles.h1}>
-          Hela ditt{'\n'}bowlingliv.
+        <Text style={styles.title}>Divisioner</Text>
+        <Text style={styles.sub}>
+          {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
         </Text>
-        <View style={styles.rule} />
-        <View style={styles.pillars}>
-          {PILLARS.map((p) => (
-            <View key={p} style={styles.pillar}>
-              <Text style={styles.pillarText}>{p}</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
-      <Text style={styles.footer}>Native · v0.1</Text>
+      {isLoading && (
+        <View style={styles.center}>
+          <ActivityIndicator color={COLOR.gold} />
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.center}>
+          <Text style={styles.error}>Kunde inte hämta data.</Text>
+          <Text style={styles.errorDetail}>{String(error)}</Text>
+        </View>
+      )}
+
+      {data && (
+        <FlatList
+          data={data}
+          keyExtractor={(d) => String(d.bits_division_id)}
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={styles.sep} />}
+          renderItem={({ item }) => (
+            <View style={styles.row}>
+              <Text style={styles.rowName}>{item.name}</Text>
+              <Text style={styles.rowMeta}>›</Text>
+            </View>
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLOR.bg,
+  safe: { flex: 1, backgroundColor: COLOR.bg },
+  header: {
     paddingHorizontal: SPACE[6],
-  },
-  hero: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: SPACE[6],
+    paddingTop: SPACE[6],
+    paddingBottom: SPACE[4],
+    gap: SPACE[1],
   },
   kicker: {
     color: COLOR.gold,
@@ -45,40 +86,29 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     fontWeight: '700',
   },
-  h1: {
+  title: {
     color: COLOR.ink,
-    fontSize: TYPE.hero,
-    lineHeight: TYPE.hero * 1.02,
+    fontSize: TYPE.title + 8,
     fontWeight: '800',
-    letterSpacing: -1,
+    letterSpacing: -0.5,
   },
-  rule: {
-    height: 2,
-    width: 40,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLOR.gold,
-  },
-  pillars: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACE[2],
-  },
-  pillar: {
-    backgroundColor: COLOR.surface,
-    borderRadius: RADIUS.pill,
-    paddingVertical: SPACE[2],
-    paddingHorizontal: SPACE[4],
-  },
-  pillarText: {
-    color: COLOR.ink2,
+  sub: { color: COLOR.ink3, fontSize: TYPE.caption },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACE[2] },
+  error: { color: COLOR.red, fontSize: TYPE.body, fontWeight: '600' },
+  errorDetail: {
+    color: COLOR.ink3,
     fontSize: TYPE.caption,
-    fontWeight: '600',
-  },
-  footer: {
-    color: COLOR.ink4,
-    fontSize: TYPE.micro,
+    paddingHorizontal: SPACE[8],
     textAlign: 'center',
-    paddingBottom: SPACE[4],
-    letterSpacing: 1,
   },
+  list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACE[4],
+  },
+  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600', flex: 1 },
+  rowMeta: { color: COLOR.ink4, fontSize: TYPE.title },
+  sep: { height: 1, backgroundColor: COLOR.hairline },
 });

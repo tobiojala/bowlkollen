@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
-import type { Database } from '@/lib/database.types'
+import type { Database } from '@bowlkollen/core'
 
 // Cookie-free anon client — safe for ISR, no session, no RLS bypass.
 // Use for Server Components reading public data (no user context needed).

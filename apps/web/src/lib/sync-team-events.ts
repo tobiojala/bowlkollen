@@ -17,7 +17,7 @@ import type {
   LineupAnnouncedPayload,
   TableRow,
 } from '@/lib/types'
-import type { TablesInsert } from '@/lib/database.types'
+import type { TablesInsert } from '@bowlkollen/core'
 
 // ── Internal types (queries only, not exported) ───────────────────────────────
 

@@ -1,4 +1,4 @@
-import type { Database } from '@/lib/database.types'
+import type { Database } from '@bowlkollen/core'
 import type { MatchRow } from '@/lib/division-standings'
 
 export type DbMatchRow = Database['public']['Tables']['bits_matches']['Row']
