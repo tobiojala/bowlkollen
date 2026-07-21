@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -98,16 +99,21 @@ export default function Following() {
 }
 
 function FollowRow({ item }: { item: FollowItem }) {
+  const router = useRouter();
   const qc = useQueryClient();
   const { mutate, isPending } = useToggleFollow(item.type, item.id);
   return (
     <View style={styles.row}>
-      <View style={styles.rowText}>
+      <Pressable
+        style={styles.rowText}
+        disabled={item.type !== 'team'}
+        onPress={() => item.type === 'team' && router.push(`/lag/${item.id}`)}
+      >
         <Text style={styles.rowName} numberOfLines={1}>
           {item.name}
         </Text>
         {item.sub && <Text style={styles.rowSub}>{item.sub}</Text>}
-      </View>
+      </Pressable>
       <Pressable
         disabled={isPending}
         onPress={() => mutate(undefined, { onSuccess: () => qc.invalidateQueries({ queryKey: ['follows', 'detail'] }) })}

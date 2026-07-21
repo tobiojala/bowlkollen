@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { formatMatchDate } from '@/lib/format';
+import { MatchRow } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -91,35 +91,6 @@ export default function Home() {
   );
 }
 
-function MatchRow({ m }: { m: Match }) {
-  return (
-    <View style={styles.match}>
-      <View style={styles.faceoff}>
-        <Text style={styles.team} numberOfLines={1}>
-          {m.home_team_name}
-        </Text>
-        <View style={styles.centerCol}>
-          {m.is_finished ? (
-            <Text style={styles.score}>
-              {m.home_score}–{m.away_score}
-            </Text>
-          ) : (
-            <Text style={styles.date}>{formatMatchDate(m.match_date)}</Text>
-          )}
-        </View>
-        <Text style={[styles.team, styles.teamRight]} numberOfLines={1}>
-          {m.away_team_name}
-        </Text>
-      </View>
-      <Text style={styles.meta} numberOfLines={1}>
-        {[m.division_name, m.is_finished ? formatMatchDate(m.match_date) : null, m.hall_name]
-          .filter(Boolean)
-          .join(' · ')}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[4] },
@@ -135,19 +106,6 @@ const styles = StyleSheet.create({
     marginTop: SPACE[6],
     marginBottom: SPACE[2],
   },
-  match: {
-    paddingVertical: SPACE[4],
-    borderBottomWidth: 1,
-    borderBottomColor: COLOR.hairline,
-    gap: SPACE[2],
-  },
-  faceoff: { flexDirection: 'row', alignItems: 'center' },
-  team: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
-  teamRight: { textAlign: 'right' },
-  centerCol: { paddingHorizontal: SPACE[3], minWidth: 64, alignItems: 'center' },
-  score: { color: COLOR.ink, fontSize: TYPE.body + 4, fontWeight: '800', letterSpacing: 0.5 },
-  date: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
-  meta: { color: COLOR.ink3, fontSize: TYPE.caption },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], gap: SPACE[3] },
   emptyTitle: { color: COLOR.ink, fontSize: TYPE.title, fontWeight: '800' },
   emptyBody: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center' },
