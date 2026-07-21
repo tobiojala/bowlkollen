@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import OnboardingSuggestions from '@/components/OnboardingSuggestions';
 import { useToggleFollow } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
@@ -105,6 +106,8 @@ export default function Onboarding() {
             ))}
           </>
         )}
+
+        {picked && <OnboardingSuggestions bitsTeamId={picked.id} />}
       </ScrollView>
 
       <View style={styles.footer}>
