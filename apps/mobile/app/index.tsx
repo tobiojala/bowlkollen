@@ -2,12 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -34,7 +36,12 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>BOWLKOLLEN</Text>
+        <View style={styles.topbar}>
+          <Text style={styles.kicker}>BOWLKOLLEN</Text>
+          <Pressable onPress={signOut} hitSlop={12}>
+            <Text style={styles.signout}>Logga ut</Text>
+          </Pressable>
+        </View>
         <Text style={styles.title}>Divisioner</Text>
         <Text style={styles.sub}>
           {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
@@ -80,6 +87,13 @@ const styles = StyleSheet.create({
     paddingBottom: SPACE[4],
     gap: SPACE[1],
   },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACE[1],
+  },
+  signout: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
   kicker: {
     color: COLOR.gold,
     fontSize: TYPE.label,
