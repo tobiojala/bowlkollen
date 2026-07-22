@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[2], paddingBottom: SPACE[4] },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.display, letterSpacing: -0.5 },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },

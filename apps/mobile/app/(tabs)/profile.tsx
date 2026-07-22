@@ -20,7 +20,6 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>BOWLKOLLEN</Text>
         <Text style={styles.title}>Profil</Text>
       </View>
 
@@ -61,7 +60,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg, paddingHorizontal: SPACE[6] },
   header: { paddingTop: SPACE[6], paddingBottom: SPACE[4] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.display, letterSpacing: -0.5 },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -81,7 +80,7 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: COLOR.gold, fontSize: TYPE.title, fontFamily: FONT.bold },
   identity: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.display },
+  name: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
   email: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   menuRow: {
     flexDirection: 'row',

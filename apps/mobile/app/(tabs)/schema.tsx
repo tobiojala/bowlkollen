@@ -32,7 +32,6 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>BOWLKOLLEN</Text>
         <Text style={styles.title}>Divisioner</Text>
         <Text style={styles.sub}>
           {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
@@ -88,7 +87,7 @@ const styles = StyleSheet.create({
   title: {
     color: COLOR.ink,
     fontSize: TYPE.title + 8,
-    fontFamily: FONT.display,
+    fontFamily: FONT.bold,
     letterSpacing: -0.5,
   },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption },

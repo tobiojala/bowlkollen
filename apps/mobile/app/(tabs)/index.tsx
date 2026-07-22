@@ -43,6 +43,14 @@ export default function Home() {
   const router = useRouter();
   const { data = [], isLoading } = useMyMatches();
 
+  const hour = new Date().getHours();
+  const greeting = hour < 10 ? 'God morgon' : hour < 18 ? 'God dag' : 'God kväll';
+  const dateStr = new Date().toLocaleDateString('sv-SE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+  });
+
   const upcoming = data
     .filter((m) => !m.is_finished)
     .sort((a, b) => a.match_date.localeCompare(b.match_date));
@@ -58,8 +66,8 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.kicker}>BOWLKOLLEN</Text>
-        <Text style={styles.title}>Hem</Text>
+        <Text style={styles.greeting}>{greeting}</Text>
+        <Text style={styles.date}>{dateStr}</Text>
       </View>
 
       {isLoading ? (
@@ -97,8 +105,13 @@ export default function Home() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[4] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.display, letterSpacing: -0.5 },
+  greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
+  date: {
+    color: COLOR.ink3,
+    fontSize: TYPE.label,
+    marginTop: SPACE[1],
+    textTransform: 'capitalize',
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   sectionLabel: {
