@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 
+import { ScrollBlur } from '@/components/ScrollBlur';
 import { COLOR, FONT } from '@/theme';
 
 export default function TabsLayout() {
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLOR.gold,
@@ -46,6 +49,8 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
-    </Tabs>
+      </Tabs>
+      <ScrollBlur overTabBar />
+    </View>
   );
 }
