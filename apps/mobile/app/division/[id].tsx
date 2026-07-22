@@ -12,6 +12,8 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
 import { MatchRow } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
@@ -90,8 +92,11 @@ export default function DivisionPage() {
               {standings.map((s, i) => {
                 const leader = i === 0;
                 return (
-                  <PressableScale
+                  <Animated.View
                     key={s.teamId}
+                    entering={FadeInDown.duration(260).delay(Math.min(i, 10) * 30)}
+                  >
+                  <PressableScale
                     style={styles.stRow}
                     onPress={() => router.push(`/lag/${s.teamId}`)}
                   >
@@ -112,6 +117,7 @@ export default function DivisionPage() {
                       {s.points}
                     </Text>
                   </PressableScale>
+                  </Animated.View>
                 );
               })}
             </View>
