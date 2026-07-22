@@ -136,9 +136,9 @@ export function FloatingNav() {
                       }}
                     >
                       <Icon
-                        size={22}
-                        strokeWidth={active ? 2.3 : 1.7}
-                        color={active ? COLOR.gold : COLOR.ink3}
+                        size={24}
+                        strokeWidth={active ? 2.4 : 1.9}
+                        color={active ? COLOR.gold : COLOR.ink2}
                       />
                     </Pressable>
                   );
@@ -149,7 +149,7 @@ export function FloatingNav() {
             /* collapsed: mini circle showing the active tab icon, tap to expand */
             <Animated.View key="mini" entering={FadeIn.duration(140)} style={styles.mini}>
               <Pressable style={styles.miniBtn} onPress={() => setLocalOpen(true)}>
-                <ActiveIcon size={22} strokeWidth={2.3} color={COLOR.gold} />
+                <ActiveIcon size={24} strokeWidth={2.4} color={COLOR.gold} />
               </Pressable>
             </Animated.View>
           )}

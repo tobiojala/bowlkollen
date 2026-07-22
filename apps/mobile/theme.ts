@@ -10,11 +10,13 @@ export const COLOR = {
   surface: '#14171c',
   surface2: '#1c2127',
 
-  // Ink — opacity scale, dark-first
+  // Ink — opacity scale, dark-first. Contrast tuned for older eyes (WCAG AA):
+  // ink/ink2/ink3 all clear ~4.5:1+ on `bg` so any of them may carry readable
+  // text; ink4 stays sub-threshold and is for hairlines/disabled/decoration only.
   ink: '#f4f5f7',
-  ink2: 'rgba(244,245,247,0.64)',
-  ink3: 'rgba(244,245,247,0.40)',
-  ink4: 'rgba(244,245,247,0.24)',
+  ink2: 'rgba(244,245,247,0.72)',
+  ink3: 'rgba(244,245,247,0.56)',
+  ink4: 'rgba(244,245,247,0.34)',
 
   hairline: 'rgba(244,245,247,0.07)',
 
@@ -26,13 +28,16 @@ export const COLOR = {
   red: '#e05555',
 } as const;
 
+// Type scale — senior-first. `body` is the readable floor; `caption` is the
+// smallest a value/date/label may use. `label`/`micro` are decoration only
+// (faint uppercase tags), never meaningful text — see the Legibility rule.
 export const TYPE = {
   hero: 52,
   title: 24,
-  body: 15,
-  caption: 13,
-  label: 11,
-  micro: 9,
+  body: 16,
+  caption: 14,
+  label: 12,
+  micro: 11,
 } as const;
 
 export const SPACE = {

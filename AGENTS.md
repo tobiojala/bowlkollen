@@ -35,6 +35,18 @@ The palette is near-black tonal with **one** brand accent. Colour carries meanin
 - **Blue — removed.** Do not use `C.blue`/`C.blueMuted` or `#7ab4e8`/`#5a82b4` in new code. Replace info/upcoming/comparison blue with ink; replace "good outcome" blue with green. (`C.blue` stays defined only so the un-migrated long tail compiles.)
 - **Division colours** (`divisions.ts`) are a separate categorical identity system, not part of this semantic palette.
 
+## Legibility — built for older eyes (senior-first, WCAG AA minimum)
+Many of our bowlers are seniors. If a 70-year-old can't read a label or spot an icon, the feature does not exist for them. This is a hard requirement, not a nice-to-have — hold every screen to it.
+
+- **Text size floor.** Body text ≥ **16px**; any text a user must read ≥ **13px** (absolute floor). `TYPE.label`/`TYPE.micro` are for **non-essential decoration only** (a faint uppercase section tag) — never for a value, name, date, count, or anything that carries meaning.
+- **Contrast.** Readable text uses **`ink` or `ink2` only** — both clear WCAG AA (4.5:1) on our dark bg. **`ink3` is the floor for genuinely secondary text and nothing fainter should carry words.** **`ink4` never carries readable content** — it is for hairlines, disabled states, and decorative chevrons only. Aim for AAA (7:1) on primary content where you can.
+- **Icons must be legible too.** Interactive icons ≥ **22px**, drawn in `ink2` or stronger (never `ink3`/`ink4` for an icon a user needs to find/tap). Active/selected → `gold`. Don't ship an icon-only control that a weak-sighted user can't identify — pair it with a label or an `accessibilityLabel`.
+- **Never encode meaning in colour alone.** A win/loss, up/down, live/finished must also differ by text or shape (e.g. form dots carry `V`/`F`/`O`, not just green/red) — many seniors have reduced colour discrimination.
+- **Respect Dynamic Type.** Never set `allowFontScaling={false}`. Layouts must survive the OS text-size setting being turned up — use wrapping/`numberOfLines`, not fixed heights that clip enlarged text.
+- **Touch targets ≥ 44×44pt** (already the interaction floor) — bigger is friendlier for less steady hands.
+
+Fix these at the **token** level (`theme.ts` / `brand.ts`) so every screen improves at once, not per-screen.
+
 ## New pages — Server Component + HydrationBoundary
 Every new dynamic route (`/things/[id]`) must follow this pattern:
 
@@ -111,6 +123,7 @@ staleTime: STALE.LONG      // 10m  — slow-moving data
 - [ ] No new `any` types — used `src/lib/types.ts`
 - [ ] No magic numbers — used `src/lib/constants.ts`
 - [ ] `useColors()` not manual theme switch
+- [ ] Senior-legible: readable text ≥13px on `ink`/`ink2`/`ink3` (never `ink4`), icons ≥22px & not fainter than `ink2`, meaning never colour-only, no `allowFontScaling={false}`
 - [ ] `next/image` not `<img>`
 - [ ] `next/link` not `<a href>` for internal routes
 - [ ] `useSession()` not `getSession()`
