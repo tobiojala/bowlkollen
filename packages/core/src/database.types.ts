@@ -2125,11 +2125,13 @@ export type Database = {
         Args: never
         Returns: {
           away_score: number
+          away_result: number
           away_team_name: string
           bits_match_id: number
           division_name: string
           hall_name: string
           home_score: number
+          home_result: number
           home_team_name: string
           is_finished: boolean
           is_personalized: boolean

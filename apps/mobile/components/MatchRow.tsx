@@ -7,8 +7,10 @@ export type MatchRowData = {
   bits_match_id: number;
   home_team_name: string;
   away_team_name: string;
-  home_score: number | null;
-  away_score: number | null;
+  // Match points (the league score, e.g. 14-6) — NOT pinfall. Pinfall lives on
+  // the match detail screen.
+  home_result: number | null;
+  away_result: number | null;
   division_name: string | null;
   is_finished: boolean | null;
   match_date: string;
@@ -41,7 +43,7 @@ export function MatchRow({
         <View style={styles.centerCol}>
           {m.is_finished ? (
             <Text style={styles.score}>
-              {m.home_score ?? 0}–{m.away_score ?? 0}
+              {m.home_result ?? 0}–{m.away_result ?? 0}
             </Text>
           ) : (
             <Text style={styles.date}>{formatMatchDate(m.match_date)}</Text>

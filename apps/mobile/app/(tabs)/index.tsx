@@ -19,8 +19,8 @@ type Match = {
   match_date: string;
   home_team_name: string;
   away_team_name: string;
-  home_score: number;
-  away_score: number;
+  home_result: number;
+  away_result: number;
   division_name: string;
   is_finished: boolean;
   hall_name: string;

@@ -39,7 +39,7 @@ function useDivisionMatches(divisionId: number) {
       const { data, error } = await supabase
         .from('bits_matches')
         .select(
-          'bits_match_id, home_team_name, away_team_name, home_score, away_score, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id',
+          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id',
         )
         .eq('bits_division_id', divisionId)
         .eq('season_id', CURRENT_SEASON);
