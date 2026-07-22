@@ -40,12 +40,35 @@ function usePlayerHistory(publicId: string) {
   });
 }
 
+// Percentile vs the whole field (integer: "better than X%").
+function usePlayerPercentile(publicId: string) {
+  return useQuery({
+    queryKey: ['player-percentile', publicId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_player_percentile', { p_public_id: publicId });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export default function PlayerPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: player, isLoading } = usePlayer(id);
   const { data: history = [] } = usePlayerHistory(id);
   const { data: followers = 0 } = useFollowCount('player', id);
+  const { data: percentile } = usePlayerPercentile(id);
+
+  // Form — recent game average vs the season, from each match's series.
+  const sorted = [...history].sort((a, b) => a.match_date.localeCompare(b.match_date));
+  const games = sorted.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
+  const seasonAvg = games.length ? Math.round(games.reduce((a, b) => a + b, 0) / games.length) : null;
+  const recent = games.slice(-9);
+  const recentAvg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null;
+  const formDiff = seasonAvg != null && recentAvg != null ? recentAvg - seasonAvg : null;
+  const historyDesc = [...sorted].reverse();
+  const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -85,6 +108,12 @@ export default function PlayerPage() {
             <FollowButton entityType="player" entityId={id} />
           </View>
 
+          {topPct != null && (
+            <View style={styles.pctPill}>
+              <Text style={styles.pctText}>TOPP {topPct}% I LANDET</Text>
+            </View>
+          )}
+
           <View style={styles.stats}>
             <Stat label="SNITT" value={player.licence_average ? String(player.licence_average) : '–'} />
             <Stat label="NIVÅ" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
@@ -93,8 +122,22 @@ export default function PlayerPage() {
 
           {history.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>MATCHER</Text>
-              {history.map((h, i) => (
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionLabel}>MATCHER</Text>
+                {recentAvg != null && (
+                  <Text style={styles.formStat}>
+                    Form {recentAvg}
+                    {formDiff != null && formDiff !== 0 && (
+                      <Text style={{ color: formDiff > 0 ? COLOR.green : COLOR.red }}>
+                        {'  '}
+                        {formDiff > 0 ? '↑' : '↓'}
+                        {Math.abs(formDiff)}
+                      </Text>
+                    )}
+                  </Text>
+                )}
+              </View>
+              {historyDesc.map((h, i) => (
                 <View key={i} style={styles.matchRow}>
                   <View style={styles.matchText}>
                     <Text style={styles.opponent} numberOfLines={1}>
@@ -102,7 +145,13 @@ export default function PlayerPage() {
                       {h.opponent_name}
                     </Text>
                     <Text style={styles.matchMeta} numberOfLines={1}>
-                      {[formatMatchDate(h.match_date), h.division_name].filter(Boolean).join(' · ')}
+                      {[
+                        formatMatchDate(h.match_date),
+                        h.division_name,
+                        h.series?.length ? h.series.join(' · ') : null,
+                      ]
+                        .filter(Boolean)
+                        .join('  ·  ')}
                     </Text>
                   </View>
                   <Text style={styles.result}>{h.total_result}</Text>
@@ -148,6 +197,26 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
+  pctPill: {
+    alignSelf: 'flex-start',
+    marginTop: SPACE[4],
+    backgroundColor: 'rgba(245,194,0,0.10)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE[4],
+    paddingVertical: SPACE[2],
+  },
+  pctText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  formStat: {
+    color: COLOR.ink2,
+    fontSize: TYPE.caption,
+    fontFamily: FONT.semibold,
+    marginBottom: SPACE[2],
+  },
   stats: {
     flexDirection: 'row',
     gap: SPACE[3],
