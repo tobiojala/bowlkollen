@@ -12,6 +12,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { ProfileDNA } from '@/components/ProfileDNA';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
@@ -91,21 +92,9 @@ export default function PlayerPage() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
+          <AmbientGlow color={teamColor(player.name).ring} />
           <View style={styles.headerRow}>
-            <View
-              style={[
-                styles.avatar,
-                {
-                  borderColor: teamColor(player.name).ring,
-                  backgroundColor: teamColor(player.name).bg,
-                  shadowColor: teamColor(player.name).ring,
-                },
-              ]}
-            >
-              <Text style={[styles.initials, { color: teamColor(player.name).text }]}>
-                {teamInitials(player.name)}
-              </Text>
-            </View>
+            <IdentityAvatar colors={teamColor(player.name)} initials={teamInitials(player.name)} size={64} />
             <View style={styles.headerText}>
               <Text style={styles.name} numberOfLines={2}>
                 {player.name}
@@ -199,19 +188,6 @@ const styles = StyleSheet.create({
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 16,
-    shadowOpacity: 0.55,
-    elevation: 8,
-  },
-  initials: { fontFamily: FONT.display, fontSize: 20, letterSpacing: 0.5 },
   headerText: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },

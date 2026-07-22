@@ -13,6 +13,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { MatchRow, type MatchRowData } from '@/components/MatchRow';
 import { useFollowCount } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
@@ -145,15 +146,9 @@ export default function TeamPage() {
         <ListSkeleton />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
+          <AmbientGlow color={tc.ring} />
           <View style={styles.heroRow}>
-            <View
-              style={[
-                styles.avatar,
-                { borderColor: tc.ring, backgroundColor: tc.bg, shadowColor: tc.ring },
-              ]}
-            >
-              <Text style={[styles.initials, { color: tc.text }]}>{initials}</Text>
-            </View>
+            <IdentityAvatar colors={tc} initials={initials} size={80} />
             <View style={styles.heroText}>
               {!!divisionName && (
                 <Text style={[styles.divLabel, { color: tc.text }]} numberOfLines={1}>
@@ -293,19 +288,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[4], marginTop: SPACE[6] },
-  avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 18,
-    shadowOpacity: 0.55,
-    elevation: 8,
-  },
-  initials: { fontFamily: FONT.display, fontSize: 26, letterSpacing: 0.5 },
   heroText: { flex: 1, minWidth: 0 },
   divLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginBottom: 3 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
