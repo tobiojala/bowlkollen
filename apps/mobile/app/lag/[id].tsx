@@ -15,6 +15,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { MatchRow, type MatchRowData } from '@/components/MatchRow';
 import { useFollowCount } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
+import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const CURRENT_SEASON = 2026;
@@ -82,6 +83,10 @@ export default function TeamPage() {
     .sort((a, b) => b.match_date.localeCompare(a.match_date));
   const divisionName = matches.find((m) => m.division_name)?.division_name ?? null;
 
+  const teamName = team?.name ?? 'Lag';
+  const tc = teamColor(teamName);
+  const initials = teamInitials(teamName);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
@@ -92,11 +97,31 @@ export default function TeamPage() {
         <ListSkeleton />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.kicker}>{divisionName ?? 'LAG'}</Text>
-          <Text style={styles.name}>{team?.name ?? 'Lag'}</Text>
-          {team?.club_name && team.club_name !== team?.name && (
-            <Text style={styles.club}>{team.club_name}</Text>
-          )}
+          <View style={styles.heroRow}>
+            <View
+              style={[
+                styles.avatar,
+                { borderColor: tc.ring, backgroundColor: tc.bg, shadowColor: tc.ring },
+              ]}
+            >
+              <Text style={[styles.initials, { color: tc.text }]}>{initials}</Text>
+            </View>
+            <View style={styles.heroText}>
+              {!!divisionName && (
+                <Text style={[styles.divLabel, { color: tc.text }]} numberOfLines={1}>
+                  {divisionName}
+                </Text>
+              )}
+              <Text style={styles.name} numberOfLines={2}>
+                {teamName}
+              </Text>
+              {team?.club_name && team.club_name !== teamName && (
+                <Text style={styles.club} numberOfLines={1}>
+                  {team.club_name}
+                </Text>
+              )}
+            </View>
+          </View>
           <View style={styles.followRow}>
             <FollowButton entityType="team" entityId={String(teamId)} />
             <Text style={styles.followers}>{followers} följare</Text>
@@ -170,15 +195,24 @@ const styles = StyleSheet.create({
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
-  kicker: {
-    color: COLOR.gold,
-    fontSize: TYPE.label,
-    letterSpacing: 2,
-    fontFamily: FONT.bold,
-    marginTop: SPACE[2],
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[4], marginTop: SPACE[6] },
+  avatar: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 2.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 18,
+    shadowOpacity: 0.55,
+    elevation: 8,
   },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 10, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
-  club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
+  initials: { fontFamily: FONT.display, fontSize: 26, letterSpacing: 0.5 },
+  heroText: { flex: 1, minWidth: 0 },
+  divLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginBottom: 3 },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
+  club: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   section: { marginTop: SPACE[8] },

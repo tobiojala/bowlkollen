@@ -15,6 +15,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
+import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 function usePlayer(publicId: string) {
@@ -61,8 +62,24 @@ export default function PlayerPage() {
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.headerRow}>
+            <View
+              style={[
+                styles.avatar,
+                {
+                  borderColor: teamColor(player.name).ring,
+                  backgroundColor: teamColor(player.name).bg,
+                  shadowColor: teamColor(player.name).ring,
+                },
+              ]}
+            >
+              <Text style={[styles.initials, { color: teamColor(player.name).text }]}>
+                {teamInitials(player.name)}
+              </Text>
+            </View>
             <View style={styles.headerText}>
-              <Text style={styles.name}>{player.name}</Text>
+              <Text style={styles.name} numberOfLines={2}>
+                {player.name}
+              </Text>
               {!!player.club_name && <Text style={styles.club}>{player.club_name}</Text>}
             </View>
             <FollowButton entityType="player" entityId={id} />
@@ -114,7 +131,20 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[2] },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 16,
+    shadowOpacity: 0.55,
+    elevation: 8,
+  },
+  initials: { fontFamily: FONT.display, fontSize: 20, letterSpacing: 0.5 },
   headerText: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
