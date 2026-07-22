@@ -32,8 +32,10 @@ export function FloatingNav({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.wrap, { bottom: insets.bottom + 12 }]} pointerEvents="box-none">
+      {/* shadow lives on the outer, un-clipped view; the pill clips the blur */}
+      <View style={styles.shadow}>
       <View style={styles.pill}>
-        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
         <View style={styles.tint} />
         <View style={styles.rim} pointerEvents="none" />
 
@@ -71,24 +73,28 @@ export function FloatingNav({ state, navigation }: BottomTabBarProps) {
           })}
         </View>
       </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 16, right: 16, alignItems: 'stretch' },
-  pill: {
-    height: 60,
+  shadow: {
     borderRadius: RADIUS.pill,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(14,17,22,0.6)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 14 },
     shadowRadius: 32,
     shadowOpacity: 0.5,
     elevation: 16,
   },
-  tint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.35)' },
+  pill: {
+    height: 60,
+    borderRadius: RADIUS.pill,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(14,17,22,0.32)',
+  },
+  tint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.14)' },
   rim: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: RADIUS.pill,

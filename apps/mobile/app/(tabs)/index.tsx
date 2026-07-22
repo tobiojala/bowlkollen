@@ -9,7 +9,7 @@ import {
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
@@ -41,6 +41,7 @@ function useMyMatches() {
 
 export default function Home() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data = [], isLoading } = useMyMatches();
 
   const hour = new Date().getHours();
@@ -63,17 +64,22 @@ export default function Home() {
     { title: 'RESULTAT', data: results },
   ].filter((s) => s.data.length > 0);
 
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>{greeting}</Text>
-        <Text style={styles.date}>{dateStr}</Text>
-      </View>
+  const header = (
+    <View style={styles.header}>
+      <Text style={styles.greeting}>{greeting}</Text>
+      <Text style={styles.date}>{dateStr}</Text>
+    </View>
+  );
 
+  return (
+    <View style={styles.safe}>
       {isLoading ? (
-        <ListSkeleton />
+        <View style={{ paddingTop: insets.top, paddingHorizontal: SPACE[6] }}>
+          {header}
+          <ListSkeleton />
+        </View>
       ) : sections.length === 0 ? (
-        <View style={styles.empty}>
+        <View style={[styles.empty, { paddingTop: insets.top }]}>
           <Text style={styles.emptyTitle}>Din feed är tom</Text>
           <Text style={styles.emptyBody}>
             Följ lag och spelare så fylls den med deras matcher.
@@ -86,7 +92,8 @@ export default function Home() {
         <SectionList
           sections={sections}
           keyExtractor={(m) => String(m.bits_match_id)}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
+          ListHeaderComponent={header}
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
             <Text style={styles.sectionLabel}>{section.title}</Text>
@@ -98,13 +105,13 @@ export default function Home() {
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[4] },
+  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4] },
   greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
   date: {
     color: COLOR.ink3,
