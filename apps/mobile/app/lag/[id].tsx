@@ -62,6 +62,10 @@ export default function TeamPage() {
   const initials = teamInitials(teamName);
   const form = computeForm(matches, teamId);
 
+  const openTeam = (tid: number) => {
+    if (tid !== teamId) router.push(`/lag/${tid}`);
+  };
+
   const [tableOpen, setTableOpen] = useState(false);
   const bg = useSharedValue(0);
   useEffect(() => {
@@ -157,6 +161,7 @@ export default function TeamPage() {
                   m={m}
                   showDivision={false}
                   onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                  onOpenTeam={openTeam}
                 />
               ))}
             </Section>
@@ -170,6 +175,7 @@ export default function TeamPage() {
                   m={m}
                   showDivision={false}
                   onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                  onOpenTeam={openTeam}
                 />
               ))}
             </Section>

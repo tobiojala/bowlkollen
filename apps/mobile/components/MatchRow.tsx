@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
 import { formatMatchDate } from '@/lib/format';
@@ -16,35 +16,44 @@ export type MatchRowData = {
   is_finished: boolean | null;
   match_date: string;
   hall_name: string | null;
+  // Present on BITS division/team matches — lets each team name be its own
+  // doorway. Absent on the home-feed RPC, where the whole row opens the match.
+  home_bits_team_id?: number | null;
+  away_bits_team_id?: number | null;
 };
 
 // Face-off row: two teams across a centre — the result if played (winner
 // emphasised, loser dimmed, so the outcome reads at a glance), the date if
-// upcoming. Teams are doorways; the meta line carries division/venue.
+// upcoming. Teams are doorways to their pages (when onOpenTeam + a team id are
+// given); tapping the centre/rest opens the match. The meta line carries
+// division/venue.
 export function MatchRow({
   m,
   showDivision = true,
   onPress,
+  onOpenTeam,
 }: {
   m: MatchRowData;
   showDivision?: boolean;
   onPress?: () => void;
+  onOpenTeam?: (teamId: number) => void;
 }) {
   const finished = !!m.is_finished && m.home_result != null && m.away_result != null;
   const homeWon = finished && (m.home_result ?? 0) > (m.away_result ?? 0);
   const awayWon = finished && (m.away_result ?? 0) > (m.home_result ?? 0);
 
   const meta = [showDivision ? m.division_name : null, m.hall_name].filter(Boolean);
+  const nameStyle = (won: boolean) => [styles.team, won ? styles.win : finished ? styles.lose : null];
 
   return (
     <PressableScale style={styles.row} onPress={onPress} disabled={!onPress} haptic>
       <View style={styles.faceoff}>
-        <Text
-          style={[styles.team, homeWon ? styles.win : finished ? styles.lose : null]}
-          numberOfLines={1}
-        >
-          {m.home_team_name}
-        </Text>
+        <TeamCell
+          name={m.home_team_name}
+          teamId={m.home_bits_team_id}
+          onOpenTeam={onOpenTeam}
+          textStyle={nameStyle(homeWon)}
+        />
 
         <View style={styles.centre}>
           {finished ? (
@@ -65,12 +74,12 @@ export function MatchRow({
           )}
         </View>
 
-        <Text
-          style={[styles.team, styles.teamRight, awayWon ? styles.win : finished ? styles.lose : null]}
-          numberOfLines={1}
-        >
-          {m.away_team_name}
-        </Text>
+        <TeamCell
+          name={m.away_team_name}
+          teamId={m.away_bits_team_id}
+          onOpenTeam={onOpenTeam}
+          textStyle={[...nameStyle(awayWon), styles.teamRight]}
+        />
       </View>
 
       {meta.length > 0 && (
@@ -82,6 +91,37 @@ export function MatchRow({
   );
 }
 
+// A team name that's a doorway to its page when we have an id + handler,
+// otherwise plain text (home feed). hitSlop keeps the tap target comfortable.
+function TeamCell({
+  name,
+  teamId,
+  onOpenTeam,
+  textStyle,
+}: {
+  name: string;
+  teamId?: number | null;
+  onOpenTeam?: (teamId: number) => void;
+  textStyle: (object | null)[];
+}) {
+  const label = (
+    <Text style={textStyle} numberOfLines={1}>
+      {name}
+    </Text>
+  );
+  if (!onOpenTeam || teamId == null) return label;
+  return (
+    <Pressable
+      style={styles.cell}
+      hitSlop={{ top: 10, bottom: 10 }}
+      onPress={() => onOpenTeam(teamId)}
+      accessibilityLabel={name}
+    >
+      {label}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   row: {
     paddingVertical: SPACE[4] + SPACE[2],
@@ -90,6 +130,7 @@ const styles = StyleSheet.create({
     gap: SPACE[3],
   },
   faceoff: { flexDirection: 'row', alignItems: 'center' },
+  cell: { flex: 1 },
   team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold, lineHeight: 21 },
   teamRight: { textAlign: 'right' },
   win: { color: COLOR.ink, fontFamily: FONT.bold },

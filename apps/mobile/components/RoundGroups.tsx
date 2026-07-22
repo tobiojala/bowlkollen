@@ -10,9 +10,11 @@ export type RoundMatch = MatchRowData & { round_id: number | null };
 export function RoundGroups({
   matches,
   onOpenMatch,
+  onOpenTeam,
 }: {
   matches: RoundMatch[];
   onOpenMatch: (id: number) => void;
+  onOpenTeam?: (teamId: number) => void;
 }) {
   const minDate = new Map<number, string>();
   for (const m of matches) {
@@ -49,6 +51,7 @@ export function RoundGroups({
               m={m}
               showDivision={false}
               onPress={() => onOpenMatch(m.bits_match_id)}
+              onOpenTeam={onOpenTeam}
             />
           ))}
         </View>

@@ -118,6 +118,10 @@ export default function DivisionPage() {
     setSheet(null);
     router.push(`/matcher/${mid}`);
   };
+  const openTeam = (tid: number) => {
+    setSheet(null);
+    router.push(`/lag/${tid}`);
+  };
 
   const bg = useSharedValue(0);
   useEffect(() => {
@@ -157,7 +161,7 @@ export default function DivisionPage() {
                     onLink={() => setSheet('upcoming')}
                   />
                   {nextRoundMatches.map((m) => (
-                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} />
+                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} onOpenTeam={openTeam} />
                   ))}
                 </View>
               )}
@@ -170,7 +174,7 @@ export default function DivisionPage() {
                     onLink={() => setSheet('season')}
                   />
                   {lastRoundMatches.map((m) => (
-                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} />
+                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} onOpenTeam={openTeam} />
                   ))}
                 </View>
               )}
@@ -204,8 +208,8 @@ export default function DivisionPage() {
               animate
             />
           )}
-          {sheet === 'upcoming' && <RoundGroups matches={upcoming} onOpenMatch={openMatch} />}
-          {sheet === 'season' && <RoundGroups matches={past} onOpenMatch={openMatch} />}
+          {sheet === 'upcoming' && <RoundGroups matches={upcoming} onOpenMatch={openMatch} onOpenTeam={openTeam} />}
+          {sheet === 'season' && <RoundGroups matches={past} onOpenMatch={openMatch} onOpenTeam={openTeam} />}
         </ScrollView>
       </GlassSheet>
     </View>
