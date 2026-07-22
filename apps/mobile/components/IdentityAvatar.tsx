@@ -28,17 +28,20 @@ export function IdentityAvatar({
 }) {
   const ringW = Math.max(3, size * 0.05);
   const radius = size / 2;
-  const hi = colors.hi ?? colors.text;
-  const lo = colors.lo ?? colors.bg;
 
+  // Solid team-colour ring (no gradient banding) + a soft top-down specular sheen
+  // that fades to transparent, so there is no visible transition line — the same
+  // rim-light language as the floating nav.
   return (
-    <LinearGradient
-      colors={[hi, colors.ring, lo]}
-      locations={[0, 0.55, 1]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={{ width: size, height: size, borderRadius: radius, padding: ringW }}
-    >
+    <View style={{ width: size, height: size, borderRadius: radius, padding: ringW, backgroundColor: colors.ring }}>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0)']}
+        locations={[0, 0.4, 0.62]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
+        pointerEvents="none"
+      />
       <View
         style={[
           styles.inner,
@@ -53,7 +56,7 @@ export function IdentityAvatar({
           </Text>
         )}
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 

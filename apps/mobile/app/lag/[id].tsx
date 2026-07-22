@@ -1,19 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { GlassSheet } from '@/components/GlassSheet';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { MatchRow } from '@/components/MatchRow';
 import { StandingsLadder } from '@/components/StandingsLadder';
+import { StandingsTable } from '@/components/StandingsTable';
 import { useFollowCount } from '@/lib/follows';
 import {
   computeForm,
@@ -50,8 +59,22 @@ export default function TeamPage() {
   const initials = teamInitials(teamName);
   const form = computeForm(matches, teamId);
 
+  const [tableOpen, setTableOpen] = useState(false);
+  const bg = useSharedValue(0);
+  useEffect(() => {
+    bg.value = tableOpen
+      ? withSpring(1, { stiffness: 240, damping: 30, mass: 0.9 })
+      : withTiming(0, { duration: 220 });
+  }, [tableOpen]);
+  const bgStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - bg.value * 0.06 }],
+    borderRadius: bg.value * 24,
+  }));
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <View style={styles.safe}>
+      <Animated.View style={[styles.pageClip, bgStyle]}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
       <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
         <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
       </PressableScale>
@@ -124,9 +147,7 @@ export default function TeamPage() {
               teamId={teamId}
               historical={standing.historical}
               onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
-              onOpenDivision={
-                divisionId != null ? () => router.push(`/division/${divisionId}`) : undefined
-              }
+              onOpenDivision={() => setTableOpen(true)}
             />
           )}
 
@@ -186,7 +207,29 @@ export default function TeamPage() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+      </Animated.View>
+
+      <GlassSheet
+        visible={tableOpen}
+        onClose={() => setTableOpen(false)}
+        title={standing?.historical ? 'Tabell — förra säsongen' : 'Tabell'}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
+          {standing?.table && (
+            <StandingsTable
+              standings={standing.table}
+              highlightTeamId={teamId}
+              onOpenTeam={(tid) => {
+                setTableOpen(false);
+                router.push(`/lag/${tid}`);
+              }}
+              animate
+            />
+          )}
+        </ScrollView>
+      </GlassSheet>
+    </View>
   );
 }
 
@@ -210,6 +253,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
+  pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
