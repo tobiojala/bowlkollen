@@ -12,6 +12,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
+import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -42,6 +43,7 @@ function useMyMatches() {
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { onScroll } = useNavScroll();
   const { data = [], isLoading } = useMyMatches();
 
   const hour = new Date().getHours();
@@ -94,6 +96,8 @@ export default function Home() {
           keyExtractor={(m) => String(m.bits_match_id)}
           contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
           ListHeaderComponent={header}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
             <Text style={styles.sectionLabel}>{section.title}</Text>

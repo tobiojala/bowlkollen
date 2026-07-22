@@ -5,6 +5,7 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -28,6 +29,7 @@ function useDivisions() {
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { onScroll } = useNavScroll();
   const { data, isLoading, error } = useDivisions();
 
   const header = (
@@ -61,6 +63,8 @@ export default function Home() {
           keyExtractor={(d) => String(d.bits_division_id)}
           contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
           ListHeaderComponent={header}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           renderItem={({ item }) => (
             <PressableScale

@@ -11,6 +11,7 @@ import {
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -42,6 +43,7 @@ function useSearch(query: string) {
 export default function Discover() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { onScroll } = useNavScroll();
   const [text, setText] = useState('');
   const [debounced, setDebounced] = useState('');
 
@@ -72,7 +74,12 @@ export default function Discover() {
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         {!hasQuery && <Text style={styles.hint}>Sök efter en spelare eller ett lag.</Text>}
         {isFetching && <Text style={styles.hint}>Söker…</Text>}
         {empty && <Text style={styles.hint}>Inga träffar.</Text>}
