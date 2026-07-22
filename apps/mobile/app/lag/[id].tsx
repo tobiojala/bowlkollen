@@ -34,14 +34,16 @@ function useTeam(teamId: number) {
   });
 }
 
+type TeamMatch = MatchRowData & { home_bits_team_id: number; away_bits_team_id: number };
+
 function useTeamMatches(teamId: number) {
   return useQuery({
     queryKey: ['team-matches', teamId],
-    queryFn: async (): Promise<MatchRowData[]> => {
+    queryFn: async (): Promise<TeamMatch[]> => {
       const { data, error } = await supabase
         .from('bits_matches')
         .select(
-          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name',
+          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id',
         )
         .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
         .eq('season_id', CURRENT_SEASON);
@@ -49,6 +51,21 @@ function useTeamMatches(teamId: number) {
       return data ?? [];
     },
   });
+}
+
+type FormResult = 'W' | 'L' | 'D';
+
+function computeForm(matches: TeamMatch[], teamId: number): FormResult[] {
+  return matches
+    .filter((m) => m.is_finished && m.home_result != null && m.away_result != null)
+    .sort((a, b) => a.match_date.localeCompare(b.match_date))
+    .slice(-5)
+    .map((m) => {
+      const home = m.home_bits_team_id === teamId;
+      const my = (home ? m.home_result : m.away_result) ?? 0;
+      const opp = (home ? m.away_result : m.home_result) ?? 0;
+      return my > opp ? 'W' : my < opp ? 'L' : 'D';
+    });
 }
 
 function useRoster(teamId: number) {
@@ -86,6 +103,7 @@ export default function TeamPage() {
   const teamName = team?.name ?? 'Lag';
   const tc = teamColor(teamName);
   const initials = teamInitials(teamName);
+  const form = computeForm(matches, teamId);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -127,6 +145,35 @@ export default function TeamPage() {
             <Text style={styles.followers}>{followers} följare</Text>
           </View>
 
+          {form.length > 0 && (
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>FORM</Text>
+              <View style={styles.formDots}>
+                {form.map((r, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.formDot,
+                      {
+                        backgroundColor:
+                          r === 'W' ? COLOR.green : r === 'L' ? COLOR.red : COLOR.surface2,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.formDotText,
+                        { color: r === 'D' ? COLOR.ink2 : COLOR.bg },
+                      ]}
+                    >
+                      {r === 'W' ? 'V' : r === 'L' ? 'F' : 'O'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
           {upcoming.length > 0 && (
             <Section label="KOMMANDE">
               {upcoming.map((m) => (
@@ -164,9 +211,15 @@ export default function TeamPage() {
                   <Text style={styles.playerName} numberOfLines={1}>
                     {p.name}
                   </Text>
-                  {!!p.licence_average && (
-                    <Text style={styles.playerAvg}>Snitt {p.licence_average}</Text>
-                  )}
+                  <Text style={styles.playerAvg} numberOfLines={1}>
+                    {[
+                      p.licence_average ? `snitt ${p.licence_average}` : null,
+                      `${p.appearances} ${p.appearances === 1 ? 'match' : 'matcher'}`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={15} color={COLOR.ink4} />
                 </PressableScale>
               ))}
             </Section>
@@ -215,6 +268,11 @@ const styles = StyleSheet.create({
   club: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  formRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[6] },
+  formLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
+  formDots: { flexDirection: 'row', gap: SPACE[2] },
+  formDot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  formDotText: { fontSize: 11, fontFamily: FONT.bold },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
@@ -226,7 +284,7 @@ const styles = StyleSheet.create({
   playerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: SPACE[3],
     paddingVertical: SPACE[3],
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
