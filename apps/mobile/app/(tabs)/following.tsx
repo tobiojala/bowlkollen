@@ -106,8 +106,9 @@ function FollowRow({ item }: { item: FollowItem }) {
     <View style={styles.row}>
       <Pressable
         style={styles.rowText}
-        disabled={item.type !== 'team'}
-        onPress={() => item.type === 'team' && router.push(`/lag/${item.id}`)}
+        onPress={() =>
+          router.push(item.type === 'team' ? `/lag/${item.id}` : `/player/${item.id}`)
+        }
       >
         <Text style={styles.rowName} numberOfLines={1}>
           {item.name}

@@ -1,8 +1,29 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 
 export type FollowEntityType = 'player' | 'team';
+
+// Whether the current user follows a given entity (for follow-button state).
+export function useIsFollowing(entityType: FollowEntityType, entityId: string) {
+  return useQuery({
+    queryKey: ['is-following', entityType, entityId],
+    queryFn: async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return false;
+      const { data } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('entity_type', entityType)
+        .eq('entity_id', entityId)
+        .maybeSingle();
+      return !!data;
+    },
+  });
+}
 
 // Toggle a follow (mirrors the web useToggleFollow): insert if absent, delete if
 // present. Team follows use String(bits_team_id) as entity_id (the bits-id bridge).

@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatMatchDate } from '@/lib/format';
 import { COLOR, SPACE, TYPE } from '@/theme';
 
 export type MatchRowData = {
+  bits_match_id: number;
   home_team_name: string;
   away_team_name: string;
   home_score: number | null;
@@ -16,7 +17,15 @@ export type MatchRowData = {
 
 // Face-off row shared by the home feed and team page (list design language:
 // two teams across a centre — score if played, date if upcoming).
-export function MatchRow({ m, showDivision = true }: { m: MatchRowData; showDivision?: boolean }) {
+export function MatchRow({
+  m,
+  showDivision = true,
+  onPress,
+}: {
+  m: MatchRowData;
+  showDivision?: boolean;
+  onPress?: () => void;
+}) {
   const meta = [
     showDivision ? m.division_name : null,
     m.is_finished ? formatMatchDate(m.match_date) : null,
@@ -24,7 +33,7 @@ export function MatchRow({ m, showDivision = true }: { m: MatchRowData; showDivi
   ].filter(Boolean);
 
   return (
-    <View style={styles.match}>
+    <Pressable style={styles.match} onPress={onPress} disabled={!onPress}>
       <View style={styles.faceoff}>
         <Text style={styles.team} numberOfLines={1}>
           {m.home_team_name}
@@ -47,7 +56,7 @@ export function MatchRow({ m, showDivision = true }: { m: MatchRowData; showDivi
           {meta.join(' · ')}
         </Text>
       )}
-    </View>
+    </Pressable>
   );
 }
 

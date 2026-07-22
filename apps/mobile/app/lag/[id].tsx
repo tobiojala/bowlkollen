@@ -99,16 +99,26 @@ export default function TeamPage() {
 
           {upcoming.length > 0 && (
             <Section label="KOMMANDE">
-              {upcoming.map((m, i) => (
-                <MatchRow key={i} m={m} showDivision={false} />
+              {upcoming.map((m) => (
+                <MatchRow
+                  key={m.bits_match_id}
+                  m={m}
+                  showDivision={false}
+                  onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                />
               ))}
             </Section>
           )}
 
           {results.length > 0 && (
             <Section label="RESULTAT">
-              {results.map((m, i) => (
-                <MatchRow key={i} m={m} showDivision={false} />
+              {results.map((m) => (
+                <MatchRow
+                  key={m.bits_match_id}
+                  m={m}
+                  showDivision={false}
+                  onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                />
               ))}
             </Section>
           )}
@@ -116,14 +126,18 @@ export default function TeamPage() {
           {roster.length > 0 && (
             <Section label="TRUPP">
               {roster.map((p) => (
-                <View key={p.public_id} style={styles.playerRow}>
+                <Pressable
+                  key={p.public_id}
+                  style={styles.playerRow}
+                  onPress={() => router.push(`/player/${p.public_id}`)}
+                >
                   <Text style={styles.playerName} numberOfLines={1}>
                     {p.name}
                   </Text>
                   {!!p.licence_average && (
                     <Text style={styles.playerAvg}>Snitt {p.licence_average}</Text>
                   )}
-                </View>
+                </Pressable>
               ))}
             </Section>
           )}

@@ -84,7 +84,9 @@ export default function Home() {
           renderSectionHeader={({ section }) => (
             <Text style={styles.sectionLabel}>{section.title}</Text>
           )}
-          renderItem={({ item }) => <MatchRow m={item} />}
+          renderItem={({ item }) => (
+            <MatchRow m={item} onPress={() => router.push(`/matcher/${item.bits_match_id}`)} />
+          )}
         />
       )}
     </SafeAreaView>
