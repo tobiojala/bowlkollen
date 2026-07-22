@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { computeStandings } from '@bowlkollen/core';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -34,7 +35,11 @@ function useTeam(teamId: number) {
   });
 }
 
-type TeamMatch = MatchRowData & { home_bits_team_id: number; away_bits_team_id: number };
+type TeamMatch = MatchRowData & {
+  home_bits_team_id: number;
+  away_bits_team_id: number;
+  bits_division_id: number | null;
+};
 
 function useTeamMatches(teamId: number) {
   return useQuery({
@@ -43,12 +48,35 @@ function useTeamMatches(teamId: number) {
       const { data, error } = await supabase
         .from('bits_matches')
         .select(
-          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id',
+          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, bits_division_id',
         )
         .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
         .eq('season_id', CURRENT_SEASON);
       if (error) throw error;
       return data ?? [];
+    },
+  });
+}
+
+// Full division table -> this team's standing (rank / points), via the shared
+// computeStandings from @bowlkollen/core.
+function useTeamStanding(divisionId: number | null, teamId: number) {
+  return useQuery({
+    queryKey: ['team-standing', divisionId, teamId],
+    enabled: divisionId != null,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bits_matches')
+        .select(
+          'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name',
+        )
+        .eq('bits_division_id', divisionId!)
+        .eq('season_id', CURRENT_SEASON);
+      if (error) throw error;
+      const table = computeStandings(data ?? []);
+      const idx = table.findIndex((s) => s.teamId === teamId);
+      if (idx === -1) return null;
+      return { rank: idx + 1, total: table.length, points: table[idx].points };
     },
   });
 }
@@ -91,6 +119,8 @@ export default function TeamPage() {
   const { data: matches = [] } = useTeamMatches(teamId);
   const { data: roster = [] } = useRoster(teamId);
   const { data: followers = 0 } = useFollowCount('team', String(teamId));
+  const divisionId = matches.find((m) => m.bits_division_id != null)?.bits_division_id ?? null;
+  const { data: standing } = useTeamStanding(divisionId, teamId);
 
   const upcoming = matches
     .filter((m) => !m.is_finished)
@@ -145,31 +175,36 @@ export default function TeamPage() {
             <Text style={styles.followers}>{followers} följare</Text>
           </View>
 
-          {form.length > 0 && (
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>FORM</Text>
-              <View style={styles.formDots}>
-                {form.map((r, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.formDot,
-                      {
-                        backgroundColor:
-                          r === 'W' ? COLOR.green : r === 'L' ? COLOR.red : COLOR.surface2,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.formDotText,
-                        { color: r === 'D' ? COLOR.ink2 : COLOR.bg },
-                      ]}
-                    >
-                      {r === 'W' ? 'V' : r === 'L' ? 'F' : 'O'}
-                    </Text>
+          {(standing || form.length > 0) && (
+            <View style={styles.statRow}>
+              <Stat value={standing ? `${standing.rank}/${standing.total}` : '–'} label="PLACERING" />
+              <View style={styles.statDivider} />
+              <Stat value={standing ? String(standing.points) : '–'} label="POÄNG" />
+              <View style={styles.statDivider} />
+              <View style={styles.statCol}>
+                {form.length > 0 ? (
+                  <View style={styles.formDots}>
+                    {form.map((r, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.formDot,
+                          {
+                            backgroundColor:
+                              r === 'W' ? COLOR.green : r === 'L' ? COLOR.red : COLOR.surface2,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.formDotText, { color: r === 'D' ? COLOR.ink2 : COLOR.bg }]}>
+                          {r === 'W' ? 'V' : r === 'L' ? 'F' : 'O'}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                ) : (
+                  <Text style={styles.statValue}>–</Text>
+                )}
+                <Text style={styles.statLabel}>FORM</Text>
               </View>
             </View>
           )}
@@ -243,6 +278,15 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.statCol}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
@@ -268,11 +312,14 @@ const styles = StyleSheet.create({
   club: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
-  formRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[6] },
-  formLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
-  formDots: { flexDirection: 'row', gap: SPACE[2] },
-  formDot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  formDotText: { fontSize: 11, fontFamily: FONT.bold },
+  statRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[6] },
+  statCol: { flex: 1, alignItems: 'center', gap: 6 },
+  statValue: { fontFamily: FONT.display, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
+  statLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
+  statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: COLOR.hairline },
+  formDots: { flexDirection: 'row', gap: 5 },
+  formDot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  formDotText: { fontSize: 10, fontFamily: FONT.bold },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
