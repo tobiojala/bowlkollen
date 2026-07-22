@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
@@ -10,6 +10,7 @@ import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function Profile() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { data: followCount = 0 } = useMyFollowCount();
   const email = session?.user?.email ?? '';
@@ -18,8 +19,8 @@ export default function Profile() {
   const initial = (name.trim()[0] ?? '?').toUpperCase();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
+    <View style={styles.safe}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACE[2] }]}>
         <Text style={styles.title}>Profil</Text>
       </View>
 
@@ -52,13 +53,13 @@ export default function Profile() {
       <PressableScale style={styles.signout} onPress={signOut}>
         <Text style={styles.signoutText}>Logga ut</Text>
       </PressableScale>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg, paddingHorizontal: SPACE[6] },
-  header: { paddingTop: SPACE[6], paddingBottom: SPACE[4] },
+  header: { paddingBottom: SPACE[4] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   card: {

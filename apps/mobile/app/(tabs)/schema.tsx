@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -27,23 +27,29 @@ function useDivisions() {
 
 export default function Home() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data, isLoading, error } = useDivisions();
 
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Divisioner</Text>
-        <Text style={styles.sub}>
-          {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
-        </Text>
-      </View>
+  const header = (
+    <View style={styles.header}>
+      <Text style={styles.title}>Divisioner</Text>
+      <Text style={styles.sub}>
+        {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
+      </Text>
+    </View>
+  );
 
+  return (
+    <View style={styles.safe}>
       {isLoading && (
-        <ListSkeleton />
+        <View style={{ paddingTop: insets.top, paddingHorizontal: SPACE[6] }}>
+          {header}
+          <ListSkeleton />
+        </View>
       )}
 
       {error && (
-        <View style={styles.center}>
+        <View style={[styles.center, { paddingTop: insets.top }]}>
           <Text style={styles.error}>Kunde inte hämta data.</Text>
           <Text style={styles.errorDetail}>{String(error)}</Text>
         </View>
@@ -53,7 +59,8 @@ export default function Home() {
         <FlatList
           data={data}
           keyExtractor={(d) => String(d.bits_division_id)}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
+          ListHeaderComponent={header}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           renderItem={({ item }) => (
             <PressableScale
@@ -66,15 +73,14 @@ export default function Home() {
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: {
-    paddingHorizontal: SPACE[6],
-    paddingTop: SPACE[6],
+    paddingTop: SPACE[3],
     paddingBottom: SPACE[4],
     gap: SPACE[1],
   },

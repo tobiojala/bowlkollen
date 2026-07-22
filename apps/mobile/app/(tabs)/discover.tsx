@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -41,6 +41,7 @@ function useSearch(query: string) {
 
 export default function Discover() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [text, setText] = useState('');
   const [debounced, setDebounced] = useState('');
 
@@ -54,8 +55,8 @@ export default function Discover() {
   const empty = hasQuery && !isFetching && data && data.players.length === 0 && data.teams.length === 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
+    <View style={styles.safe}>
+      <View style={[styles.header, { paddingTop: insets.top + SPACE[2] }]}>
         <Text style={styles.title}>Hitta</Text>
       </View>
 
@@ -114,13 +115,13 @@ export default function Discover() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[3] },
+  header: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[3] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[2] },
