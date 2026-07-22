@@ -1,3 +1,4 @@
+import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
@@ -61,40 +62,42 @@ export function IdentityAvatar({
 }
 
 // Soft ambient glow behind a hero — the team/club colour faintly lighting the
-// header instead of a flat fill. Many equal, very-low-opacity concentric discs:
-// they overlap most in the centre and least at the edges, so the alpha builds up
-// into a smooth radial falloff (no hard blob, no react-native-svg RadialGradient
-// solid-fill bug, no unreliable coloured shadows).
-const GLOW_LAYERS = 7;
-const GLOW_OPACITY = 0.022;
-
+// header. Built purely from smooth gradients (no stacked circles, so no visible
+// banding / "vector lines"): a vertical colour->transparent fill, masked by a
+// horizontal centre fade, so it's brightest top-centre and dissolves to the
+// sides and downward. No react-native-svg RadialGradient (renders solid) needed.
 export function AmbientGlow({
   color,
-  size = 300,
-  top = -80,
+  height = 230,
+  top = -30,
+  opacity = 0.16,
 }: {
   color: string;
-  size?: number;
+  height?: number;
   top?: number;
+  opacity?: number;
 }) {
   return (
-    <View pointerEvents="none" style={[styles.glowWrap, { top, height: size }]}>
-      {Array.from({ length: GLOW_LAYERS }, (_, i) => {
-        const s = size * (1 - (i / GLOW_LAYERS) * 0.86);
-        return (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              width: s,
-              height: s,
-              borderRadius: s / 2,
-              backgroundColor: color,
-              opacity: GLOW_OPACITY,
-            }}
+    <View pointerEvents="none" style={[styles.glowWrap, { top, height }]}>
+      <MaskedView
+        style={StyleSheet.absoluteFill}
+        maskElement={
+          <LinearGradient
+            colors={['transparent', '#000', '#000', 'transparent']}
+            locations={[0, 0.32, 0.68, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
           />
-        );
-      })}
+        }
+      >
+        <LinearGradient
+          colors={[color, 'transparent']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={[StyleSheet.absoluteFill, { opacity }]}
+        />
+      </MaskedView>
     </View>
   );
 }

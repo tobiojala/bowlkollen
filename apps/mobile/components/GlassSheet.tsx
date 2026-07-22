@@ -75,10 +75,10 @@ export function GlassSheet({
         style={[styles.panel, { height: sheetH, paddingBottom: insets.bottom + SPACE[4] }, panelStyle]}
       >
         {liquid ? (
-          <GlassView glassEffectStyle="regular" colorScheme="dark" style={StyleSheet.absoluteFill} />
+          <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={StyleSheet.absoluteFill} />
         ) : (
           <>
-            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={64} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={styles.panelTint} />
           </>
         )}
@@ -102,9 +102,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: 'hidden',
-    backgroundColor: 'rgba(16,19,24,0.72)',
+    backgroundColor: 'rgba(16,19,24,0.28)',
   },
-  panelTint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.5)' },
+  panelTint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.28)' },
   rim: {
     ...StyleSheet.absoluteFillObject,
     borderTopLeftRadius: 28,
