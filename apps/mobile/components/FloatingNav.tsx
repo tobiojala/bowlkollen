@@ -137,8 +137,8 @@ export function FloatingNav() {
                     >
                       <Icon
                         size={24}
-                        strokeWidth={active ? 2.4 : 1.9}
-                        color={active ? COLOR.gold : COLOR.ink2}
+                        strokeWidth={active ? 2.4 : 2}
+                        color={active ? COLOR.gold : 'rgba(244,245,247,0.92)'}
                       />
                     </Pressable>
                   );

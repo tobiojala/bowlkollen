@@ -102,9 +102,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: 'hidden',
-    backgroundColor: 'rgba(16,19,24,0.28)',
+    backgroundColor: 'rgba(16,19,24,0.42)',
   },
-  panelTint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.28)' },
+  panelTint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,17,22,0.32)' },
   rim: {
     ...StyleSheet.absoluteFillObject,
     borderTopLeftRadius: 28,

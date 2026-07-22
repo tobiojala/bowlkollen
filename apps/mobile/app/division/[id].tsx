@@ -59,10 +59,16 @@ function useDivisionMatches(divisionId: number) {
         .eq('season_id', CURRENT_SEASON);
       if (cur.error) throw cur.error;
       const curMatches = cur.data ?? [];
+      // Upcoming fixtures always come from THIS season's schedule.
+      const upcoming = curMatches
+        .filter((m) => !m.is_finished)
+        .sort((a, b) => a.match_date.localeCompare(b.match_date));
+
       if (curMatches.some((m) => m.is_finished)) {
-        return { matches: curMatches, historical: false };
+        return { matches: curMatches, upcoming, historical: false };
       }
 
+      // Pre-season: no results yet -> table + results fall back to last season.
       const prev = await supabase
         .from('bits_matches')
         .select(MATCH_COLS)
@@ -71,9 +77,9 @@ function useDivisionMatches(divisionId: number) {
       if (prev.error) throw prev.error;
       const prevMatches = prev.data ?? [];
       if (prevMatches.some((m) => m.is_finished)) {
-        return { matches: prevMatches, historical: true };
+        return { matches: prevMatches, upcoming, historical: true };
       }
-      return { matches: curMatches, historical: false };
+      return { matches: curMatches, upcoming, historical: false };
     },
   });
 }
@@ -85,22 +91,23 @@ export default function DivisionPage() {
   const { data: division, isLoading } = useDivision(divisionId);
   const { data: matchData } = useDivisionMatches(divisionId);
   const matches = matchData?.matches ?? [];
+  const upcoming = matchData?.upcoming ?? [];
   const historical = matchData?.historical ?? false;
 
   const standings = computeStandings(matches);
 
-  const recent = matches
+  const past = matches
     .filter((m) => m.is_finished)
     .sort((a, b) => b.match_date.localeCompare(a.match_date))
-    .slice(0, 20);
+    .slice(0, 30);
 
-  const [matchesOpen, setMatchesOpen] = useState(false);
+  const [tableOpen, setTableOpen] = useState(false);
   const bg = useSharedValue(0);
   useEffect(() => {
-    bg.value = matchesOpen
+    bg.value = tableOpen
       ? withSpring(1, { stiffness: 240, damping: 30, mass: 0.9 })
       : withTiming(0, { duration: 220 });
-  }, [matchesOpen]);
+  }, [tableOpen]);
   const bgStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 - bg.value * 0.06 }],
     borderRadius: bg.value * 24,
@@ -123,30 +130,47 @@ export default function DivisionPage() {
                 {division?.name ?? matches[0]?.division_name ?? 'Division'}
               </Text>
 
-              {recent.length > 0 && (
-                <PressableScale style={styles.matchesBtn} onPress={() => setMatchesOpen(true)}>
-                  <Ionicons name="calendar-outline" size={18} color={COLOR.ink2} />
+              {standings.length > 0 && (
+                <PressableScale style={styles.matchesBtn} onPress={() => setTableOpen(true)}>
+                  <Ionicons name="podium-outline" size={18} color={COLOR.ink2} />
                   <Text style={styles.matchesBtnText}>
-                    {historical ? 'Resultat — förra säsongen' : 'Senaste resultat'}
+                    {historical ? 'Tabell — förra säsongen' : 'Tabell'}
                   </Text>
                   <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
                 </PressableScale>
               )}
 
-              {standings.length > 0 && (
+              {upcoming.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>
-                    {historical ? 'TABELL — FÖRRA SÄSONGEN' : 'TABELL'}
-                  </Text>
-                  <StandingsTable
-                    standings={standings}
-                    onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
-                    animate
-                  />
+                  <Text style={styles.sectionLabel}>KOMMANDE</Text>
+                  {upcoming.map((m) => (
+                    <MatchRow
+                      key={m.bits_match_id}
+                      m={m}
+                      showDivision={false}
+                      onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                    />
+                  ))}
                 </View>
               )}
 
-              {matches.length === 0 && (
+              {past.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionLabel}>
+                    {historical ? 'RESULTAT — FÖRRA SÄSONGEN' : 'SENASTE RESULTAT'}
+                  </Text>
+                  {past.map((m) => (
+                    <MatchRow
+                      key={m.bits_match_id}
+                      m={m}
+                      showDivision={false}
+                      onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {matches.length === 0 && upcoming.length === 0 && (
                 <Text style={styles.empty}>Ingen säsongsdata för den här divisionen ännu.</Text>
               )}
             </ScrollView>
@@ -155,22 +179,19 @@ export default function DivisionPage() {
       </Animated.View>
 
       <GlassSheet
-        visible={matchesOpen}
-        onClose={() => setMatchesOpen(false)}
-        title={historical ? 'Resultat — förra säsongen' : 'Senaste resultat'}
+        visible={tableOpen}
+        onClose={() => setTableOpen(false)}
+        title={historical ? 'Tabell — förra säsongen' : 'Tabell'}
       >
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
-          {recent.map((m) => (
-            <MatchRow
-              key={m.bits_match_id}
-              m={m}
-              showDivision={false}
-              onPress={() => {
-                setMatchesOpen(false);
-                router.push(`/matcher/${m.bits_match_id}`);
-              }}
-            />
-          ))}
+          <StandingsTable
+            standings={standings}
+            onOpenTeam={(tid) => {
+              setTableOpen(false);
+              router.push(`/lag/${tid}`);
+            }}
+            animate
+          />
         </ScrollView>
       </GlassSheet>
     </View>
