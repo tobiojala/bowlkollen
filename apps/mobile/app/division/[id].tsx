@@ -21,9 +21,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchRow } from '@/components/MatchRow';
+import { RoundGroups } from '@/components/RoundGroups';
 import { StandingsTable } from '@/components/StandingsTable';
 import { supabase } from '@/lib/supabase';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+
+type SheetKind = 'table' | 'upcoming' | 'season' | null;
 
 const CURRENT_SEASON = 2026;
 const PREVIOUS_SEASON = 2025;
@@ -98,28 +101,55 @@ export default function DivisionPage() {
 
   const past = matches
     .filter((m) => m.is_finished)
-    .sort((a, b) => b.match_date.localeCompare(a.match_date))
-    .slice(0, 30);
+    .sort((a, b) => b.match_date.localeCompare(a.match_date));
 
-  const [tableOpen, setTableOpen] = useState(false);
+  // Nearest upcoming omgång and latest played omgång — the rest expands into sheets.
+  const nextRound = upcoming[0]?.round_id ?? null;
+  const nextRoundMatches = upcoming.filter((m) => m.round_id === nextRound);
+  const lastRound = past[0]?.round_id ?? null;
+  const lastRoundMatches = past.filter((m) => m.round_id === lastRound);
+  const hasMoreUpcoming = upcoming.length > nextRoundMatches.length;
+  const hasMorePast = past.length > lastRoundMatches.length;
+
+  const [sheet, setSheet] = useState<SheetKind>(null);
+  const openMatch = (mid: number) => {
+    setSheet(null);
+    router.push(`/matcher/${mid}`);
+  };
+
   const bg = useSharedValue(0);
   useEffect(() => {
-    bg.value = tableOpen
+    bg.value = sheet != null
       ? withSpring(1, { stiffness: 240, damping: 30, mass: 0.9 })
       : withTiming(0, { duration: 220 });
-  }, [tableOpen]);
+  }, [sheet]);
   const bgStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 - bg.value * 0.06 }],
     borderRadius: bg.value * 24,
   }));
 
+  const sheetTitle =
+    sheet === 'table'
+      ? historical ? 'Tabell — förra säsongen' : 'Tabell'
+      : sheet === 'upcoming'
+        ? 'Kommande omgångar'
+        : historical ? 'Förra säsongen' : 'Hela säsongen';
+
   return (
     <View style={styles.safe}>
       <Animated.View style={[styles.pageClip, bgStyle]}>
         <SafeAreaView style={styles.safe} edges={['top']}>
-          <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-          </PressableScale>
+          <View style={styles.topbar}>
+            <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
+              <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
+            </PressableScale>
+            {standings.length > 0 && (
+              <PressableScale style={styles.tableAction} onPress={() => setSheet('table')} hitSlop={8}>
+                <Ionicons name="podium-outline" size={16} color={COLOR.ink} />
+                <Text style={styles.tableActionText}>Tabell</Text>
+              </PressableScale>
+            )}
+          </View>
 
           {isLoading ? (
             <ListSkeleton />
@@ -130,42 +160,28 @@ export default function DivisionPage() {
                 {division?.name ?? matches[0]?.division_name ?? 'Division'}
               </Text>
 
-              {standings.length > 0 && (
-                <PressableScale style={styles.matchesBtn} onPress={() => setTableOpen(true)}>
-                  <Ionicons name="podium-outline" size={18} color={COLOR.ink2} />
-                  <Text style={styles.matchesBtnText}>
-                    {historical ? 'Tabell — förra säsongen' : 'Tabell'}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
-                </PressableScale>
-              )}
-
-              {upcoming.length > 0 && (
+              {nextRoundMatches.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>KOMMANDE</Text>
-                  {upcoming.map((m) => (
-                    <MatchRow
-                      key={m.bits_match_id}
-                      m={m}
-                      showDivision={false}
-                      onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
-                    />
+                  <SectionHead
+                    label="NÄSTA OMGÅNG"
+                    linkLabel={hasMoreUpcoming ? 'Alla kommande' : undefined}
+                    onLink={() => setSheet('upcoming')}
+                  />
+                  {nextRoundMatches.map((m) => (
+                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} />
                   ))}
                 </View>
               )}
 
-              {past.length > 0 && (
+              {lastRoundMatches.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>
-                    {historical ? 'RESULTAT — FÖRRA SÄSONGEN' : 'SENASTE RESULTAT'}
-                  </Text>
-                  {past.map((m) => (
-                    <MatchRow
-                      key={m.bits_match_id}
-                      m={m}
-                      showDivision={false}
-                      onPress={() => router.push(`/matcher/${m.bits_match_id}`)}
-                    />
+                  <SectionHead
+                    label={historical ? 'SENASTE OMGÅNGEN — FÖRRA SÄSONGEN' : 'SENASTE OMGÅNGEN'}
+                    linkLabel={hasMorePast ? 'Hela säsongen' : undefined}
+                    onLink={() => setSheet('season')}
+                  />
+                  {lastRoundMatches.map((m) => (
+                    <MatchRow key={m.bits_match_id} m={m} showDivision={false} onPress={() => openMatch(m.bits_match_id)} />
                   ))}
                 </View>
               )}
@@ -178,22 +194,43 @@ export default function DivisionPage() {
         </SafeAreaView>
       </Animated.View>
 
-      <GlassSheet
-        visible={tableOpen}
-        onClose={() => setTableOpen(false)}
-        title={historical ? 'Tabell — förra säsongen' : 'Tabell'}
-      >
+      <GlassSheet visible={sheet != null} onClose={() => setSheet(null)} title={sheetTitle}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
-          <StandingsTable
-            standings={standings}
-            onOpenTeam={(tid) => {
-              setTableOpen(false);
-              router.push(`/lag/${tid}`);
-            }}
-            animate
-          />
+          {sheet === 'table' && (
+            <StandingsTable
+              standings={standings}
+              onOpenTeam={(tid) => {
+                setSheet(null);
+                router.push(`/lag/${tid}`);
+              }}
+              animate
+            />
+          )}
+          {sheet === 'upcoming' && <RoundGroups matches={upcoming} onOpenMatch={openMatch} />}
+          {sheet === 'season' && <RoundGroups matches={past} onOpenMatch={openMatch} />}
         </ScrollView>
       </GlassSheet>
+    </View>
+  );
+}
+
+function SectionHead({
+  label,
+  linkLabel,
+  onLink,
+}: {
+  label: string;
+  linkLabel?: string;
+  onLink: () => void;
+}) {
+  return (
+    <View style={styles.secHead}>
+      <Text style={styles.sectionLabel}>{label}</Text>
+      {linkLabel && (
+        <PressableScale onPress={onLink} hitSlop={8}>
+          <Text style={styles.link}>{linkLabel} →</Text>
+        </PressableScale>
+      )}
     </View>
   );
 }
@@ -201,29 +238,40 @@ export default function DivisionPage() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingRight: SPACE[6],
+  },
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
+  tableAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[2],
+    paddingVertical: SPACE[2],
+    paddingHorizontal: SPACE[3],
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLOR.surface,
+  },
+  tableActionText: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontFamily: FONT.bold, marginTop: SPACE[2] },
   name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
-  matchesBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE[3],
-    marginTop: SPACE[6],
-    paddingVertical: SPACE[3],
-    paddingHorizontal: SPACE[4],
-    borderRadius: 14,
-    backgroundColor: COLOR.surface,
-  },
-  matchesBtnText: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   section: { marginTop: SPACE[8] },
+  secHead: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: SPACE[2],
+  },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
     fontFamily: FONT.bold,
     letterSpacing: 1.5,
-    marginBottom: SPACE[2],
   },
+  link: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
 });
