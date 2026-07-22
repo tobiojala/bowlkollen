@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { useIsFollowing, useToggleFollow, type FollowEntityType } from '@/lib/follows';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 // Reusable follow pill with real state (useIsFollowing) + optimistic toggle.
 export function FollowButton({
@@ -43,6 +43,6 @@ const styles = StyleSheet.create({
     borderColor: COLOR.ink4,
   },
   pillOn: { backgroundColor: COLOR.gold, borderColor: COLOR.gold },
-  text: { color: COLOR.ink, fontSize: TYPE.caption, fontWeight: '700' },
+  text: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
   textOn: { color: COLOR.bg },
 });

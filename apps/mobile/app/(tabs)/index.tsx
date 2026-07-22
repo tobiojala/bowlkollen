@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 type Match = {
   bits_match_id: number;
@@ -96,20 +96,20 @@ export default function Home() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[4] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontWeight: '700' },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
+  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginTop: SPACE[6],
     marginBottom: SPACE[2],
   },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], gap: SPACE[3] },
-  emptyTitle: { color: COLOR.ink, fontSize: TYPE.title, fontWeight: '800' },
+  emptyTitle: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold },
   emptyBody: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center' },
   emptyBtn: {
     marginTop: SPACE[2],
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[6],
     paddingVertical: SPACE[3],
   },
-  emptyBtnText: { color: COLOR.gold, fontSize: TYPE.caption, fontWeight: '700' },
+  emptyBtnText: { color: COLOR.gold, fontSize: TYPE.caption, fontFamily: FONT.bold },
 });

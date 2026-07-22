@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function Profile() {
   const router = useRouter();
@@ -59,8 +59,8 @@ export default function Profile() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg, paddingHorizontal: SPACE[6] },
   header: { paddingTop: SPACE[6], paddingBottom: SPACE[4] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontWeight: '700' },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
+  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,9 +78,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: COLOR.gold, fontSize: TYPE.title, fontWeight: '800' },
+  avatarText: { color: COLOR.gold, fontSize: TYPE.title, fontFamily: FONT.bold },
   identity: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.body + 2, fontWeight: '700' },
+  name: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
   email: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   menuRow: {
     flexDirection: 'row',
@@ -92,9 +92,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: COLOR.hairline,
   },
-  menuText: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  menuText: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   menuRight: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
-  menuCount: { color: COLOR.ink3, fontSize: TYPE.body, fontWeight: '700' },
+  menuCount: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.bold },
   signout: {
     borderWidth: 1,
     borderColor: COLOR.hairline,
@@ -103,5 +103,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACE[6],
   },
-  signoutText: { color: COLOR.red, fontSize: TYPE.body, fontWeight: '700' },
+  signoutText: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.bold },
 });

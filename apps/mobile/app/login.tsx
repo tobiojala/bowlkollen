@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 type Step = 'email' | 'code';
 
@@ -140,12 +140,12 @@ const styles = StyleSheet.create({
     color: COLOR.gold,
     fontSize: TYPE.label,
     letterSpacing: 3,
-    fontWeight: '700',
+    fontFamily: FONT.bold,
   },
   h1: {
     color: COLOR.ink,
     fontSize: TYPE.title + 12,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: -0.5,
   },
   sub: { color: COLOR.ink3, fontSize: TYPE.body, marginBottom: SPACE[2] },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE.title,
     letterSpacing: 8,
     textAlign: 'center',
-    fontWeight: '700',
+    fontFamily: FONT.bold,
   },
   error: { color: COLOR.red, fontSize: TYPE.caption },
   button: {
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     marginTop: SPACE[2],
   },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: COLOR.bg, fontSize: TYPE.body + 1, fontWeight: '700' },
+  buttonText: { color: COLOR.bg, fontSize: TYPE.body + 1, fontFamily: FONT.bold },
   link: {
     color: COLOR.ink3,
     fontSize: TYPE.caption,

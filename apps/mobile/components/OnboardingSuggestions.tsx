@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { useToggleFollow, type FollowEntityType } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 // Teammates (your team's roster) + nearby teams — the two highest-value tiers.
 // Elitserien/rival-player tiers (web SuggestionTiers) come in a later increment.
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: COLOR.ink2,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLOR.hairline,
   },
   rowText: { flex: 1, minWidth: 0 },
-  rowTitle: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  rowTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   rowSub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
   pill: {
     paddingHorizontal: SPACE[4],
@@ -148,6 +148,6 @@ const styles = StyleSheet.create({
     borderColor: COLOR.ink4,
   },
   pillOn: { backgroundColor: COLOR.gold, borderColor: COLOR.gold },
-  pillText: { color: COLOR.ink, fontSize: TYPE.caption, fontWeight: '700' },
+  pillText: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
   pillTextOn: { color: COLOR.bg },
 });

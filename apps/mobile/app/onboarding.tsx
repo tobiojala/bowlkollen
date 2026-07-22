@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import OnboardingSuggestions from '@/components/OnboardingSuggestions';
 import { useToggleFollow } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const SEARCH_MIN = 2;
 
@@ -153,12 +153,12 @@ const styles = StyleSheet.create({
     color: COLOR.gold,
     fontSize: TYPE.label,
     letterSpacing: 3,
-    fontWeight: '700',
+    fontFamily: FONT.bold,
   },
   h1: {
     color: COLOR.ink,
     fontSize: TYPE.title + 12,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: -0.5,
     marginTop: SPACE[2],
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   label: {
     color: COLOR.ink2,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginTop: SPACE[8],
     marginBottom: SPACE[3],
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
   },
-  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   rowClub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   pickedRow: {
     flexDirection: 'row',
@@ -201,8 +201,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[4],
     paddingVertical: SPACE[4],
   },
-  pickedName: { color: COLOR.gold, fontSize: TYPE.body, fontWeight: '700' },
-  change: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
+  pickedName: { color: COLOR.gold, fontSize: TYPE.body, fontFamily: FONT.bold },
+  change: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   footer: {
     paddingHorizontal: SPACE[6],
     paddingBottom: SPACE[4],
@@ -217,11 +217,11 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE[4],
     alignItems: 'center',
   },
-  primaryText: { color: COLOR.bg, fontSize: TYPE.body + 1, fontWeight: '700' },
+  primaryText: { color: COLOR.bg, fontSize: TYPE.body + 1, fontFamily: FONT.bold },
   skip: {
     color: COLOR.ink3,
     fontSize: TYPE.caption,
-    fontWeight: '600',
+    fontFamily: FONT.semibold,
     textAlign: 'center',
     paddingVertical: SPACE[2],
   },

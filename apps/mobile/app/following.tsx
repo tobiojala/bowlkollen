@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useToggleFollow, type FollowEntityType } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
-import { COLOR, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 type FollowItem = { type: FollowEntityType; id: string; name: string; sub: string | null };
 
@@ -134,14 +134,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[2], paddingBottom: SPACE[4] },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginTop: SPACE[6],
     marginBottom: SPACE[2],
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLOR.hairline,
   },
   rowText: { flex: 1, minWidth: 0 },
-  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   rowSub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
-  unfollow: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '700' },
+  unfollow: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.bold },
 });

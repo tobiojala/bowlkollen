@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
-import { COLOR, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const CURRENT_SEASON = 2026;
 
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
   back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontWeight: '700', marginTop: SPACE[2] },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontWeight: '800', letterSpacing: -0.5, marginTop: SPACE[1] },
+  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontFamily: FONT.bold, marginTop: SPACE[2] },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
@@ -150,6 +150,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
   },
-  teamName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  teamName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
 });

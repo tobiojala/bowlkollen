@@ -15,7 +15,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { MatchRow, type MatchRowData } from '@/components/MatchRow';
 import { useFollowCount } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
-import { COLOR, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const CURRENT_SEASON = 2026;
 
@@ -176,18 +176,18 @@ const styles = StyleSheet.create({
     color: COLOR.gold,
     fontSize: TYPE.label,
     letterSpacing: 2,
-    fontWeight: '700',
+    fontFamily: FONT.bold,
     marginTop: SPACE[2],
   },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 10, fontWeight: '800', letterSpacing: -0.5, marginTop: SPACE[1] },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 10, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
-  followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
+  followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
   },
-  playerName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  playerName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   playerAvg: { color: COLOR.ink3, fontSize: TYPE.caption },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
 });

@@ -4,7 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const SEASON_ID = 2026; // 2026/27 season, per the data-source convention
 
@@ -83,17 +83,17 @@ const styles = StyleSheet.create({
     color: COLOR.gold,
     fontSize: TYPE.label,
     letterSpacing: 3,
-    fontWeight: '700',
+    fontFamily: FONT.bold,
   },
   title: {
     color: COLOR.ink,
     fontSize: TYPE.title + 8,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: -0.5,
   },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACE[2] },
-  error: { color: COLOR.red, fontSize: TYPE.body, fontWeight: '600' },
+  error: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.semibold },
   errorDetail: {
     color: COLOR.ink3,
     fontSize: TYPE.caption,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: SPACE[4],
   },
-  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600', flex: 1 },
+  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold, flex: 1 },
   rowMeta: { color: COLOR.ink4, fontSize: TYPE.title },
   sep: { height: 1, backgroundColor: COLOR.hairline },
 });

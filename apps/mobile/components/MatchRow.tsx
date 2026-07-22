@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatMatchDate } from '@/lib/format';
-import { COLOR, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 export type MatchRowData = {
   bits_match_id: number;
@@ -70,10 +70,10 @@ const styles = StyleSheet.create({
     gap: SPACE[2],
   },
   faceoff: { flexDirection: 'row', alignItems: 'center' },
-  team: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  team: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   teamRight: { textAlign: 'right' },
   centerCol: { paddingHorizontal: SPACE[3], minWidth: 64, alignItems: 'center' },
-  score: { color: COLOR.ink, fontSize: TYPE.body + 4, fontWeight: '800', letterSpacing: 0.5 },
-  date: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
-  meta: { color: COLOR.ink3, fontSize: TYPE.caption },
+  score: { color: COLOR.ink, fontSize: TYPE.body + 8, fontFamily: FONT.display, letterSpacing: 0.5 },
+  date: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular },
 });

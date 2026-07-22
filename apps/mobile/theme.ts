@@ -53,3 +53,16 @@ export const RADIUS = {
   xl: 20,
   pill: 9999,
 } as const;
+
+// Brand fonts (mirror web: DM Sans body, Barlow Condensed display).
+// RN custom fonts are selected by family name, not fontWeight — so each weight
+// is its own family. `display` (Barlow Condensed) is for scores/hero numbers &
+// big titles; the DM Sans weights are body/labels.
+export const FONT = {
+  regular: 'DMSans_400Regular',
+  medium: 'DMSans_500Medium',
+  semibold: 'DMSans_600SemiBold',
+  bold: 'DMSans_700Bold',
+  display: 'BarlowCondensed_700Bold',
+  displaySemi: 'BarlowCondensed_600SemiBold',
+} as const;

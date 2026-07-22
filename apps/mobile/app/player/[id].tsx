@@ -15,7 +15,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 function usePlayer(publicId: string) {
   return useQuery({
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[2] },
   headerText: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   stats: {
     flexDirection: 'row',
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE[4],
     alignItems: 'center',
   },
-  statValue: { color: COLOR.ink, fontSize: TYPE.title, fontWeight: '800' },
-  statLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontWeight: '700', letterSpacing: 1, marginTop: 2 },
+  statValue: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.display },
+  statLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 2 },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLOR.hairline,
   },
   matchText: { flex: 1, minWidth: 0 },
-  opponent: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  opponent: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   matchMeta: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
-  result: { color: COLOR.ink, fontSize: TYPE.body + 2, fontWeight: '800' },
+  result: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
 });

@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
-import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const SEARCH_MIN = 2;
 
@@ -123,8 +123,8 @@ export default function Discover() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[3] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontWeight: '700' },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
+  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[2] },
   search: {
     backgroundColor: COLOR.surface2,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginTop: SPACE[6],
     marginBottom: SPACE[2],
@@ -149,6 +149,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
   },
-  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   rowSub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
 });

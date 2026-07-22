@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
-import { COLOR, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 function useMatch(matchId: number) {
   return useQuery({
@@ -165,22 +165,22 @@ const styles = StyleSheet.create({
     color: COLOR.gold,
     fontSize: TYPE.label,
     letterSpacing: 2,
-    fontWeight: '700',
+    fontFamily: FONT.bold,
     textAlign: 'center',
     marginTop: SPACE[2],
   },
   hero: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[4] },
-  heroTeam: { flex: 1, color: COLOR.ink, fontSize: TYPE.body + 2, fontWeight: '700' },
+  heroTeam: { flex: 1, color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
   heroTeamRight: { textAlign: 'right' },
   heroCenter: { paddingHorizontal: SPACE[4], alignItems: 'center' },
-  heroScore: { color: COLOR.ink, fontSize: TYPE.hero - 8, fontWeight: '800' },
-  heroDate: { color: COLOR.ink3, fontSize: TYPE.body, fontWeight: '700' },
+  heroScore: { color: COLOR.ink, fontSize: TYPE.hero, fontFamily: FONT.display },
+  heroDate: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.bold },
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginTop: SPACE[2] },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
-    fontWeight: '800',
+    fontFamily: FONT.bold,
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLOR.hairline,
   },
   playerText: { flex: 1, minWidth: 0 },
-  playerName: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  playerName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   series: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
-  total: { color: COLOR.ink, fontSize: TYPE.body + 2, fontWeight: '800' },
+  total: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
 });
