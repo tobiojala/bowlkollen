@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import {
-  ActivityIndicator,
-  Pressable,
   SectionList,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useToggleFollow, type FollowEntityType } from '@/lib/follows';
@@ -71,17 +71,15 @@ export default function Following() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Pressable style={styles.back} onPress={() => router.back()} hitSlop={8}>
+      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
         <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </Pressable>
+      </PressableScale>
       <View style={styles.header}>
         <Text style={styles.title}>Följer</Text>
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLOR.gold} />
-        </View>
+        <ListSkeleton />
       ) : sections.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.empty}>Du följer inget än.</Text>
@@ -108,7 +106,7 @@ function FollowRow({ item }: { item: FollowItem }) {
   const { mutate, isPending } = useToggleFollow(item.type, item.id);
   return (
     <View style={styles.row}>
-      <Pressable
+      <PressableScale
         style={styles.rowText}
         onPress={() =>
           router.push(item.type === 'team' ? `/lag/${item.id}` : `/player/${item.id}`)
@@ -118,14 +116,14 @@ function FollowRow({ item }: { item: FollowItem }) {
           {item.name}
         </Text>
         {item.sub && <Text style={styles.rowSub}>{item.sub}</Text>}
-      </Pressable>
-      <Pressable
+      </PressableScale>
+      <PressableScale
         disabled={isPending}
         onPress={() => mutate(undefined, { onSuccess: () => qc.invalidateQueries({ queryKey: ['follows', 'detail'] }) })}
         hitSlop={6}
       >
         <Text style={styles.unfollow}>Följer</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

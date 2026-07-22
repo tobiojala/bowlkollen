@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/PressableScale';
 
 import { useToggleFollow, type FollowEntityType } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
@@ -102,7 +103,7 @@ function FollowRow({
         </Text>
         {subtitle && <Text style={styles.rowSub}>{subtitle}</Text>}
       </View>
-      <Pressable
+      <PressableScale
         style={[styles.pill, following && styles.pillOn]}
         onPress={() => {
           mutate();
@@ -113,7 +114,7 @@ function FollowRow({
         <Text style={[styles.pillText, following && styles.pillTextOn]}>
           {following ? 'Följer' : 'Följ'}
         </Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

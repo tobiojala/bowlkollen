@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -81,9 +80,9 @@ export default function Onboarding() {
         {picked ? (
           <View style={styles.pickedRow}>
             <Text style={styles.pickedName}>✓ {picked.name}</Text>
-            <Pressable onPress={() => setPicked(null)} hitSlop={10}>
+            <PressableScale onPress={() => setPicked(null)} hitSlop={10}>
               <Text style={styles.change}>Byt</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         ) : (
           <>
@@ -121,9 +120,9 @@ export default function Onboarding() {
             )}
           </PressableScale>
         )}
-        <Pressable onPress={finish} disabled={finishing} hitSlop={8}>
+        <PressableScale onPress={finish} disabled={finishing} hitSlop={8}>
           <Text style={styles.skip}>Hoppa över</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
@@ -132,7 +131,7 @@ export default function Onboarding() {
 function TeamRow({ team, onPick }: { team: TeamHit; onPick: () => void }) {
   const { mutate } = useToggleFollow('team', String(team.bits_team_id));
   return (
-    <Pressable
+    <PressableScale
       style={styles.row}
       onPress={() => {
         mutate();
@@ -143,7 +142,7 @@ function TeamRow({ team, onPick }: { team: TeamHit; onPick: () => void }) {
       {team.club_name && team.club_name !== team.name && (
         <Text style={styles.rowClub}>{team.club_name}</Text>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
@@ -73,14 +73,12 @@ export default function DivisionPage() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Pressable style={styles.back} onPress={() => router.back()} hitSlop={8}>
+      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
         <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </Pressable>
+      </PressableScale>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLOR.gold} />
-        </View>
+        <ListSkeleton />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.kicker}>DIVISION</Text>
@@ -90,7 +88,7 @@ export default function DivisionPage() {
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>LAG</Text>
               {teams.map((t) => (
-                <Pressable
+                <PressableScale
                   key={t.tid}
                   style={styles.teamRow}
                   onPress={() => router.push(`/lag/${t.tid}`)}
@@ -99,7 +97,7 @@ export default function DivisionPage() {
                     {t.name}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color={COLOR.ink4} />
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
           )}

@@ -2,14 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
@@ -82,7 +81,7 @@ export default function Discover() {
           <>
             <Text style={styles.sectionLabel}>SPELARE</Text>
             {data.players.map((p) => (
-              <Pressable
+              <PressableScale
                 key={p.public_id}
                 style={styles.row}
                 onPress={() => router.push(`/player/${p.public_id}`)}
@@ -91,7 +90,7 @@ export default function Discover() {
                   {`${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim()}
                 </Text>
                 {!!p.club_name && <Text style={styles.rowSub}>{p.club_name}</Text>}
-              </Pressable>
+              </PressableScale>
             ))}
           </>
         )}
@@ -100,7 +99,7 @@ export default function Discover() {
           <>
             <Text style={styles.sectionLabel}>LAG</Text>
             {data.teams.map((t) => (
-              <Pressable
+              <PressableScale
                 key={t.bits_team_id}
                 style={styles.row}
                 onPress={() => router.push(`/lag/${t.bits_team_id}`)}
@@ -111,7 +110,7 @@ export default function Discover() {
                 {!!t.club_name && t.club_name !== t.name && (
                   <Text style={styles.rowSub}>{t.club_name}</Text>
                 )}
-              </Pressable>
+              </PressableScale>
             ))}
           </>
         )}

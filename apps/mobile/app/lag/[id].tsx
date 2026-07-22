@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
@@ -84,14 +84,12 @@ export default function TeamPage() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Pressable style={styles.back} onPress={() => router.back()} hitSlop={8}>
+      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
         <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </Pressable>
+      </PressableScale>
 
       {teamLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLOR.gold} />
-        </View>
+        <ListSkeleton />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.kicker}>{divisionName ?? 'LAG'}</Text>
@@ -133,7 +131,7 @@ export default function TeamPage() {
           {roster.length > 0 && (
             <Section label="TRUPP">
               {roster.map((p) => (
-                <Pressable
+                <PressableScale
                   key={p.public_id}
                   style={styles.playerRow}
                   onPress={() => router.push(`/player/${p.public_id}`)}
@@ -144,7 +142,7 @@ export default function TeamPage() {
                   {!!p.licence_average && (
                     <Text style={styles.playerAvg}>Snitt {p.licence_average}</Text>
                   )}
-                </Pressable>
+                </PressableScale>
               ))}
             </Section>
           )}

@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -113,7 +112,7 @@ export default function Login() {
           </PressableScale>
 
           {step === 'code' && (
-            <Pressable
+            <PressableScale
               onPress={() => {
                 setStep('email');
                 setCode('');
@@ -121,7 +120,7 @@ export default function Login() {
               }}
             >
               <Text style={styles.link}>Ändra e-post</Text>
-            </Pressable>
+            </PressableScale>
           )}
         </View>
       </KeyboardAvoidingView>

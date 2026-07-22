@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
@@ -38,9 +40,7 @@ export default function Home() {
       </View>
 
       {isLoading && (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLOR.gold} />
-        </View>
+        <ListSkeleton />
       )}
 
       {error && (
@@ -57,13 +57,13 @@ export default function Home() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           renderItem={({ item }) => (
-            <Pressable
+            <PressableScale
               style={styles.row}
               onPress={() => router.push(`/division/${item.bits_division_id}`)}
             >
               <Text style={styles.rowName}>{item.name}</Text>
               <Text style={styles.rowMeta}>›</Text>
-            </Pressable>
+            </PressableScale>
           )}
         />
       )}

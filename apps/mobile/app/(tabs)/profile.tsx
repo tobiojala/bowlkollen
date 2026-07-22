@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { signOut, useAuth } from '@/lib/auth';
@@ -39,19 +40,19 @@ export default function Profile() {
         </View>
       </View>
 
-      <Pressable style={styles.menuRow} onPress={() => router.push('/following')}>
+      <PressableScale style={styles.menuRow} onPress={() => router.push('/following')}>
         <Text style={styles.menuText}>Följer</Text>
         <View style={styles.menuRight}>
           <Text style={styles.menuCount}>{followCount}</Text>
           <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
         </View>
-      </Pressable>
+      </PressableScale>
 
       <View style={{ flex: 1 }} />
 
-      <Pressable style={styles.signout} onPress={signOut}>
+      <PressableScale style={styles.signout} onPress={signOut}>
         <Text style={styles.signoutText}>Logga ut</Text>
-      </Pressable>
+      </PressableScale>
     </SafeAreaView>
   );
 }

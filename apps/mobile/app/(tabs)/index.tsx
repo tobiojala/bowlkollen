@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import {
-  ActivityIndicator,
-  Pressable,
   SectionList,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -63,18 +63,16 @@ export default function Home() {
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLOR.gold} />
-        </View>
+        <ListSkeleton />
       ) : sections.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Din feed är tom</Text>
           <Text style={styles.emptyBody}>
             Följ lag och spelare så fylls den med deras matcher.
           </Text>
-          <Pressable style={styles.emptyBtn} onPress={() => router.push('/schema')}>
+          <PressableScale style={styles.emptyBtn} onPress={() => router.push('/schema')}>
             <Text style={styles.emptyBtnText}>Utforska divisioner</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       ) : (
         <SectionList
