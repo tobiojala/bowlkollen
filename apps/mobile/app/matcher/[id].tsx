@@ -24,17 +24,44 @@ function useMatch(matchId: number) {
   });
 }
 
+type ResultRow = {
+  player_name: string;
+  total_result: number;
+  series: number[];
+  is_home_team: boolean;
+  public_id: string | null;
+};
+
 function useMatchResults(matchId: number) {
   return useQuery({
     queryKey: ['match-results', matchId],
-    queryFn: async () => {
+    queryFn: async (): Promise<ResultRow[]> => {
       const { data, error } = await supabase
         .from('bits_match_player_results')
-        .select('player_name, total_result, series, is_home_team')
+        .select('player_name, total_result, series, is_home_team, lic_nbr')
         .eq('bits_match_id', matchId)
         .order('total_result', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+
+      // Resolve licence numbers -> profile ids so rows can open player pages.
+      const licNbrs = [...new Set(rows.map((r) => r.lic_nbr))];
+      const idMap = new Map<string, string>();
+      if (licNbrs.length) {
+        const { data: players } = await supabase
+          .from('bits_players')
+          .select('lic_nbr, public_id')
+          .in('lic_nbr', licNbrs);
+        for (const p of players ?? []) idMap.set(p.lic_nbr, p.public_id);
+      }
+
+      return rows.map((r) => ({
+        player_name: r.player_name,
+        total_result: r.total_result,
+        series: r.series,
+        is_home_team: r.is_home_team,
+        public_id: idMap.get(r.lic_nbr) ?? null,
+      }));
     },
   });
 }
@@ -99,20 +126,20 @@ export default function MatchPage() {
   );
 }
 
-function ResultBlock({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: { player_name: string; total_result: number; series: number[] }[];
-}) {
+function ResultBlock({ title, rows }: { title: string; rows: ResultRow[] }) {
+  const router = useRouter();
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel} numberOfLines={1}>
         {title.toUpperCase()}
       </Text>
       {rows.map((r, i) => (
-        <View key={i} style={styles.playerRow}>
+        <Pressable
+          key={i}
+          style={styles.playerRow}
+          disabled={!r.public_id}
+          onPress={() => r.public_id && router.push(`/player/${r.public_id}`)}
+        >
           <View style={styles.playerText}>
             <Text style={styles.playerName} numberOfLines={1}>
               {r.player_name}
@@ -122,7 +149,7 @@ function ResultBlock({
             )}
           </View>
           <Text style={styles.total}>{r.total_result}</Text>
-        </View>
+        </Pressable>
       ))}
     </View>
   );

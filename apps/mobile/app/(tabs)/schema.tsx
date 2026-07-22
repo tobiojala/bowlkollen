@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
@@ -23,6 +24,7 @@ function useDivisions() {
 }
 
 export default function Home() {
+  const router = useRouter();
   const { data, isLoading, error } = useDivisions();
 
   return (
@@ -55,10 +57,13 @@ export default function Home() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           renderItem={({ item }) => (
-            <View style={styles.row}>
+            <Pressable
+              style={styles.row}
+              onPress={() => router.push(`/division/${item.bits_division_id}`)}
+            >
               <Text style={styles.rowName}>{item.name}</Text>
               <Text style={styles.rowMeta}>›</Text>
-            </View>
+            </Pressable>
           )}
         />
       )}
