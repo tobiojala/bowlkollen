@@ -84,26 +84,26 @@ export function MatchRow({
 
 const styles = StyleSheet.create({
   row: {
-    paddingVertical: SPACE[4] + 2,
+    paddingVertical: SPACE[4] + SPACE[2],
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
-    gap: SPACE[2],
+    gap: SPACE[3],
   },
   faceoff: { flexDirection: 'row', alignItems: 'center' },
-  team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold, lineHeight: 21 },
   teamRight: { textAlign: 'right' },
   win: { color: COLOR.ink, fontFamily: FONT.bold },
-  lose: { color: COLOR.ink3 },
+  lose: { color: COLOR.ink2 },
 
-  centre: { paddingHorizontal: SPACE[4], minWidth: 78, alignItems: 'center' },
+  centre: { paddingHorizontal: SPACE[4], minWidth: 82, alignItems: 'center' },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  score: { fontSize: TYPE.body + 10, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  score: { fontSize: TYPE.body + 12, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
   scoreWin: { color: COLOR.ink },
-  scoreLose: { color: COLOR.ink3 },
-  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body + 4, fontFamily: FONT.display, marginHorizontal: 4 },
+  scoreLose: { color: COLOR.ink2 },
+  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body + 4, fontFamily: FONT.display, marginHorizontal: 5 },
 
-  date: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
-  vs: { color: COLOR.ink4, fontSize: TYPE.label, fontFamily: FONT.semibold, letterSpacing: 1, marginTop: 1 },
+  date: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
+  vs: { color: COLOR.ink4, fontSize: TYPE.label, fontFamily: FONT.semibold, letterSpacing: 1.5, marginTop: 2 },
 
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular },
 });

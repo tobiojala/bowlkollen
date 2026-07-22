@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
-import { groupByTier, TIER_ACCENT, type Tier } from '@/lib/tiers';
+import { groupByTier, type Tier } from '@/lib/tiers';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const SEASON_ID = 2026; // 2026/27 season, per the data-source convention
@@ -75,17 +75,20 @@ export default function Home() {
           scrollEventThrottle={16}
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
-            <View style={styles.tierHead}>
-              <View style={[styles.dot, { backgroundColor: TIER_ACCENT[section.title] }]} />
-              <Text style={styles.tierText}>{section.title}</Text>
-            </View>
+            <Text
+              style={[
+                styles.tierText,
+                section.title === 'Elitserien' && styles.tierTop,
+              ]}
+            >
+              {section.title}
+            </Text>
           )}
-          renderItem={({ item, section }) => (
+          renderItem={({ item }) => (
             <PressableScale
               style={styles.row}
               onPress={() => router.push(`/division/${item.bits_division_id}`)}
             >
-              <View style={[styles.accent, { backgroundColor: TIER_ACCENT[section.title] }]} />
               <Text style={styles.rowName} numberOfLines={1}>
                 {item.name}
               </Text>
@@ -106,20 +109,15 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACE[2] },
   error: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.semibold },
   list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
-  tierHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE[2],
-    marginTop: SPACE[6],
-    marginBottom: SPACE[2],
-  },
-  dot: { width: 8, height: 8, borderRadius: 4 },
   tierText: {
-    color: COLOR.ink2,
+    color: COLOR.ink3,
     fontSize: TYPE.label,
     fontFamily: FONT.bold,
     letterSpacing: 1.5,
+    marginTop: SPACE[8],
+    marginBottom: SPACE[1],
   },
+  tierTop: { color: COLOR.gold },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -128,7 +126,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLOR.hairline,
   },
-  accent: { width: 3, height: 22, borderRadius: 2 },
   rowName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   chevron: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.regular },
 });
