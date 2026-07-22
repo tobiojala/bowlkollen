@@ -1,54 +1,21 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 
+import { FloatingNav } from '@/components/FloatingNav';
 import { ScrollBlur } from '@/components/ScrollBlur';
-import { COLOR, FONT } from '@/theme';
+import { COLOR } from '@/theme';
 
 export default function TabsLayout() {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: COLOR.bg }}>
       <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: COLOR.gold,
-        tabBarInactiveTintColor: COLOR.ink3,
-        tabBarStyle: {
-          backgroundColor: COLOR.bg,
-          borderTopColor: COLOR.hairline,
-          borderTopWidth: 1,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontFamily: FONT.semibold },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Hem',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="schema"
-        options={{
-          title: 'Schema',
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="discover"
-        options={{
-          title: 'Hitta',
-          tabBarIcon: ({ color, size }) => <Ionicons name="search" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
-        }}
-      />
+        tabBar={(props) => <FloatingNav {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="schema" />
+        <Tabs.Screen name="discover" />
+        <Tabs.Screen name="profile" />
       </Tabs>
       <ScrollBlur overTabBar />
     </View>

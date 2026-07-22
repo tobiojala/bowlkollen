@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: COLOR.ink,
     fontSize: TYPE.body,
   },
-  list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
+  list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   hint: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', paddingVertical: SPACE[6] },
   sectionLabel: {
     color: COLOR.ink3,

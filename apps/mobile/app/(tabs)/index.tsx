@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
+  list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,

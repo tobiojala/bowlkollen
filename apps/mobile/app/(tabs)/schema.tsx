@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[8],
     textAlign: 'center',
   },
-  list: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
+  list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

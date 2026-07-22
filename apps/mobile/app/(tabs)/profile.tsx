@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     paddingVertical: SPACE[4],
     alignItems: 'center',
-    marginBottom: SPACE[6],
+    marginBottom: 92,
   },
   signoutText: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.bold },
 });
