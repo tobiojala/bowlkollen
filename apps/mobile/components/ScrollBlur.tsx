@@ -4,18 +4,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Port of the web AppShell scroll-blur chrome: a top band and a bottom band that
-// frost + fade the content passing under them (Instagram-style — no solid bars,
-// just blur at the very top and bottom edges). The mask makes the blur strongest
-// at the screen edge and fade to nothing toward the middle.
-// Clearance for the floating nav pill (12 margin + 60 height + a small gap) so
-// the bottom band sits just above the nav, not over it.
-const FLOATING_NAV = 78;
-
+// Instagram-style top chrome: a single blur band at the very top that frosts +
+// fades the content scrolling under it (the mask makes the blur strongest at the
+// edge and fade to nothing downward). The bottom blur comes from the floating
+// nav's own glass, not a separate band.
 export function ScrollBlur({ overTabBar = false }: { overTabBar?: boolean }) {
   const insets = useSafeAreaInsets();
-  const bottomOffset = overTabBar ? insets.bottom + FLOATING_NAV : 0;
   const topHeight = insets.top + 40;
+  void overTabBar;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -33,24 +29,6 @@ export function ScrollBlur({ overTabBar = false }: { overTabBar?: boolean }) {
         <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
         <LinearGradient
           colors={['rgba(11,13,16,0.72)', 'transparent']}
-          style={StyleSheet.absoluteFill}
-        />
-      </MaskedView>
-
-      {/* bottom band — strong at the bottom, fades upward */}
-      <MaskedView
-        style={[styles.band, { bottom: bottomOffset, height: 84 }]}
-        maskElement={
-          <LinearGradient
-            colors={['transparent', '#000', '#000']}
-            locations={[0, 0.6, 1]}
-            style={StyleSheet.absoluteFill}
-          />
-        }
-      >
-        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          colors={['transparent', 'rgba(11,13,16,0.6)']}
           style={StyleSheet.absoluteFill}
         />
       </MaskedView>

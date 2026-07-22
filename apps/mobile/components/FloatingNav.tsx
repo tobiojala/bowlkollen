@@ -8,10 +8,10 @@ import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -60,14 +60,12 @@ export function FloatingNav() {
   const pw = useSharedValue(fullWidth);
   const ph = useSharedValue(PILL_H);
   const px = useSharedValue(0);
-  const co = useSharedValue(1);
   const ind = useSharedValue(current);
 
   useEffect(() => {
     pw.value = withSpring(expanded ? fullWidth : MINI, SPRING);
     ph.value = withSpring(expanded ? PILL_H : MINI, SPRING);
     px.value = withSpring(expanded ? 0 : fullWidth - MINI, SPRING);
-    co.value = withTiming(expanded ? 1 : 0, { duration: 130 });
   }, [expanded, fullWidth]);
 
   useEffect(() => {
@@ -79,8 +77,6 @@ export function FloatingNav() {
     height: ph.value,
     transform: [{ translateX: px.value }],
   }));
-  const rowStyle = useAnimatedStyle(() => ({ opacity: co.value }));
-  const miniStyle = useAnimatedStyle(() => ({ opacity: 1 - co.value }));
   const indStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: 8 + ind.value * tabW }],
   }));
@@ -94,7 +90,7 @@ export function FloatingNav() {
         <View style={styles.clip}>
           {liquid ? (
             <GlassView
-              glassEffectStyle="regular"
+              glassEffectStyle="clear"
               colorScheme="dark"
               isInteractive
               style={StyleSheet.absoluteFill}
@@ -107,56 +103,56 @@ export function FloatingNav() {
           )}
           <View style={styles.rim} pointerEvents="none" />
 
-          {/* expanded: sliding gold indicator + tab row */}
-          <Animated.View
-            style={[StyleSheet.absoluteFill, rowStyle]}
-            pointerEvents={expanded ? 'auto' : 'none'}
-          >
-            <Animated.View style={[styles.indicator, { width: tabW }, indStyle]} pointerEvents="none">
-              <LinearGradient
-                colors={['rgba(255,215,40,0.18)', 'rgba(245,160,0,0.11)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0.4, y: 1 }}
-                style={styles.indicatorGrad}
-              />
+          {expanded ? (
+            /* expanded: sliding gold indicator + tab row */
+            <Animated.View
+              key="row"
+              entering={FadeIn.duration(120)}
+              style={StyleSheet.absoluteFill}
+            >
+              <Animated.View style={[styles.indicator, { width: tabW }, indStyle]} pointerEvents="none">
+                <LinearGradient
+                  colors={['rgba(255,215,40,0.18)', 'rgba(245,160,0,0.11)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0.4, y: 1 }}
+                  style={styles.indicatorGrad}
+                />
+              </Animated.View>
+
+              <View style={styles.row}>
+                {TABS.map((tab, i) => {
+                  const active = i === current;
+                  const Icon = tab.icon;
+                  return (
+                    <Pressable
+                      key={tab.href}
+                      style={styles.tab}
+                      onPress={() => {
+                        if (!active) {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          router.navigate(tab.href as never);
+                        }
+                        setLocalOpen(false);
+                      }}
+                    >
+                      <Icon
+                        size={22}
+                        strokeWidth={active ? 2.3 : 1.7}
+                        color={active ? COLOR.gold : COLOR.ink3}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
             </Animated.View>
-
-            <View style={styles.row}>
-              {TABS.map((tab, i) => {
-                const active = i === current;
-                const Icon = tab.icon;
-                return (
-                  <Pressable
-                    key={tab.href}
-                    style={styles.tab}
-                    onPress={() => {
-                      if (!active) {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.navigate(tab.href as never);
-                      }
-                      setLocalOpen(false);
-                    }}
-                  >
-                    <Icon
-                      size={22}
-                      strokeWidth={active ? 2.3 : 1.7}
-                      color={active ? COLOR.gold : COLOR.ink3}
-                    />
-                  </Pressable>
-                );
-              })}
-            </View>
-          </Animated.View>
-
-          {/* collapsed: mini circle showing the active icon, tap to expand */}
-          <Animated.View
-            style={[styles.mini, miniStyle]}
-            pointerEvents={expanded ? 'none' : 'auto'}
-          >
-            <Pressable style={styles.miniBtn} onPress={() => setLocalOpen(true)}>
-              <ActiveIcon size={22} strokeWidth={2.3} color={COLOR.gold} />
-            </Pressable>
-          </Animated.View>
+          ) : (
+            /* collapsed: mini circle showing the active tab icon, tap to expand */
+            <Animated.View key="mini" entering={FadeIn.duration(140)} style={styles.mini}>
+              <Pressable style={styles.miniBtn} onPress={() => setLocalOpen(true)}>
+                <ActiveIcon size={22} strokeWidth={2.3} color={COLOR.gold} />
+              </Pressable>
+            </Animated.View>
+          )}
         </View>
       </Animated.View>
     </View>
