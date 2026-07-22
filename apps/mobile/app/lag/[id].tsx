@@ -1,6 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { computeStandings } from '@bowlkollen/core';
-import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ScrollView,
@@ -14,102 +12,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
-import { MatchRow, type MatchRowData } from '@/components/MatchRow';
+import { MatchRow } from '@/components/MatchRow';
+import { StandingsLadder } from '@/components/StandingsLadder';
 import { useFollowCount } from '@/lib/follows';
-import { supabase } from '@/lib/supabase';
+import {
+  computeForm,
+  useRoster,
+  useTeam,
+  useTeamMatches,
+  useTeamStanding,
+} from '@/lib/team-data';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
-
-const CURRENT_SEASON = 2026;
-
-function useTeam(teamId: number) {
-  return useQuery({
-    queryKey: ['team', teamId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('bits_teams')
-        .select('name, club_name')
-        .eq('bits_team_id', teamId)
-        .maybeSingle();
-      return data;
-    },
-  });
-}
-
-type TeamMatch = MatchRowData & {
-  home_bits_team_id: number;
-  away_bits_team_id: number;
-  bits_division_id: number | null;
-};
-
-function useTeamMatches(teamId: number) {
-  return useQuery({
-    queryKey: ['team-matches', teamId],
-    queryFn: async (): Promise<TeamMatch[]> => {
-      const { data, error } = await supabase
-        .from('bits_matches')
-        .select(
-          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, bits_division_id',
-        )
-        .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
-        .eq('season_id', CURRENT_SEASON);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
-
-// Full division table -> this team's standing (rank / points), via the shared
-// computeStandings from @bowlkollen/core.
-function useTeamStanding(divisionId: number | null, teamId: number) {
-  return useQuery({
-    queryKey: ['team-standing', divisionId, teamId],
-    enabled: divisionId != null,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('bits_matches')
-        .select(
-          'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name',
-        )
-        .eq('bits_division_id', divisionId!)
-        .eq('season_id', CURRENT_SEASON);
-      if (error) throw error;
-      const table = computeStandings(data ?? []);
-      const idx = table.findIndex((s) => s.teamId === teamId);
-      if (idx === -1) return null;
-      return { rank: idx + 1, total: table.length, points: table[idx].points };
-    },
-  });
-}
-
-type FormResult = 'W' | 'L' | 'D';
-
-function computeForm(matches: TeamMatch[], teamId: number): FormResult[] {
-  return matches
-    .filter((m) => m.is_finished && m.home_result != null && m.away_result != null)
-    .sort((a, b) => a.match_date.localeCompare(b.match_date))
-    .slice(-5)
-    .map((m) => {
-      const home = m.home_bits_team_id === teamId;
-      const my = (home ? m.home_result : m.away_result) ?? 0;
-      const opp = (home ? m.away_result : m.home_result) ?? 0;
-      return my > opp ? 'W' : my < opp ? 'L' : 'D';
-    });
-}
-
-function useRoster(teamId: number) {
-  return useQuery({
-    queryKey: ['team-roster', teamId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_team_roster', {
-        p_bits_team_id: teamId,
-        p_limit: 20,
-      });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
 
 export default function TeamPage() {
   const router = useRouter();
@@ -170,11 +84,11 @@ export default function TeamPage() {
             <Text style={styles.followers}>{followers} följare</Text>
           </View>
 
-          {(standing || form.length > 0) && (
+          {(standing?.rank != null || form.length > 0) && (
             <View style={styles.statRow}>
-              <Stat value={standing ? `${standing.rank}/${standing.total}` : '–'} label="PLACERING" />
+              <Stat value={standing?.rank != null ? `${standing.rank}/${standing.total}` : '–'} label="PLACERING" />
               <View style={styles.statDivider} />
-              <Stat value={standing ? String(standing.points) : '–'} label="POÄNG" />
+              <Stat value={standing?.points != null ? String(standing.points) : '–'} label="POÄNG" />
               <View style={styles.statDivider} />
               <View style={styles.statCol}>
                 {form.length > 0 ? (
@@ -202,6 +116,17 @@ export default function TeamPage() {
                 <Text style={styles.statLabel}>FORM</Text>
               </View>
             </View>
+          )}
+
+          {standing?.table && standing.table.length > 1 && (
+            <StandingsLadder
+              standings={standing.table}
+              teamId={teamId}
+              onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
+              onOpenDivision={
+                divisionId != null ? () => router.push(`/division/${divisionId}`) : undefined
+              }
+            />
           )}
 
           {upcoming.length > 0 && (

@@ -85,3 +85,28 @@ export function computeStandings(matches: MatchRow[]): TeamStanding[] {
     return b.boardWins - a.boardWins;
   });
 }
+
+/** The `radius` teams above and below `teamId` (inclusive), clamped to stay
+ * in-bounds rather than shrinking near the top or bottom of the table. */
+export function standingsNeighbors(
+  standings: TeamStanding[],
+  teamId: number,
+  radius = 2,
+): TeamStanding[] {
+  const idx = standings.findIndex((s) => s.teamId === teamId);
+  if (idx === -1) return [];
+  const windowSize = radius * 2 + 1;
+  const start = Math.max(0, Math.min(idx - radius, standings.length - windowSize));
+  return standings.slice(start, start + windowSize);
+}
+
+/** Drops the redundant team-designation suffixes BITS appends (A / H A / DA / F)
+ * so "IK Sisu H A" reads as "IK Sisu". Mirrors web utils.shortName. */
+export function shortName(n: string): string {
+  return (n || '')
+    .replace(/ A$/, '')
+    .replace(/ H A$/, '')
+    .replace(/ DA$/, '')
+    .replace(/ F$/, '')
+    .trim();
+}
