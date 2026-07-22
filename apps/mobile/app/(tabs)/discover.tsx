@@ -20,22 +20,15 @@ const SEARCH_MIN = 2;
 function useSearch(query: string) {
   const q = query.trim();
   return useQuery({
-    queryKey: ['discover', q],
+    queryKey: ['discover-players', q],
     enabled: q.length >= SEARCH_MIN,
     queryFn: async () => {
-      const [players, teams] = await Promise.all([
-        supabase
-          .from('bits_players')
-          .select('public_id, first_name, sur_name, club_name')
-          .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
-          .limit(15),
-        supabase
-          .from('bits_teams')
-          .select('bits_team_id, name, club_name')
-          .or(`name.ilike.%${q}%,club_name.ilike.%${q}%`)
-          .limit(15),
-      ]);
-      return { players: players.data ?? [], teams: teams.data ?? [] };
+      const { data } = await supabase
+        .from('bits_players')
+        .select('public_id, first_name, sur_name, club_name')
+        .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
+        .limit(25);
+      return { players: data ?? [] };
     },
   });
 }
@@ -54,7 +47,7 @@ export default function Discover() {
 
   const { data, isFetching } = useSearch(debounced);
   const hasQuery = debounced.trim().length >= SEARCH_MIN;
-  const empty = hasQuery && !isFetching && data && data.players.length === 0 && data.teams.length === 0;
+  const empty = hasQuery && !isFetching && data && data.players.length === 0;
 
   return (
     <View style={styles.safe}>
@@ -67,7 +60,7 @@ export default function Discover() {
           style={styles.search}
           value={text}
           onChangeText={setText}
-          placeholder="Sök spelare eller lag…"
+          placeholder="Sök spelare…"
           placeholderTextColor={COLOR.ink4}
           autoCapitalize="none"
           autoCorrect={false}
@@ -80,7 +73,7 @@ export default function Discover() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {!hasQuery && <Text style={styles.hint}>Sök efter en spelare eller ett lag.</Text>}
+        {!hasQuery && <Text style={styles.hint}>Sök efter en spelare.</Text>}
         {isFetching && <Text style={styles.hint}>Söker…</Text>}
         {empty && <Text style={styles.hint}>Inga träffar.</Text>}
 
@@ -97,26 +90,6 @@ export default function Discover() {
                   {`${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim()}
                 </Text>
                 {!!p.club_name && <Text style={styles.rowSub}>{p.club_name}</Text>}
-              </PressableScale>
-            ))}
-          </>
-        )}
-
-        {data && data.teams.length > 0 && (
-          <>
-            <Text style={styles.sectionLabel}>LAG</Text>
-            {data.teams.map((t) => (
-              <PressableScale
-                key={t.bits_team_id}
-                style={styles.row}
-                onPress={() => router.push(`/lag/${t.bits_team_id}`)}
-              >
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {t.name}
-                </Text>
-                {!!t.club_name && t.club_name !== t.name && (
-                  <Text style={styles.rowSub}>{t.club_name}</Text>
-                )}
               </PressableScale>
             ))}
           </>

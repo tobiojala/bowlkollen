@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,11 +9,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
 import { groupByTier, type Tier } from '@/lib/tiers';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const SEASON_ID = 2026; // 2026/27 season, per the data-source convention
+const SEARCH_MIN = 2;
 
 type Division = { bits_division_id: number; name: string; season_id: number };
+type TeamHit = { bits_team_id: number; name: string; club_name: string | null };
 
 function useDivisions() {
   return useQuery({
@@ -30,68 +32,121 @@ function useDivisions() {
   });
 }
 
+function useTeamSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['schema-teams', q],
+    enabled: q.length >= SEARCH_MIN,
+    queryFn: async (): Promise<TeamHit[]> => {
+      const { data } = await supabase
+        .from('bits_teams')
+        .select('bits_team_id, name, club_name')
+        .ilike('name', `%${q}%`)
+        .limit(25);
+      return data ?? [];
+    },
+  });
+}
+
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { onScroll } = useNavScroll();
-  const { data = [], isLoading, error } = useDivisions();
+  const { data = [], isLoading } = useDivisions();
 
+  const [text, setText] = useState('');
+  const [debounced, setDebounced] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(text), 220);
+    return () => clearTimeout(t);
+  }, [text]);
+
+  const q = debounced.trim().toLowerCase();
+  const searching = q.length >= 1;
+  const divisionHits = useMemo(
+    () => (searching ? data.filter((d) => d.name.toLowerCase().includes(q)) : []),
+    [data, q, searching],
+  );
+  const { data: teamHits = [], isFetching } = useTeamSearch(debounced);
   const sections = useMemo(
     () => groupByTier(data).map((g) => ({ title: g.tier as Tier, data: g.items })),
     [data],
   );
 
-  const header = (
-    <View style={styles.header}>
-      <Text style={styles.title}>Divisioner</Text>
-      <Text style={styles.sub}>
-        {data.length > 0 ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
-      </Text>
-    </View>
-  );
+  const noHits =
+    searching && divisionHits.length === 0 && teamHits.length === 0 && !isFetching && q.length >= SEARCH_MIN;
 
   return (
     <View style={styles.safe}>
-      {isLoading && (
-        <View style={{ paddingTop: insets.top, paddingHorizontal: SPACE[6] }}>
-          {header}
+      <View style={[styles.top, { paddingTop: insets.top + SPACE[2] }]}>
+        <Text style={styles.title}>Schema</Text>
+        <TextInput
+          style={styles.search}
+          value={text}
+          onChangeText={setText}
+          placeholder="Sök lag eller division…"
+          placeholderTextColor={COLOR.ink4}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      </View>
+
+      {isLoading ? (
+        <View style={styles.body}>
           <ListSkeleton />
         </View>
-      )}
-
-      {error && (
-        <View style={[styles.center, { paddingTop: insets.top }]}>
-          <Text style={styles.error}>Kunde inte hämta data.</Text>
-        </View>
-      )}
-
-      {!isLoading && !error && (
+      ) : searching ? (
+        <ScrollView
+          contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+        >
+          {divisionHits.length > 0 && (
+            <>
+              <Text style={styles.tierText}>DIVISIONER</Text>
+              {divisionHits.map((d) => (
+                <PressableScale key={d.bits_division_id} style={styles.row} onPress={() => router.push(`/division/${d.bits_division_id}`)}>
+                  <Text style={styles.rowName} numberOfLines={1}>{d.name}</Text>
+                  <Text style={styles.chevron}>›</Text>
+                </PressableScale>
+              ))}
+            </>
+          )}
+          {teamHits.length > 0 && (
+            <>
+              <Text style={styles.tierText}>LAG</Text>
+              {teamHits.map((t) => (
+                <PressableScale key={t.bits_team_id} style={styles.row} onPress={() => router.push(`/lag/${t.bits_team_id}`)}>
+                  <View style={styles.teamText}>
+                    <Text style={styles.rowName} numberOfLines={1}>{t.name}</Text>
+                    {!!t.club_name && t.club_name !== t.name && (
+                      <Text style={styles.rowSub} numberOfLines={1}>{t.club_name}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </PressableScale>
+              ))}
+            </>
+          )}
+          {noHits && <Text style={styles.hint}>Inga träffar.</Text>}
+        </ScrollView>
+      ) : (
         <SectionList
           sections={sections}
           keyExtractor={(d) => String(d.bits_division_id)}
-          contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
-          ListHeaderComponent={header}
+          contentContainerStyle={styles.list}
           onScroll={onScroll}
           scrollEventThrottle={16}
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
-            <Text
-              style={[
-                styles.tierText,
-                section.title === 'Elitserien' && styles.tierTop,
-              ]}
-            >
+            <Text style={[styles.tierText, section.title === 'Elitserien' && styles.tierTop]}>
               {section.title}
             </Text>
           )}
           renderItem={({ item }) => (
-            <PressableScale
-              style={styles.row}
-              onPress={() => router.push(`/division/${item.bits_division_id}`)}
-            >
-              <Text style={styles.rowName} numberOfLines={1}>
-                {item.name}
-              </Text>
+            <PressableScale style={styles.row} onPress={() => router.push(`/division/${item.bits_division_id}`)}>
+              <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
               <Text style={styles.chevron}>›</Text>
             </PressableScale>
           )}
@@ -103,18 +158,24 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4], gap: SPACE[1] },
+  top: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[3], gap: SPACE[3] },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
-  sub: { color: COLOR.ink3, fontSize: TYPE.caption },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACE[2] },
-  error: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  search: {
+    backgroundColor: COLOR.surface2,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACE[4],
+    paddingVertical: SPACE[4],
+    color: COLOR.ink,
+    fontSize: TYPE.body,
+  },
+  body: { paddingHorizontal: SPACE[6] },
   list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   tierText: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
     fontFamily: FONT.bold,
     letterSpacing: 1.5,
-    marginTop: SPACE[8],
+    marginTop: SPACE[6],
     marginBottom: SPACE[1],
   },
   tierTop: { color: COLOR.gold },
@@ -126,6 +187,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLOR.hairline,
   },
+  teamText: { flex: 1, minWidth: 0 },
   rowName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  rowSub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
   chevron: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.regular },
+  hint: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', paddingVertical: SPACE[8] },
 });
