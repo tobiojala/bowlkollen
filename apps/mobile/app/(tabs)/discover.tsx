@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[3] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontFamily: FONT.bold },
-  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.display, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[2] },
   search: {
     backgroundColor: COLOR.surface2,

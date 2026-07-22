@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontFamily: FONT.bold, marginTop: SPACE[2] },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.display, letterSpacing: -0.5, marginTop: SPACE[1] },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,

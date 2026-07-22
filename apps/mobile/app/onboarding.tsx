@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   h1: {
     color: COLOR.ink,
     fontSize: TYPE.title + 12,
-    fontFamily: FONT.bold,
+    fontFamily: FONT.display,
     letterSpacing: -0.5,
     marginTop: SPACE[2],
   },

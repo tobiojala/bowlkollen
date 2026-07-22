@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[2] },
   headerText: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
+  name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.display, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   stats: {
     flexDirection: 'row',

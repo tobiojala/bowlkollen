@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   title: {
     color: COLOR.ink,
     fontSize: TYPE.title + 8,
-    fontFamily: FONT.bold,
+    fontFamily: FONT.display,
     letterSpacing: -0.5,
   },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption },
