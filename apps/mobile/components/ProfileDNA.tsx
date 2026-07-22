@@ -7,24 +7,15 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, {
-  Circle,
-  Defs,
-  Ellipse,
-  G,
-  Line,
-  Path,
-  RadialGradient,
-  Stop,
-  Text as SvgText,
-} from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { COLOR, FONT } from '@/theme';
 
-// Faithful native port of the web ProfileDNA radar: aurora glow behind, a
-// soft-glowing gold shape whose spokes are matches (radius = that match's
-// average, min-max normalized) and whose outline brightens toward the latest
-// matches. Breathes gently.
+// Native port of the web ProfileDNA radar. Each spoke is a match; radius is the
+// match's average (min-max normalized). Outline brightens toward the latest
+// matches. Uses solid colours + opacity props (react-native-svg renders those
+// reliably; gradients were falling back to solid fills).
+const GOLD = '#f5c200';
 const SW = 360;
 const SH = 300;
 const CX = 180;
@@ -32,7 +23,7 @@ const CY = 158;
 const AVATAR_R = 34;
 const SPOKE_START = AVATAR_R + 6;
 const rMin = 50;
-const rMax = 120;
+const rMax = 122;
 
 export function ProfileDNA({
   matchAvgs,
@@ -56,7 +47,6 @@ export function ProfileDNA({
   const pathD =
     spokes.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
 
-  // gentle breathing
   const breathe = useSharedValue(1);
   useEffect(() => {
     breathe.value = withRepeat(
@@ -68,25 +58,15 @@ export function ProfileDNA({
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathe.value }] }));
 
   return (
-    <Animated.View style={[{ width: '86%', alignSelf: 'center' }, animStyle]}>
+    <Animated.View style={[{ width: '90%', alignSelf: 'center' }, animStyle]}>
       <Svg width="100%" height={SH} viewBox={`0 0 ${SW} ${SH}`}>
-        <Defs>
-          <RadialGradient id="dna_fill" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="rgba(245,194,0,0.22)" />
-            <Stop offset="100%" stopColor="rgba(245,194,0,0.03)" />
-          </RadialGradient>
-          <RadialGradient id="aurora" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="rgba(245,194,0,0.16)" />
-            <Stop offset="70%" stopColor="rgba(245,194,0,0)" />
-          </RadialGradient>
-        </Defs>
-
-        {/* aurora glow behind everything */}
-        <Ellipse cx={CX} cy={CY} rx={168} ry={128} fill="url(#aurora)" />
+        {/* soft centre glow — layered low-opacity circles (fake radial) */}
+        <Circle cx={CX} cy={CY} r={118} fill={GOLD} opacity={0.025} />
+        <Circle cx={CX} cy={CY} r={78} fill={GOLD} opacity={0.035} />
 
         {/* ring guides */}
         {[rMin, rMin + (rMax - rMin) * 0.5, rMax].map((r) => (
-          <Circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke="rgba(244,245,247,0.06)" strokeWidth={1} />
+          <Circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke={COLOR.ink} strokeOpacity={0.06} strokeWidth={1} />
         ))}
 
         {/* spoke lines (start outside the avatar) */}
@@ -97,16 +77,17 @@ export function ProfileDNA({
             y1={CY + SPOKE_START * Math.sin(p.angle)}
             x2={p.x}
             y2={p.y}
-            stroke="rgba(244,245,247,0.05)"
+            stroke={COLOR.ink}
+            strokeOpacity={0.05}
             strokeWidth={1}
           />
         ))}
 
-        {/* filled shape */}
-        <Path d={pathD} fill="url(#dna_fill)" />
+        {/* faint fill */}
+        <Path d={pathD} fill={GOLD} fillOpacity={0.07} />
 
-        {/* soft outer glow of the outline (approximates the blur filter) */}
-        <Path d={pathD} fill="none" stroke="rgba(245,194,0,0.28)" strokeWidth={9} strokeLinejoin="round" />
+        {/* soft outer glow of the outline */}
+        <Path d={pathD} fill="none" stroke={GOLD} strokeOpacity={0.22} strokeWidth={8} strokeLinejoin="round" />
 
         {/* crisp recency-brightened outline */}
         {spokes.map((p, i) => {
@@ -121,7 +102,8 @@ export function ProfileDNA({
               y1={p.y}
               x2={q.x}
               y2={q.y}
-              stroke={`rgba(245,194,0,${op.toFixed(2)})`}
+              stroke={GOLD}
+              strokeOpacity={op}
               strokeWidth={2.4}
               strokeLinecap="round"
             />
@@ -131,22 +113,15 @@ export function ProfileDNA({
         {/* spoke dots with a soft halo */}
         {spokes.map((p, i) => (
           <G key={`d${i}`}>
-            <Circle cx={p.x} cy={p.y} r={7} fill="rgba(245,194,0,0.16)" />
-            <Circle cx={p.x} cy={p.y} r={3.4} fill={COLOR.gold} />
+            <Circle cx={p.x} cy={p.y} r={7} fill={GOLD} opacity={0.16} />
+            <Circle cx={p.x} cy={p.y} r={3.4} fill={GOLD} />
           </G>
         ))}
 
         {/* centre avatar with a soft glow ring */}
-        <Circle cx={CX} cy={CY} r={AVATAR_R + 8} fill="rgba(245,194,0,0.07)" />
+        <Circle cx={CX} cy={CY} r={AVATAR_R + 8} fill={GOLD} opacity={0.06} />
         <Circle cx={CX} cy={CY} r={AVATAR_R} fill={COLOR.surface2} stroke={ringColor} strokeWidth={2} />
-        <SvgText
-          x={CX}
-          y={CY + 6}
-          fill={ringColor}
-          fontSize={17}
-          fontFamily={FONT.display}
-          textAnchor="middle"
-        >
+        <SvgText x={CX} y={CY + 6} fill={ringColor} fontSize={17} fontFamily={FONT.display} textAnchor="middle">
           {initials}
         </SvgText>
       </Svg>
