@@ -12,6 +12,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { ProfileDNA } from '@/components/ProfileDNA';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
@@ -67,6 +68,12 @@ export default function PlayerPage() {
   const recent = games.slice(-9);
   const recentAvg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null;
   const formDiff = seasonAvg != null && recentAvg != null ? recentAvg - seasonAvg : null;
+  const matchAvgs = sorted
+    .map((h) => {
+      const g = (h.series ?? []).filter((x) => x > 0);
+      return g.length ? g.reduce((a, b) => a + b, 0) / g.length : 0;
+    })
+    .filter((a) => a > 0);
   const historyDesc = [...sorted].reverse();
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
 
@@ -119,6 +126,17 @@ export default function PlayerPage() {
             <Stat label="NIVÅ" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
             <Stat label="FÖLJARE" value={String(followers)} />
           </View>
+
+          {matchAvgs.length > 2 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>BOWLING-DNA</Text>
+              <ProfileDNA
+                matchAvgs={matchAvgs}
+                initials={teamInitials(player.name)}
+                ringColor={teamColor(player.name).text}
+              />
+            </View>
+          )}
 
           {history.length > 0 && (
             <View style={styles.section}>
