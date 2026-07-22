@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/MatchRow';
@@ -84,8 +85,10 @@ export default function Home() {
           renderSectionHeader={({ section }) => (
             <Text style={styles.sectionLabel}>{section.title}</Text>
           )}
-          renderItem={({ item }) => (
-            <MatchRow m={item} onPress={() => router.push(`/matcher/${item.bits_match_id}`)} />
+          renderItem={({ item, index }) => (
+            <Animated.View entering={FadeInDown.duration(280).delay(Math.min(index, 8) * 35)}>
+              <MatchRow m={item} onPress={() => router.push(`/matcher/${item.bits_match_id}`)} />
+            </Animated.View>
           )}
         />
       )}

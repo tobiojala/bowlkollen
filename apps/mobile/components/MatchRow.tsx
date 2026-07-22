@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PressableScale } from '@/components/PressableScale';
 import { formatMatchDate } from '@/lib/format';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
@@ -35,7 +36,7 @@ export function MatchRow({
   ].filter(Boolean);
 
   return (
-    <Pressable style={styles.match} onPress={onPress} disabled={!onPress}>
+    <PressableScale style={styles.match} onPress={onPress} disabled={!onPress} haptic>
       <View style={styles.faceoff}>
         <Text style={styles.team} numberOfLines={1}>
           {m.home_team_name}
@@ -58,7 +59,7 @@ export function MatchRow({
           {meta.join(' · ')}
         </Text>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

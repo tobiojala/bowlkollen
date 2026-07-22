@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PressableScale } from '@/components/PressableScale';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -96,9 +97,10 @@ export default function Login() {
 
           {error && <Text style={styles.error}>{error}</Text>}
 
-          <Pressable
+          <PressableScale
             style={[styles.button, disabled && styles.buttonDisabled]}
             disabled={disabled}
+            haptic
             onPress={step === 'email' ? sendCode : verify}
           >
             {busy ? (
@@ -108,7 +110,7 @@ export default function Login() {
                 {step === 'email' ? 'Skicka kod' : 'Logga in'}
               </Text>
             )}
-          </Pressable>
+          </PressableScale>
 
           {step === 'code' && (
             <Pressable

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import OnboardingSuggestions from '@/components/OnboardingSuggestions';
+import { PressableScale } from '@/components/PressableScale';
 import { useToggleFollow } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -112,13 +113,13 @@ export default function Onboarding() {
 
       <View style={styles.footer}>
         {picked && (
-          <Pressable style={styles.primary} onPress={finish} disabled={finishing}>
+          <PressableScale style={styles.primary} onPress={finish} disabled={finishing} haptic>
             {finishing ? (
               <ActivityIndicator color={COLOR.bg} />
             ) : (
               <Text style={styles.primaryText}>Klar</Text>
             )}
-          </Pressable>
+          </PressableScale>
         )}
         <Pressable onPress={finish} disabled={finishing} hitSlop={8}>
           <Text style={styles.skip}>Hoppa över</Text>

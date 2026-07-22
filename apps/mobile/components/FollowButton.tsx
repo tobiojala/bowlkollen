@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { PressableScale } from '@/components/PressableScale';
 import { useIsFollowing, useToggleFollow, type FollowEntityType } from '@/lib/follows';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -19,9 +20,10 @@ export function FollowButton({
   const following = override ?? initial ?? false;
 
   return (
-    <Pressable
+    <PressableScale
       style={[styles.pill, following && styles.pillOn]}
       hitSlop={6}
+      haptic
       onPress={() => {
         setOverride(!following);
         mutate();
@@ -30,7 +32,7 @@ export function FollowButton({
       <Text style={[styles.text, following && styles.textOn]}>
         {following ? 'Följer' : 'Följ'}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
