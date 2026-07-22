@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
@@ -43,6 +44,7 @@ export default function PlayerPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: player, isLoading } = usePlayer(id);
   const { data: history = [] } = usePlayerHistory(id);
+  const { data: followers = 0 } = useFollowCount('player', id);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -71,7 +73,7 @@ export default function PlayerPage() {
           <View style={styles.stats}>
             <Stat label="SNITT" value={player.licence_average ? String(player.licence_average) : '–'} />
             <Stat label="NIVÅ" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
-            {player.is_junior && <Stat label="JUNIOR" value="Ja" />}
+            <Stat label="FÖLJARE" value={String(followers)} />
           </View>
 
           {history.length > 0 && (

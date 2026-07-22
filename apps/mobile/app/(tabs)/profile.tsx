@@ -4,11 +4,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { signOut, useAuth } from '@/lib/auth';
+import { useMyFollowCount } from '@/lib/follows';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function Profile() {
   const router = useRouter();
   const { session } = useAuth();
+  const { data: followCount = 0 } = useMyFollowCount();
   const email = session?.user?.email ?? '';
   const meta = session?.user?.user_metadata ?? {};
   const name = (typeof meta.full_name === 'string' && meta.full_name) || email || 'Bowlare';
@@ -39,7 +41,10 @@ export default function Profile() {
 
       <Pressable style={styles.menuRow} onPress={() => router.push('/following')}>
         <Text style={styles.menuText}>Följer</Text>
-        <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+        <View style={styles.menuRight}>
+          <Text style={styles.menuCount}>{followCount}</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+        </View>
       </Pressable>
 
       <View style={{ flex: 1 }} />
@@ -88,6 +93,8 @@ const styles = StyleSheet.create({
     borderColor: COLOR.hairline,
   },
   menuText: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
+  menuRight: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
+  menuCount: { color: COLOR.ink3, fontSize: TYPE.body, fontWeight: '700' },
   signout: {
     borderWidth: 1,
     borderColor: COLOR.hairline,

@@ -25,6 +25,39 @@ export function useIsFollowing(entityType: FollowEntityType, entityId: string) {
   });
 }
 
+// Public follower count for an entity (Instagram-style) via the count-only RPC.
+export function useFollowCount(entityType: FollowEntityType, entityId: string) {
+  return useQuery({
+    queryKey: ['follow-count', entityType, entityId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_follow_count', {
+        p_entity_type: entityType,
+        p_entity_id: entityId,
+      });
+      if (error) throw error;
+      return data ?? 0;
+    },
+  });
+}
+
+// How many entities the current user follows (own rows — readable via RLS).
+export function useMyFollowCount() {
+  return useQuery({
+    queryKey: ['my-follow-count'],
+    queryFn: async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return 0;
+      const { count } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', session.user.id);
+      return count ?? 0;
+    },
+  });
+}
+
 // Toggle a follow (mirrors the web useToggleFollow): insert if absent, delete if
 // present. Team follows use String(bits_team_id) as entity_id (the bits-id bridge).
 export function useToggleFollow(entityType: FollowEntityType, entityId: string) {
@@ -54,6 +87,17 @@ export function useToggleFollow(entityType: FollowEntityType, entityId: string) 
         .insert({ user_id: uid, entity_type: entityType, entity_id: entityId });
       return true;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['follows'] }),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        predicate: (q) => {
+          const k = q.queryKey[0];
+          return (
+            k === 'follows' ||
+            k === 'is-following' ||
+            k === 'follow-count' ||
+            k === 'my-follow-count'
+          );
+        },
+      }),
   });
 }

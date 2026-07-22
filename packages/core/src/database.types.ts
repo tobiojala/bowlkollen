@@ -1992,6 +1992,7 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      get_follow_count: { Args: { p_entity_type: string; p_entity_id: string }; Returns: number }
       bits_player_is_junior: { Args: { p_lic_nbr: string }; Returns: boolean }
       delete_anon_views: { Args: { p_anon_id: string }; Returns: undefined }
       fix_bits_home_team_assignment: { Args: never; Returns: number }

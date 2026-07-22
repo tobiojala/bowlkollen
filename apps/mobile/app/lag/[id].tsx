@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FollowButton } from '@/components/FollowButton';
 import { MatchRow, type MatchRowData } from '@/components/MatchRow';
+import { useFollowCount } from '@/lib/follows';
 import { supabase } from '@/lib/supabase';
 import { COLOR, SPACE, TYPE } from '@/theme';
 
@@ -70,6 +72,7 @@ export default function TeamPage() {
   const { data: team, isLoading: teamLoading } = useTeam(teamId);
   const { data: matches = [] } = useTeamMatches(teamId);
   const { data: roster = [] } = useRoster(teamId);
+  const { data: followers = 0 } = useFollowCount('team', String(teamId));
 
   const upcoming = matches
     .filter((m) => !m.is_finished)
@@ -96,6 +99,10 @@ export default function TeamPage() {
           {team?.club_name && team.club_name !== team?.name && (
             <Text style={styles.club}>{team.club_name}</Text>
           )}
+          <View style={styles.followRow}>
+            <FollowButton entityType="team" entityId={String(teamId)} />
+            <Text style={styles.followers}>{followers} följare</Text>
+          </View>
 
           {upcoming.length > 0 && (
             <Section label="KOMMANDE">
@@ -174,6 +181,8 @@ const styles = StyleSheet.create({
   },
   name: { color: COLOR.ink, fontSize: TYPE.title + 10, fontWeight: '800', letterSpacing: -0.5, marginTop: SPACE[1] },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
+  followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
+  followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: '600' },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
