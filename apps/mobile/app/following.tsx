@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import {
@@ -60,6 +61,7 @@ function useMyFollows() {
 }
 
 export default function Following() {
+  const router = useRouter();
   const { data, isLoading } = useMyFollows();
 
   const sections = [
@@ -69,8 +71,10 @@ export default function Following() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <Pressable style={styles.back} onPress={() => router.back()} hitSlop={8}>
+        <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
+      </Pressable>
       <View style={styles.header}>
-        <Text style={styles.kicker}>BOWLKOLLEN</Text>
         <Text style={styles.title}>Följer</Text>
       </View>
 
@@ -128,8 +132,8 @@ function FollowRow({ item }: { item: FollowItem }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[6], paddingBottom: SPACE[4] },
-  kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 3, fontWeight: '700' },
+  back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
+  header: { paddingHorizontal: SPACE[6], paddingTop: SPACE[2], paddingBottom: SPACE[4] },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontWeight: '800', letterSpacing: -0.5 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },

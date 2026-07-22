@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -5,6 +7,7 @@ import { signOut, useAuth } from '@/lib/auth';
 import { COLOR, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function Profile() {
+  const router = useRouter();
   const { session } = useAuth();
   const email = session?.user?.email ?? '';
   const meta = session?.user?.user_metadata ?? {};
@@ -33,6 +36,11 @@ export default function Profile() {
           )}
         </View>
       </View>
+
+      <Pressable style={styles.menuRow} onPress={() => router.push('/following')}>
+        <Text style={styles.menuText}>Följer</Text>
+        <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+      </Pressable>
 
       <View style={{ flex: 1 }} />
 
@@ -69,6 +77,17 @@ const styles = StyleSheet.create({
   identity: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.body + 2, fontWeight: '700' },
   email: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACE[4],
+    marginTop: SPACE[4],
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLOR.hairline,
+  },
+  menuText: { color: COLOR.ink, fontSize: TYPE.body, fontWeight: '600' },
   signout: {
     borderWidth: 1,
     borderColor: COLOR.hairline,
