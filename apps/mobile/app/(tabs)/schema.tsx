@@ -1,27 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { groupByTier, TIER_ACCENT, type Tier } from '@/lib/tiers';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const SEASON_ID = 2026; // 2026/27 season, per the data-source convention
+
+type Division = { bits_division_id: number; name: string; season_id: number };
 
 function useDivisions() {
   return useQuery({
     queryKey: ['divisions', SEASON_ID],
-    queryFn: async () => {
+    queryFn: async (): Promise<Division[]> => {
       const { data, error } = await supabase
         .from('bits_divisions')
         .select('bits_division_id, name, season_id')
         .eq('season_id', SEASON_ID)
         .order('name', { ascending: true });
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 }
@@ -30,13 +34,18 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { onScroll } = useNavScroll();
-  const { data, isLoading, error } = useDivisions();
+  const { data = [], isLoading, error } = useDivisions();
+
+  const sections = useMemo(
+    () => groupByTier(data).map((g) => ({ title: g.tier as Tier, data: g.items })),
+    [data],
+  );
 
   const header = (
     <View style={styles.header}>
       <Text style={styles.title}>Divisioner</Text>
       <Text style={styles.sub}>
-        {data ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
+        {data.length > 0 ? `${data.length} divisioner · säsong ${SEASON_ID}/27` : 'Live från BITS'}
       </Text>
     </View>
   );
@@ -53,26 +62,34 @@ export default function Home() {
       {error && (
         <View style={[styles.center, { paddingTop: insets.top }]}>
           <Text style={styles.error}>Kunde inte hämta data.</Text>
-          <Text style={styles.errorDetail}>{String(error)}</Text>
         </View>
       )}
 
-      {data && (
-        <FlatList
-          data={data}
+      {!isLoading && !error && (
+        <SectionList
+          sections={sections}
           keyExtractor={(d) => String(d.bits_division_id)}
           contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
           ListHeaderComponent={header}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          ItemSeparatorComponent={() => <View style={styles.sep} />}
-          renderItem={({ item }) => (
+          stickySectionHeadersEnabled={false}
+          renderSectionHeader={({ section }) => (
+            <View style={styles.tierHead}>
+              <View style={[styles.dot, { backgroundColor: TIER_ACCENT[section.title] }]} />
+              <Text style={styles.tierText}>{section.title}</Text>
+            </View>
+          )}
+          renderItem={({ item, section }) => (
             <PressableScale
               style={styles.row}
               onPress={() => router.push(`/division/${item.bits_division_id}`)}
             >
-              <Text style={styles.rowName}>{item.name}</Text>
-              <Text style={styles.rowMeta}>›</Text>
+              <View style={[styles.accent, { backgroundColor: TIER_ACCENT[section.title] }]} />
+              <Text style={styles.rowName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={styles.chevron}>›</Text>
             </PressableScale>
           )}
         />
@@ -83,40 +100,35 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  header: {
-    paddingTop: SPACE[3],
-    paddingBottom: SPACE[4],
-    gap: SPACE[1],
-  },
-  kicker: {
-    color: COLOR.gold,
-    fontSize: TYPE.label,
-    letterSpacing: 3,
-    fontFamily: FONT.bold,
-  },
-  title: {
-    color: COLOR.ink,
-    fontSize: TYPE.title + 8,
-    fontFamily: FONT.bold,
-    letterSpacing: -0.5,
-  },
+  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4], gap: SPACE[1] },
+  title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACE[2] },
   error: { color: COLOR.red, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  errorDetail: {
-    color: COLOR.ink3,
-    fontSize: TYPE.caption,
-    paddingHorizontal: SPACE[8],
-    textAlign: 'center',
-  },
   list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
+  tierHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[2],
+    marginTop: SPACE[6],
+    marginBottom: SPACE[2],
+  },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  tierText: {
+    color: COLOR.ink2,
+    fontSize: TYPE.label,
+    fontFamily: FONT.bold,
+    letterSpacing: 1.5,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: SPACE[3],
     paddingVertical: SPACE[4],
+    borderTopWidth: 1,
+    borderTopColor: COLOR.hairline,
   },
-  rowName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold, flex: 1 },
-  rowMeta: { color: COLOR.ink4, fontSize: TYPE.title },
-  sep: { height: 1, backgroundColor: COLOR.hairline },
+  accent: { width: 3, height: 22, borderRadius: 2 },
+  rowName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  chevron: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.regular },
 });

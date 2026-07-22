@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { computeStandings } from '@bowlkollen/core';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -15,16 +14,18 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GlassCircle, GlassPill } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchRow } from '@/components/MatchRow';
 import { RoundGroups } from '@/components/RoundGroups';
+import { ScrollBlur } from '@/components/ScrollBlur';
 import { StandingsTable } from '@/components/StandingsTable';
 import { supabase } from '@/lib/supabase';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 type SheetKind = 'table' | 'upcoming' | 'season' | null;
 
@@ -89,6 +90,7 @@ function useDivisionMatches(divisionId: number) {
 
 export default function DivisionPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const divisionId = Number(id);
   const { data: division, isLoading } = useDivision(divisionId);
@@ -138,23 +140,10 @@ export default function DivisionPage() {
   return (
     <View style={styles.safe}>
       <Animated.View style={[styles.pageClip, bgStyle]}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.topbar}>
-            <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
-              <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-            </PressableScale>
-            {standings.length > 0 && (
-              <PressableScale style={styles.tableAction} onPress={() => setSheet('table')} hitSlop={8}>
-                <Ionicons name="podium-outline" size={16} color={COLOR.ink} />
-                <Text style={styles.tableActionText}>Tabell</Text>
-              </PressableScale>
-            )}
-          </View>
-
           {isLoading ? (
             <ListSkeleton />
           ) : (
-            <ScrollView contentContainerStyle={styles.scroll}>
+            <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
               <Text style={styles.kicker}>DIVISION</Text>
               <Text style={styles.name}>
                 {division?.name ?? matches[0]?.division_name ?? 'Division'}
@@ -191,7 +180,16 @@ export default function DivisionPage() {
               )}
             </ScrollView>
           )}
-        </SafeAreaView>
+
+          <ScrollBlur />
+          <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
+            <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
+          </View>
+          {standings.length > 0 && (
+            <View style={[styles.chromeRight, { top: insets.top + 6 }]}>
+              <GlassPill icon="podium-outline" label="Tabell" onPress={() => setSheet('table')} />
+            </View>
+          )}
       </Animated.View>
 
       <GlassSheet visible={sheet != null} onClose={() => setSheet(null)} title={sheetTitle}>
@@ -238,23 +236,8 @@ function SectionHead({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
-  topbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingRight: SPACE[6],
-  },
-  back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
-  tableAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE[2],
-    paddingVertical: SPACE[2],
-    paddingHorizontal: SPACE[3],
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLOR.surface,
-  },
-  tableActionText: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
+  chromeLeft: { position: 'absolute', left: 16 },
+  chromeRight: { position: 'absolute', right: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontFamily: FONT.bold, marginTop: SPACE[2] },

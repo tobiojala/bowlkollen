@@ -18,8 +18,9 @@ export type MatchRowData = {
   hall_name: string | null;
 };
 
-// Face-off row shared by the home feed and team page (list design language:
-// two teams across a centre — score if played, date if upcoming).
+// Face-off row: two teams across a centre — the result if played (winner
+// emphasised, loser dimmed, so the outcome reads at a glance), the date if
+// upcoming. Teams are doorways; the meta line carries division/venue.
 export function MatchRow({
   m,
   showDivision = true,
@@ -29,34 +30,52 @@ export function MatchRow({
   showDivision?: boolean;
   onPress?: () => void;
 }) {
-  const meta = [
-    showDivision ? m.division_name : null,
-    m.is_finished ? formatMatchDate(m.match_date) : null,
-    m.hall_name,
-  ].filter(Boolean);
+  const finished = !!m.is_finished && m.home_result != null && m.away_result != null;
+  const homeWon = finished && (m.home_result ?? 0) > (m.away_result ?? 0);
+  const awayWon = finished && (m.away_result ?? 0) > (m.home_result ?? 0);
+
+  const meta = [showDivision ? m.division_name : null, m.hall_name].filter(Boolean);
 
   return (
-    <PressableScale style={styles.match} onPress={onPress} disabled={!onPress} haptic>
+    <PressableScale style={styles.row} onPress={onPress} disabled={!onPress} haptic>
       <View style={styles.faceoff}>
-        <Text style={styles.team} numberOfLines={1}>
+        <Text
+          style={[styles.team, homeWon ? styles.win : finished ? styles.lose : null]}
+          numberOfLines={1}
+        >
           {m.home_team_name}
         </Text>
-        <View style={styles.centerCol}>
-          {m.is_finished ? (
-            <Text style={styles.score}>
-              {m.home_result ?? 0}–{m.away_result ?? 0}
-            </Text>
+
+        <View style={styles.centre}>
+          {finished ? (
+            <View style={styles.scoreRow}>
+              <Text style={[styles.score, homeWon ? styles.scoreWin : styles.scoreLose]}>
+                {m.home_result}
+              </Text>
+              <Text style={styles.scoreSep}>–</Text>
+              <Text style={[styles.score, awayWon ? styles.scoreWin : styles.scoreLose]}>
+                {m.away_result}
+              </Text>
+            </View>
           ) : (
-            <Text style={styles.date}>{formatMatchDate(m.match_date)}</Text>
+            <>
+              <Text style={styles.date}>{formatMatchDate(m.match_date)}</Text>
+              <Text style={styles.vs}>vs</Text>
+            </>
           )}
         </View>
-        <Text style={[styles.team, styles.teamRight]} numberOfLines={1}>
+
+        <Text
+          style={[styles.team, styles.teamRight, awayWon ? styles.win : finished ? styles.lose : null]}
+          numberOfLines={1}
+        >
           {m.away_team_name}
         </Text>
       </View>
+
       {meta.length > 0 && (
         <Text style={styles.meta} numberOfLines={1}>
-          {meta.join(' · ')}
+          {meta.join('  ·  ')}
         </Text>
       )}
     </PressableScale>
@@ -64,17 +83,27 @@ export function MatchRow({
 }
 
 const styles = StyleSheet.create({
-  match: {
-    paddingVertical: SPACE[4],
+  row: {
+    paddingVertical: SPACE[4] + 2,
     borderBottomWidth: 1,
     borderBottomColor: COLOR.hairline,
     gap: SPACE[2],
   },
   faceoff: { flexDirection: 'row', alignItems: 'center' },
-  team: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
   teamRight: { textAlign: 'right' },
-  centerCol: { paddingHorizontal: SPACE[3], minWidth: 64, alignItems: 'center' },
-  score: { color: COLOR.ink, fontSize: TYPE.body + 8, fontFamily: FONT.display, letterSpacing: 0.5 },
-  date: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  win: { color: COLOR.ink, fontFamily: FONT.bold },
+  lose: { color: COLOR.ink3 },
+
+  centre: { paddingHorizontal: SPACE[4], minWidth: 78, alignItems: 'center' },
+  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
+  score: { fontSize: TYPE.body + 10, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  scoreWin: { color: COLOR.ink },
+  scoreLose: { color: COLOR.ink3 },
+  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body + 4, fontFamily: FONT.display, marginHorizontal: 4 },
+
+  date: { color: COLOR.ink, fontSize: TYPE.caption, fontFamily: FONT.bold },
+  vs: { color: COLOR.ink4, fontSize: TYPE.label, fontFamily: FONT.semibold, letterSpacing: 1, marginTop: 1 },
+
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular },
 });

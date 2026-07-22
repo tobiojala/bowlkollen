@@ -15,10 +15,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { GlassCircle } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
+import { ScrollBlur } from '@/components/ScrollBlur';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { MatchRow } from '@/components/MatchRow';
 import { StandingsLadder } from '@/components/StandingsLadder';
@@ -36,6 +38,7 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 export default function TeamPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const teamId = Number(id);
 
@@ -74,16 +77,11 @@ export default function TeamPage() {
   return (
     <View style={styles.safe}>
       <Animated.View style={[styles.pageClip, bgStyle]}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
-        <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </PressableScale>
-
       {teamLoading ? (
         <ListSkeleton />
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <AmbientGlow color={tc.ring} />
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
+          <AmbientGlow color={tc.ring} top={insets.top - 10} />
           <View style={styles.heroRow}>
             <IdentityAvatar colors={tc} initials={initials} size={80} />
             <View style={styles.heroText}>
@@ -207,7 +205,11 @@ export default function TeamPage() {
           )}
         </ScrollView>
       )}
-      </SafeAreaView>
+
+      <ScrollBlur />
+      <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
+        <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
+      </View>
       </Animated.View>
 
       <GlassSheet
@@ -254,7 +256,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
-  back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
+  chromeLeft: { position: 'absolute', left: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[4], marginTop: SPACE[6] },

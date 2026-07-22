@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -9,11 +8,13 @@ import {
 } from 'react-native';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
+import { GlassCircle } from '@/components/GlassButtons';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { ProfileDNA } from '@/components/ProfileDNA';
+import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
@@ -56,6 +57,7 @@ function usePlayerPercentile(publicId: string) {
 
 export default function PlayerPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: player, isLoading } = usePlayer(id);
   const { data: history = [] } = usePlayerHistory(id);
@@ -79,11 +81,7 @@ export default function PlayerPage() {
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
-        <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </PressableScale>
-
+    <View style={styles.safe}>
       {isLoading ? (
         <ListSkeleton />
       ) : !player ? (
@@ -91,8 +89,8 @@ export default function PlayerPage() {
           <Text style={styles.empty}>Spelaren hittades inte.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <AmbientGlow color={teamColor(player.name).ring} />
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
+          <AmbientGlow color={teamColor(player.name).ring} top={insets.top - 10} />
           <View style={styles.headerRow}>
             <IdentityAvatar colors={teamColor(player.name)} initials={teamInitials(player.name)} size={64} />
             <View style={styles.headerText}>
@@ -168,7 +166,12 @@ export default function PlayerPage() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+
+      <ScrollBlur />
+      <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
+        <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
+      </View>
+    </View>
   );
 }
 
@@ -183,7 +186,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
+  chromeLeft: { position: 'absolute', left: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },

@@ -1,11 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GlassCircle } from '@/components/GlassButtons';
+import { ScrollBlur } from '@/components/ScrollBlur';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
@@ -70,6 +71,7 @@ function useMatchResults(matchId: number) {
 
 export default function MatchPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const matchId = Number(id);
   const { data: match, isLoading } = useMatch(matchId);
@@ -79,11 +81,7 @@ export default function MatchPage() {
   const away = results.filter((r) => !r.is_home_team);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <PressableScale style={styles.back} onPress={() => router.back()} hitSlop={8}>
-        <Ionicons name="chevron-back" size={26} color={COLOR.ink2} />
-      </PressableScale>
-
+    <View style={styles.safe}>
       {isLoading ? (
         <ListSkeleton />
       ) : !match ? (
@@ -91,7 +89,7 @@ export default function MatchPage() {
           <Text style={styles.empty}>Matchen hittades inte.</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
           {!!match.division_name && <Text style={styles.kicker}>{match.division_name}</Text>}
           <View style={styles.hero}>
             <Text style={styles.heroTeam} numberOfLines={2}>
@@ -122,7 +120,12 @@ export default function MatchPage() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+
+      <ScrollBlur />
+      <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
+        <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
+      </View>
+    </View>
   );
 }
 
@@ -157,7 +160,7 @@ function ResultBlock({ title, rows }: { title: string; rows: ResultRow[] }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  back: { paddingHorizontal: SPACE[4], paddingTop: SPACE[2], paddingBottom: SPACE[1] },
+  chromeLeft: { position: 'absolute', left: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
