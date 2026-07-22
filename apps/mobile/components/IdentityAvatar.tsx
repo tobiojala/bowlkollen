@@ -34,9 +34,9 @@ export function IdentityAvatar({
   return (
     <LinearGradient
       colors={[hi, colors.ring, lo]}
-      locations={[0, 0.5, 1]}
-      start={{ x: 0.1, y: 0 }}
-      end={{ x: 0.9, y: 1 }}
+      locations={[0, 0.55, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={{ width: size, height: size, borderRadius: radius, padding: ringW }}
     >
       <View
@@ -57,40 +57,41 @@ export function IdentityAvatar({
   );
 }
 
-// Soft ambient glow behind a hero — the team/club colour lighting the header
-// instead of a flat fill. Built from a few concentric low-opacity discs (largest
-// faintest) so it fades outward like a radial glow, without the react-native-svg
-// RadialGradient solid-fill bug or unreliable coloured shadows.
+// Soft ambient glow behind a hero — the team/club colour faintly lighting the
+// header instead of a flat fill. Many equal, very-low-opacity concentric discs:
+// they overlap most in the centre and least at the edges, so the alpha builds up
+// into a smooth radial falloff (no hard blob, no react-native-svg RadialGradient
+// solid-fill bug, no unreliable coloured shadows).
+const GLOW_LAYERS = 7;
+const GLOW_OPACITY = 0.022;
+
 export function AmbientGlow({
   color,
-  size = 260,
-  top = -60,
+  size = 300,
+  top = -80,
 }: {
   color: string;
   size?: number;
   top?: number;
 }) {
-  const layers = [
-    { s: size, o: 0.05 },
-    { s: size * 0.72, o: 0.06 },
-    { s: size * 0.48, o: 0.08 },
-    { s: size * 0.28, o: 0.1 },
-  ];
   return (
     <View pointerEvents="none" style={[styles.glowWrap, { top, height: size }]}>
-      {layers.map((l, i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            width: l.s,
-            height: l.s,
-            borderRadius: l.s / 2,
-            backgroundColor: color,
-            opacity: l.o,
-          }}
-        />
-      ))}
+      {Array.from({ length: GLOW_LAYERS }, (_, i) => {
+        const s = size * (1 - (i / GLOW_LAYERS) * 0.86);
+        return (
+          <View
+            key={i}
+            style={{
+              position: 'absolute',
+              width: s,
+              height: s,
+              borderRadius: s / 2,
+              backgroundColor: color,
+              opacity: GLOW_OPACITY,
+            }}
+          />
+        );
+      })}
     </View>
   );
 }

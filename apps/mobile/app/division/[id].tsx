@@ -19,6 +19,9 @@ import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const CURRENT_SEASON = 2026;
+const PREVIOUS_SEASON = 2025;
+const MATCH_COLS =
+  'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, round_id';
 
 function useDivision(divisionId: number) {
   return useQuery({
@@ -35,19 +38,35 @@ function useDivision(divisionId: number) {
   });
 }
 
+// Division IDs are stable across seasons, so pre-season (no finished matches yet)
+// falls back to last season's same division, flagged historical — mirrors the
+// team page + the web.
 function useDivisionMatches(divisionId: number) {
   return useQuery({
     queryKey: ['division-matches', divisionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const cur = await supabase
         .from('bits_matches')
-        .select(
-          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, round_id',
-        )
+        .select(MATCH_COLS)
         .eq('bits_division_id', divisionId)
         .eq('season_id', CURRENT_SEASON);
-      if (error) throw error;
-      return data ?? [];
+      if (cur.error) throw cur.error;
+      const curMatches = cur.data ?? [];
+      if (curMatches.some((m) => m.is_finished)) {
+        return { matches: curMatches, historical: false };
+      }
+
+      const prev = await supabase
+        .from('bits_matches')
+        .select(MATCH_COLS)
+        .eq('bits_division_id', divisionId)
+        .eq('season_id', PREVIOUS_SEASON);
+      if (prev.error) throw prev.error;
+      const prevMatches = prev.data ?? [];
+      if (prevMatches.some((m) => m.is_finished)) {
+        return { matches: prevMatches, historical: true };
+      }
+      return { matches: curMatches, historical: false };
     },
   });
 }
@@ -57,7 +76,9 @@ export default function DivisionPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const divisionId = Number(id);
   const { data: division, isLoading } = useDivision(divisionId);
-  const { data: matches = [] } = useDivisionMatches(divisionId);
+  const { data: matchData } = useDivisionMatches(divisionId);
+  const matches = matchData?.matches ?? [];
+  const historical = matchData?.historical ?? false;
 
   const standings = computeStandings(matches);
 
@@ -81,7 +102,9 @@ export default function DivisionPage() {
 
           {standings.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>TABELL</Text>
+              <Text style={styles.sectionLabel}>
+                {historical ? 'TABELL — FÖRRA SÄSONGEN' : 'TABELL'}
+              </Text>
               <View style={styles.stHead}>
                 <Text style={[styles.stH, styles.stPos]}>#</Text>
                 <Text style={[styles.stH, styles.stTeamCol]}>LAG</Text>
@@ -125,7 +148,9 @@ export default function DivisionPage() {
 
           {recent.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>SENASTE RESULTAT</Text>
+              <Text style={styles.sectionLabel}>
+                {historical ? 'RESULTAT — FÖRRA SÄSONGEN' : 'SENASTE RESULTAT'}
+              </Text>
               {recent.map((m) => (
                 <MatchRow
                   key={m.bits_match_id}
