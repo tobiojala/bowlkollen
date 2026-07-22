@@ -7,6 +7,10 @@ export function teamColor(name: string) {
     bg: `hsl(${hue}, 38%, 14%)`,
     ring: `hsl(${hue}, 55%, 56%)`,
     text: `hsl(${hue}, 62%, 64%)`,
+    // Light + deep stops so the avatar "story ring" reads as an actual gradient
+    // (a linear sweep hi -> ring -> lo), not a near-solid fill.
+    hi: `hsl(${hue}, 78%, 74%)`,
+    lo: `hsl(${hue}, 48%, 34%)`,
   };
 }
 

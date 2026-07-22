@@ -122,6 +122,7 @@ export default function TeamPage() {
             <StandingsLadder
               standings={standing.table}
               teamId={teamId}
+              historical={standing.historical}
               onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
               onOpenDivision={
                 divisionId != null ? () => router.push(`/division/${divisionId}`) : undefined

@@ -5,6 +5,10 @@ import type { MatchRowData } from '@/components/MatchRow';
 import { supabase } from '@/lib/supabase';
 
 const CURRENT_SEASON = 2026;
+const PREVIOUS_SEASON = 2025;
+
+const STANDING_COLS =
+  'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name';
 
 export function useTeam(teamId: number) {
   return useQuery({
@@ -45,23 +49,56 @@ export function useTeamMatches(teamId: number) {
 
 // Full division table -> this team's standing (rank / points) + the whole table
 // for the standings ladder, via the shared computeStandings from @bowlkollen/core.
+// Pre-season (no finished matches yet) falls back to last season's final table,
+// flagged `historical` so the UI can label it — mirrors the web.
 export function useTeamStanding(divisionId: number | null, teamId: number) {
   return useQuery({
     queryKey: ['team-standing', divisionId, teamId],
     enabled: divisionId != null,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const current = await supabase
         .from('bits_matches')
-        .select(
-          'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name',
-        )
+        .select(STANDING_COLS)
         .eq('bits_division_id', divisionId!)
         .eq('season_id', CURRENT_SEASON);
-      if (error) throw error;
-      const table = computeStandings(data ?? []);
+      if (current.error) throw current.error;
+
+      let table = computeStandings(current.data ?? []);
+      let historical = false;
+
+      // No finished matches this season yet -> show last season's final table for
+      // the division the team actually played in then (promotion/relegation-safe).
+      if (table.length === 0) {
+        const prevDiv = await supabase
+          .from('bits_matches')
+          .select('bits_division_id')
+          .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
+          .eq('season_id', PREVIOUS_SEASON)
+          .not('bits_division_id', 'is', null)
+          .limit(1)
+          .maybeSingle();
+        const prevDivisionId = prevDiv.data?.bits_division_id ?? null;
+        if (prevDivisionId != null) {
+          const prev = await supabase
+            .from('bits_matches')
+            .select(STANDING_COLS)
+            .eq('bits_division_id', prevDivisionId)
+            .eq('season_id', PREVIOUS_SEASON);
+          if (!prev.error) {
+            table = computeStandings(prev.data ?? []);
+            historical = true;
+          }
+        }
+      }
+
       const idx = table.findIndex((s) => s.teamId === teamId);
-      if (idx === -1) return { rank: null, total: table.length, points: null, table };
-      return { rank: idx + 1, total: table.length, points: table[idx].points, table };
+      return {
+        rank: idx === -1 ? null : idx + 1,
+        total: table.length,
+        points: idx === -1 ? null : table[idx].points,
+        table,
+        historical,
+      };
     },
   });
 }
