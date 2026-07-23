@@ -3,6 +3,7 @@ import {
   computePlayerStats,
   getTier,
   playerAchievements,
+  projectSeasonAvg,
   stdDev,
   type PlayerMatch,
 } from '@/lib/player-stats';
@@ -90,6 +91,28 @@ describe('computePlayerStats', () => {
     expect(s.recentAvg).toBe(210); // last 9 games are all 210
     expect(s.formDiff).not.toBeNull();
     expect(s.formDiff!).toBeGreaterThan(0); // trending up
+  });
+});
+
+describe('projectSeasonAvg', () => {
+  it('is null with too few matches or no season average', () => {
+    expect(projectSeasonAvg([180, 190, 200], 190)).toBeNull();
+    expect(projectSeasonAvg([180, 190, 200, 210], null)).toBeNull();
+  });
+  it('projects upward for a rising trend', () => {
+    const avgs = [170, 180, 190, 200, 210];
+    const proj = projectSeasonAvg(avgs, 190)!;
+    expect(proj).not.toBeNull();
+    expect(proj).toBeGreaterThan(190);
+  });
+  it('projects downward for a falling trend', () => {
+    expect(projectSeasonAvg([210, 200, 190, 180, 170], 190)!).toBeLessThan(190);
+  });
+  it('clamps so noise cannot produce a wild number', () => {
+    const avgs = [180, 182, 181, 183, 182];
+    const proj = projectSeasonAvg(avgs, 182)!;
+    expect(proj).toBeLessThanOrEqual(Math.max(...avgs) + 15);
+    expect(proj).toBeGreaterThanOrEqual(Math.min(...avgs) - 15);
   });
 });
 

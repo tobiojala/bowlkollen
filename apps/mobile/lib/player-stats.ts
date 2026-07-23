@@ -23,8 +23,12 @@ export type PlayerStats = {
   consistency: number; // std-dev of per-match averages (lower = steadier)
   rating: number; // BK-rating 0–99
   tier: TierInfo;
+  projectedAvg: number | null; // where the season is heading if form holds
   historyDesc: PlayerMatch[]; // newest first
 };
+
+const MIN_MATCHES_FOR_PROJECTION = 4;
+const PROJECTION_CLAMP = 15; // never project further than this beyond seen results
 
 const RECENT_GAMES = 9; // ~3 matches — the "form" window
 const BIG_GAME = 200;
@@ -43,6 +47,27 @@ export function stdDev(xs: number[]): number {
 export function calcRating(avg: number, best: number, over200: number, hasData: boolean): number {
   if (!hasData) return Math.min(55, round(avg * 0.3));
   return Math.min(99, round(avg * 0.4 + (best / 40) * 0.4 + over200 * 1.5));
+}
+
+// Projected average one match ahead — a least-squares trend line through the
+// per-match averages, clamped so noisy data can't produce a wild number. Null
+// until there's enough of a season to read a trend.
+export function projectSeasonAvg(matchAvgs: number[], seasonAvg: number | null): number | null {
+  if (matchAvgs.length < MIN_MATCHES_FOR_PROJECTION || seasonAvg == null) return null;
+  const n = matchAvgs.length;
+  const mx = (n - 1) / 2;
+  const my = mean(matchAvgs);
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - mx) * (matchAvgs[i] - my);
+    den += (i - mx) ** 2;
+  }
+  const slope = den ? num / den : 0;
+  const next = my - slope * mx + slope * n; // intercept + slope * n
+  const lo = Math.min(...matchAvgs) - PROJECTION_CLAMP;
+  const hi = Math.max(...matchAvgs) + PROJECTION_CLAMP;
+  return round(Math.max(lo, Math.min(hi, next)));
 }
 
 export function getTier(rating: number): TierInfo {
@@ -89,6 +114,7 @@ export function computePlayerStats(history: PlayerMatch[]): PlayerStats {
     consistency: stdDev(matchAvgs.map(round)),
     rating,
     tier: getTier(rating),
+    projectedAvg: projectSeasonAvg(matchAvgs.map(round), seasonAvg),
     historyDesc: [...sorted].reverse(),
   };
 }

@@ -7,7 +7,7 @@ import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 // Season analysis: a plain-language narrative, the headline numbers, and the
 // form curve — all derived from the match history.
 export function PlayerSeason({ firstName, stats }: { firstName: string; stats: PlayerStats }) {
-  const { seasonAvg, matchesPlayed, bestSeries, bestGame, games200, matchAvgs, formDiff } = stats;
+  const { seasonAvg, matchesPlayed, bestSeries, bestGame, games200, matchAvgs, formDiff, projectedAvg } = stats;
   if (matchesPlayed === 0) return null;
 
   const trend =
@@ -16,6 +16,11 @@ export function PlayerSeason({ firstName, stats }: { firstName: string; stats: P
       : formDiff > 0
         ? { word: 'stigande', color: COLOR.green }
         : { word: 'fallande', color: COLOR.red };
+
+  const proj =
+    projectedAvg == null || seasonAvg == null || projectedAvg === seasonAvg
+      ? null
+      : { color: projectedAvg > seasonAvg ? COLOR.green : COLOR.red, arrow: projectedAvg > seasonAvg ? '↑' : '↓' };
 
   return (
     <View style={styles.section}>
@@ -32,6 +37,17 @@ export function PlayerSeason({ firstName, stats }: { firstName: string; stats: P
             </Text>
           )}
         </Text>
+      )}
+
+      {projectedAvg != null && (
+        <View style={styles.prognos}>
+          <Text style={styles.prognosLabel}>PROGNOS</Text>
+          <Text style={styles.prognosValue}>
+            ~{projectedAvg}
+            {proj && <Text style={{ color: proj.color }}> {proj.arrow}</Text>}
+          </Text>
+          <Text style={styles.prognosHint}>snitt om formen håller</Text>
+        </View>
       )}
 
       <View style={styles.grid}>
@@ -65,6 +81,10 @@ const styles = StyleSheet.create({
   label: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginBottom: SPACE[2] },
   narrative: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.regular, lineHeight: 23 },
   strong: { color: COLOR.ink, fontFamily: FONT.bold },
+  prognos: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[2], marginTop: SPACE[4] },
+  prognosLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  prognosValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display },
+  prognosHint: { color: COLOR.ink3, fontSize: TYPE.caption },
   grid: { flexDirection: 'row', gap: SPACE[2], marginTop: SPACE[4] },
   mini: {
     flex: 1,
