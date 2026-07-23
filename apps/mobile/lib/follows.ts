@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 
-export type FollowEntityType = 'player' | 'team';
+export type FollowEntityType = 'player' | 'team' | 'division';
 
 // Whether the current user follows a given entity (for follow-button state).
 export function useIsFollowing(entityType: FollowEntityType, entityId: string) {

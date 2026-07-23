@@ -3,12 +3,22 @@ import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
-import type { TeamMatch } from '@/lib/team-data';
+// The fields the exporters need — satisfied by both team and division matches.
+export type ExportMatch = {
+  bits_match_id: number;
+  home_team_name: string;
+  away_team_name: string;
+  home_result: number | null;
+  away_result: number | null;
+  is_finished: boolean | null;
+  match_date: string;
+  hall_name: string | null;
+};
 
 const safeName = (s: string) => (s || 'lag').replace(/[^\p{L}\p{N}]+/gu, '_').slice(0, 40);
 const day = (d: string) => d.slice(0, 10);
 const csvCell = (s: string) => `"${(s ?? '').replace(/"/g, '""')}"`;
-const result = (m: TeamMatch) =>
+const result = (m: ExportMatch) =>
   m.is_finished && m.home_result != null ? `${m.home_result}–${m.away_result}` : '';
 
 async function writeAndShare(name: string, content: string, mimeType: string) {
@@ -31,7 +41,7 @@ export type CalendarResult =
 
 // Add upcoming fixtures straight into the device's default calendar (iCloud /
 // Google / iOS — whatever the phone syncs), all-day events. No file to manage.
-export async function addToCalendar(matches: TeamMatch[]): Promise<CalendarResult> {
+export async function addToCalendar(matches: ExportMatch[]): Promise<CalendarResult> {
   try {
     const { status } = await Calendar.requestCalendarPermissionsAsync();
     if (status !== 'granted') return { ok: false, reason: 'permission' };
@@ -57,7 +67,7 @@ export async function addToCalendar(matches: TeamMatch[]): Promise<CalendarResul
 }
 
 // Season matches as CSV (opens in Excel/Numbers/Sheets).
-export async function shareCSV(teamName: string, matches: TeamMatch[]) {
+export async function shareCSV(teamName: string, matches: ExportMatch[]) {
   const rows = [
     ['Datum', 'Hemma', 'Borta', 'Resultat', 'Hall'],
     ...matches.map((m) => [day(m.match_date), m.home_team_name, m.away_team_name, result(m), m.hall_name ?? '']),
@@ -67,7 +77,7 @@ export async function shareCSV(teamName: string, matches: TeamMatch[]) {
 }
 
 // Season matches as a printable PDF.
-export async function sharePDF(teamName: string, matches: TeamMatch[]) {
+export async function sharePDF(teamName: string, matches: ExportMatch[]) {
   const rows = matches
     .map(
       (m) =>

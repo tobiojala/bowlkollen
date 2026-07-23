@@ -22,7 +22,9 @@ import { GlassCircle, GlassPill } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchRow } from '@/components/MatchRow';
 import { RoundGroups } from '@/components/RoundGroups';
+import { ScheduleActions } from '@/components/ScheduleActions';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { SeasonPills } from '@/components/SeasonPills';
 import { StandingsTable } from '@/components/StandingsTable';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
@@ -30,7 +32,6 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 type SheetKind = 'table' | 'upcoming' | 'season' | null;
 
 const CURRENT_SEASON = 2026;
-const PREVIOUS_SEASON = 2025;
 const MATCH_COLS =
   'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, round_id';
 
@@ -42,48 +43,42 @@ function useDivision(divisionId: number) {
         .from('bits_divisions')
         .select('name')
         .eq('bits_division_id', divisionId)
-        .eq('season_id', CURRENT_SEASON)
+        .order('season_id', { ascending: false })
+        .limit(1)
         .maybeSingle();
       return data;
     },
   });
 }
 
-// Division IDs are stable across seasons, so pre-season (no finished matches yet)
-// falls back to last season's same division, flagged historical — mirrors the
-// team page + the web.
-function useDivisionMatches(divisionId: number) {
+// Seasons this division has data in (newest first) — division IDs are stable
+// across seasons, so this drives the season picker.
+function useDivisionSeasons(divisionId: number) {
   return useQuery({
-    queryKey: ['division-matches', divisionId],
+    queryKey: ['division-seasons', divisionId],
+    queryFn: async (): Promise<number[]> => {
+      const { data, error } = await supabase
+        .from('bits_matches')
+        .select('season_id')
+        .eq('bits_division_id', divisionId);
+      if (error) throw error;
+      return [...new Set((data ?? []).map((r) => r.season_id as number))].sort((a, b) => b - a);
+    },
+  });
+}
+
+function useDivisionSeasonMatches(divisionId: number, season: number | null) {
+  return useQuery({
+    queryKey: ['division-season-matches', divisionId, season],
+    enabled: season != null,
     queryFn: async () => {
-      const cur = await supabase
+      const { data, error } = await supabase
         .from('bits_matches')
         .select(MATCH_COLS)
         .eq('bits_division_id', divisionId)
-        .eq('season_id', CURRENT_SEASON);
-      if (cur.error) throw cur.error;
-      const curMatches = cur.data ?? [];
-      // Upcoming fixtures always come from THIS season's schedule.
-      const upcoming = curMatches
-        .filter((m) => !m.is_finished)
-        .sort((a, b) => a.match_date.localeCompare(b.match_date));
-
-      if (curMatches.some((m) => m.is_finished)) {
-        return { matches: curMatches, upcoming, historical: false };
-      }
-
-      // Pre-season: no results yet -> table + results fall back to last season.
-      const prev = await supabase
-        .from('bits_matches')
-        .select(MATCH_COLS)
-        .eq('bits_division_id', divisionId)
-        .eq('season_id', PREVIOUS_SEASON);
-      if (prev.error) throw prev.error;
-      const prevMatches = prev.data ?? [];
-      if (prevMatches.some((m) => m.is_finished)) {
-        return { matches: prevMatches, upcoming, historical: true };
-      }
-      return { matches: curMatches, upcoming, historical: false };
+        .eq('season_id', season!);
+      if (error) throw error;
+      return data ?? [];
     },
   });
 }
@@ -93,14 +88,18 @@ export default function DivisionPage() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const divisionId = Number(id);
-  const { data: division, isLoading } = useDivision(divisionId);
-  const { data: matchData } = useDivisionMatches(divisionId);
-  const matches = matchData?.matches ?? [];
-  const upcoming = matchData?.upcoming ?? [];
-  const historical = matchData?.historical ?? false;
+  const { data: division } = useDivision(divisionId);
+  const { data: seasons = [] } = useDivisionSeasons(divisionId);
+  const [picked, setPicked] = useState<number | null>(null);
+  const season = picked ?? seasons[0] ?? null;
+  const { data: matches = [], isLoading } = useDivisionSeasonMatches(divisionId, season);
 
+  const divisionName = division?.name ?? matches[0]?.division_name ?? 'Division';
   const standings = computeStandings(matches);
 
+  const upcoming = matches
+    .filter((m) => !m.is_finished)
+    .sort((a, b) => a.match_date.localeCompare(b.match_date));
   const past = matches
     .filter((m) => m.is_finished)
     .sort((a, b) => b.match_date.localeCompare(a.match_date));
@@ -135,11 +134,7 @@ export default function DivisionPage() {
   }));
 
   const sheetTitle =
-    sheet === 'table'
-      ? historical ? 'Tabell — förra säsongen' : 'Tabell'
-      : sheet === 'upcoming'
-        ? 'Kommande omgångar'
-        : historical ? 'Förra säsongen' : 'Hela säsongen';
+    sheet === 'table' ? 'Tabell' : sheet === 'upcoming' ? 'Kommande omgångar' : 'Hela säsongen';
 
   return (
     <View style={styles.safe}>
@@ -149,9 +144,16 @@ export default function DivisionPage() {
           ) : (
             <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
               <Text style={styles.kicker}>DIVISION</Text>
-              <Text style={styles.name}>
-                {division?.name ?? matches[0]?.division_name ?? 'Division'}
-              </Text>
+              <Text style={styles.name}>{divisionName}</Text>
+
+              <ScheduleActions
+                followType="division"
+                followId={String(divisionId)}
+                name={divisionName}
+                upcoming={upcoming}
+                matches={matches}
+              />
+              <SeasonPills seasons={seasons} selected={season} onSelect={setPicked} />
 
               {nextRoundMatches.length > 0 && (
                 <View style={styles.section}>
@@ -169,7 +171,7 @@ export default function DivisionPage() {
               {lastRoundMatches.length > 0 && (
                 <View style={styles.section}>
                   <SectionHead
-                    label={historical ? 'SENASTE OMGÅNGEN — FÖRRA SÄSONGEN' : 'SENASTE OMGÅNGEN'}
+                    label="SENASTE OMGÅNGEN"
                     linkLabel={hasMorePast ? 'Hela säsongen' : undefined}
                     onLink={() => setSheet('season')}
                   />
