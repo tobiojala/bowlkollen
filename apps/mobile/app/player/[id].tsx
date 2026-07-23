@@ -13,10 +13,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { PlayerSeason } from '@/components/PlayerSeason';
 import { ProfileDNA } from '@/components/ProfileDNA';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
+import { computePlayerStats } from '@/lib/player-stats';
 import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -64,20 +66,8 @@ export default function PlayerPage() {
   const { data: followers = 0 } = useFollowCount('player', id);
   const { data: percentile } = usePlayerPercentile(id);
 
-  // Form — recent game average vs the season, from each match's series.
-  const sorted = [...history].sort((a, b) => a.match_date.localeCompare(b.match_date));
-  const games = sorted.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
-  const seasonAvg = games.length ? Math.round(games.reduce((a, b) => a + b, 0) / games.length) : null;
-  const recent = games.slice(-9);
-  const recentAvg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null;
-  const formDiff = seasonAvg != null && recentAvg != null ? recentAvg - seasonAvg : null;
-  const matchAvgs = sorted
-    .map((h) => {
-      const g = (h.series ?? []).filter((x) => x > 0);
-      return g.length ? g.reduce((a, b) => a + b, 0) / g.length : 0;
-    })
-    .filter((a) => a > 0);
-  const historyDesc = [...sorted].reverse();
+  const stats = computePlayerStats(history);
+  const { recentAvg, formDiff, matchAvgs, historyDesc } = stats;
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
 
   return (
@@ -113,6 +103,8 @@ export default function PlayerPage() {
             <Stat label="NIVÅ" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
             <Stat label="FÖLJARE" value={String(followers)} />
           </View>
+
+          <PlayerSeason firstName={player.name.split(' ')[0]} stats={stats} />
 
           {matchAvgs.length > 2 && (
             <View style={styles.section}>
