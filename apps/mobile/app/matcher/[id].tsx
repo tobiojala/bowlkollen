@@ -124,7 +124,7 @@ export default function MatchPage() {
               ) : (
                 <Text style={styles.heroDate}>{formatMatchDate(match.match_date)}</Text>
               )}
-              <Text style={styles.pointsLabel}>{finished ? 'MATCHPOÄNG' : 'KOMMANDE'}</Text>
+              <Text style={styles.pointsLabel}>{finished ? 'BANPOÄNG' : 'KOMMANDE'}</Text>
             </View>
             <HeroTeam name={match.away_team_name} won={awayWon} finished={finished} right onPress={() => openTeam(match.away_bits_team_id)} />
           </View>
