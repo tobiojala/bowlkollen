@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
+import { PostMeta } from '@/components/feed/PostMeta';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { formatMatchDate } from '@/lib/format';
 import type { FeedMatch } from '@/lib/feed';
@@ -26,12 +27,14 @@ export const MatchCard = memo(function MatchCard({
 
   return (
     <FeedCard onPress={onPress}>
-      <View style={styles.kicker}>
-        <Text style={styles.division} numberOfLines={1}>{match.division_name}</Text>
-        <Text style={[styles.status, upcoming && styles.statusUpcoming]}>
-          {upcoming ? 'KOMMANDE' : formatMatchDate(match.match_date)}
-        </Text>
-      </View>
+      <PostMeta
+        left={
+          <Text style={[styles.status, upcoming && styles.statusUpcoming]}>
+            {upcoming ? 'KOMMANDE' : 'RESULTAT'}
+          </Text>
+        }
+        division={match.division_name}
+      />
 
       <View style={styles.teams}>
         <TeamLine name={match.home_team_name} score={match.home_result} won={homeWon} finished={finished} />
@@ -73,9 +76,7 @@ function TeamLine({
 }
 
 const styles = StyleSheet.create({
-  kicker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
-  division: { flex: 1, color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
-  status: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.5 },
+  status: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
   statusUpcoming: { color: COLOR.gold },
 
   teams: { gap: SPACE[4] },

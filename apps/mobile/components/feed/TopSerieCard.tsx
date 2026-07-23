@@ -4,8 +4,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
 import { POST_AVATAR, PostHeader } from '@/components/feed/PostHeader';
+import { PostMeta } from '@/components/feed/PostMeta';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
-import { formatMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import type { TopScore } from '@/lib/top-scores';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
@@ -23,22 +23,23 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
 
   return (
     <FeedCard onPress={onPress}>
-      <PostHeader
-        avatar={<IdentityAvatar colors={colors} initials={teamInitials(score.playerName)} size={POST_AVATAR} />}
-        name={score.playerName}
-        subtitle={[score.division, `mot ${score.opponent}`].filter(Boolean).join('  ·  ')}
-        right={
+      <PostMeta
+        left={
           <View style={styles.badge}>
             <Ionicons name="flame" size={13} color={COLOR.gold} />
             <Text style={styles.badgeText}>TOPPSERIE</Text>
           </View>
         }
+        division={score.division}
       />
 
-      <View style={styles.heroRow}>
-        <Text style={[styles.total, gold && styles.totalGold]}>{score.total}</Text>
-        <Text style={styles.heroLabel}>{formatMatchDate(score.date)}</Text>
-      </View>
+      <PostHeader
+        avatar={<IdentityAvatar colors={colors} initials={teamInitials(score.playerName)} size={POST_AVATAR} />}
+        name={score.playerName}
+        subtitle={`mot ${score.opponent}`}
+      />
+
+      <Text style={[styles.total, gold && styles.totalGold]}>{score.total}</Text>
 
       {score.series.length > 0 && (
         <View style={styles.bars}>
@@ -67,10 +68,8 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   badgeText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
 
-  heroRow: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[4] },
   total: { color: COLOR.ink, fontSize: 68, fontFamily: FONT.display, letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
   totalGold: { color: COLOR.gold },
-  heroLabel: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
 
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: SPACE[4] },
   barCol: { flex: 1, alignItems: 'center', gap: 6 },
