@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PressableScale } from '@/components/PressableScale';
+import { FeedCard } from '@/components/feed/FeedCard';
 import { formatMatchDate } from '@/lib/format';
 import type { TopScore } from '@/lib/top-scores';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const ELITE = 900;
 const BAR_H = 40;
@@ -17,7 +17,7 @@ export function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: ()
   const max = Math.max(...score.series, 1);
 
   return (
-    <PressableScale style={styles.card} onPress={onPress} disabled={!onPress} haptic>
+    <FeedCard onPress={onPress}>
       <View style={styles.top}>
         <View style={styles.badge}>
           <Ionicons name="flame" size={13} color={COLOR.gold} />
@@ -55,18 +55,11 @@ export function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: ()
           ))}
         </View>
       )}
-    </PressableScale>
+    </FeedCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLOR.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACE[4],
-    marginBottom: SPACE[3],
-    gap: SPACE[3],
-  },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   badgeText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },

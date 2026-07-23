@@ -5,8 +5,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
-const SIZE = 60;
-const RING = 2.5;
+const SIZE = 76;
+const RING = 3;
 
 export type Story = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap };
 
@@ -43,7 +43,7 @@ export function StoryChips({
                 pointerEvents="none"
               />
               <View style={styles.inner2}>
-                <Ionicons name={s.icon} size={24} color={on ? COLOR.gold : COLOR.ink2} />
+                <Ionicons name={s.icon} size={30} color={on ? COLOR.gold : COLOR.ink2} />
               </View>
             </View>
             <Text style={[styles.label, on && styles.labelOn]} numberOfLines={1}>{s.label}</Text>
@@ -57,7 +57,7 @@ export function StoryChips({
 const styles = StyleSheet.create({
   row: { marginHorizontal: -SPACE[6] },
   inner: { paddingHorizontal: SPACE[6], gap: SPACE[4] },
-  item: { alignItems: 'center', width: SIZE, gap: 6 },
+  item: { alignItems: 'center', width: SIZE, gap: 7 },
   ring: { width: SIZE, height: SIZE, borderRadius: SIZE / 2, padding: RING },
   sheen: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: SIZE / 2 },
   inner2: {

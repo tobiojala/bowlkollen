@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PressableScale } from '@/components/PressableScale';
+import { FeedCard } from '@/components/feed/FeedCard';
 import { formatMatchDate } from '@/lib/format';
 import type { FeedMatch } from '@/lib/feed';
 import { teamColor } from '@/lib/team-identity';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 // A match as a feed card: division + status label, the face-off with team-colour
 // accents (winner emphasised for results), venue. Whole card opens the match.
@@ -24,7 +24,7 @@ export function MatchCard({
   const ac = teamColor(match.away_team_name);
 
   return (
-    <PressableScale style={styles.card} onPress={onPress} haptic>
+    <FeedCard onPress={onPress}>
       <View style={styles.top}>
         <Text style={styles.division} numberOfLines={1}>{match.division_name}</Text>
         <Text style={[styles.status, upcoming && styles.statusUpcoming]}>
@@ -61,18 +61,11 @@ export function MatchCard({
       </View>
 
       {!!match.hall_name && <Text style={styles.meta} numberOfLines={1}>{match.hall_name}</Text>}
-    </PressableScale>
+    </FeedCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLOR.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACE[4],
-    marginBottom: SPACE[3],
-    gap: SPACE[3],
-  },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
   division: { flex: 1, color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   status: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.5 },
