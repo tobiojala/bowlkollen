@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
@@ -9,7 +10,8 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 // Match post: a division kicker, then a clean two-team scoreboard (avatar + name
 // + score per line, winner lit), then a quiet footer. Whole post opens the match.
-export function MatchCard({
+// memo'd so it doesn't re-render while the virtualized list scrolls.
+export const MatchCard = memo(function MatchCard({
   match,
   upcoming,
   onPress,
@@ -41,7 +43,7 @@ export function MatchCard({
       </Text>
     </FeedCard>
   );
-}
+});
 
 function TeamLine({
   name,

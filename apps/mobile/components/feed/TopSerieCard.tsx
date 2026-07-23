@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
@@ -13,7 +14,8 @@ const BAR_H = 48;
 const GAME_GOLD = 250;
 
 // Top-series post: player avatar + name header, the total as the hero, game bars.
-export function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: () => void }) {
+// memo'd so it stays cheap while the virtualized list scrolls.
+export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: () => void }) {
   const gold = score.total >= ELITE;
   const max = Math.max(...score.series, 1);
   const colors = teamColor(score.playerName);
@@ -60,7 +62,7 @@ export function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: ()
       )}
     </FeedCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3] },

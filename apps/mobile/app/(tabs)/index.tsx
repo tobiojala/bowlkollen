@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, type ListRenderItem, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/PressableScale';
@@ -10,7 +9,7 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { StoryChips, type Story } from '@/components/StoryChips';
 import { MatchCard } from '@/components/feed/MatchCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
-import { buildFeed, filterFeed, type FeedCategory, type FeedMatch } from '@/lib/feed';
+import { buildFeed, filterFeed, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
 import { useTopScores } from '@/lib/top-scores';
@@ -51,24 +50,46 @@ export default function Home() {
     [matches, topScores, category],
   );
 
+  const renderItem = useCallback<ListRenderItem<FeedItem>>(
+    ({ item }) =>
+      item.kind === 'match' ? (
+        <MatchCard
+          match={item.match}
+          upcoming={item.upcoming}
+          onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
+        />
+      ) : (
+        <TopSerieCard
+          score={item.score}
+          onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
+        />
+      ),
+    [router],
+  );
+
+  const header = (
+    <View style={styles.headerWrap}>
+      <View style={styles.header}>
+        <Text style={styles.greeting}>{greeting}</Text>
+        <Text style={styles.date}>{dateStr}</Text>
+      </View>
+      <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
+    </View>
+  );
+
   return (
     <View style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-      >
-        <View style={styles.header}>
-          <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.date}>{dateStr}</Text>
-        </View>
-
-        <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
-
-        <View style={styles.feed}>
-          {isLoading ? (
-            <ListSkeleton />
-          ) : feed.length === 0 ? (
+      <FlatList
+        data={feed}
+        keyExtractor={(item) => item.key}
+        renderItem={renderItem}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          isLoading ? (
+            <View style={styles.pad}>
+              <ListSkeleton />
+            </View>
+          ) : (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>Inget att visa än</Text>
               <Text style={styles.emptyBody}>Följ lag och spelare så fylls flödet med deras matcher.</Text>
@@ -76,26 +97,17 @@ export default function Home() {
                 <Text style={styles.emptyBtnText}>Utforska divisioner</Text>
               </PressableScale>
             </View>
-          ) : (
-            feed.map((item, i) => (
-              <Animated.View key={item.key} entering={FadeInDown.duration(300).delay(Math.min(i, 8) * 40)}>
-                {item.kind === 'match' ? (
-                  <MatchCard
-                    match={item.match}
-                    upcoming={item.upcoming}
-                    onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
-                  />
-                ) : (
-                  <TopSerieCard
-                    score={item.score}
-                    onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
-                  />
-                )}
-              </Animated.View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+          )
+        }
+        contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[2] }]}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={4}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        removeClippedSubviews
+      />
     </View>
   );
 }
@@ -103,10 +115,11 @@ export default function Home() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
+  pad: { paddingTop: SPACE[6] },
+  headerWrap: { marginBottom: SPACE[4] },
   header: { paddingTop: SPACE[3], paddingBottom: SPACE[4] },
   greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
   date: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[1], textTransform: 'capitalize' },
-  feed: { marginTop: SPACE[6] },
   empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], paddingTop: SPACE[16], gap: SPACE[3] },
   emptyTitle: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold },
   emptyBody: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center' },
