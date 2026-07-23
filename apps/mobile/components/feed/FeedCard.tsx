@@ -1,12 +1,14 @@
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
-import { COLOR, RADIUS, SPACE } from '@/theme';
+import { COLOR, SPACE } from '@/theme';
 
-// The one card frame every feed item shares — a floating, borderless, rounded
-// surface with a soft shadow (Instagram/Revolut feel) and a generous minimum
-// height so nothing feels cramped. A shop/centre ad drops into the same frame
-// and blends in. Keep all feed cards going through this.
+// Every feed item shares this frame. No card, no border, no shadow — just an
+// airy post separated from the next by a thin hairline (the web feed feel), and
+// tall (~one before the fold, Instagram-style) so the stream breathes. A shop/
+// centre ad fills the same post height and blends in.
+const FOLD_FRACTION = 0.46;
+
 export function FeedCard({
   onPress,
   children,
@@ -16,31 +18,27 @@ export function FeedCard({
   children: React.ReactNode;
   contentStyle?: ViewStyle;
 }) {
+  const { height } = useWindowDimensions();
   return (
-    <PressableScale style={styles.card} onPress={onPress} disabled={!onPress} haptic>
+    <PressableScale
+      style={[styles.post, { minHeight: Math.round(height * FOLD_FRACTION) }]}
+      onPress={onPress}
+      disabled={!onPress}
+      haptic
+    >
       <View style={[styles.content, contentStyle]}>{children}</View>
     </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLOR.surface,
-    borderRadius: RADIUS.xl,
-    marginBottom: SPACE[4],
-    minHeight: 148,
-    overflow: 'hidden',
-    // Floating — no borders, soft depth.
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowRadius: 24,
-    shadowOpacity: 0.4,
-    elevation: 8,
+  post: {
+    justifyContent: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLOR.hairline,
   },
   content: {
-    flex: 1,
-    padding: SPACE[6],
-    justifyContent: 'center',
-    gap: 20,
+    paddingVertical: SPACE[8],
+    gap: 22,
   },
 });
