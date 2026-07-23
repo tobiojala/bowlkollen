@@ -59,7 +59,12 @@ function TeamLine({
   return (
     <View style={styles.line}>
       <IdentityAvatar colors={teamColor(name)} initials={teamInitials(name)} size={40} />
-      <Text style={[styles.team, won ? styles.win : finished ? styles.lose : null]} numberOfLines={1}>
+      <Text
+        style={[styles.team, won ? styles.win : finished ? styles.lose : null]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
         {name}
       </Text>
       {finished && <Text style={[styles.score, won ? styles.sWin : styles.sLose]}>{score}</Text>}

@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
+import { POST_AVATAR, PostHeader } from '@/components/feed/PostHeader';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { formatMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
@@ -22,19 +23,17 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
 
   return (
     <FeedCard onPress={onPress}>
-      <View style={styles.header}>
-        <IdentityAvatar colors={colors} initials={teamInitials(score.playerName)} size={44} />
-        <View style={styles.who}>
-          <Text style={styles.name} numberOfLines={1}>{score.playerName}</Text>
-          <Text style={styles.sub} numberOfLines={1}>
-            {[score.division, `mot ${score.opponent}`].filter(Boolean).join('  ·  ')}
-          </Text>
-        </View>
-        <View style={styles.badge}>
-          <Ionicons name="flame" size={13} color={COLOR.gold} />
-          <Text style={styles.badgeText}>TOPPSERIE</Text>
-        </View>
-      </View>
+      <PostHeader
+        avatar={<IdentityAvatar colors={colors} initials={teamInitials(score.playerName)} size={POST_AVATAR} />}
+        name={score.playerName}
+        subtitle={[score.division, `mot ${score.opponent}`].filter(Boolean).join('  ·  ')}
+        right={
+          <View style={styles.badge}>
+            <Ionicons name="flame" size={13} color={COLOR.gold} />
+            <Text style={styles.badgeText}>TOPPSERIE</Text>
+          </View>
+        }
+      />
 
       <View style={styles.heroRow}>
         <Text style={[styles.total, gold && styles.totalGold]}>{score.total}</Text>
@@ -65,10 +64,6 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
 });
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3] },
-  who: { flex: 1, minWidth: 0, gap: 2 },
-  name: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, letterSpacing: -0.4 },
-  sub: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   badgeText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
 

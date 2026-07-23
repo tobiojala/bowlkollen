@@ -4,6 +4,7 @@ import { memo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
+import { POST_AVATAR, PostHeader } from '@/components/feed/PostHeader';
 import type { Promo } from '@/lib/promos';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -13,16 +14,16 @@ import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 export const PromoCard = memo(function PromoCard({ promo, onPress }: { promo: Promo; onPress?: () => void }) {
   return (
     <FeedCard onPress={onPress}>
-      <View style={styles.header}>
-        <View style={[styles.logo, { backgroundColor: promo.accent }]}>
-          <Ionicons name={promo.sponsorIcon} size={22} color={COLOR.bg} />
-        </View>
-        <View style={styles.who}>
-          <Text style={styles.sponsor} numberOfLines={1}>{promo.sponsor}</Text>
-          <Text style={styles.sponsrad}>Sponsrad</Text>
-        </View>
-        <Ionicons name="ellipsis-horizontal" size={18} color={COLOR.ink3} />
-      </View>
+      <PostHeader
+        avatar={
+          <View style={[styles.logo, { backgroundColor: promo.accent }]}>
+            <Ionicons name={promo.sponsorIcon} size={24} color={COLOR.bg} />
+          </View>
+        }
+        name={promo.sponsor}
+        subtitle="Sponsrad"
+        right={<Ionicons name="ellipsis-horizontal" size={18} color={COLOR.ink3} />}
+      />
 
       <View style={styles.hero}>
         {promo.imageUrl ? (
@@ -53,11 +54,7 @@ export const PromoCard = memo(function PromoCard({ promo, onPress }: { promo: Pr
 });
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3] },
-  logo: { width: 40, height: 40, borderRadius: RADIUS.pill, alignItems: 'center', justifyContent: 'center' },
-  who: { flex: 1, minWidth: 0 },
-  sponsor: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
-  sponsrad: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 1 },
+  logo: { width: POST_AVATAR, height: POST_AVATAR, borderRadius: RADIUS.pill, alignItems: 'center', justifyContent: 'center' },
 
   hero: {
     height: 150,
