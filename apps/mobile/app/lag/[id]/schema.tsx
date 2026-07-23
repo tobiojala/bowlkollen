@@ -40,7 +40,7 @@ export default function TeamSchedulePage() {
     return { upcoming: up, past: pa };
   }, [matches]);
 
-  const openTeam = (tid: number) => tid !== teamId && router.push(`/lag/${tid}`);
+  const openTeam = (tid: number) => router.push(`/lag/${tid}`);
 
   const onCalendar = async () => {
     const res = await addToCalendar(upcoming);
@@ -57,7 +57,12 @@ export default function TeamSchedulePage() {
     <View style={styles.safe}>
       <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
         <Text style={styles.kicker}>SPELSCHEMA</Text>
-        <Text style={styles.name} numberOfLines={2}>{teamName}</Text>
+        <PressableScale onPress={() => router.push(`/lag/${teamId}`)} hitSlop={6}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={2}>{teamName}</Text>
+            <Ionicons name="chevron-forward" size={22} color={COLOR.ink3} />
+          </View>
+        </PressableScale>
 
         <View style={styles.actions}>
           <FollowButton entityType="team" entityId={String(teamId)} />
@@ -130,7 +135,8 @@ const styles = StyleSheet.create({
   chromeLeft: { position: 'absolute', left: 16 },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   kicker: { color: COLOR.gold, fontSize: TYPE.label, letterSpacing: 2, fontFamily: FONT.bold },
-  name: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5, marginTop: SPACE[1] },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2], marginTop: SPACE[1] },
+  name: { flex: 1, color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2], marginTop: SPACE[6] },
   action: {
     flex: 1,
