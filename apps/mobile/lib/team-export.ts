@@ -1,3 +1,4 @@
+import * as Calendar from 'expo-calendar';
 import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -6,8 +7,6 @@ import type { TeamMatch } from '@/lib/team-data';
 
 const safeName = (s: string) => (s || 'lag').replace(/[^\p{L}\p{N}]+/gu, '_').slice(0, 40);
 const day = (d: string) => d.slice(0, 10);
-const icsDay = (d: string) => day(d).replace(/-/g, '');
-const escICS = (s: string) => (s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
 const csvCell = (s: string) => `"${(s ?? '').replace(/"/g, '""')}"`;
 const result = (m: TeamMatch) =>
   m.is_finished && m.home_result != null ? `${m.home_result}–${m.away_result}` : '';
@@ -26,22 +25,35 @@ async function writeAndShare(name: string, content: string, mimeType: string) {
   }
 }
 
-// Upcoming fixtures as all-day calendar events.
-export async function shareICS(teamName: string, matches: TeamMatch[]) {
-  const events = matches.map((m) =>
-    [
-      'BEGIN:VEVENT',
-      `UID:bk-${m.bits_match_id}@bowlkollen`,
-      `DTSTART;VALUE=DATE:${icsDay(m.match_date)}`,
-      `SUMMARY:${escICS(`${m.home_team_name} – ${m.away_team_name}`)}`,
-      m.hall_name ? `LOCATION:${escICS(m.hall_name)}` : '',
-      'END:VEVENT',
-    ]
-      .filter(Boolean)
-      .join('\r\n'),
-  );
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Bowlkollen//SV', ...events, 'END:VCALENDAR'].join('\r\n');
-  await writeAndShare(`${safeName(teamName)}_schema.ics`, ics, 'text/calendar');
+export type CalendarResult =
+  | { ok: true; added: number }
+  | { ok: false; reason: 'permission' | 'error' };
+
+// Add upcoming fixtures straight into the device's default calendar (iCloud /
+// Google / iOS — whatever the phone syncs), all-day events. No file to manage.
+export async function addToCalendar(matches: TeamMatch[]): Promise<CalendarResult> {
+  try {
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    if (status !== 'granted') return { ok: false, reason: 'permission' };
+    const cal = await Calendar.getDefaultCalendarAsync();
+    let added = 0;
+    for (const m of matches) {
+      const start = new Date(`${day(m.match_date)}T00:00:00`);
+      const end = new Date(start.getTime() + 24 * 3600 * 1000);
+      await Calendar.createEventAsync(cal.id, {
+        title: `${m.home_team_name} – ${m.away_team_name}`,
+        startDate: start,
+        endDate: end,
+        allDay: true,
+        location: m.hall_name ?? undefined,
+        notes: 'Bowlkollen',
+      });
+      added++;
+    }
+    return { ok: true, added };
+  } catch {
+    return { ok: false, reason: 'error' };
+  }
 }
 
 // Season matches as CSV (opens in Excel/Numbers/Sheets).

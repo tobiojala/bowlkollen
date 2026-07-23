@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
@@ -11,7 +11,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { ListSkeleton } from '@/components/Skeleton';
 import { useTeam, useTeamSeasonMatches, useTeamSeasons } from '@/lib/team-data';
-import { shareCSV, shareICS, sharePDF } from '@/lib/team-export';
+import { addToCalendar, shareCSV, sharePDF } from '@/lib/team-export';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const seasonLabel = (s: number) => `${s}/${String((s + 1) % 100).padStart(2, '0')}`;
@@ -40,7 +40,18 @@ export default function TeamSchedulePage() {
     return { upcoming: up, past: pa };
   }, [matches]);
 
-  const openTeam = (tid: number) => tid !== teamId && router.push(`/lag/${tid}/schema`);
+  const openTeam = (tid: number) => tid !== teamId && router.push(`/lag/${tid}`);
+
+  const onCalendar = async () => {
+    const res = await addToCalendar(upcoming);
+    if (res.ok) {
+      Alert.alert('Tillagt i kalendern', `${res.added} ${res.added === 1 ? 'match' : 'matcher'} tillagda.`);
+    } else if (res.reason === 'permission') {
+      Alert.alert('Kalender', 'Ge Bowlkollen åtkomst till kalendern i Inställningar för att lägga till matcher.');
+    } else {
+      Alert.alert('Kalender', 'Kunde inte lägga till i kalendern.');
+    }
+  };
 
   return (
     <View style={styles.safe}>
@@ -50,7 +61,7 @@ export default function TeamSchedulePage() {
 
         <View style={styles.actions}>
           <FollowButton entityType="team" entityId={String(teamId)} />
-          <Action icon="calendar-outline" label="Kalender" onPress={() => shareICS(teamName, upcoming)} disabled={upcoming.length === 0} />
+          <Action icon="calendar-outline" label="Kalender" onPress={onCalendar} disabled={upcoming.length === 0} />
           <Action icon="grid-outline" label="Excel" onPress={() => shareCSV(teamName, matches)} disabled={matches.length === 0} />
           <Action icon="document-outline" label="PDF" onPress={() => sharePDF(teamName, matches)} disabled={matches.length === 0} />
         </View>
