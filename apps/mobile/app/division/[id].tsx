@@ -24,6 +24,7 @@ import { MatchRow } from '@/components/MatchRow';
 import { RoundGroups } from '@/components/RoundGroups';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { StandingsTable } from '@/components/StandingsTable';
+import { useTeamPeek } from '@/components/TeamPeekProvider';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
@@ -91,6 +92,7 @@ function useDivisionMatches(divisionId: number) {
 export default function DivisionPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { peek } = useTeamPeek();
   const { id } = useLocalSearchParams<{ id: string }>();
   const divisionId = Number(id);
   const { data: division, isLoading } = useDivision(divisionId);
@@ -118,9 +120,9 @@ export default function DivisionPage() {
     setSheet(null);
     router.push(`/matcher/${mid}`);
   };
-  const openTeam = (tid: number) => {
+  const openTeam = (tid: number, name: string) => {
     setSheet(null);
-    router.push(`/lag/${tid}`);
+    peek(tid, name);
   };
 
   const bg = useSharedValue(0);

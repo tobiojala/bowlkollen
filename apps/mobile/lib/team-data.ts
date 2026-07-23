@@ -30,9 +30,10 @@ export type TeamMatch = MatchRowData & {
   bits_division_id: number | null;
 };
 
-export function useTeamMatches(teamId: number) {
+export function useTeamMatches(teamId: number, enabled = true) {
   return useQuery({
     queryKey: ['team-matches', teamId],
+    enabled: enabled && teamId > 0,
     queryFn: async (): Promise<TeamMatch[]> => {
       const { data, error } = await supabase
         .from('bits_matches')

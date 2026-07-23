@@ -14,7 +14,7 @@ export function RoundGroups({
 }: {
   matches: RoundMatch[];
   onOpenMatch: (id: number) => void;
-  onOpenTeam?: (teamId: number) => void;
+  onOpenTeam?: (teamId: number, teamName: string) => void;
 }) {
   const minDate = new Map<number, string>();
   for (const m of matches) {

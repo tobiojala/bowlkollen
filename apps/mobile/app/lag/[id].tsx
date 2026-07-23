@@ -21,6 +21,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { useTeamPeek } from '@/components/TeamPeekProvider';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { MatchRow } from '@/components/MatchRow';
 import { StandingsLadder } from '@/components/StandingsLadder';
@@ -39,6 +40,7 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 export default function TeamPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { peek } = useTeamPeek();
   const { id } = useLocalSearchParams<{ id: string }>();
   const teamId = Number(id);
 
@@ -62,8 +64,8 @@ export default function TeamPage() {
   const initials = teamInitials(teamName);
   const form = computeForm(matches, teamId);
 
-  const openTeam = (tid: number) => {
-    if (tid !== teamId) router.push(`/lag/${tid}`);
+  const openTeam = (tid: number, name: string) => {
+    if (tid !== teamId) peek(tid, name);
   };
 
   const [tableOpen, setTableOpen] = useState(false);
