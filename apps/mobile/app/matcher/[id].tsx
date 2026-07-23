@@ -1,12 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GlassCircle } from '@/components/GlassButtons';
+import { GlassCircle, GlassPill } from '@/components/GlassButtons';
+import { GlassSheet } from '@/components/GlassSheet';
+import { MatchScorecard } from '@/components/MatchScorecard';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { formatMatchDate } from '@/lib/format';
@@ -95,11 +104,25 @@ export default function MatchPage() {
   const homeWon = finished && (match!.home_result ?? 0) > (match!.away_result ?? 0);
   const awayWon = finished && (match!.away_result ?? 0) > (match!.home_result ?? 0);
   const hasPins = finished && match!.home_score != null && match!.away_score != null;
+  const hasSeries = results.some((r) => (r.series?.length ?? 0) > 0);
 
   const openTeam = (tid: number | null) => tid != null && router.push(`/lag/${tid}`);
 
+  const [cardOpen, setCardOpen] = useState(false);
+  const bg = useSharedValue(0);
+  useEffect(() => {
+    bg.value = cardOpen
+      ? withSpring(1, { stiffness: 240, damping: 30, mass: 0.9 })
+      : withTiming(0, { duration: 220 });
+  }, [cardOpen]);
+  const bgStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - bg.value * 0.06 }],
+    borderRadius: bg.value * 24,
+  }));
+
   return (
     <View style={styles.safe}>
+      <Animated.View style={[styles.pageClip, bgStyle]}>
       {isLoading || !match ? (
         isLoading ? (
           <ListSkeleton />
@@ -164,6 +187,29 @@ export default function MatchPage() {
       <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
         <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
       </View>
+      {finished && hasSeries && (
+        <View style={[styles.chromeRight, { top: insets.top + 6 }]}>
+          <GlassPill icon="stats-chart-outline" label="Scorecard" onPress={() => setCardOpen(true)} />
+        </View>
+      )}
+      </Animated.View>
+
+      {match && (
+        <GlassSheet visible={cardOpen} onClose={() => setCardOpen(false)} title="Scorecard">
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
+            <MatchScorecard
+              homeTeam={match.home_team_name}
+              awayTeam={match.away_team_name}
+              home={home}
+              away={away}
+              homeBanp={match.home_result}
+              awayBanp={match.away_result}
+              homePins={match.home_score}
+              awayPins={match.away_score}
+            />
+          </ScrollView>
+        </GlassSheet>
+      )}
     </View>
   );
 }
@@ -195,7 +241,9 @@ function HeroTeam({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
+  pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
   chromeLeft: { position: 'absolute', left: 16 },
+  chromeRight: { position: 'absolute', right: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
