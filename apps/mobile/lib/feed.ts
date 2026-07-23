@@ -1,3 +1,4 @@
+import type { Promo } from '@/lib/promos';
 import type { TopScore } from '@/lib/top-scores';
 
 // One match from get_user_season_matches (followed scope).
@@ -17,7 +18,8 @@ export type FeedMatch = {
 // become new kinds here — the feed + renderer are built to grow.
 export type FeedItem =
   | { kind: 'match'; key: string; ts: string; upcoming: boolean; match: FeedMatch }
-  | { kind: 'serie'; key: string; ts: string; score: TopScore };
+  | { kind: 'serie'; key: string; ts: string; score: TopScore }
+  | { kind: 'promo'; key: string; ts: string; promo: Promo };
 
 export type FeedCategory = 'Allt' | 'Matcher' | 'Serier';
 
@@ -48,4 +50,20 @@ export function filterFeed(items: FeedItem[], category: FeedCategory): FeedItem[
   if (category === 'Matcher') return items.filter((i) => i.kind === 'match');
   if (category === 'Serier') return items.filter((i) => i.kind === 'serie');
   return items;
+}
+
+// Drop sponsored posts into the stream at intervals — like Instagram, never at
+// the very top, spaced out so they read as part of the feed, not a banner.
+export function injectPromos(items: FeedItem[], promos: Promo[], every = 5): FeedItem[] {
+  if (promos.length === 0 || items.length < 3) return items;
+  const out: FeedItem[] = [];
+  let p = 0;
+  items.forEach((item, i) => {
+    out.push(item);
+    if (i > 0 && (i + 1) % every === 0 && p < promos.length) {
+      out.push({ kind: 'promo', key: `promo-${promos[p].id}`, ts: item.ts, promo: promos[p] });
+      p += 1;
+    }
+  });
+  return out;
 }

@@ -8,9 +8,11 @@ import { PressableScale } from '@/components/PressableScale';
 import { ListSkeleton } from '@/components/Skeleton';
 import { StoryChips, type Story } from '@/components/StoryChips';
 import { MatchCard } from '@/components/feed/MatchCard';
+import { PromoCard } from '@/components/feed/PromoCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
-import { buildFeed, filterFeed, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
+import { buildFeed, filterFeed, injectPromos, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
 import { useNavScroll } from '@/lib/nav-scroll';
+import { SAMPLE_PROMOS } from '@/lib/promos';
 import { supabase } from '@/lib/supabase';
 import { useTopScores } from '@/lib/top-scores';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -45,25 +47,33 @@ export default function Home() {
   const greeting = hour < 10 ? 'God morgon' : hour < 18 ? 'God dag' : 'God kväll';
   const dateStr = new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' });
 
-  const feed = useMemo(
-    () => filterFeed(buildFeed(matches, topScores), category),
-    [matches, topScores, category],
-  );
+  const feed = useMemo(() => {
+    const base = filterFeed(buildFeed(matches, topScores), category);
+    // Sponsored posts only mix into the full stream, not the filtered views.
+    return category === 'Allt' ? injectPromos(base, SAMPLE_PROMOS) : base;
+  }, [matches, topScores, category]);
 
   const renderItem = useCallback<ListRenderItem<FeedItem>>(
-    ({ item }) =>
-      item.kind === 'match' ? (
-        <MatchCard
-          match={item.match}
-          upcoming={item.upcoming}
-          onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
-        />
-      ) : (
-        <TopSerieCard
-          score={item.score}
-          onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
-        />
-      ),
+    ({ item }) => {
+      if (item.kind === 'match') {
+        return (
+          <MatchCard
+            match={item.match}
+            upcoming={item.upcoming}
+            onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
+          />
+        );
+      }
+      if (item.kind === 'serie') {
+        return (
+          <TopSerieCard
+            score={item.score}
+            onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
+          />
+        );
+      }
+      return <PromoCard promo={item.promo} />;
+    },
     [router],
   );
 
