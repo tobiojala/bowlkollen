@@ -1,11 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,12 +20,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { PlayerAchievements } from '@/components/PlayerAchievements';
+import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
+import { PlayerRating } from '@/components/PlayerRating';
 import { PlayerSeason } from '@/components/PlayerSeason';
 import { ProfileDNA } from '@/components/ProfileDNA';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
-import { computePlayerStats } from '@/lib/player-stats';
+import { computePlayerStats, playerAchievements } from '@/lib/player-stats';
 import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -69,9 +79,23 @@ export default function PlayerPage() {
   const stats = computePlayerStats(history);
   const { recentAvg, formDiff, matchAvgs, historyDesc } = stats;
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
+  const achievements = playerAchievements(stats);
+
+  const [sheet, setSheet] = useState<PlayerSheetKind>(null);
+  const bg = useSharedValue(0);
+  useEffect(() => {
+    bg.value = sheet != null
+      ? withSpring(1, { stiffness: 240, damping: 30, mass: 0.9 })
+      : withTiming(0, { duration: 220 });
+  }, [sheet]);
+  const bgStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - bg.value * 0.06 }],
+    borderRadius: bg.value * 24,
+  }));
 
   return (
     <View style={styles.safe}>
+      <Animated.View style={[styles.pageClip, bgStyle]}>
       {isLoading ? (
         <ListSkeleton />
       ) : !player ? (
@@ -92,11 +116,7 @@ export default function PlayerPage() {
             <FollowButton entityType="player" entityId={id} />
           </View>
 
-          {topPct != null && (
-            <View style={styles.pctPill}>
-              <Text style={styles.pctText}>TOPP {topPct}% I LANDET</Text>
-            </View>
-          )}
+          <PlayerRating rating={stats.rating} tier={stats.tier} topPct={topPct} onInfo={() => setSheet('rating')} />
 
           <View style={styles.stats}>
             <Stat label="SNITT" value={player.licence_average ? String(player.licence_average) : '–'} />
@@ -104,11 +124,16 @@ export default function PlayerPage() {
             <Stat label="FÖLJARE" value={String(followers)} />
           </View>
 
+          <PlayerAchievements items={achievements} />
+
           <PlayerSeason firstName={player.name.split(' ')[0]} stats={stats} />
 
           {matchAvgs.length > 2 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>BOWLING-DNA</Text>
+              <PressableScale style={styles.sectionHeaderRow} onPress={() => setSheet('dna')} hitSlop={6}>
+                <Text style={styles.sectionLabel}>BOWLING-DNA</Text>
+                <Text style={styles.infoLink}>Vad är det?</Text>
+              </PressableScale>
               <ProfileDNA
                 matchAvgs={matchAvgs}
                 initials={teamInitials(player.name)}
@@ -163,6 +188,9 @@ export default function PlayerPage() {
       <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
         <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
       </View>
+      </Animated.View>
+
+      <PlayerInfoSheet kind={sheet} stats={stats} recentAvg={recentAvg} onClose={() => setSheet(null)} />
     </View>
   );
 }
@@ -178,6 +206,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
+  pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
   chromeLeft: { position: 'absolute', left: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
@@ -186,20 +215,13 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
-  pctPill: {
-    alignSelf: 'flex-start',
-    marginTop: SPACE[4],
-    backgroundColor: 'rgba(245,194,0,0.10)',
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: SPACE[4],
-    paddingVertical: SPACE[2],
-  },
-  pctText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
   sectionHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: SPACE[2],
   },
+  infoLink: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   formStat: {
     color: COLOR.ink2,
     fontSize: TYPE.caption,
