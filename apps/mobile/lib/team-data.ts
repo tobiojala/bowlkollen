@@ -119,6 +119,42 @@ export function computeForm(matches: TeamMatch[], teamId: number): FormResult[] 
     });
 }
 
+// Distinct seasons this team has data in (newest first) — drives the schedule's
+// season picker so you can look back at past seasons.
+export function useTeamSeasons(teamId: number) {
+  return useQuery({
+    queryKey: ['team-seasons', teamId],
+    queryFn: async (): Promise<number[]> => {
+      const { data, error } = await supabase
+        .from('bits_matches')
+        .select('season_id')
+        .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`);
+      if (error) throw error;
+      const seasons = [...new Set((data ?? []).map((r) => r.season_id as number))];
+      return seasons.sort((a, b) => b - a);
+    },
+  });
+}
+
+// This team's matches for a specific season (any season, for the picker).
+export function useTeamSeasonMatches(teamId: number, season: number | null) {
+  return useQuery({
+    queryKey: ['team-season-matches', teamId, season],
+    enabled: season != null,
+    queryFn: async (): Promise<TeamMatch[]> => {
+      const { data, error } = await supabase
+        .from('bits_matches')
+        .select(
+          'bits_match_id, home_team_name, away_team_name, home_result, away_result, division_name, is_finished, match_date, hall_name, home_bits_team_id, away_bits_team_id, bits_division_id',
+        )
+        .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
+        .eq('season_id', season!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 export function useRoster(teamId: number) {
   return useQuery({
     queryKey: ['team-roster', teamId],

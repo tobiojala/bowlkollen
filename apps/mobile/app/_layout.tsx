@@ -17,7 +17,6 @@ import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { TeamPeekProvider } from '@/components/TeamPeekProvider';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { queryClient } from '@/lib/query';
 import { COLOR } from '@/theme';
@@ -52,14 +51,12 @@ function RootNavigator() {
   }
 
   return (
-    <TeamPeekProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: COLOR.bg },
-        }}
-      />
-    </TeamPeekProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: COLOR.bg },
+      }}
+    />
   );
 }
 

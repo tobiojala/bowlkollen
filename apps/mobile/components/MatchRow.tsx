@@ -36,7 +36,7 @@ export function MatchRow({
   m: MatchRowData;
   showDivision?: boolean;
   onPress?: () => void;
-  onOpenTeam?: (teamId: number, teamName: string) => void;
+  onOpenTeam?: (teamId: number) => void;
 }) {
   const finished = !!m.is_finished && m.home_result != null && m.away_result != null;
   const homeWon = finished && (m.home_result ?? 0) > (m.away_result ?? 0);
@@ -101,7 +101,7 @@ function TeamCell({
 }: {
   name: string;
   teamId?: number | null;
-  onOpenTeam?: (teamId: number, teamName: string) => void;
+  onOpenTeam?: (teamId: number) => void;
   textStyle: (object | null)[];
 }) {
   const label = (
@@ -114,7 +114,7 @@ function TeamCell({
     <Pressable
       style={styles.cell}
       hitSlop={{ top: 10, bottom: 10 }}
-      onPress={() => onOpenTeam(teamId, name)}
+      onPress={() => onOpenTeam(teamId)}
       accessibilityLabel={name}
     >
       {label}
