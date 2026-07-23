@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -7,9 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassCircle } from '@/components/GlassButtons';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 type Match = {
   home_team_name: string;
@@ -41,14 +43,6 @@ function useMatch(matchId: number) {
     },
   });
 }
-
-type ResultRow = {
-  player_name: string;
-  total_result: number;
-  series: number[];
-  is_home_team: boolean;
-  public_id: string | null;
-};
 
 function useMatchResults(matchId: number) {
   return useQuery({
@@ -94,6 +88,8 @@ export default function MatchPage() {
 
   const home = results.filter((r) => r.is_home_team);
   const away = results.filter((r) => !r.is_home_team);
+  const topTotal = results.length ? Math.max(...results.map((r) => r.total_result)) : 0;
+  const topPlayer = results.find((r) => r.total_result === topTotal) ?? null;
 
   const finished = !!match?.is_finished && match.home_result != null && match.away_result != null;
   const homeWon = finished && (match!.home_result ?? 0) > (match!.away_result ?? 0);
@@ -142,8 +138,25 @@ export default function MatchPage() {
             {[formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
           </Text>
 
-          <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} />
-          <TeamResults teamName={match.away_team_name} pins={match.away_score} rows={away} />
+          {topPlayer && topTotal > 0 && (
+            <PressableScale
+              style={styles.best}
+              disabled={!topPlayer.public_id}
+              onPress={() => topPlayer.public_id && router.push(`/player/${topPlayer.public_id}`)}
+            >
+              <Ionicons name="trophy" size={22} color={COLOR.gold} />
+              <View style={styles.bestText}>
+                <Text style={styles.bestLabel}>MATCHENS BÄSTA</Text>
+                <Text style={styles.bestName} numberOfLines={1}>
+                  {topPlayer.player_name} · {topPlayer.is_home_team ? match.home_team_name : match.away_team_name}
+                </Text>
+              </View>
+              <Text style={styles.bestTotal}>{topTotal}</Text>
+            </PressableScale>
+          )}
+
+          <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} topTotal={topTotal} />
+          <TeamResults teamName={match.away_team_name} pins={match.away_score} rows={away} topTotal={topTotal} />
         </ScrollView>
       )}
 
@@ -180,39 +193,6 @@ function HeroTeam({
   );
 }
 
-function TeamResults({ teamName, pins, rows }: { teamName: string; pins: number | null; rows: ResultRow[] }) {
-  const router = useRouter();
-  if (rows.length === 0) return null;
-  return (
-    <View style={styles.section}>
-      <View style={styles.sectionHead}>
-        <Text style={styles.sectionLabel} numberOfLines={1}>{teamName.toUpperCase()}</Text>
-        {pins != null && <Text style={styles.teamPins}>{pins}</Text>}
-      </View>
-      {rows.map((r, i) => (
-        <PressableScale
-          key={i}
-          style={styles.playerRow}
-          disabled={!r.public_id}
-          onPress={() => r.public_id && router.push(`/player/${r.public_id}`)}
-        >
-          <View style={styles.playerTop}>
-            <Text style={styles.playerName} numberOfLines={1}>{r.player_name}</Text>
-            <Text style={styles.total}>{r.total_result}</Text>
-          </View>
-          {r.series?.length > 0 && (
-            <View style={styles.seriesRow}>
-              {r.series.map((g, gi) => (
-                <Text key={gi} style={styles.seriesNum}>{g}</Text>
-              ))}
-            </View>
-          )}
-        </PressableScale>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   chromeLeft: { position: 'absolute', left: 16 },
@@ -239,19 +219,19 @@ const styles = StyleSheet.create({
   pins: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold, textAlign: 'center', marginTop: SPACE[3], fontVariant: ['tabular-nums'] },
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginTop: SPACE[1] },
 
-  section: { marginTop: SPACE[8] },
-  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACE[2] },
-  sectionLabel: { flex: 1, color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
-  teamPins: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.bold, fontVariant: ['tabular-nums'] },
-  playerRow: {
-    paddingVertical: SPACE[3],
-    borderTopWidth: 1,
-    borderTopColor: COLOR.hairline,
-    gap: 4,
+  best: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[3],
+    marginTop: SPACE[6],
+    padding: SPACE[4],
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(245,194,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,194,0,0.24)',
   },
-  playerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
-  playerName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  total: { color: COLOR.ink, fontSize: TYPE.body + 4, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
-  seriesRow: { flexDirection: 'row', gap: SPACE[3] },
-  seriesNum: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular, fontVariant: ['tabular-nums'] },
+  bestText: { flex: 1, minWidth: 0 },
+  bestLabel: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  bestName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold, marginTop: 2 },
+  bestTotal: { color: COLOR.gold, fontSize: TYPE.title + 4, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
 });
