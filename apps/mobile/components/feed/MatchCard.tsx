@@ -1,13 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
+import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { formatMatchDate } from '@/lib/format';
 import type { FeedMatch } from '@/lib/feed';
-import { teamColor } from '@/lib/team-identity';
+import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
-// A match as a feed card: division + status label, the face-off with team-colour
-// accents (winner emphasised for results), venue. Whole card opens the match.
+// Match post: a division kicker, then a clean two-team scoreboard (avatar + name
+// + score per line, winner lit), then a quiet footer. Whole post opens the match.
 export function MatchCard({
   match,
   upcoming,
@@ -20,72 +21,64 @@ export function MatchCard({
   const finished = !!match.is_finished;
   const homeWon = finished && match.home_result > match.away_result;
   const awayWon = finished && match.away_result > match.home_result;
-  const hc = teamColor(match.home_team_name);
-  const ac = teamColor(match.away_team_name);
 
   return (
     <FeedCard onPress={onPress}>
-      <View style={styles.top}>
+      <View style={styles.kicker}>
         <Text style={styles.division} numberOfLines={1}>{match.division_name}</Text>
         <Text style={[styles.status, upcoming && styles.statusUpcoming]}>
           {upcoming ? 'KOMMANDE' : formatMatchDate(match.match_date)}
         </Text>
       </View>
 
-      <View style={styles.faceoff}>
-        <View style={styles.teamL}>
-          <View style={[styles.dot, { backgroundColor: hc.ring }]} />
-          <Text style={[styles.team, homeWon ? styles.win : finished ? styles.lose : null]} numberOfLines={1}>
-            {match.home_team_name}
-          </Text>
-        </View>
-
-        <View style={styles.centre}>
-          {finished ? (
-            <Text style={styles.score}>
-              <Text style={homeWon ? styles.sWin : styles.sLose}>{match.home_result}</Text>
-              <Text style={styles.sSep}> – </Text>
-              <Text style={awayWon ? styles.sWin : styles.sLose}>{match.away_result}</Text>
-            </Text>
-          ) : (
-            <Text style={styles.date}>{formatMatchDate(match.match_date)}</Text>
-          )}
-        </View>
-
-        <View style={styles.teamR}>
-          <Text style={[styles.team, styles.teamRight, awayWon ? styles.win : finished ? styles.lose : null]} numberOfLines={1}>
-            {match.away_team_name}
-          </Text>
-          <View style={[styles.dot, { backgroundColor: ac.ring }]} />
-        </View>
+      <View style={styles.teams}>
+        <TeamLine name={match.home_team_name} score={match.home_result} won={homeWon} finished={finished} />
+        <TeamLine name={match.away_team_name} score={match.away_result} won={awayWon} finished={finished} />
       </View>
 
-      {!!match.hall_name && <Text style={styles.meta} numberOfLines={1}>{match.hall_name}</Text>}
+      <Text style={styles.footer} numberOfLines={1}>
+        {[finished ? 'Banpoäng' : formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
+      </Text>
     </FeedCard>
   );
 }
 
+function TeamLine({
+  name,
+  score,
+  won,
+  finished,
+}: {
+  name: string;
+  score: number;
+  won: boolean;
+  finished: boolean;
+}) {
+  return (
+    <View style={styles.line}>
+      <IdentityAvatar colors={teamColor(name)} initials={teamInitials(name)} size={40} />
+      <Text style={[styles.team, won ? styles.win : finished ? styles.lose : null]} numberOfLines={1}>
+        {name}
+      </Text>
+      {finished && <Text style={[styles.score, won ? styles.sWin : styles.sLose]}>{score}</Text>}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
+  kicker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] },
   division: { flex: 1, color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   status: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.5 },
   statusUpcoming: { color: COLOR.gold },
 
-  faceoff: { flexDirection: 'row', alignItems: 'center' },
-  teamL: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
-  teamR: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: SPACE[2] },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  teamRight: { textAlign: 'right' },
+  teams: { gap: SPACE[4] },
+  line: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3] },
+  team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.title, fontFamily: FONT.semibold, letterSpacing: -0.3 },
   win: { color: COLOR.ink, fontFamily: FONT.bold },
   lose: { color: COLOR.ink3 },
-
-  centre: { paddingHorizontal: SPACE[3], alignItems: 'center' },
-  score: { fontSize: TYPE.title + 4, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  score: { fontSize: TYPE.hero - 8, fontFamily: FONT.display, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
   sWin: { color: COLOR.ink },
   sLose: { color: COLOR.ink3 },
-  sSep: { color: COLOR.ink4 },
-  date: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
 
-  meta: { color: COLOR.ink3, fontSize: TYPE.caption },
+  footer: { color: COLOR.ink3, fontSize: TYPE.caption },
 });
