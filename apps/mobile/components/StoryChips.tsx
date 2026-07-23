@@ -55,8 +55,8 @@ export function StoryChips({
 }
 
 const styles = StyleSheet.create({
-  row: { marginHorizontal: -SPACE[6] },
-  inner: { paddingHorizontal: SPACE[6], gap: SPACE[4] },
+  row: {},
+  inner: { paddingHorizontal: SPACE[4], gap: SPACE[4] },
   item: { alignItems: 'center', width: SIZE, gap: 7 },
   ring: { width: SIZE, height: SIZE, borderRadius: SIZE / 2, padding: RING },
   sheen: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: SIZE / 2 },

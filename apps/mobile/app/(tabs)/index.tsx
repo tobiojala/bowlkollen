@@ -124,10 +124,10 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
-  list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
-  pad: { paddingTop: SPACE[6] },
-  headerWrap: { marginBottom: SPACE[4] },
-  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4] },
+  list: { paddingBottom: 120 },
+  pad: { paddingTop: SPACE[6], paddingHorizontal: SPACE[4] },
+  headerWrap: { marginBottom: SPACE[2] },
+  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4], paddingHorizontal: SPACE[4] },
   greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
   date: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[1], textTransform: 'capitalize' },
   empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], paddingTop: SPACE[16], gap: SPACE[3] },
