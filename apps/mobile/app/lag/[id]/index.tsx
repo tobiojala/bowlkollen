@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
+import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
@@ -34,6 +35,8 @@ import {
 } from '@/lib/team-data';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+
+const MATCH_PREVIEW = 3; // keep the profile short — the rest lives in the schedule
 
 export default function TeamPage() {
   const router = useRouter();
@@ -153,8 +156,12 @@ export default function TeamPage() {
           )}
 
           {upcoming.length > 0 && (
-            <Section label="KOMMANDE">
-              {upcoming.map((m) => (
+            <Section
+              label="KOMMANDE"
+              linkLabel={upcoming.length > MATCH_PREVIEW ? 'Hela schemat' : undefined}
+              onLink={() => router.push(`/lag/${teamId}/schema`)}
+            >
+              {upcoming.slice(0, MATCH_PREVIEW).map((m) => (
                 <MatchRow
                   key={m.bits_match_id}
                   m={m}
@@ -167,8 +174,12 @@ export default function TeamPage() {
           )}
 
           {results.length > 0 && (
-            <Section label="RESULTAT">
-              {results.map((m) => (
+            <Section
+              label="RESULTAT"
+              linkLabel={results.length > MATCH_PREVIEW ? 'Alla resultat' : undefined}
+              onLink={() => router.push(`/lag/${teamId}/schema`)}
+            >
+              {results.slice(0, MATCH_PREVIEW).map((m) => (
                 <MatchRow
                   key={m.bits_match_id}
                   m={m}
@@ -231,10 +242,27 @@ export default function TeamPage() {
   );
 }
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({
+  label,
+  linkLabel,
+  onLink,
+  children,
+}: {
+  label: string;
+  linkLabel?: string;
+  onLink?: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionLabel}>{label}</Text>
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionLabel}>{label}</Text>
+        {linkLabel && onLink && (
+          <PressableScale onPress={onLink} hitSlop={8}>
+            <Text style={styles.sectionLink}>{linkLabel}</Text>
+          </PressableScale>
+        )}
+      </View>
       {children}
     </View>
   );
@@ -271,13 +299,19 @@ const styles = StyleSheet.create({
   formDot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   formDotText: { fontSize: 10, fontFamily: FONT.bold },
   section: { marginTop: SPACE[8] },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: SPACE[2],
+  },
   sectionLabel: {
     color: COLOR.ink3,
     fontSize: TYPE.label,
     fontFamily: FONT.bold,
     letterSpacing: 1.5,
-    marginBottom: SPACE[2],
   },
+  sectionLink: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   roster: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3] },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
 });
