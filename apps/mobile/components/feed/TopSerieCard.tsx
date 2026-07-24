@@ -18,9 +18,26 @@ const ELITE = 900;
 
 // Top-series post: player avatar + name header, the total as the hero, an
 // adaptive game graph, and a quiet timestamp. memo'd for the virtualized list.
-export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { score: TopScore; onPress?: () => void }) {
+export const TopSerieCard = memo(function TopSerieCard({
+  score,
+  onPress,
+  liked,
+  saved,
+  likeCount,
+  onLike,
+  onSave,
+}: {
+  score: TopScore;
+  onPress?: () => void;
+  liked: boolean;
+  saved: boolean;
+  likeCount: number;
+  onLike: (key: string, liked: boolean) => void;
+  onSave: (key: string, saved: boolean) => void;
+}) {
   const gold = score.total >= ELITE;
   const colors = teamColor(score.playerName);
+  const postKey = `s${score.matchId}-${score.playerName}`;
 
   return (
     <FeedCard onPress={onPress}>
@@ -47,7 +64,15 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
       <View style={styles.bottom}>
         <SerieBars series={score.series} />
         <Text style={styles.date}>{formatMatchDate(score.date)}</Text>
-        <PostActions postKey={`s${score.matchId}-${score.playerName}`} shareMessage={`${score.playerName} · ${score.total} · Bowlkollen`} />
+        <PostActions
+          postKey={postKey}
+          liked={liked}
+          saved={saved}
+          likeCount={likeCount}
+          onLike={onLike}
+          onSave={onSave}
+          shareMessage={`${score.playerName} · ${score.total} · Bowlkollen`}
+        />
       </View>
     </FeedCard>
   );

@@ -17,10 +17,20 @@ export const MatchCard = memo(function MatchCard({
   match,
   upcoming,
   onPress,
+  liked,
+  saved,
+  likeCount,
+  onLike,
+  onSave,
 }: {
   match: FeedMatch;
   upcoming: boolean;
   onPress: () => void;
+  liked: boolean;
+  saved: boolean;
+  likeCount: number;
+  onLike: (key: string, liked: boolean) => void;
+  onSave: (key: string, saved: boolean) => void;
 }) {
   const finished = !!match.is_finished;
   const homeWon = finished && match.home_result > match.away_result;
@@ -48,6 +58,11 @@ export const MatchCard = memo(function MatchCard({
         </Text>
         <PostActions
           postKey={`m${match.bits_match_id}`}
+          liked={liked}
+          saved={saved}
+          likeCount={likeCount}
+          onLike={onLike}
+          onSave={onSave}
           shareMessage={`${match.home_team_name} – ${match.away_team_name} · Bowlkollen`}
         />
       </View>

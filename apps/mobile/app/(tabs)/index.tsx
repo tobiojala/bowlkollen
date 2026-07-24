@@ -11,6 +11,7 @@ import { MatchCard } from '@/components/feed/MatchCard';
 import { PromoCard } from '@/components/feed/PromoCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
 import { buildFeed, filterFeed, injectPromos, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
+import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { SAMPLE_PROMOS } from '@/lib/promos';
 import { supabase } from '@/lib/supabase';
@@ -53,28 +54,41 @@ export default function Home() {
     return category === 'Allt' ? injectPromos(base, SAMPLE_PROMOS) : base;
   }, [matches, topScores, category]);
 
+  // Likes/saves for every likeable post in the feed, in one batched query.
+  const reactionKeys = useMemo(() => feed.filter((i) => i.kind !== 'promo').map((i) => i.key), [feed]);
+  const { data: reactions } = useFeedReactions(reactionKeys);
+  const { toggleLike, toggleSave } = useReactionActions();
+
   const renderItem = useCallback<ListRenderItem<FeedItem>>(
     ({ item }) => {
+      if (item.kind === 'promo') return <PromoCard promo={item.promo} />;
+      const r = reactions?.get(item.key);
+      const common = {
+        liked: r?.liked ?? false,
+        saved: r?.saved ?? false,
+        likeCount: r?.likes ?? 0,
+        onLike: toggleLike,
+        onSave: toggleSave,
+      };
       if (item.kind === 'match') {
         return (
           <MatchCard
             match={item.match}
             upcoming={item.upcoming}
             onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
+            {...common}
           />
         );
       }
-      if (item.kind === 'serie') {
-        return (
-          <TopSerieCard
-            score={item.score}
-            onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
-          />
-        );
-      }
-      return <PromoCard promo={item.promo} />;
+      return (
+        <TopSerieCard
+          score={item.score}
+          onPress={() => item.score.publicId && router.push(`/player/${item.score.publicId}`)}
+          {...common}
+        />
+      );
     },
-    [router],
+    [router, reactions, toggleLike, toggleSave],
   );
 
   const header = (
@@ -91,6 +105,7 @@ export default function Home() {
     <View style={styles.safe}>
       <FlatList
         data={feed}
+        extraData={reactions}
         keyExtractor={(item) => item.key}
         renderItem={renderItem}
         ListHeaderComponent={header}
