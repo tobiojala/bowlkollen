@@ -288,19 +288,48 @@ export function useDetachBall() {
   });
 }
 
-// Well-known pattern names for quick selection; free entry covers the rest.
-export const OIL_PATTERNS = [
-  'Husgärd',
-  'Kegel Main Street',
-  'Kegel Navigation',
-  'USBC Red',
-  'USBC White',
-  'USBC Blue',
-  'PBA Cheetah',
-  'PBA Chameleon',
-  'PBA Scorpion',
-  'PBA Shark',
-];
+// The official SvBF oil profiles (shared oil_profiles table, seeded from swebowl.se).
+// Category order + Swedish labels, everyday league profiles first.
+export type OilProfile = {
+  name: string;
+  lengthFt: number | null;
+  ratio: number | null;
+  category: string | null;
+  description: string | null;
+};
+
+export const OIL_CATEGORY_ORDER = ['elite', 'elite_damer', 'bredare', 'sammandrag', 'kval', 'sm'];
+export const OIL_CATEGORY_LABEL: Record<string, string> = {
+  elite: 'ELITSERIEN / ALLSVENSKAN',
+  elite_damer: 'ELITSERIEN DAMER',
+  bredare: 'DIVISION 1–3 / ALLSVENSKAN DAMER',
+  sammandrag: 'SAMMANDRAG',
+  kval: 'KVAL',
+  sm: 'SM-SLUTSPEL',
+  other: 'ÖVRIGA',
+};
+
+// The Swedish-league oil profiles, ready to pick from. Public-read table, so no auth
+// needed; returns [] before it's seeded (the sheet then falls back to Husgärd + free entry).
+export function useOilProfiles() {
+  return useQuery({
+    queryKey: ['oil-profiles'],
+    staleTime: 60 * 60_000,
+    queryFn: async (): Promise<OilProfile[]> => {
+      const { data } = await db
+        .from('oil_profiles')
+        .select('name, length_ft, ratio, category, description')
+        .order('length_ft', { ascending: true });
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        name: r.name as string,
+        lengthFt: (r.length_ft as number | null) ?? null,
+        ratio: (r.ratio as number | null) ?? null,
+        category: (r.category as string | null) ?? null,
+        description: (r.description as string | null) ?? null,
+      }));
+    },
+  });
+}
 
 // The oil pattern the player logged for this match, if any.
 export function useMatchPattern(matchId: number | null | undefined) {
