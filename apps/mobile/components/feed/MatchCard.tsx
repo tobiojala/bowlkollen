@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
+import { PostActions } from '@/components/feed/PostActions';
 import { PostMeta } from '@/components/feed/PostMeta';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { formatMatchDate } from '@/lib/format';
@@ -41,9 +42,15 @@ export const MatchCard = memo(function MatchCard({
         <TeamLine name={match.away_team_name} score={match.away_result} won={awayWon} finished={finished} />
       </View>
 
-      <Text style={styles.footer} numberOfLines={1}>
-        {[finished ? 'Banpoäng' : formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
-      </Text>
+      <View style={styles.bottom}>
+        <Text style={styles.footer} numberOfLines={1}>
+          {[finished ? 'Banpoäng' : formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
+        </Text>
+        <PostActions
+          postKey={`m${match.bits_match_id}`}
+          shareMessage={`${match.home_team_name} – ${match.away_team_name} · Bowlkollen`}
+        />
+      </View>
     </FeedCard>
   );
 });
@@ -88,5 +95,6 @@ const styles = StyleSheet.create({
   sWin: { color: COLOR.ink },
   sLose: { color: COLOR.ink3 },
 
+  bottom: { gap: SPACE[3] },
   footer: { color: COLOR.ink3, fontSize: TYPE.caption },
 });

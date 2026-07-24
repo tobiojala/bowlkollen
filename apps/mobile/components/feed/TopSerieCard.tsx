@@ -4,8 +4,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FeedCard } from '@/components/feed/FeedCard';
 import { POST_AVATAR, PostHeader } from '@/components/feed/PostHeader';
+import { PostActions } from '@/components/feed/PostActions';
 import { PostMeta } from '@/components/feed/PostMeta';
 import { SerieBars } from '@/components/feed/SerieBars';
+import { FollowButton } from '@/components/FollowButton';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { formatMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
@@ -36,6 +38,7 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
           avatar={<IdentityAvatar colors={colors} initials={teamInitials(score.playerName)} size={POST_AVATAR} />}
           name={score.playerName}
           subtitle={`mot ${score.opponent}`}
+          right={score.publicId ? <FollowButton entityType="player" entityId={score.publicId} /> : undefined}
         />
       </View>
 
@@ -44,6 +47,7 @@ export const TopSerieCard = memo(function TopSerieCard({ score, onPress }: { sco
       <View style={styles.bottom}>
         <SerieBars series={score.series} />
         <Text style={styles.date}>{formatMatchDate(score.date)}</Text>
+        <PostActions postKey={`s${score.matchId}-${score.playerName}`} shareMessage={`${score.playerName} · ${score.total} · Bowlkollen`} />
       </View>
     </FeedCard>
   );
