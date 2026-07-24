@@ -26,6 +26,7 @@ import { MatchRow } from '@/components/MatchRow';
 import { PlayerRosterCard } from '@/components/PlayerRosterCard';
 import { StandingsLadder } from '@/components/StandingsLadder';
 import { StandingsTable } from '@/components/StandingsTable';
+import { useAuth } from '@/lib/auth';
 import { useFollowCount } from '@/lib/follows';
 import { useMyTeamRole } from '@/lib/team-admin';
 import {
@@ -51,6 +52,7 @@ export default function TeamPage() {
   const { data: roster = [] } = useRoster(teamId);
   const { data: followers = 0 } = useFollowCount('team', String(teamId));
   const { data: myRole } = useMyTeamRole(teamId);
+  const { session } = useAuth();
   const divisionId = matches.find((m) => m.bits_division_id != null)?.bits_division_id ?? null;
   const { data: standing } = useTeamStanding(divisionId, teamId);
 
@@ -114,7 +116,7 @@ export default function TeamPage() {
             <Text style={styles.followers}>{followers} följare</Text>
           </View>
 
-          {myRole && (
+          {myRole ? (
             <PressableScale style={styles.manage} onPress={() => router.push(`/lag/${teamId}/laget`)}>
               <Ionicons name="clipboard-outline" size={22} color={COLOR.gold} />
               <View style={styles.manageText}>
@@ -125,7 +127,16 @@ export default function TeamPage() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
             </PressableScale>
-          )}
+          ) : session ? (
+            <PressableScale style={styles.manage} onPress={() => router.push(`/lag/${teamId}/ga-med`)}>
+              <Ionicons name="person-add-outline" size={22} color={COLOR.gold} />
+              <View style={styles.manageText}>
+                <Text style={styles.manageTitle}>Spelar du i laget?</Text>
+                <Text style={styles.manageBody}>Gå med för närvaro och lagverktyg.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
+          ) : null}
 
           {(standing?.rank != null || form.length > 0) && (
             <View style={styles.statRow}>

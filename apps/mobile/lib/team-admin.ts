@@ -7,8 +7,30 @@ import { supabase } from '@/lib/supabase';
 // team_match_availability + its RPCs aren't in the generated types.
 const db = supabase as unknown as SupabaseClient;
 
-export type TeamRole = 'captain' | 'player';
+export type TeamRole = 'captain' | 'player' | 'lagledare' | 'styrelse' | 'reserv';
 export type AvailabilityResponse = 'yes' | 'maybe' | 'no';
+
+// Join a team as a verified member (role 'player'). License that played for the team
+// or is licensed with its club auto-verifies an adult; juniors/non-matches → pending.
+export function useJoinTeam(teamId: number) {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (licNbr: string): Promise<'verified' | 'pending'> => {
+      const { data, error } = await db.rpc('submit_team_claim', {
+        p_bits_team_id: teamId,
+        p_lic_nbr: licNbr.trim(),
+      });
+      if (error) throw error;
+      return ((data as { status?: 'verified' | 'pending' } | null)?.status ?? 'pending');
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-team-role', uid, teamId] });
+      qc.invalidateQueries({ queryKey: ['my-teams', uid] });
+    },
+  });
+}
 
 // The caller's role on a team (verified claim), or null if not a member.
 export function useMyTeamRole(teamId: number) {
