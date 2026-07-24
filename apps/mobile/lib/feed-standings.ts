@@ -17,14 +17,13 @@ export type FeedStanding = {
   divisionId: number;
   division: string;
   historical: boolean;
-  badge: string; // SERIELEDARE / KLÄTTRAR / SEGERSVIT / …
-  headline: string;
-  subtext: string;
+  badge: string; // SERIELEDARE / KLÄTTRAR / SEGERSVIT / … — the event category
+  headline: string; // the achievement, no team name / no number the chip or ladder already show
   teamId: number;
   teamName: string;
-  delta: number; // spots climbed since the previous round (>0 = up)
+  delta: number; // spots climbed since the previous round (>0 = up) — shown by the chip
   streak: number; // trailing wins
-  ladder: LadderRow[]; // the subject + a neighbour each side
+  ladder: LadderRow[]; // the subject + a neighbour each side (rank + points live here)
 };
 
 const ordinal = (n: number) => (n <= 2 ? `${n}:a` : `${n}:e`);
@@ -88,33 +87,27 @@ function divisionStory(matches: MatchRow[], divisionId: number, division: string
   if (!best) return null;
   const b: Cand = best;
   const row = table[b.rank - 1];
-  const plats = b.delta === 1 ? 'plats' : 'platser';
 
+  // Each fact once: team name is the header, the climb is the chip, rank + points
+  // are the ladder — so the headline states only the achievement, plainly.
   let badge: string;
   let headline: string;
   if (historical) {
     badge = 'FÖRRA SÄSONGEN';
-    headline = `${row.teamName} slutade ${ordinal(b.rank)}`;
+    headline = b.rank === 1 ? 'Vann serien' : `Slutade ${ordinal(b.rank)}`;
   } else if (b.newLeader) {
     badge = 'SERIELEDARE';
-    headline = `${row.teamName} tar serieledningen`;
-  } else if (b.delta > 0 && b.streak >= 2) {
-    badge = 'SEGERSVIT';
-    headline = `${b.streak} raka — ${row.teamName} klättrar ${b.delta} ${plats}`;
-  } else if (b.delta > 0) {
-    badge = 'KLÄTTRAR';
-    headline = `${row.teamName} klättrar ${b.delta} ${plats} till ${ordinal(b.rank)}`;
+    headline = 'Tar serieledningen';
   } else if (b.streak >= 2) {
     badge = 'SEGERSVIT';
-    headline = `${row.teamName} — ${b.streak} raka segrar`;
+    headline = `${b.streak} raka segrar`;
+  } else if (b.delta > 0) {
+    badge = 'KLÄTTRAR';
+    headline = 'Klättrar i tabellen';
   } else {
     badge = 'I TOPPEN';
-    headline = `${row.teamName} leder serien`;
+    headline = 'Leder serien';
   }
-
-  const subtext = historical
-    ? `Slutade ${ordinal(b.rank)} av ${table.length}`
-    : `Nu ${ordinal(b.rank)} · ${row.points} p`;
 
   const ladder: LadderRow[] = standingsNeighbors(table, b.id, 1).map((s) => ({
     rank: rankOf(table, s.teamId)!,
@@ -124,7 +117,7 @@ function divisionStory(matches: MatchRow[], divisionId: number, division: string
     subject: s.teamId === b.id,
   }));
 
-  return { divisionId, division, historical, badge, headline, subtext, teamId: b.id, teamName: row.teamName, delta: b.delta, streak: b.streak, ladder };
+  return { divisionId, division, historical, badge, headline, teamId: b.id, teamName: row.teamName, delta: b.delta, streak: b.streak, ladder };
 }
 
 async function seasonMatches(divisionId: number, season: number): Promise<MatchRow[]> {

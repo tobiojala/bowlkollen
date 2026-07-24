@@ -23,12 +23,9 @@ export const StandingsCard = memo(function StandingsCard({
   onOpen: () => void;
   onOpenTeam: (teamId: number) => void;
 }) {
-  const chip =
-    standing.delta > 0
-      ? { icon: 'arrow-up' as const, text: `+${standing.delta}`, color: COLOR.green }
-      : standing.streak >= 2
-        ? { icon: 'flame' as const, text: `${standing.streak}`, color: COLOR.gold }
-        : null;
+  // Climb → chip (the headline never restates the number). Streak lives in the
+  // headline, so no streak chip — each fact appears once.
+  const chip = standing.delta > 0 ? { text: `+${standing.delta}`, color: COLOR.green } : null;
 
   return (
     <FeedCard onPress={onOpen}>
@@ -37,11 +34,10 @@ export const StandingsCard = memo(function StandingsCard({
         <PostHeader
           avatar={<IdentityAvatar colors={teamColor(standing.teamName)} initials={teamInitials(standing.teamName)} size={POST_AVATAR} />}
           name={standing.teamName}
-          subtitle={standing.subtext}
           right={
             chip ? (
               <View style={[styles.chip, { borderColor: chip.color }]}>
-                <Ionicons name={chip.icon} size={13} color={chip.color} />
+                <Ionicons name="arrow-up" size={13} color={chip.color} />
                 <Text style={[styles.chipText, { color: chip.color }]}>{chip.text}</Text>
               </View>
             ) : undefined
