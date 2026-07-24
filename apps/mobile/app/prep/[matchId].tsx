@@ -4,15 +4,20 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BallOrb } from '@/components/BallOrb';
 import { GlassCircle } from '@/components/GlassButtons';
+import { MatchBallPicker } from '@/components/MatchBallPicker';
 import { PressableScale } from '@/components/PressableScale';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import {
   useDeleteNote,
+  useHallBalls,
   useHallNotes,
+  useMatchBalls,
   useMatchNotes,
   usePrepMatch,
   useSaveNote,
+  type MatchBall,
   type Note,
 } from '@/lib/diary';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
@@ -27,10 +32,13 @@ export default function PrepPage() {
   const { data: match } = usePrepMatch(matchId);
   const { data: matchNotes = [] } = useMatchNotes(matchId);
   const { data: hallNotes = [] } = useHallNotes(match?.hall);
+  const { data: matchBalls = [] } = useMatchBalls(matchId);
+  const { data: recallBalls = [] } = useHallBalls(match?.hall, matchId);
   const save = useSaveNote();
   const del = useDeleteNote();
 
   const [draft, setDraft] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Recall = notes from earlier visits to this center, not this match.
   const recall = hallNotes.filter((n) => n.matchId !== matchId);
@@ -73,17 +81,45 @@ export default function PrepPage() {
         )}
 
         {/* Recall — the "served up" memory from earlier visits to this center */}
-        {recall.length > 0 && (
+        {(recall.length > 0 || recallBalls.length > 0) && (
           <View style={styles.section}>
             <View style={styles.recallHead}>
               <Ionicons name="bookmark" size={16} color={COLOR.gold} />
               <Text style={styles.recallLabel}>SENAST PÅ {match?.hall?.toUpperCase()}</Text>
             </View>
+            {recallBalls.length > 0 && (
+              <View style={styles.recallBalls}>
+                <Text style={styles.subLabel}>KLOT DU SPELAT HÄR</Text>
+                <View style={styles.orbRow}>
+                  {recallBalls.map((b) => (
+                    <BallStack key={b.playerBallId} ball={b} />
+                  ))}
+                </View>
+              </View>
+            )}
             {recall.map((n) => (
               <NoteCard key={n.id} note={n} onDelete={() => del.mutate(n.id)} muted />
             ))}
           </View>
         )}
+
+        {/* What I threw this match */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>KLOT DENNA MATCH</Text>
+          <View style={styles.orbRow}>
+            {matchBalls.map((b) => (
+              <PressableScale key={b.rowId} onPress={() => setPickerOpen(true)}>
+                <BallStack ball={b} />
+              </PressableScale>
+            ))}
+            <PressableScale style={styles.orbCol} onPress={() => setPickerOpen(true)}>
+              <View style={styles.addTile}>
+                <Ionicons name="add" size={26} color={COLOR.ink3} />
+              </View>
+              <Text style={styles.orbName}>{matchBalls.length > 0 ? 'Ändra' : 'Lägg till'}</Text>
+            </PressableScale>
+          </View>
+        </View>
 
         {/* Write a note for this match */}
         <View style={styles.section}>
@@ -122,6 +158,22 @@ export default function PrepPage() {
       <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
         <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
       </View>
+
+      <MatchBallPicker
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        matchId={matchId}
+        hall={match?.hall ?? null}
+      />
+    </View>
+  );
+}
+
+function BallStack({ ball }: { ball: MatchBall }) {
+  return (
+    <View style={styles.orbCol}>
+      <BallOrb label={`${ball.brand ?? ''} ${ball.name}`} imageUrl={ball.imageUrl} size={56} />
+      <Text style={styles.orbName} numberOfLines={1}>{ball.name}</Text>
     </View>
   );
 }
@@ -157,6 +209,23 @@ const styles = StyleSheet.create({
   sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginBottom: SPACE[3] },
   recallHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACE[3] },
   recallLabel: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.2, flexShrink: 1 },
+  recallBalls: { marginBottom: SPACE[4] },
+  subLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginBottom: SPACE[3] },
+
+  orbRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[4] },
+  orbCol: { alignItems: 'center', width: 64, gap: 6 },
+  orbName: { color: COLOR.ink, fontSize: TYPE.label, fontFamily: FONT.semibold, textAlign: 'center', maxWidth: 62 },
+  addTile: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: COLOR.hairline,
+    backgroundColor: COLOR.surface,
+  },
 
   input: {
     backgroundColor: COLOR.surface2,

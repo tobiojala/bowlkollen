@@ -191,6 +191,103 @@ export function useSaveNote() {
   });
 }
 
+// A ball as it appears in a match's "what I threw" list — enough to render the orb.
+export type MatchBall = {
+  rowId: string;          // match_balls row id (for detach)
+  playerBallId: string;   // the bag entry
+  brand: string | null;
+  name: string;
+  imageUrl: string | null;
+  weight: number | null;
+};
+
+const BALL_JOIN =
+  'id, player_ball_id, player_ball:player_ball_id(custom_name, brand, weight, ball:ball_id(brand, name, image_url))';
+
+const mapMatchBall = (row: Record<string, unknown>): MatchBall => {
+  const pb = (Array.isArray(row.player_ball) ? row.player_ball[0] : row.player_ball) as
+    | Record<string, unknown>
+    | null;
+  const cat = pb && (Array.isArray(pb.ball) ? pb.ball[0] : pb.ball) as Record<string, unknown> | null;
+  return {
+    rowId: row.id as string,
+    playerBallId: row.player_ball_id as string,
+    brand: (cat?.brand as string | null) ?? (pb?.brand as string | null) ?? null,
+    name: (cat?.name as string | null) ?? (pb?.custom_name as string | null) ?? 'Klot',
+    imageUrl: (cat?.image_url as string | null) ?? null,
+    weight: (pb?.weight as number | null) ?? null,
+  };
+};
+
+// Balls attached to this specific match.
+export function useMatchBalls(matchId: number | null | undefined) {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  return useQuery({
+    queryKey: ['match-balls', uid, matchId],
+    enabled: !!uid && matchId != null,
+    queryFn: async (): Promise<MatchBall[]> => {
+      const { data } = await db
+        .from('match_balls')
+        .select(BALL_JOIN)
+        .eq('user_id', uid!)
+        .eq('bits_match_id', matchId!)
+        .order('created_at', { ascending: true });
+      return ((data ?? []) as unknown as Record<string, unknown>[]).map(mapMatchBall);
+    },
+  });
+}
+
+// Distinct balls I've thrown at this center on *other* visits — the recall.
+export function useHallBalls(hall: string | null | undefined, excludeMatchId: number) {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  return useQuery({
+    queryKey: ['hall-balls', uid, hall, excludeMatchId],
+    enabled: !!uid && !!hall,
+    queryFn: async (): Promise<MatchBall[]> => {
+      const { data } = await db
+        .from('match_balls')
+        .select(BALL_JOIN + ', bits_match_id')
+        .eq('user_id', uid!)
+        .eq('hall_name', hall!)
+        .neq('bits_match_id', excludeMatchId)
+        .order('created_at', { ascending: false });
+      const rows = ((data ?? []) as unknown as Record<string, unknown>[]).map(mapMatchBall);
+      const seen = new Set<string>();
+      return rows.filter((b) => (seen.has(b.playerBallId) ? false : (seen.add(b.playerBallId), true)));
+    },
+  });
+}
+
+export function useAttachBall() {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { matchId: number; playerBallId: string; hall: string | null }) => {
+      const { error } = await db
+        .from('match_balls')
+        .insert({ user_id: uid, bits_match_id: v.matchId, player_ball_id: v.playerBallId, hall_name: v.hall });
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ['match-balls', uid, v.matchId] }),
+  });
+}
+
+export function useDetachBall() {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { rowId: string; matchId: number }) => {
+      const { error } = await db.from('match_balls').delete().eq('id', v.rowId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ['match-balls', uid, v.matchId] }),
+  });
+}
+
 export function useDeleteNote() {
   const { session } = useAuth();
   const uid = session?.user?.id;
