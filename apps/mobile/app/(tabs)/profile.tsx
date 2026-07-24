@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IdentityAvatar } from '@/components/IdentityAvatar';
@@ -8,8 +10,13 @@ import { PressableScale } from '@/components/PressableScale';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
 import { useMyClaim, useMyTeams } from '@/lib/me';
+import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+
+// release_player_claim / delete_my_account aren't in the generated types yet
+// (run supabase/migrations/account_tools.sql) — reach them through an untyped view.
+const db = supabase as unknown as SupabaseClient;
 
 export default function Profile() {
   const router = useRouter();
@@ -18,6 +25,33 @@ export default function Profile() {
   const { data: followCount = 0 } = useMyFollowCount();
   const { data: claim } = useMyClaim();
   const { data: teams = [] } = useMyTeams();
+  const qc = useQueryClient();
+
+  const releaseClaim = () =>
+    Alert.alert('Släpp spelarkoppling', 'Din spelarprofil kopplas bort från kontot. Du kan koppla igen när som helst.', [
+      { text: 'Avbryt', style: 'cancel' },
+      {
+        text: 'Släpp',
+        style: 'destructive',
+        onPress: async () => {
+          await db.rpc('release_player_claim');
+          qc.invalidateQueries({ queryKey: ['my-claim'] });
+        },
+      },
+    ]);
+
+  const deleteAccount = () =>
+    Alert.alert('Radera konto', 'Detta raderar ditt konto och all din data permanent. Går inte att ångra.', [
+      { text: 'Avbryt', style: 'cancel' },
+      {
+        text: 'Radera konto',
+        style: 'destructive',
+        onPress: async () => {
+          await db.rpc('delete_my_account');
+          await signOut();
+        },
+      },
+    ]);
 
   const email = session?.user?.email ?? '';
   const meta = session?.user?.user_metadata ?? {};
@@ -82,6 +116,18 @@ export default function Profile() {
             <Ionicons name="people-outline" size={22} color={COLOR.ink2} />
             <Text style={styles.rowName}>Följer</Text>
             <Text style={styles.count}>{followCount}</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
+          {!!claim && (
+            <PressableScale style={styles.row} onPress={releaseClaim}>
+              <Ionicons name="link-outline" size={22} color={COLOR.ink2} />
+              <Text style={styles.rowName}>Släpp spelarkoppling</Text>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+            </PressableScale>
+          )}
+          <PressableScale style={styles.row} onPress={deleteAccount}>
+            <Ionicons name="trash-outline" size={22} color={COLOR.red} />
+            <Text style={[styles.rowName, { color: COLOR.red }]}>Radera konto</Text>
             <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
           </PressableScale>
         </View>

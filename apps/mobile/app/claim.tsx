@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   label: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginTop: SPACE[6] },
   hint: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[2], lineHeight: 19 },
 
-  primary: { marginTop: SPACE[6], backgroundColor: COLOR.gold, borderRadius: RADIUS.pill, paddingVertical: SPACE[4], alignItems: 'center' },
+  primary: { alignSelf: 'stretch', marginTop: SPACE[6], backgroundColor: COLOR.gold, borderRadius: RADIUS.md, paddingVertical: SPACE[4], alignItems: 'center' },
   primaryBusy: { opacity: 0.7 },
   primaryText: { color: COLOR.bg, fontSize: TYPE.body, fontFamily: FONT.bold },
 
