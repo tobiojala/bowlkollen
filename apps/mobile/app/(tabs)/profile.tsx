@@ -149,6 +149,11 @@ export default function Profile() {
             <Text style={styles.count}>{followCount}</Text>
             <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
           </PressableScale>
+          <PressableScale style={styles.row} onPress={() => router.push('/invite')}>
+            <Ionicons name="ticket-outline" size={22} color={COLOR.ink2} />
+            <Text style={styles.rowName}>Lös in inbjudningskod</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
           {!!claim && (
             <PressableScale style={styles.row} onPress={releaseClaim}>
               <Ionicons name="link-outline" size={22} color={COLOR.ink2} />
