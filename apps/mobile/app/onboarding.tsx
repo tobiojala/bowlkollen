@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { InviteGate } from '@/components/InviteGate';
 import OnboardingSuggestions from '@/components/OnboardingSuggestions';
 import { PressableScale } from '@/components/PressableScale';
 import { useToggleFollow } from '@/lib/follows';
+import { useMyTeams } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -40,6 +42,9 @@ function useTeamSearch(query: string) {
 
 export default function Onboarding() {
   const router = useRouter();
+  const { data: teams = [], isLoading: teamsLoading } = useMyTeams();
+  const hasAccess = teams.length > 0;
+
   const [text, setText] = useState('');
   const [debounced, setDebounced] = useState('');
   const [picked, setPicked] = useState<{ id: number; name: string } | null>(null);
@@ -50,7 +55,23 @@ export default function Onboarding() {
     return () => clearTimeout(t);
   }, [text]);
 
+  // Came in via an invite → their team is already known; pre-pick it so we don't
+  // ask them to search for a team they just joined.
+  useEffect(() => {
+    if (!picked && teams[0]) setPicked({ id: teams[0].teamId, name: teams[0].name });
+  }, [teams, picked]);
+
   const { data: results = [], isFetching } = useTeamSearch(debounced);
+
+  // Closed beta: no verified membership yet → the invite gate, no way past it.
+  if (teamsLoading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={COLOR.gold} />
+      </View>
+    );
+  }
+  if (!hasAccess) return <InviteGate />;
 
   async function finish() {
     setFinishing(true);
@@ -148,6 +169,7 @@ function TeamRow({ team, onPick }: { team: TeamHit; onPick: () => void }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
+  loading: { flex: 1, backgroundColor: COLOR.bg, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: SPACE[6], paddingTop: SPACE[8], paddingBottom: SPACE[12] },
   kicker: {
     color: COLOR.gold,
