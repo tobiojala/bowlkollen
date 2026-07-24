@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -14,7 +13,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ListSkeleton } from '@/components/Skeleton';
-import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
@@ -23,6 +21,7 @@ import { GlassSheet } from '@/components/GlassSheet';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { MatchRow } from '@/components/MatchRow';
+import { PlayerRosterCard } from '@/components/PlayerRosterCard';
 import { StandingsLadder } from '@/components/StandingsLadder';
 import { StandingsTable } from '@/components/StandingsTable';
 import { useFollowCount } from '@/lib/follows';
@@ -183,26 +182,17 @@ export default function TeamPage() {
 
           {roster.length > 0 && (
             <Section label="TRUPP">
-              {roster.map((p) => (
-                <PressableScale
-                  key={p.public_id}
-                  style={styles.playerRow}
-                  onPress={() => router.push(`/player/${p.public_id}`)}
-                >
-                  <Text style={styles.playerName} numberOfLines={1}>
-                    {p.name}
-                  </Text>
-                  <Text style={styles.playerAvg} numberOfLines={1}>
-                    {[
-                      p.licence_average ? `snitt ${p.licence_average}` : null,
-                      `${p.appearances} ${p.appearances === 1 ? 'match' : 'matcher'}`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={15} color={COLOR.ink4} />
-                </PressableScale>
-              ))}
+              <View style={styles.roster}>
+                {roster.map((p) => (
+                  <PlayerRosterCard
+                    key={p.public_id}
+                    name={p.name}
+                    average={p.licence_average}
+                    appearances={p.appearances}
+                    onPress={() => router.push(`/player/${p.public_id}`)}
+                  />
+                ))}
+              </View>
             </Section>
           )}
 
@@ -288,15 +278,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
-  playerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE[3],
-    paddingVertical: SPACE[3],
-    borderBottomWidth: 1,
-    borderBottomColor: COLOR.hairline,
-  },
-  playerName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  playerAvg: { color: COLOR.ink3, fontSize: TYPE.caption },
+  roster: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3] },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
 });
