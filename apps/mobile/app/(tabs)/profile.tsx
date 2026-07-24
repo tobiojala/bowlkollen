@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BallShelf } from '@/components/BallShelf';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { NextMatchCard } from '@/components/NextMatchCard';
 import { PressableScale } from '@/components/PressableScale';
@@ -122,6 +123,9 @@ export default function Profile() {
             <Text style={styles.pendingText}>Din spelarkoppling väntar på granskning.</Text>
           </View>
         )}
+
+        {/* Ball arsenal (bowling diary, Phase 2) */}
+        <BallShelf />
 
         {teams.length > 0 && (
           <View style={styles.section}>
