@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BallOrb } from '@/components/BallOrb';
+import { BallStack, NoteCard } from '@/components/DiaryCards';
 import { GlassCircle } from '@/components/GlassButtons';
 import { MatchBallPicker } from '@/components/MatchBallPicker';
+import { OilPatternSheet } from '@/components/OilPatternSheet';
 import { PressableScale } from '@/components/PressableScale';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import {
@@ -15,10 +16,11 @@ import {
   useHallNotes,
   useMatchBalls,
   useMatchNotes,
+  useMatchPattern,
+  usePatternHistory,
   usePrepMatch,
   useSaveNote,
-  type MatchBall,
-  type Note,
+  useSetMatchPattern,
 } from '@/lib/diary';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -34,11 +36,15 @@ export default function PrepPage() {
   const { data: hallNotes = [] } = useHallNotes(match?.hall);
   const { data: matchBalls = [] } = useMatchBalls(matchId);
   const { data: recallBalls = [] } = useHallBalls(match?.hall, matchId);
+  const { data: pattern = null } = useMatchPattern(matchId);
+  const { data: patternHistory } = usePatternHistory(pattern, matchId);
   const save = useSaveNote();
   const del = useDeleteNote();
+  const setPattern = useSetMatchPattern();
 
   const [draft, setDraft] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [patternOpen, setPatternOpen] = useState(false);
 
   // Recall = notes from earlier visits to this center, not this match.
   const recall = hallNotes.filter((n) => n.matchId !== matchId);
@@ -78,6 +84,38 @@ export default function PrepPage() {
           </>
         ) : (
           <ActivityIndicator color={COLOR.ink3} style={{ marginTop: SPACE[6] }} />
+        )}
+
+        {/* Oil pattern for this match — tap to set/change */}
+        <PressableScale style={styles.patternChip} onPress={() => setPatternOpen(true)}>
+          <Ionicons name="water-outline" size={16} color={pattern ? COLOR.gold : COLOR.ink3} />
+          <Text style={[styles.patternText, pattern && styles.patternSet]} numberOfLines={1}>
+            {pattern ?? 'Lägg till oljebild'}
+          </Text>
+          <Ionicons name="chevron-forward" size={15} color={COLOR.ink4} />
+        </PressableScale>
+
+        {/* Cross-center recall: what worked on this same pattern elsewhere */}
+        {pattern && patternHistory && (patternHistory.balls.length > 0 || patternHistory.notes.length > 0) && (
+          <View style={styles.section}>
+            <View style={styles.recallHead}>
+              <Ionicons name="water" size={16} color={COLOR.gold} />
+              <Text style={styles.recallLabel}>SAMMA OLJEBILD — {pattern.toUpperCase()}</Text>
+            </View>
+            {patternHistory.balls.length > 0 && (
+              <View style={styles.recallBalls}>
+                <Text style={styles.subLabel}>KLOT SOM FUNKAT</Text>
+                <View style={styles.orbRow}>
+                  {patternHistory.balls.map((b) => (
+                    <BallStack key={b.playerBallId} ball={b} />
+                  ))}
+                </View>
+              </View>
+            )}
+            {patternHistory.notes.map((n) => (
+              <NoteCard key={n.id} note={n} onDelete={() => del.mutate(n.id)} muted />
+            ))}
+          </View>
         )}
 
         {/* Recall — the "served up" memory from earlier visits to this center */}
@@ -165,29 +203,13 @@ export default function PrepPage() {
         matchId={matchId}
         hall={match?.hall ?? null}
       />
-    </View>
-  );
-}
 
-function BallStack({ ball }: { ball: MatchBall }) {
-  return (
-    <View style={styles.orbCol}>
-      <BallOrb label={`${ball.brand ?? ''} ${ball.name}`} imageUrl={ball.imageUrl} size={56} />
-      <Text style={styles.orbName} numberOfLines={1}>{ball.name}</Text>
-    </View>
-  );
-}
-
-function NoteCard({ note, onDelete, muted }: { note: Note; onDelete: () => void; muted?: boolean }) {
-  return (
-    <View style={[styles.note, muted && styles.noteMuted]}>
-      <Text style={styles.noteBody}>{note.body}</Text>
-      <View style={styles.noteFoot}>
-        <Text style={styles.noteDate}>{formatMatchDate(note.createdAt.slice(0, 10))}</Text>
-        <PressableScale onPress={onDelete} hitSlop={10}>
-          <Ionicons name="trash-outline" size={18} color={COLOR.ink3} />
-        </PressableScale>
-      </View>
+      <OilPatternSheet
+        visible={patternOpen}
+        onClose={() => setPatternOpen(false)}
+        current={pattern}
+        onPick={(p) => setPattern.mutate({ matchId, pattern: p, hall: match?.hall ?? null })}
+      />
     </View>
   );
 }
@@ -204,6 +226,21 @@ const styles = StyleSheet.create({
   metaStrong: { color: COLOR.gold, fontSize: TYPE.caption, fontFamily: FONT.bold },
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1 },
   metaDot: { color: COLOR.ink4, fontSize: TYPE.caption },
+
+  patternChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[2],
+    alignSelf: 'flex-start',
+    marginTop: SPACE[4],
+    paddingVertical: SPACE[2],
+    paddingHorizontal: SPACE[3],
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLOR.surface,
+    maxWidth: '100%',
+  },
+  patternText: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, flexShrink: 1 },
+  patternSet: { color: COLOR.ink },
 
   section: { marginTop: SPACE[8] },
   sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginBottom: SPACE[3] },
@@ -241,9 +278,4 @@ const styles = StyleSheet.create({
   saveText: { color: COLOR.bg, fontSize: TYPE.body, fontFamily: FONT.bold },
   empty: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[4] },
 
-  note: { marginTop: SPACE[3], padding: SPACE[4], borderRadius: RADIUS.md, backgroundColor: COLOR.surface },
-  noteMuted: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLOR.hairline },
-  noteBody: { color: COLOR.ink, fontSize: TYPE.body, lineHeight: 22 },
-  noteFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACE[3] },
-  noteDate: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium },
 });

@@ -288,6 +288,100 @@ export function useDetachBall() {
   });
 }
 
+// Well-known pattern names for quick selection; free entry covers the rest.
+export const OIL_PATTERNS = [
+  'Husgärd',
+  'Kegel Main Street',
+  'Kegel Navigation',
+  'USBC Red',
+  'USBC White',
+  'USBC Blue',
+  'PBA Cheetah',
+  'PBA Chameleon',
+  'PBA Scorpion',
+  'PBA Shark',
+];
+
+// The oil pattern the player logged for this match, if any.
+export function useMatchPattern(matchId: number | null | undefined) {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  return useQuery({
+    queryKey: ['match-pattern', uid, matchId],
+    enabled: !!uid && matchId != null,
+    queryFn: async (): Promise<string | null> => {
+      const { data } = await db
+        .from('match_prep')
+        .select('oil_pattern')
+        .eq('user_id', uid!)
+        .eq('bits_match_id', matchId!)
+        .maybeSingle();
+      return ((data as Record<string, unknown> | null)?.oil_pattern as string | null) ?? null;
+    },
+  });
+}
+
+export function useSetMatchPattern() {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { matchId: number; pattern: string | null; hall: string | null }) => {
+      const { error } = await db
+        .from('match_prep')
+        .upsert(
+          { user_id: uid, bits_match_id: v.matchId, oil_pattern: v.pattern, hall_name: v.hall, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,bits_match_id' },
+        );
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['match-pattern', uid, v.matchId] });
+      qc.invalidateQueries({ queryKey: ['pattern-history', uid] });
+    },
+  });
+}
+
+export type PatternHistory = { balls: MatchBall[]; notes: Note[] };
+
+// Everything I learned on this oil pattern at OTHER matches — the cross-center
+// recall. Distinct balls thrown + the most recent notes, from any hall.
+export function usePatternHistory(pattern: string | null | undefined, excludeMatchId: number) {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  return useQuery({
+    queryKey: ['pattern-history', uid, pattern, excludeMatchId],
+    enabled: !!uid && !!pattern,
+    queryFn: async (): Promise<PatternHistory> => {
+      const { data: preps } = await db
+        .from('match_prep')
+        .select('bits_match_id')
+        .eq('user_id', uid!)
+        .eq('oil_pattern', pattern!)
+        .neq('bits_match_id', excludeMatchId);
+      const ids = ((preps ?? []) as Record<string, unknown>[]).map((p) => p.bits_match_id as number);
+      if (ids.length === 0) return { balls: [], notes: [] };
+
+      const [ballsRes, notesRes] = await Promise.all([
+        db.from('match_balls').select(BALL_JOIN).eq('user_id', uid!).in('bits_match_id', ids),
+        db
+          .from('player_notes')
+          .select('id, bits_match_id, hall_name, body, created_at')
+          .eq('user_id', uid!)
+          .in('bits_match_id', ids)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      const rawBalls = ((ballsRes.data ?? []) as unknown as Record<string, unknown>[]).map(mapMatchBall);
+      const seen = new Set<string>();
+      const balls = rawBalls.filter((b) => (seen.has(b.playerBallId) ? false : (seen.add(b.playerBallId), true)));
+      const notes = ((notesRes.data ?? []) as Record<string, unknown>[]).map(mapNote);
+      return { balls, notes };
+    },
+  });
+}
+
 export function useDeleteNote() {
   const { session } = useAuth();
   const uid = session?.user?.id;
