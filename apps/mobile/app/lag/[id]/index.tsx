@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -26,6 +27,7 @@ import { PlayerRosterCard } from '@/components/PlayerRosterCard';
 import { StandingsLadder } from '@/components/StandingsLadder';
 import { StandingsTable } from '@/components/StandingsTable';
 import { useFollowCount } from '@/lib/follows';
+import { useMyTeamRole } from '@/lib/team-admin';
 import {
   computeForm,
   useRoster,
@@ -34,7 +36,7 @@ import {
   useTeamStanding,
 } from '@/lib/team-data';
 import { teamColor, teamInitials } from '@/lib/team-identity';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const MATCH_PREVIEW = 3; // keep the profile short — the rest lives in the schedule
 
@@ -48,6 +50,7 @@ export default function TeamPage() {
   const { data: matches = [] } = useTeamMatches(teamId);
   const { data: roster = [] } = useRoster(teamId);
   const { data: followers = 0 } = useFollowCount('team', String(teamId));
+  const { data: myRole } = useMyTeamRole(teamId);
   const divisionId = matches.find((m) => m.bits_division_id != null)?.bits_division_id ?? null;
   const { data: standing } = useTeamStanding(divisionId, teamId);
 
@@ -110,6 +113,19 @@ export default function TeamPage() {
             <FollowButton entityType="team" entityId={String(teamId)} />
             <Text style={styles.followers}>{followers} följare</Text>
           </View>
+
+          {myRole && (
+            <PressableScale style={styles.manage} onPress={() => router.push(`/lag/${teamId}/laget`)}>
+              <Ionicons name="clipboard-outline" size={22} color={COLOR.gold} />
+              <View style={styles.manageText}>
+                <Text style={styles.manageTitle}>Mitt lag</Text>
+                <Text style={styles.manageBody}>
+                  {myRole === 'captain' ? 'Närvaro & laguppställning' : 'Svara på närvaro för kommande matcher'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
+          )}
 
           {(standing?.rank != null || form.length > 0) && (
             <View style={styles.statRow}>
@@ -290,6 +306,20 @@ const styles = StyleSheet.create({
   club: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  manage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[3],
+    marginTop: SPACE[4],
+    padding: SPACE[4],
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(245,194,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,194,0,0.24)',
+  },
+  manageText: { flex: 1, minWidth: 0, gap: 2 },
+  manageTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
+  manageBody: { color: COLOR.ink3, fontSize: TYPE.caption, lineHeight: 18 },
   statRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[6] },
   statCol: { flex: 1, alignItems: 'center', gap: 6 },
   statValue: { fontFamily: FONT.display, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
