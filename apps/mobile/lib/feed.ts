@@ -1,3 +1,4 @@
+import type { FeedStanding } from '@/lib/feed-standings';
 import type { Promo } from '@/lib/promos';
 import type { TopScore } from '@/lib/top-scores';
 
@@ -19,7 +20,8 @@ export type FeedMatch = {
 export type FeedItem =
   | { kind: 'match'; key: string; ts: string; upcoming: boolean; match: FeedMatch }
   | { kind: 'serie'; key: string; ts: string; score: TopScore }
-  | { kind: 'promo'; key: string; ts: string; promo: Promo };
+  | { kind: 'promo'; key: string; ts: string; promo: Promo }
+  | { kind: 'standings'; key: string; ts: string; standing: FeedStanding };
 
 export type FeedCategory = 'Allt' | 'Matcher' | 'Serier';
 
@@ -50,6 +52,17 @@ export function filterFeed(items: FeedItem[], category: FeedCategory): FeedItem[
   if (category === 'Matcher') return items.filter((i) => i.kind === 'match');
   if (category === 'Serier') return items.filter((i) => i.kind === 'serie');
   return items;
+}
+
+// Standings snapshots sit near the top (at-a-glance content), spaced out.
+export function injectStandings(items: FeedItem[], standings: FeedStanding[]): FeedItem[] {
+  if (standings.length === 0) return items;
+  const out = [...items];
+  standings.forEach((s, i) => {
+    const pos = Math.min(out.length, 2 + i * 4);
+    out.splice(pos, 0, { kind: 'standings', key: `std-${s.divisionId}`, ts: '', standing: s });
+  });
+  return out;
 }
 
 // Drop sponsored posts into the stream at intervals — like Instagram, never at

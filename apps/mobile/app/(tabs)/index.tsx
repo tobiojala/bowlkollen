@@ -9,9 +9,11 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { StoryChips, type Story } from '@/components/StoryChips';
 import { MatchCard } from '@/components/feed/MatchCard';
 import { PromoCard } from '@/components/feed/PromoCard';
+import { StandingsCard } from '@/components/feed/StandingsCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
-import { buildFeed, filterFeed, injectPromos, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
+import { buildFeed, filterFeed, injectPromos, injectStandings, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions';
+import { useFeedStandings } from '@/lib/feed-standings';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { SAMPLE_PROMOS } from '@/lib/promos';
 import { supabase } from '@/lib/supabase';
@@ -43,6 +45,7 @@ export default function Home() {
   const [category, setCategory] = useState<FeedCategory>('Allt');
   const { data: matches = [], isLoading } = useMyMatches();
   const { data: topScores = [] } = useTopScores();
+  const { data: standings = [] } = useFeedStandings();
 
   const hour = new Date().getHours();
   const greeting = hour < 10 ? 'God morgon' : hour < 18 ? 'God dag' : 'God kväll';
@@ -50,9 +53,9 @@ export default function Home() {
 
   const feed = useMemo(() => {
     const base = filterFeed(buildFeed(matches, topScores), category);
-    // Sponsored posts only mix into the full stream, not the filtered views.
-    return category === 'Allt' ? injectPromos(base, SAMPLE_PROMOS) : base;
-  }, [matches, topScores, category]);
+    // Standings + sponsored posts only mix into the full stream, not filtered views.
+    return category === 'Allt' ? injectPromos(injectStandings(base, standings), SAMPLE_PROMOS) : base;
+  }, [matches, topScores, standings, category]);
 
   // Likes/saves for every likeable post in the feed, in one batched query.
   const reactionKeys = useMemo(() => feed.filter((i) => i.kind !== 'promo').map((i) => i.key), [feed]);
@@ -62,6 +65,15 @@ export default function Home() {
   const renderItem = useCallback<ListRenderItem<FeedItem>>(
     ({ item }) => {
       if (item.kind === 'promo') return <PromoCard promo={item.promo} />;
+      if (item.kind === 'standings') {
+        return (
+          <StandingsCard
+            standing={item.standing}
+            onOpen={() => router.push(`/division/${item.standing.divisionId}`)}
+            onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
+          />
+        );
+      }
       const r = reactions?.get(item.key);
       const common = {
         liked: r?.liked ?? false,
