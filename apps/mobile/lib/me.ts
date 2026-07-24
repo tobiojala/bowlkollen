@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/lib/auth';
+import { computePlayerStats, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
 import { supabase } from '@/lib/supabase';
 
 export type MyClaim = {
@@ -35,6 +36,22 @@ export function useMyClaim() {
       };
     },
   });
+}
+
+// Season snapshot for the claimed player — shares the ['player-history'] cache
+// with the full player page, so tapping through is instant. null until claimed.
+export function useMyStats(publicId: string | undefined): PlayerStats | null {
+  const { data: history = [] } = useQuery({
+    queryKey: ['player-history', publicId],
+    enabled: !!publicId,
+    queryFn: async (): Promise<PlayerMatch[]> => {
+      const { data, error } = await supabase.rpc('get_player_match_history', { p_public_id: publicId! });
+      if (error) throw error;
+      return (data ?? []) as PlayerMatch[];
+    },
+  });
+  if (!publicId || history.length === 0) return null;
+  return computePlayerStats(history);
 }
 
 export type MyTeam = { teamId: number; name: string; role: string };

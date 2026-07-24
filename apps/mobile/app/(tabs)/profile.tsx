@@ -9,7 +9,7 @@ import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
-import { useMyClaim, useMyTeams } from '@/lib/me';
+import { useMyClaim, useMyStats, useMyTeams } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -24,6 +24,8 @@ export default function Profile() {
   const { session } = useAuth();
   const { data: followCount = 0 } = useMyFollowCount();
   const { data: claim } = useMyClaim();
+  const verifiedClaim = claim?.status === 'verified';
+  const stats = useMyStats(verifiedClaim ? claim?.publicId : undefined);
   const { data: teams = [] } = useMyTeams();
   const qc = useQueryClient();
 
@@ -56,7 +58,7 @@ export default function Profile() {
   const email = session?.user?.email ?? '';
   const meta = session?.user?.user_metadata ?? {};
   const accountName = (typeof meta.full_name === 'string' && meta.full_name) || email || 'Bowlare';
-  const verified = claim?.status === 'verified';
+  const verified = verifiedClaim;
   const displayName = verified ? claim!.name : accountName;
 
   return (
@@ -77,6 +79,27 @@ export default function Profile() {
           </View>
           {verified && <Ionicons name="chevron-forward" size={20} color={COLOR.ink3} />}
         </PressableScale>
+
+        {/* Season snapshot — a doorway to the full player page */}
+        {verified && stats && (
+          <PressableScale style={styles.snapshot} onPress={() => router.push(`/player/${claim!.publicId}`)}>
+            <Snap value={stats.seasonAvg != null ? String(stats.seasonAvg) : '–'} label="SNITT" />
+            <View style={styles.snapDivider} />
+            <Snap value={String(stats.matchesPlayed)} label="MATCHER" />
+            <View style={styles.snapDivider} />
+            <View style={styles.snapCol}>
+              <View style={styles.formVal}>
+                <Text style={styles.snapValue}>{stats.recentAvg != null ? String(stats.recentAvg) : '–'}</Text>
+                {stats.formDiff != null && stats.formDiff !== 0 && (
+                  <Text style={[styles.formDelta, { color: stats.formDiff > 0 ? COLOR.green : COLOR.red }]}>
+                    {stats.formDiff > 0 ? '▲' : '▼'} {Math.abs(stats.formDiff)}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.snapLabel}>FORM</Text>
+            </View>
+          </PressableScale>
+        )}
 
         {/* Claim CTA / pending state */}
         {!claim && (
@@ -140,6 +163,15 @@ export default function Profile() {
   );
 }
 
+function Snap({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.snapCol}>
+      <Text style={styles.snapValue}>{value}</Text>
+      <Text style={styles.snapLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
@@ -156,6 +188,14 @@ const styles = StyleSheet.create({
   who: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, letterSpacing: -0.3 },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 2 },
+
+  snapshot: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[4], paddingVertical: SPACE[2] },
+  snapCol: { flex: 1, alignItems: 'center', gap: 6 },
+  snapValue: { fontFamily: FONT.display, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
+  snapLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
+  snapDivider: { width: 1, alignSelf: 'stretch', backgroundColor: COLOR.hairline },
+  formVal: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
+  formDelta: { fontSize: TYPE.caption, fontFamily: FONT.bold },
 
   cta: {
     flexDirection: 'row',
