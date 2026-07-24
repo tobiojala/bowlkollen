@@ -46,7 +46,7 @@ export default function Profile() {
 
         {/* Claim CTA / pending state */}
         {!claim && (
-          <PressableScale style={styles.cta} onPress={() => router.push('/discover')}>
+          <PressableScale style={styles.cta} onPress={() => router.push('/claim')}>
             <Ionicons name="person-circle-outline" size={24} color={COLOR.gold} />
             <View style={styles.ctaText}>
               <Text style={styles.ctaTitle}>Koppla din spelarprofil</Text>
