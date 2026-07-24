@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, type ListRenderItem, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { NextMatchCard } from '@/components/NextMatchCard';
 import { PressableScale } from '@/components/PressableScale';
 import { ListSkeleton } from '@/components/Skeleton';
 import { StoryChips, type Story } from '@/components/StoryChips';
@@ -109,6 +110,9 @@ export default function Home() {
         <Text style={styles.greeting}>{greeting}</Text>
         <Text style={styles.date}>{dateStr}</Text>
       </View>
+      <View style={styles.prep}>
+        <NextMatchCard />
+      </View>
       <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
     </View>
   );
@@ -155,6 +159,7 @@ const styles = StyleSheet.create({
   pad: { paddingTop: SPACE[6], paddingHorizontal: SPACE[4] },
   headerWrap: { marginBottom: SPACE[2] },
   header: { paddingTop: SPACE[3], paddingBottom: SPACE[4], paddingHorizontal: SPACE[4] },
+  prep: { paddingHorizontal: SPACE[4], marginBottom: SPACE[4] },
   greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
   date: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[1], textTransform: 'capitalize' },
   empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], paddingTop: SPACE[16], gap: SPACE[3] },
