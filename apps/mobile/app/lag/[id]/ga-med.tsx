@@ -27,7 +27,7 @@ export default function JoinTeam() {
   const name = team?.name ?? 'Laget';
 
   const submit = () =>
-    join.mutate(lic, { onSuccess: (status) => setResult(status) });
+    join.mutate({ licNbr: lic }, { onSuccess: (status) => setResult(status) });
 
   return (
     <View style={styles.safe}>

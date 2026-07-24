@@ -12,15 +12,19 @@ export type AvailabilityResponse = 'yes' | 'maybe' | 'no';
 
 // Join a team as a verified member (role 'player'). License that played for the team
 // or is licensed with its club auto-verifies an adult; juniors/non-matches → pending.
+// An optional team-scoped invite code is the vouching signal. p_invite_code is always
+// sent (null when absent) so PostgREST resolves to the hardened 3-arg submit_team_claim
+// rather than erroring on the legacy overload.
 export function useJoinTeam(teamId: number) {
   const { session } = useAuth();
   const uid = session?.user?.id;
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (licNbr: string): Promise<'verified' | 'pending'> => {
+    mutationFn: async (v: { licNbr: string; inviteCode?: string | null }): Promise<'verified' | 'pending'> => {
       const { data, error } = await db.rpc('submit_team_claim', {
         p_bits_team_id: teamId,
-        p_lic_nbr: licNbr.trim(),
+        p_lic_nbr: v.licNbr.trim(),
+        p_invite_code: v.inviteCode?.trim() || null,
       });
       if (error) throw error;
       return ((data as { status?: 'verified' | 'pending' } | null)?.status ?? 'pending');
