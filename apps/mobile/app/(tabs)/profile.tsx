@@ -6,6 +6,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IdentityAvatar } from '@/components/IdentityAvatar';
+import { NextMatchCard } from '@/components/NextMatchCard';
 import { PressableScale } from '@/components/PressableScale';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
@@ -100,6 +101,9 @@ export default function Profile() {
             </View>
           </PressableScale>
         )}
+
+        {/* Next match → prep sheet (bowling diary) */}
+        <NextMatchCard />
 
         {/* Claim CTA / pending state */}
         {!claim && (
