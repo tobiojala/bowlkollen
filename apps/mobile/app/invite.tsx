@@ -8,6 +8,7 @@ import { GlassCircle } from '@/components/GlassButtons';
 import { PressableScale } from '@/components/PressableScale';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { messageForRedeemError, useRedeemInvite, type RedeemResult } from '@/lib/invites';
+import { clearPendingInvite } from '@/lib/pending-invite';
 import { useTeam } from '@/lib/team-data';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -25,12 +26,16 @@ export default function InvitePage() {
   // Auto-redeem when arriving via a link with a code.
   useEffect(() => {
     if (codeParam && !result && !redeem.isPending) {
-      redeem.mutate(codeParam, { onSuccess: setResult });
+      redeem.mutate(codeParam, { onSuccess: onRedeemed });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeParam]);
 
-  const submit = () => code.trim() && redeem.mutate(code, { onSuccess: setResult });
+  const onRedeemed = (r: RedeemResult) => {
+    setResult(r);
+    void clearPendingInvite();
+  };
+  const submit = () => code.trim() && redeem.mutate(code, { onSuccess: onRedeemed });
 
   return (
     <View style={styles.safe}>

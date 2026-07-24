@@ -6,19 +6,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/PressableScale';
 import { signOut } from '@/lib/auth';
 import { messageForRedeemError, useRedeemInvite } from '@/lib/invites';
+import { clearPendingInvite, getPendingInvite } from '@/lib/pending-invite';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 // The closed-beta gate: no valid invite, no entry. Redeeming a team code makes the
 // user a verified member, which flips the parent (useMyTeams) past this screen.
 // Shown as the first step of onboarding; there is deliberately no skip.
-export function InviteGate({ initialCode }: { initialCode?: string }) {
+export function InviteGate() {
   const redeem = useRedeemInvite();
-  const [code, setCode] = useState(initialCode ?? '');
+  const [code, setCode] = useState('');
 
+  // A code stashed from a tapped link (before login) auto-redeems here.
   useEffect(() => {
-    if (initialCode) redeem.mutate(initialCode);
+    let active = true;
+    getPendingInvite().then((c) => {
+      if (active && c) {
+        setCode(c);
+        redeem.mutate(c);
+      }
+    });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCode]);
+  }, []);
+
+  // Once we're in, the stashed code has done its job.
+  useEffect(() => {
+    if (redeem.isSuccess) void clearPendingInvite();
+  }, [redeem.isSuccess]);
 
   const submit = () => code.trim() && redeem.mutate(code);
 
@@ -50,7 +66,7 @@ export function InviteGate({ initialCode }: { initialCode?: string }) {
               placeholderTextColor={COLOR.ink4}
               autoCapitalize="none"
               autoCorrect={false}
-              autoFocus={!initialCode}
+              autoFocus={!code}
             />
             <PressableScale
               style={[styles.primary, (!code.trim() || redeem.isPending) && styles.primaryOff]}

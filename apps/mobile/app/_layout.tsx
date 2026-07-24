@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { useCaptureInviteLinks } from '@/lib/pending-invite';
 import { queryClient } from '@/lib/query';
 import { COLOR } from '@/theme';
 
@@ -25,6 +26,9 @@ function RootNavigator() {
   const { session, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Stash an invite code from a tapped link before any auth redirect can drop it.
+  useCaptureInviteLinks();
 
   const onboarded = !!session?.user?.user_metadata?.onboarding_seen;
 
