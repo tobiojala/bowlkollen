@@ -37,6 +37,11 @@ export function CandidateRow({ c, hall, onPress }: { c: LineupCandidate; hall: s
             <Text style={styles.insightKey}>★ Bäst: </Text>{c.bestVenue.name} {c.bestVenue.avg}
           </Text>
         )}
+        {c.bestDivision && (
+          <Text style={styles.insight} numberOfLines={1}>
+            <Text style={styles.insightKey}>Div: </Text>{c.bestDivision.name} {c.bestDivision.avg}
+          </Text>
+        )}
         {c.bestSquad && (
           <Text style={styles.insight} numberOfLines={1}>
             <Text style={styles.insightKey}>Lag: </Text>{c.bestSquad.name} {c.bestSquad.avg}

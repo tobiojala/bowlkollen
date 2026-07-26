@@ -177,6 +177,7 @@ export type LineupCandidate = {
   divisionAvg: number | null;
   divisionGames: number;
   bestVenue: BestSplit;
+  bestDivision: BestSplit;
   bestSquad: BestSplit;
   availability: AvailabilityResponse | null;
 };
@@ -214,6 +215,7 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         divisionAvg: (r.division_avg as number | null) ?? null,
         divisionGames: (r.division_games as number | null) ?? 0,
         bestVenue: split(r.best_venue, r.best_venue_avg, r.best_venue_games),
+        bestDivision: split(r.best_division, r.best_division_avg, r.best_division_games),
         bestSquad: split(r.best_squad, r.best_squad_avg, r.best_squad_games),
         availability: (r.availability as AvailabilityResponse | null) ?? null,
       }));

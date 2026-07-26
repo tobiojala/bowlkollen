@@ -22,6 +22,7 @@ import { GlassCircle } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { LineupDisplay } from '@/components/LineupDisplay';
 import { MatchRow } from '@/components/MatchRow';
 import { PlayerRosterCard } from '@/components/PlayerRosterCard';
 import { StandingsLadder } from '@/components/StandingsLadder';
@@ -179,6 +180,17 @@ export default function TeamPage() {
               historical={standing.historical}
               onOpenTeam={(tid) => router.push(`/lag/${tid}`)}
               onOpenDivision={() => setTableOpen(true)}
+            />
+          )}
+
+          {upcoming[0] && (
+            <LineupDisplay
+              teamId={teamId}
+              matchId={upcoming[0].bits_match_id}
+              subtitle={
+                (upcoming[0].home_bits_team_id === teamId ? 'Hemma mot ' : 'Borta mot ') +
+                (upcoming[0].home_bits_team_id === teamId ? upcoming[0].away_team_name : upcoming[0].home_team_name)
+              }
             />
           )}
 

@@ -22,13 +22,16 @@ RETURNS TABLE (
   venue_games      integer,
   division_avg     integer,
   division_games   integer,
-  best_venue       text,
-  best_venue_avg   integer,
-  best_venue_games integer,
-  best_squad       text,
-  best_squad_avg   integer,
-  best_squad_games integer,
-  availability     text
+  best_venue          text,
+  best_venue_avg      integer,
+  best_venue_games    integer,
+  best_division       text,
+  best_division_avg   integer,
+  best_division_games integer,
+  best_squad          text,
+  best_squad_avg      integer,
+  best_squad_games    integer,
+  availability        text
 )
 LANGUAGE sql
 STABLE
@@ -79,6 +82,13 @@ AS $$
     GROUP BY lic, hall_name HAVING count(*) >= 6
     ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
   ),
+  -- Strongest division (higher or lower — where their game travels best).
+  best_division AS (
+    SELECT DISTINCT ON (lic) lic, division_name, round(avg(pins)) AS avg, count(*) AS games
+    FROM games WHERE division_name IS NOT NULL
+    GROUP BY lic, division_name HAVING count(*) >= 6
+    ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
+  ),
   -- Strongest squad (which of the club's teams they shine with).
   best_squad AS (
     SELECT DISTINCT ON (lic) lic, squad, round(avg(pins)) AS avg, count(*) AS games
@@ -94,13 +104,15 @@ AS $$
     a.venue_avg::int,   COALESCE(a.venue_games, 0)::int,
     a.division_avg::int, COALESCE(a.division_games, 0)::int,
     bv.hall_name, bv.avg::int, bv.games::int,
+    bd.division_name, bd.avg::int, bd.games::int,
     bs.squad, bs.avg::int, bs.games::int,
     av.response AS availability
   FROM cand c
   JOIN bits_players bp ON upper(bp.lic_nbr) = c.lic
-  LEFT JOIN agg a         ON a.lic  = c.lic
-  LEFT JOIN best_venue bv ON bv.lic = c.lic
-  LEFT JOIN best_squad bs ON bs.lic = c.lic
+  LEFT JOIN agg a           ON a.lic  = c.lic
+  LEFT JOIN best_venue bv   ON bv.lic = c.lic
+  LEFT JOIN best_division bd ON bd.lic = c.lic
+  LEFT JOIN best_squad bs   ON bs.lic = c.lic
   LEFT JOIN team_claims tc ON tc.matched_public_id = bp.public_id
         AND tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
   LEFT JOIN team_match_availability av ON av.user_id = tc.user_id
