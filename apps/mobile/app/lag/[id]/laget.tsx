@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCircle } from '@/components/GlassButtons';
 import { PressableScale } from '@/components/PressableScale';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { TeamBackOffice } from '@/components/TeamBackOffice';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { useTeam, useTeamMatches } from '@/lib/team-data';
 import { useMyTeamRole } from '@/lib/team-admin';
@@ -41,35 +42,41 @@ export default function TeamAdminHub() {
 
         {!role ? (
           <Text style={styles.empty}>Bara lagets medlemmar har tillgång här.</Text>
-        ) : upcoming.length === 0 ? (
-          <Text style={styles.empty}>Inga kommande matcher just nu.</Text>
         ) : (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>KOMMANDE MATCHER</Text>
-            {upcoming.map((m) => {
-              const home = m.home_bits_team_id === teamId;
-              const opponent = home ? m.away_team_name : m.home_team_name;
-              return (
-                <PressableScale
-                  key={m.bits_match_id}
-                  style={styles.row}
-                  onPress={() => router.push(`/lag/${teamId}/match/${m.bits_match_id}`)}
-                >
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowOpp} numberOfLines={1}>
-                      {home ? 'Hemma mot ' : 'Borta mot '}
-                      <Text style={styles.rowOppName}>{opponent}</Text>
-                    </Text>
-                    <Text style={styles.rowMeta} numberOfLines={1}>
-                      {relativeMatchDate(m.match_date)} · {formatMatchDate(m.match_date)}
-                      {m.hall_name ? ` · ${m.hall_name}` : ''}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLOR.ink3} />
-                </PressableScale>
-              );
-            })}
-          </View>
+          <>
+            {upcoming.length === 0 ? (
+              <Text style={styles.empty}>Inga kommande matcher just nu.</Text>
+            ) : (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>KOMMANDE MATCHER</Text>
+                {upcoming.map((m) => {
+                  const home = m.home_bits_team_id === teamId;
+                  const opponent = home ? m.away_team_name : m.home_team_name;
+                  return (
+                    <PressableScale
+                      key={m.bits_match_id}
+                      style={styles.row}
+                      onPress={() => router.push(`/lag/${teamId}/match/${m.bits_match_id}`)}
+                    >
+                      <View style={styles.rowText}>
+                        <Text style={styles.rowOpp} numberOfLines={1}>
+                          {home ? 'Hemma mot ' : 'Borta mot '}
+                          <Text style={styles.rowOppName}>{opponent}</Text>
+                        </Text>
+                        <Text style={styles.rowMeta} numberOfLines={1}>
+                          {relativeMatchDate(m.match_date)} · {formatMatchDate(m.match_date)}
+                          {m.hall_name ? ` · ${m.hall_name}` : ''}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color={COLOR.ink3} />
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            )}
+
+            <TeamBackOffice teamId={teamId} teamName={team?.name ?? 'Lag'} isCaptain={role === 'captain'} />
+          </>
         )}
       </ScrollView>
 

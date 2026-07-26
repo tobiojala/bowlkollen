@@ -99,6 +99,72 @@ export function useSetAvailability(teamId: number, matchId: number) {
   });
 }
 
+// Human-readable Swedish labels for team roles.
+export const ROLE_LABEL: Record<TeamRole, string> = {
+  captain: 'Kapten',
+  player: 'Spelare',
+  lagledare: 'Lagledare',
+  styrelse: 'Styrelse',
+  reserv: 'Reserv',
+};
+export const ASSIGNABLE_ROLES: TeamRole[] = ['captain', 'player', 'lagledare', 'styrelse', 'reserv'];
+
+export type TeamMember = {
+  userId: string;
+  displayName: string;
+  publicId: string | null;
+  role: TeamRole;
+  vouched: boolean;
+  isMe: boolean;
+};
+
+// The squad's accounts + roles — team-private (RPC checks the caller is a member).
+export function useTeamMembers(teamId: number) {
+  return useQuery({
+    queryKey: ['team-members', teamId],
+    enabled: teamId > 0,
+    queryFn: async (): Promise<TeamMember[]> => {
+      const { data, error } = await db.rpc('get_team_members', { p_bits_team_id: teamId });
+      if (error) throw error;
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        userId: r.user_id as string,
+        displayName: (r.display_name as string | null) ?? 'Spelare',
+        publicId: (r.public_id as string | null) ?? null,
+        role: (r.role as TeamRole) ?? 'player',
+        vouched: (r.vouched as boolean | null) ?? false,
+        isMe: (r.is_me as boolean | null) ?? false,
+      }));
+    },
+  });
+}
+
+// Captain-only: assign a role to a member.
+export function useSetMemberRole(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { userId: string; role: TeamRole }) => {
+      const { error } = await db.rpc('set_member_role', {
+        p_bits_team_id: teamId,
+        p_target_user_id: v.userId,
+        p_role: v.role,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team-members', teamId] }),
+  });
+}
+
+// Any verified member can mint a shareable team invite link (the share IS the vouch).
+export function useCreateTeamInvite(teamId: number) {
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data, error } = await db.rpc('create_team_invite_code', { p_bits_team_id: teamId });
+      if (error) throw error;
+      return data as string;
+    },
+  });
+}
+
 export type AvailabilityRow = {
   userId: string;
   response: AvailabilityResponse;

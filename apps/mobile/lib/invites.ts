@@ -8,6 +8,11 @@ const db = supabase as unknown as SupabaseClient;
 
 export type RedeemResult = { teamId: number; role: 'player' | 'captain' };
 
+// Shareable universal link for an invite code. Opens the app (once association files
+// are hosted on the domain); otherwise falls back to the web. Domain: confirm.
+export const INVITE_LINK_BASE = 'https://bowlkollen.se/invite';
+export const inviteLink = (code: string) => `${INVITE_LINK_BASE}?code=${encodeURIComponent(code)}`;
+
 // Map the RPC's raised exceptions to something a bowler can read.
 const MESSAGES: Record<string, string> = {
   invalid_code: 'Koden gäller inte (eller har dragits tillbaka).',
