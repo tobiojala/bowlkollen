@@ -221,6 +221,50 @@ export function useLineupCandidates(teamId: number, matchId: number) {
   });
 }
 
+// ─── Lineup (laguttagning seating) ───────────────────────────────────────────
+export type LineupSlot = { publicId: string; name: string; bord: number; pos: number; isReserve: boolean };
+export type LineupStatus = 'draft' | 'published';
+
+// Existing saved lineup for a match (draft for members, published for all).
+export function useTeamLineup(teamId: number, matchId: number) {
+  return useQuery({
+    queryKey: ['team-lineup', teamId, matchId],
+    enabled: teamId > 0 && matchId > 0,
+    queryFn: async (): Promise<{ status: LineupStatus | null; slots: LineupSlot[] }> => {
+      const { data, error } = await db.rpc('get_team_lineup', { p_bits_team_id: teamId, p_bits_match_id: matchId });
+      if (error) throw error;
+      const rows = (data ?? []) as Record<string, unknown>[];
+      return {
+        status: (rows[0]?.status as LineupStatus | undefined) ?? null,
+        slots: rows.map((r) => ({
+          publicId: r.public_id as string,
+          name: (r.player_name as string | null) ?? 'Spelare',
+          bord: r.bord as number,
+          pos: r.pos as number,
+          isReserve: (r.is_reserve as boolean | null) ?? false,
+        })),
+      };
+    },
+  });
+}
+
+// Captain-only save. Publishing requires 8 starters (server enforces it too).
+export function useSaveLineup(teamId: number, matchId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { slots: LineupSlot[]; publish: boolean }) => {
+      const { error } = await db.rpc('save_team_lineup', {
+        p_bits_team_id: teamId,
+        p_bits_match_id: matchId,
+        p_slots: v.slots.map((s) => ({ public_id: s.publicId, bord: s.bord, pos: s.pos, is_reserve: s.isReserve })),
+        p_publish: v.publish,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team-lineup', teamId, matchId] }),
+  });
+}
+
 export type AvailabilityRow = {
   userId: string;
   response: AvailabilityResponse;
