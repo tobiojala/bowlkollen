@@ -1,26 +1,34 @@
 -- Laguttagning intelligence: for a given match, rank the team's candidates by how
 -- they actually perform IN THAT CONTEXT — their average at that center and in that
--- division — folded together with the availability answers. Players hop between
--- squads/divisions, so a season average hides where someone is actually strong.
+-- division — folded with availability. Plus each player's career highlights: the
+-- center they're strongest at ("bäst i") and the squad they perform best with (a
+-- club fields several teams — A/B/F — and people move between them).
 --
--- Data: every finished game lives in bits_match_player_results.series, and each
--- result joins bits_matches for hall_name + division_name. So per-player splits by
--- venue and division are real, computed from actual games (not the licence average).
+-- Data: every finished game lives in bits_match_player_results.series, each joins
+-- bits_matches for hall_name + division_name + the team worn that day. Matched by
+-- LICENCE NUMBER only, so a player's whole career travels with them across clubs.
 --
--- Team-private (verified members only). Ranking: available first (yes > maybe >
--- unknown > no), then "fit here" = venue avg (if enough games) → division avg → overall.
+-- Team-private. Ranking: available first (yes>maybe>unknown>no), then fit here
+-- (venue avg if enough games → division → overall). "Best" needs a higher bar so a
+-- single hot night can't be someone's headline.
 
 CREATE OR REPLACE FUNCTION public.get_lineup_candidates(p_bits_team_id integer, p_bits_match_id integer)
 RETURNS TABLE (
-  public_id      uuid,
-  player_name    text,
-  overall_avg    integer,
-  overall_games  integer,
-  venue_avg      integer,
-  venue_games    integer,
-  division_avg   integer,
-  division_games integer,
-  availability   text
+  public_id        uuid,
+  player_name      text,
+  overall_avg      integer,
+  overall_games    integer,
+  venue_avg        integer,
+  venue_games      integer,
+  division_avg     integer,
+  division_games   integer,
+  best_venue       text,
+  best_venue_avg   integer,
+  best_venue_games integer,
+  best_squad       text,
+  best_squad_avg   integer,
+  best_squad_games integer,
+  availability     text
 )
 LANGUAGE sql
 STABLE
@@ -30,8 +38,6 @@ AS $$
   WITH m AS (
     SELECT hall_name, division_name FROM bits_matches WHERE bits_match_id = p_bits_match_id
   ),
-  -- Candidates: everyone who has played for this team, plus verified app members
-  -- (so a newly-joined teammate appears even before their first game).
   cand AS (
     SELECT DISTINCT upper(r.lic_nbr) AS lic
     FROM bits_match_player_results r
@@ -44,9 +50,11 @@ AS $$
     JOIN bits_players bp ON bp.public_id = tc.matched_public_id
     WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
   ),
-  -- Every game each candidate has ever bowled, with its venue + division.
+  -- Every game each candidate has bowled, with venue, division, and the squad worn.
   games AS (
-    SELECT upper(r.lic_nbr) AS lic, g.pins, bm.hall_name, bm.division_name
+    SELECT
+      upper(r.lic_nbr) AS lic, g.pins, bm.hall_name, bm.division_name,
+      CASE WHEN r.is_home_team THEN bm.home_team_name ELSE bm.away_team_name END AS squad
     FROM bits_match_player_results r
     JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
     JOIN cand c ON c.lic = upper(r.lic_nbr)
@@ -56,13 +64,27 @@ AS $$
   agg AS (
     SELECT
       lic,
-      round(avg(pins))                                                               AS overall_avg,
-      count(*)                                                                        AS overall_games,
-      round(avg(pins) FILTER (WHERE hall_name     = (SELECT hall_name FROM m)))       AS venue_avg,
-      count(*)        FILTER (WHERE hall_name     = (SELECT hall_name FROM m))        AS venue_games,
-      round(avg(pins) FILTER (WHERE division_name = (SELECT division_name FROM m)))   AS division_avg,
-      count(*)        FILTER (WHERE division_name = (SELECT division_name FROM m))    AS division_games
+      round(avg(pins))                                                             AS overall_avg,
+      count(*)                                                                      AS overall_games,
+      round(avg(pins) FILTER (WHERE hall_name     = (SELECT hall_name FROM m)))     AS venue_avg,
+      count(*)        FILTER (WHERE hall_name     = (SELECT hall_name FROM m))      AS venue_games,
+      round(avg(pins) FILTER (WHERE division_name = (SELECT division_name FROM m))) AS division_avg,
+      count(*)        FILTER (WHERE division_name = (SELECT division_name FROM m))  AS division_games
     FROM games GROUP BY lic
+  ),
+  -- Strongest center (≥6 games so it's a real trend, not one night).
+  best_venue AS (
+    SELECT DISTINCT ON (lic) lic, hall_name, round(avg(pins)) AS avg, count(*) AS games
+    FROM games WHERE hall_name IS NOT NULL
+    GROUP BY lic, hall_name HAVING count(*) >= 6
+    ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
+  ),
+  -- Strongest squad (which of the club's teams they shine with).
+  best_squad AS (
+    SELECT DISTINCT ON (lic) lic, squad, round(avg(pins)) AS avg, count(*) AS games
+    FROM games WHERE squad IS NOT NULL
+    GROUP BY lic, squad HAVING count(*) >= 6
+    ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
   )
   SELECT
     bp.public_id,
@@ -71,10 +93,14 @@ AS $$
     a.overall_avg::int, COALESCE(a.overall_games, 0)::int,
     a.venue_avg::int,   COALESCE(a.venue_games, 0)::int,
     a.division_avg::int, COALESCE(a.division_games, 0)::int,
+    bv.hall_name, bv.avg::int, bv.games::int,
+    bs.squad, bs.avg::int, bs.games::int,
     av.response AS availability
   FROM cand c
   JOIN bits_players bp ON upper(bp.lic_nbr) = c.lic
-  LEFT JOIN agg a ON a.lic = c.lic
+  LEFT JOIN agg a         ON a.lic  = c.lic
+  LEFT JOIN best_venue bv ON bv.lic = c.lic
+  LEFT JOIN best_squad bs ON bs.lic = c.lic
   LEFT JOIN team_claims tc ON tc.matched_public_id = bp.public_id
         AND tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
   LEFT JOIN team_match_availability av ON av.user_id = tc.user_id

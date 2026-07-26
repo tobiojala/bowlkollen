@@ -78,19 +78,24 @@ function CandidateRow({ c, hall, onPress }: { c: LineupCandidate; hall: string |
     : c.overallGames > 0 ? `SNITT · ${c.overallGames} matcher`
     : 'INGEN DATA';
 
-  // Secondary splits worth showing beside the lead.
-  const secondary = [
-    fit.context !== 'division' && c.divisionAvg != null ? `Div ${c.divisionAvg}` : null,
-    fit.context !== 'overall' && c.overallAvg != null ? `Snitt ${c.overallAvg}` : null,
-  ].filter(Boolean).join(' · ');
-
   return (
     <PressableScale style={styles.card} onPress={onPress}>
       <IdentityAvatar colors={teamColor(c.name)} initials={teamInitials(c.name)} size={44} />
       <View style={styles.mid}>
         <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
         <Text style={styles.context}>{contextLabel}</Text>
-        {!!secondary && <Text style={styles.secondary} numberOfLines={1}>{secondary}</Text>}
+        {c.bestVenue && (
+          <Text style={styles.insight} numberOfLines={1}>
+            <Text style={styles.insightKey}>★ Bäst: </Text>
+            {c.bestVenue.name} {c.bestVenue.avg}
+          </Text>
+        )}
+        {c.bestSquad && (
+          <Text style={styles.insight} numberOfLines={1}>
+            <Text style={styles.insightKey}>Lag: </Text>
+            {c.bestSquad.name} {c.bestSquad.avg}
+          </Text>
+        )}
       </View>
       <View style={styles.right}>
         <Text style={styles.lead}>{fit.value != null ? fit.value : '–'}</Text>
@@ -125,7 +130,8 @@ const styles = StyleSheet.create({
   mid: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   context: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.8, marginTop: 2 },
-  secondary: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
+  insight: { color: COLOR.ink2, fontSize: TYPE.caption, marginTop: 2 },
+  insightKey: { color: COLOR.ink3, fontFamily: FONT.bold },
   right: { alignItems: 'flex-end', gap: 3, minWidth: 64 },
   lead: { color: COLOR.ink, fontFamily: FONT.display, fontSize: 26, letterSpacing: -0.5 },
   avail: { flexDirection: 'row', alignItems: 'center', gap: 3 },

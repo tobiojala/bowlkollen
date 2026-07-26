@@ -165,6 +165,8 @@ export function useCreateTeamInvite(teamId: number) {
   });
 }
 
+export type BestSplit = { name: string; avg: number; games: number } | null;
+
 export type LineupCandidate = {
   publicId: string;
   name: string;
@@ -174,6 +176,8 @@ export type LineupCandidate = {
   venueGames: number;
   divisionAvg: number | null;
   divisionGames: number;
+  bestVenue: BestSplit;
+  bestSquad: BestSplit;
   availability: AvailabilityResponse | null;
 };
 
@@ -198,6 +202,8 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         p_bits_match_id: matchId,
       });
       if (error) throw error;
+      const split = (name: unknown, avg: unknown, games: unknown): BestSplit =>
+        name ? { name: name as string, avg: (avg as number) ?? 0, games: (games as number) ?? 0 } : null;
       return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
         publicId: r.public_id as string,
         name: (r.player_name as string | null) ?? 'Spelare',
@@ -207,6 +213,8 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         venueGames: (r.venue_games as number | null) ?? 0,
         divisionAvg: (r.division_avg as number | null) ?? null,
         divisionGames: (r.division_games as number | null) ?? 0,
+        bestVenue: split(r.best_venue, r.best_venue_avg, r.best_venue_games),
+        bestSquad: split(r.best_squad, r.best_squad_avg, r.best_squad_games),
         availability: (r.availability as AvailabilityResponse | null) ?? null,
       }));
     },
