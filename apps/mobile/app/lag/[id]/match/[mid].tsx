@@ -106,6 +106,18 @@ export default function MatchAdmin() {
               placeholderTextColor={COLOR.ink4}
             />
 
+            {/* Captain: laguttagning (contextual lineup tool) */}
+            {role === 'captain' && (
+              <PressableScale style={styles.lineupBtn} onPress={() => router.push(`/lag/${teamId}/laguttagning/${matchId}`)}>
+                <Ionicons name="clipboard" size={22} color={COLOR.gold} />
+                <View style={styles.lineupText}>
+                  <Text style={styles.lineupTitle}>Laguttagning</Text>
+                  <Text style={styles.lineupBody}>Se vem som presterar bäst här — och sätt laget.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+              </PressableScale>
+            )}
+
             {/* The squad */}
             {GROUPS.map((g) => {
               const rows = squad.filter((r) => r.response === g.key);
@@ -174,6 +186,21 @@ const styles = StyleSheet.create({
   optionText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
   optionTextOn: { color: COLOR.bg },
   note: { marginTop: SPACE[3], backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[4], color: COLOR.ink, fontSize: TYPE.body },
+
+  lineupBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[3],
+    marginTop: SPACE[8],
+    padding: SPACE[4],
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(245,194,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,194,0,0.24)',
+  },
+  lineupText: { flex: 1, minWidth: 0, gap: 2 },
+  lineupTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
+  lineupBody: { color: COLOR.ink3, fontSize: TYPE.caption, lineHeight: 18 },
 
   group: { marginTop: SPACE[8] },
   groupLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.2, marginBottom: SPACE[2] },

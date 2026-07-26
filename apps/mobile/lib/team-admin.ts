@@ -165,6 +165,54 @@ export function useCreateTeamInvite(teamId: number) {
   });
 }
 
+export type LineupCandidate = {
+  publicId: string;
+  name: string;
+  overallAvg: number | null;
+  overallGames: number;
+  venueAvg: number | null;
+  venueGames: number;
+  divisionAvg: number | null;
+  divisionGames: number;
+  availability: AvailabilityResponse | null;
+};
+
+const MIN_CONTEXT_GAMES = 3; // below this a split is too noisy to lead with
+
+// The number to show/rank on for this match: venue if they've bowled it enough,
+// else this division, else their overall. Returns the value + which context it is.
+export function candidateFit(c: LineupCandidate): { value: number | null; context: 'venue' | 'division' | 'overall' } {
+  if (c.venueAvg != null && c.venueGames >= MIN_CONTEXT_GAMES) return { value: c.venueAvg, context: 'venue' };
+  if (c.divisionAvg != null && c.divisionGames >= MIN_CONTEXT_GAMES) return { value: c.divisionAvg, context: 'division' };
+  return { value: c.overallAvg, context: 'overall' };
+}
+
+// Ranked, context-aware candidates for a match's laguttagning (team-private RPC).
+export function useLineupCandidates(teamId: number, matchId: number) {
+  return useQuery({
+    queryKey: ['lineup-candidates', teamId, matchId],
+    enabled: teamId > 0 && matchId > 0,
+    queryFn: async (): Promise<LineupCandidate[]> => {
+      const { data, error } = await db.rpc('get_lineup_candidates', {
+        p_bits_team_id: teamId,
+        p_bits_match_id: matchId,
+      });
+      if (error) throw error;
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        publicId: r.public_id as string,
+        name: (r.player_name as string | null) ?? 'Spelare',
+        overallAvg: (r.overall_avg as number | null) ?? null,
+        overallGames: (r.overall_games as number | null) ?? 0,
+        venueAvg: (r.venue_avg as number | null) ?? null,
+        venueGames: (r.venue_games as number | null) ?? 0,
+        divisionAvg: (r.division_avg as number | null) ?? null,
+        divisionGames: (r.division_games as number | null) ?? 0,
+        availability: (r.availability as AvailabilityResponse | null) ?? null,
+      }));
+    },
+  });
+}
+
 export type AvailabilityRow = {
   userId: string;
   response: AvailabilityResponse;
