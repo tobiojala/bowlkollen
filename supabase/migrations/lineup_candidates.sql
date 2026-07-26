@@ -12,6 +12,10 @@
 -- (venue avg if enough games → division → overall). "Best" needs a higher bar so a
 -- single hot night can't be someone's headline.
 
+-- Return shape changed over time (added best_division etc.), and CREATE OR REPLACE
+-- can't alter a function's OUT columns — drop then recreate.
+DROP FUNCTION IF EXISTS public.get_lineup_candidates(integer, integer);
+
 CREATE OR REPLACE FUNCTION public.get_lineup_candidates(p_bits_team_id integer, p_bits_match_id integer)
 RETURNS TABLE (
   public_id        uuid,
