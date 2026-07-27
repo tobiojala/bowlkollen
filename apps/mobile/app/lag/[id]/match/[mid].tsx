@@ -16,6 +16,7 @@ import {
   useMyTeamRole,
   useSetAvailability,
   useTeamAvailability,
+  useTeamMembers,
   type AvailabilityResponse,
   type AvailabilityRow,
 } from '@/lib/team-admin';
@@ -44,7 +45,12 @@ export default function MatchAdmin() {
   const { data: role } = useMyTeamRole(teamId);
   const { data: mine } = useMyAvailability(teamId, matchId);
   const { data: squad = [] } = useTeamAvailability(teamId, matchId, !!role);
+  const { data: members = [] } = useTeamMembers(teamId);
   const setAvail = useSetAvailability(teamId, matchId);
+
+  // The nudge: verified members who haven't answered yet.
+  const responded = new Set(squad.map((r) => r.userId));
+  const noReply = members.filter((m) => !responded.has(m.userId));
 
   const [note, setNote] = useState('');
   const noteValue = note || mine?.note || '';
@@ -131,7 +137,23 @@ export default function MatchAdmin() {
                 </View>
               );
             })}
-            {squad.length === 0 && <Text style={styles.empty}>Ingen har svarat än. Bli först!</Text>}
+            {noReply.length > 0 && (
+              <View style={styles.group}>
+                <Text style={styles.groupLabel}>HAR INTE SVARAT · {noReply.length}</Text>
+                {noReply.map((m) => (
+                  <PressableScale
+                    key={m.userId}
+                    style={styles.squadRow}
+                    onPress={() => m.publicId && router.push(`/player/${m.publicId}`)}
+                    disabled={!m.publicId}
+                  >
+                    <IdentityAvatar colors={teamColor(m.displayName)} initials={teamInitials(m.displayName)} size={36} />
+                    <Text style={[styles.squadName, { flex: 1 }]} numberOfLines={1}>{m.displayName}{m.isMe ? ' (du)' : ''}</Text>
+                  </PressableScale>
+                ))}
+              </View>
+            )}
+            {squad.length === 0 && noReply.length === 0 && <Text style={styles.empty}>Ingen har svarat än. Bli först!</Text>}
           </>
         ) : (
           <Text style={styles.empty}>Bara lagets medlemmar kan svara på närvaro.</Text>
