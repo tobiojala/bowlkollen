@@ -88,6 +88,8 @@ export type PrepMatch = {
   division: string | null;
   homeName: string;
   awayName: string;
+  homeTeamId: number | null;
+  awayTeamId: number | null;
 };
 
 // Just enough of a match to head up the prep sheet. Shares the ['match'] cache
@@ -99,7 +101,7 @@ export function usePrepMatch(matchId: number) {
     queryFn: async (): Promise<PrepMatch | null> => {
       const { data } = await supabase
         .from('bits_matches')
-        .select('bits_match_id, match_date, hall_name, division_name, home_team_name, away_team_name')
+        .select('bits_match_id, match_date, hall_name, division_name, home_team_name, away_team_name, home_bits_team_id, away_bits_team_id')
         .eq('bits_match_id', matchId)
         .maybeSingle();
       if (!data) return null;
@@ -110,6 +112,8 @@ export function usePrepMatch(matchId: number) {
         division: (data.division_name as string | null) ?? null,
         homeName: data.home_team_name as string,
         awayName: data.away_team_name as string,
+        homeTeamId: (data.home_bits_team_id as number | null) ?? null,
+        awayTeamId: (data.away_bits_team_id as number | null) ?? null,
       };
     },
   });

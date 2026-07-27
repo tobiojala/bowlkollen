@@ -336,6 +336,34 @@ export function useTeamShortcuts() {
   }));
 }
 
+// Recent meetings between two teams (for opponent scouting). Banpoäng result from
+// our team's perspective (won / lost / drawn).
+export type H2HMatch = { matchId: number; date: string; ours: number | null; theirs: number | null; outcome: 'W' | 'L' | 'D' | null };
+export function useHeadToHead(teamId: number, opponentId: number | null) {
+  return useQuery({
+    queryKey: ['h2h', teamId, opponentId],
+    enabled: teamId > 0 && !!opponentId,
+    queryFn: async (): Promise<H2HMatch[]> => {
+      const { data } = await supabase
+        .from('bits_matches')
+        .select('bits_match_id, match_date, home_bits_team_id, away_bits_team_id, home_result, away_result')
+        .eq('is_finished', true)
+        .or(
+          `and(home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${opponentId}),and(home_bits_team_id.eq.${opponentId},away_bits_team_id.eq.${teamId})`,
+        )
+        .order('match_date', { ascending: false })
+        .limit(6);
+      return ((data ?? []) as Record<string, unknown>[]).map((m) => {
+        const isHome = m.home_bits_team_id === teamId;
+        const ours = (isHome ? m.home_result : m.away_result) as number | null;
+        const theirs = (isHome ? m.away_result : m.home_result) as number | null;
+        const outcome = ours == null || theirs == null ? null : ours > theirs ? 'W' : ours < theirs ? 'L' : 'D';
+        return { matchId: m.bits_match_id as number, date: m.match_date as string, ours, theirs, outcome };
+      });
+    },
+  });
+}
+
 // Free player search over the whole licence register — so a captain can seat ANY
 // bowler (teammates who don't use the app, or teams with no per-player result data).
 export type PlayerHit = { publicId: string; name: string; club: string | null };
