@@ -249,6 +249,42 @@ export function useLineupCandidates(teamId: number, matchId: number) {
   });
 }
 
+// "Du är uttagen" — the published lineups the signed-in user is seated in (in-app half
+// of the publish notification; real push comes with a dev build).
+export type MySelection = {
+  teamId: number;
+  teamName: string;
+  matchId: number;
+  date: string;
+  opponent: string;
+  bord: number;
+  pos: number;
+  isReserve: boolean;
+};
+
+export function useMySelections() {
+  const { session } = useAuth();
+  const uid = session?.user?.id;
+  return useQuery({
+    queryKey: ['my-selections', uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<MySelection[]> => {
+      const { data, error } = await db.rpc('get_my_selections');
+      if (error) throw error;
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        teamId: r.bits_team_id as number,
+        teamName: (r.team_name as string | null) ?? 'Lag',
+        matchId: r.bits_match_id as number,
+        date: r.match_date as string,
+        opponent: (r.opponent as string | null) ?? '',
+        bord: r.bord as number,
+        pos: r.pos as number,
+        isReserve: (r.is_reserve as boolean | null) ?? false,
+      }));
+    },
+  });
+}
+
 // Each of the user's teams + its next upcoming match — powers the profile shortcut so
 // a captain reaches the lineup/availability tool in one tap instead of four.
 export type TeamShortcut = {

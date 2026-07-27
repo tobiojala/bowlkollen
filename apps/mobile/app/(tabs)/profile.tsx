@@ -9,6 +9,7 @@ import { BallShelf } from '@/components/BallShelf';
 import { CaptainQuickActions } from '@/components/CaptainQuickActions';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { NextMatchCard } from '@/components/NextMatchCard';
+import { SelectedCard } from '@/components/SelectedCard';
 import { PressableScale } from '@/components/PressableScale';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
@@ -102,6 +103,9 @@ export default function Profile() {
             </View>
           </PressableScale>
         )}
+
+        {/* You've been picked for a published lineup */}
+        <SelectedCard />
 
         {/* Next match → prep sheet (bowling diary) */}
         <NextMatchCard />
