@@ -5,7 +5,7 @@ import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
 import { candidateFit, playsDown, type AvailabilityResponse, type LineupCandidate } from '@/lib/team-admin';
 import { teamColor, teamInitials } from '@/lib/team-identity';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, TYPE } from '@/theme';
 
 const AVAIL: Record<AvailabilityResponse, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
   yes: { label: 'Ja', icon: 'checkmark-circle', color: COLOR.green },
@@ -46,7 +46,15 @@ export function CandidateRow({
       <View style={[styles.accent, { backgroundColor: accent }]} />
       <IdentityAvatar colors={teamColor(c.name)} initials={teamInitials(c.name)} size={44} />
       <View style={styles.mid}>
-        <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
+          {down && (
+            <View style={styles.badge}>
+              <Ionicons name="swap-vertical" size={11} color={COLOR.ink2} />
+              <Text style={styles.badgeText}>NEDFLYTTAD</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.context}>{contextLabel}</Text>
         {c.bestVenue && (
           <Text style={styles.insight} numberOfLines={1}>
@@ -63,12 +71,7 @@ export function CandidateRow({
             <Text style={styles.insightKey}>Mest: </Text>{c.homeTeam}{c.homeDivision ? ` · ${c.homeDivision}` : ''}
           </Text>
         )}
-        {down && (
-          <View style={styles.sparr}>
-            <Ionicons name="warning-outline" size={13} color={COLOR.gold} />
-            <Text style={styles.sparrText} numberOfLines={2}>Nedflyttad — kontrollera spärr (§ D 306)</Text>
-          </View>
-        )}
+        {down && <Text style={styles.sparrNote} numberOfLines={1}>Kontrollera spärr · § D 306</Text>}
       </View>
       <View style={styles.right}>
         <Text style={styles.lead}>{fit.value != null ? fit.value : '–'}</Text>
@@ -90,12 +93,24 @@ const styles = StyleSheet.create({
   cardOut: { opacity: 0.5 },
   accent: { width: 4, height: 38, borderRadius: 2 },
   mid: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { flexShrink: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: COLOR.ink4,
+    backgroundColor: COLOR.surface2,
+  },
+  badgeText: { color: COLOR.ink2, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.5 },
   context: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.8, marginTop: 2 },
   insight: { color: COLOR.ink2, fontSize: TYPE.caption, marginTop: 2 },
   insightKey: { color: COLOR.ink3, fontFamily: FONT.bold },
-  sparr: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  sparrText: { flex: 1, color: COLOR.gold, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  sparrNote: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, marginTop: 2 },
   right: { alignItems: 'flex-end', gap: 3, minWidth: 64 },
   lead: { color: COLOR.ink, fontFamily: FONT.display, fontSize: 26, letterSpacing: -0.5 },
   avail: { flexDirection: 'row', alignItems: 'center', gap: 3 },
