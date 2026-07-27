@@ -26,8 +26,13 @@ export function CandidateRow({ c, hall, onPress }: { c: LineupCandidate; hall: s
     : c.overallGames > 0 ? `SNITT · ${c.overallGames} matcher`
     : 'INGEN DATA';
 
+  // Availability as a scannable colour: an accent bar per answered player, and a
+  // dimmed card for those who've said no (still pickable — the captain decides).
+  const accent = a ? a.color : 'transparent';
+
   return (
-    <PressableScale style={styles.card} onPress={onPress}>
+    <PressableScale style={[styles.card, c.availability === 'no' && styles.cardOut]} onPress={onPress}>
+      <View style={[styles.accent, { backgroundColor: accent }]} />
       <IdentityAvatar colors={teamColor(c.name)} initials={teamInitials(c.name)} size={44} />
       <View style={styles.mid}>
         <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
@@ -64,7 +69,9 @@ export function CandidateRow({ c, hall, onPress }: { c: LineupCandidate; hall: s
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
+  cardOut: { opacity: 0.5 },
+  accent: { width: 4, height: 38, borderRadius: 2 },
   mid: { flex: 1, minWidth: 0 },
   name: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   context: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.8, marginTop: 2 },

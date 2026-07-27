@@ -46,15 +46,25 @@ AS $$
     SELECT hall_name, division_name FROM bits_matches WHERE bits_match_id = p_bits_match_id
   ),
   cand AS (
+    -- Anyone who has played for this team (all-time roster).
     SELECT DISTINCT upper(r.lic_nbr) AS lic
     FROM bits_match_player_results r
     JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
     WHERE (bm.home_bits_team_id = p_bits_team_id AND r.is_home_team)
        OR (bm.away_bits_team_id = p_bits_team_id AND NOT r.is_home_team)
     UNION
+    -- Verified members resolved via their roster match on join…
     SELECT upper(bp.lic_nbr)
     FROM team_claims tc
     JOIN bits_players bp ON bp.public_id = tc.matched_public_id
+    WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
+    UNION
+    -- …and via the player they've claimed (covers manual/club/invite verifications
+    -- where matched_public_id was never set — the "can't pick myself" bug).
+    SELECT upper(bp.lic_nbr)
+    FROM team_claims tc
+    JOIN player_claims pc ON pc.user_id = tc.user_id AND pc.status = 'verified'
+    JOIN bits_players bp ON bp.public_id = pc.player_id
     WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
   ),
   -- Every game each candidate has bowled, with venue, division, and the squad worn.
@@ -99,6 +109,20 @@ AS $$
     FROM games WHERE squad IS NOT NULL
     GROUP BY lic, squad HAVING count(*) >= 6
     ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
+  ),
+  -- Map a player (public_id) → the app account of the verified member who is that
+  -- player, via roster match OR their claimed player. Used to attach availability.
+  member AS (
+    SELECT bp.public_id, tc.user_id
+    FROM team_claims tc
+    JOIN bits_players bp ON bp.public_id = tc.matched_public_id
+    WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
+    UNION
+    SELECT bp.public_id, tc.user_id
+    FROM team_claims tc
+    JOIN player_claims pc ON pc.user_id = tc.user_id AND pc.status = 'verified'
+    JOIN bits_players bp ON bp.public_id = pc.player_id
+    WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
   )
   SELECT
     bp.public_id,
@@ -117,9 +141,8 @@ AS $$
   LEFT JOIN best_venue bv   ON bv.lic = c.lic
   LEFT JOIN best_division bd ON bd.lic = c.lic
   LEFT JOIN best_squad bs   ON bs.lic = c.lic
-  LEFT JOIN team_claims tc ON tc.matched_public_id = bp.public_id
-        AND tc.bits_team_id = p_bits_team_id AND tc.status = 'verified'
-  LEFT JOIN team_match_availability av ON av.user_id = tc.user_id
+  LEFT JOIN member mb ON mb.public_id = bp.public_id
+  LEFT JOIN team_match_availability av ON av.user_id = mb.user_id
         AND av.bits_team_id = p_bits_team_id AND av.bits_match_id = p_bits_match_id
   WHERE EXISTS (
     SELECT 1 FROM team_claims me
