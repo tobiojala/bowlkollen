@@ -48,13 +48,19 @@ AS $$
     SELECT hall_name, division_name FROM bits_matches WHERE bits_match_id = p_bits_match_id
   ),
   cand AS (
-    -- Everyone CURRENTLY licensed with the club (bits_players.club_name) — the real,
-    -- active roster across the club's teams. Excludes players who've since moved clubs
-    -- (their club_name now points elsewhere), which the old "ever played" pool leaked in.
+    -- The club's MATCH-ACTIVE roster: currently licensed with the club (bits_players
+    -- .club_name, excludes players who've moved clubs) AND has actually bowled in the
+    -- last/upcoming season — not the dormant card-holders who haven't played in years.
     SELECT DISTINCT upper(bp.lic_nbr) AS lic
     FROM bits_players bp
     WHERE bp.club_name = (SELECT club_name FROM bits_teams WHERE bits_team_id = p_bits_team_id)
       AND bp.lic_nbr IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM bits_match_player_results r
+        JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
+        WHERE upper(r.lic_nbr) = upper(bp.lic_nbr)
+          AND bm.season_id >= (SELECT max(season_id) - 1 FROM bits_matches)  -- last + upcoming season
+      )
     UNION
     -- Verified app members (roster match OR claimed player) — always included, even if
     -- their licence club text hasn't synced.
