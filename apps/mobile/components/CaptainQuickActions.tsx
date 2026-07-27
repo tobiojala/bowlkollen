@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
 import { relativeMatchDate } from '@/lib/format';
 import { useTeamShortcuts, type TeamShortcut } from '@/lib/team-admin';
+import { useMyUnread } from '@/lib/team-posts';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 // Captain/member shortcuts on Profil — one tap to the lineup or availability for each
@@ -25,7 +26,9 @@ export function CaptainQuickActions() {
 
 function TeamCard({ t }: { t: TeamShortcut }) {
   const router = useRouter();
+  const { data: unread } = useMyUnread();
   const isCaptain = t.role === 'captain';
+  const unreadCount = unread?.get(t.teamId) ?? 0;
 
   return (
     <View style={styles.card}>
@@ -57,7 +60,7 @@ function TeamCard({ t }: { t: TeamShortcut }) {
             disabled={!t.next}
           />
         )}
-        <Action icon="person-add-outline" label="Bjud in" onPress={() => router.push(`/lag/${t.teamId}/laget`)} />
+        <Action icon="megaphone-outline" label="Nyheter" onPress={() => router.push(`/lag/${t.teamId}/nyheter`)} badge={unreadCount} />
       </View>
     </View>
   );
@@ -68,15 +71,22 @@ function Action({
   label,
   onPress,
   disabled,
+  badge,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  badge?: number;
 }) {
   return (
     <PressableScale style={[styles.action, disabled && styles.actionOff]} onPress={onPress} disabled={disabled}>
-      <Ionicons name={icon} size={22} color={disabled ? COLOR.ink4 : COLOR.gold} />
+      <View>
+        <Ionicons name={icon} size={22} color={disabled ? COLOR.ink4 : COLOR.gold} />
+        {!!badge && badge > 0 && (
+          <View style={styles.badge}><Text style={styles.badgeText}>{badge}</Text></View>
+        )}
+      </View>
       <Text style={[styles.actionText, disabled && { color: COLOR.ink4 }]}>{label}</Text>
     </PressableScale>
   );
@@ -103,4 +113,6 @@ const styles = StyleSheet.create({
   },
   actionOff: { opacity: 0.5 },
   actionText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.bold },
+  badge: { position: 'absolute', top: -6, right: -10, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, backgroundColor: COLOR.gold, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: COLOR.bg, fontSize: TYPE.micro, fontFamily: FONT.bold },
 });

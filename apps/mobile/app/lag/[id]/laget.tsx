@@ -10,6 +10,7 @@ import { TeamBackOffice } from '@/components/TeamBackOffice';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { useTeam, useTeamMatches } from '@/lib/team-data';
 import { useLineupHistory, useMyTeamRole } from '@/lib/team-admin';
+import { useMyUnread } from '@/lib/team-posts';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function TeamAdminHub() {
@@ -22,6 +23,8 @@ export default function TeamAdminHub() {
   const { data: role } = useMyTeamRole(teamId);
   const { data: matches = [] } = useTeamMatches(teamId);
   const { data: history = [] } = useLineupHistory(teamId);
+  const { data: unread } = useMyUnread();
+  const unreadCount = unread?.get(teamId) ?? 0;
 
   const upcoming = matches
     .filter((m) => !m.is_finished)
@@ -45,6 +48,18 @@ export default function TeamAdminHub() {
           <Text style={styles.empty}>Bara lagets medlemmar har tillgång här.</Text>
         ) : (
           <>
+            <PressableScale style={styles.anslag} onPress={() => router.push(`/lag/${teamId}/nyheter`)}>
+              <Ionicons name="megaphone-outline" size={22} color={COLOR.gold} />
+              <View style={styles.anslagText}>
+                <Text style={styles.anslagTitle}>Anslagstavla</Text>
+                <Text style={styles.anslagBody}>Nyheter, info och meddelanden från lagledningen</Text>
+              </View>
+              {unreadCount > 0 && (
+                <View style={styles.unreadBadge}><Text style={styles.unreadText}>{unreadCount}</Text></View>
+              )}
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
+
             {upcoming.length === 0 ? (
               <Text style={styles.empty}>Inga kommande matcher just nu.</Text>
             ) : (
@@ -146,4 +161,11 @@ const styles = StyleSheet.create({
   histScore: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
   histBadge: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   histBadgeText: { color: COLOR.bg, fontSize: TYPE.caption, fontFamily: FONT.bold },
+
+  anslag: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[6], padding: SPACE[4], borderRadius: RADIUS.lg, backgroundColor: COLOR.surface },
+  anslagText: { flex: 1, minWidth: 0, gap: 2 },
+  anslagTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
+  anslagBody: { color: COLOR.ink3, fontSize: TYPE.caption, lineHeight: 18 },
+  unreadBadge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: COLOR.gold, alignItems: 'center', justifyContent: 'center' },
+  unreadText: { color: COLOR.bg, fontSize: TYPE.caption, fontFamily: FONT.bold },
 });
