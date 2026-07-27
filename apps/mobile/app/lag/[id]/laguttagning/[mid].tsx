@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CandidateRow } from '@/components/CandidateRow';
@@ -15,9 +15,9 @@ import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import {
   useLineupCandidates,
+  useRosterSearch,
   useSaveLineup,
   useTeamLineup,
-  type LineupCandidate,
   type LineupSlot,
 } from '@/lib/team-admin';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -42,6 +42,13 @@ export default function Laguttagning() {
   const hall = match?.hall ?? null;
   const [slots, setSlots] = useState<LineupSlot[]>([]);
   const [target, setTarget] = useState<Target | null>(null);
+  const [query, setQuery] = useState('');
+  const [debounced, setDebounced] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query), 220);
+    return () => clearTimeout(t);
+  }, [query]);
+  const { data: searchHits = [] } = useRosterSearch(debounced);
   const seeded = useRef(false);
 
   // Seed the board from the saved lineup once it arrives.
@@ -57,20 +64,30 @@ export default function Laguttagning() {
   const starterCount = slots.filter((s) => !s.isReserve).length;
   const seated = new Set(slots.map((s) => s.publicId));
 
-  const assign = (c: LineupCandidate) => {
+  const assign = (publicId: string, name: string) => {
     if (!target) return;
     setSlots((prev) => {
-      let next = prev.filter((s) => s.publicId !== c.publicId); // no dupes across seats
+      let next = prev.filter((s) => s.publicId !== publicId); // no dupes across seats
       if (target.isReserve) {
         const pos = Math.max(0, ...next.filter((s) => s.isReserve).map((s) => s.pos)) + 1;
-        next.push({ publicId: c.publicId, name: c.name, bord: 0, pos, isReserve: true });
+        next.push({ publicId, name, bord: 0, pos, isReserve: true });
       } else {
         next = next.filter((s) => !(!s.isReserve && s.bord === target.bord && s.pos === target.pos));
-        next.push({ publicId: c.publicId, name: c.name, bord: target.bord, pos: target.pos, isReserve: false });
+        next.push({ publicId, name, bord: target.bord, pos: target.pos, isReserve: false });
       }
       return next;
     });
     setTarget(null);
+    setQuery('');
+  };
+
+  const shareLineup = () => {
+    const line = (b: number) => `Banpar ${b}: ${starter(b, 1)?.name ?? '—'} / ${starter(b, 2)?.name ?? '—'}`;
+    const head = match ? `Laguppställning – ${match.homeName} mot ${match.awayName}` : 'Laguppställning';
+    const when = match ? `${formatMatchDate(match.date)}${hall ? ` · ${hall}` : ''}` : '';
+    const body = [head, when, '', ...BOARDS.map(line)];
+    if (reserves.length) body.push('', `Reserver: ${reserves.map((r) => r.name).join(', ')}`);
+    Share.share({ message: body.filter((l) => l !== undefined).join('\n') }).catch(() => {});
   };
 
   const remove = (publicId: string) => setSlots((prev) => prev.filter((s) => s.publicId !== publicId));
@@ -140,6 +157,13 @@ export default function Laguttagning() {
         {starterCount !== STARTERS && (
           <Text style={styles.publishHint}>Fyll alla {STARTERS} platser för att publicera.</Text>
         )}
+
+        {starterCount > 0 && (
+          <PressableScale style={styles.share} onPress={shareLineup}>
+            <Ionicons name="share-outline" size={20} color={COLOR.ink2} />
+            <Text style={styles.shareText}>Dela laguppställning</Text>
+          </PressableScale>
+        )}
       </ScrollView>
 
       <ScrollBlur />
@@ -149,14 +173,40 @@ export default function Laguttagning() {
 
       <GlassSheet
         visible={!!target}
-        onClose={() => setTarget(null)}
+        onClose={() => { setTarget(null); setQuery(''); }}
         title={target?.isReserve ? 'Välj reserv' : `Banpar ${target?.bord} · plats ${target?.pos}`}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
-          {pickList.map((c) => (
-            <CandidateRow key={c.publicId} c={c} hall={hall} onPress={() => assign(c)} />
-          ))}
-          {pickList.length === 0 && <Text style={styles.empty}>Alla tillgängliga spelare är redan placerade.</Text>}
+        <TextInput
+          style={styles.search}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Sök spelare att lägga till…"
+          placeholderTextColor={COLOR.ink4}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: SPACE[8] }}>
+          {debounced.trim().length >= 2 ? (
+            <>
+              {searchHits.filter((p) => !seated.has(p.publicId)).map((p) => (
+                <PressableScale key={p.publicId} style={styles.hit} onPress={() => assign(p.publicId, p.name)}>
+                  <IdentityAvatar colors={teamColor(p.name)} initials={teamInitials(p.name)} size={40} />
+                  <View style={styles.hitText}>
+                    <Text style={styles.hitName} numberOfLines={1}>{p.name}</Text>
+                    {!!p.club && <Text style={styles.hitClub} numberOfLines={1}>{p.club}</Text>}
+                  </View>
+                  <Ionicons name="add-circle" size={22} color={COLOR.gold} />
+                </PressableScale>
+              ))}
+            </>
+          ) : (
+            <>
+              {pickList.map((c) => (
+                <CandidateRow key={c.publicId} c={c} hall={hall} onPress={() => assign(c.publicId, c.name)} />
+              ))}
+              <Text style={styles.pickerHint}>Söker du någon som inte är med i laget i appen? Sök på namn ovan.</Text>
+            </>
+          )}
         </ScrollView>
       </GlassSheet>
     </View>
@@ -226,5 +276,14 @@ const styles = StyleSheet.create({
   publishOff: { opacity: 0.4 },
   publishText: { color: COLOR.bg, fontSize: TYPE.body, fontFamily: FONT.bold },
   publishHint: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginTop: SPACE[2] },
+  share: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACE[2], marginTop: SPACE[4], paddingVertical: SPACE[3] },
+  shareText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center', paddingVertical: SPACE[6] },
+
+  search: { backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[3], color: COLOR.ink, fontSize: TYPE.body, marginBottom: SPACE[3] },
+  hit: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
+  hitText: { flex: 1, minWidth: 0 },
+  hitName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  hitClub: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
+  pickerHint: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', paddingVertical: SPACE[6], lineHeight: 18 },
 });

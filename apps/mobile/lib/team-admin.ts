@@ -223,6 +223,29 @@ export function useLineupCandidates(teamId: number, matchId: number) {
   });
 }
 
+// Free player search over the whole licence register — so a captain can seat ANY
+// bowler (teammates who don't use the app, or teams with no per-player result data).
+export type PlayerHit = { publicId: string; name: string; club: string | null };
+export function useRosterSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['roster-search', q],
+    enabled: q.length >= 2,
+    queryFn: async (): Promise<PlayerHit[]> => {
+      const { data } = await supabase
+        .from('bits_players')
+        .select('public_id, first_name, sur_name, club_name')
+        .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
+        .limit(20);
+      return (data ?? []).map((p) => ({
+        publicId: p.public_id as string,
+        name: `${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim() || 'Spelare',
+        club: (p.club_name as string | null) ?? null,
+      }));
+    },
+  });
+}
+
 // ─── Lineup (laguttagning seating) ───────────────────────────────────────────
 export type LineupSlot = { publicId: string; name: string; bord: number; pos: number; isReserve: boolean };
 export type LineupStatus = 'draft' | 'published';
