@@ -202,7 +202,7 @@ export default function Laguttagning() {
           ) : (
             <>
               {pickList.map((c) => (
-                <CandidateRow key={c.publicId} c={c} hall={hall} onPress={() => assign(c.publicId, c.name)} />
+                <CandidateRow key={c.publicId} c={c} hall={hall} matchDivision={match?.division} onPress={() => assign(c.publicId, c.name)} />
               ))}
               <Text style={styles.pickerHint}>Söker du någon som inte är med i laget i appen? Sök på namn ovan.</Text>
             </>

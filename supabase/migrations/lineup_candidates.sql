@@ -35,6 +35,8 @@ RETURNS TABLE (
   best_squad          text,
   best_squad_avg      integer,
   best_squad_games    integer,
+  home_team           text,
+  home_division       text,
   availability        text
 )
 LANGUAGE sql
@@ -66,6 +68,14 @@ AS $$
     JOIN player_claims pc ON pc.user_id = tc.user_id AND pc.status = 'verified'
     JOIN bits_players bp ON bp.public_id = pc.player_id
     WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
+    UNION
+    -- …and everyone who has played for ANY of the club's teams (A-lag, F1, F2…), so a
+    -- captain can pull the whole club — players move between the club's teams/divisions.
+    SELECT DISTINCT upper(r.lic_nbr)
+    FROM bits_match_player_results r
+    JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
+    JOIN bits_teams t ON t.bits_team_id = CASE WHEN r.is_home_team THEN bm.home_bits_team_id ELSE bm.away_bits_team_id END
+    WHERE t.bits_club_id = (SELECT bits_club_id FROM bits_teams WHERE bits_team_id = p_bits_team_id)
   ),
   -- Every game each candidate has bowled, with venue, division, and the squad worn.
   games AS (
@@ -110,6 +120,17 @@ AS $$
     GROUP BY lic, squad HAVING count(*) >= 6
     ORDER BY lic, round(avg(pins)) DESC, count(*) DESC
   ),
+  -- Where they play MOST (not best) — their home team + division, for the spärr check.
+  home_team AS (
+    SELECT DISTINCT ON (lic) lic, squad, count(*) AS games
+    FROM games WHERE squad IS NOT NULL
+    GROUP BY lic, squad ORDER BY lic, count(*) DESC
+  ),
+  home_div AS (
+    SELECT DISTINCT ON (lic) lic, division_name, count(*) AS games
+    FROM games WHERE division_name IS NOT NULL
+    GROUP BY lic, division_name ORDER BY lic, count(*) DESC
+  ),
   -- Map a player (public_id) → the app account of the verified member who is that
   -- player, via roster match OR their claimed player. Used to attach availability.
   member AS (
@@ -134,6 +155,7 @@ AS $$
     bv.hall_name, bv.avg::int, bv.games::int,
     bd.division_name, bd.avg::int, bd.games::int,
     bs.squad, bs.avg::int, bs.games::int,
+    ht.squad, hd.division_name,
     av.response AS availability
   FROM cand c
   JOIN bits_players bp ON upper(bp.lic_nbr) = c.lic
@@ -141,6 +163,8 @@ AS $$
   LEFT JOIN best_venue bv   ON bv.lic = c.lic
   LEFT JOIN best_division bd ON bd.lic = c.lic
   LEFT JOIN best_squad bs   ON bs.lic = c.lic
+  LEFT JOIN home_team ht    ON ht.lic = c.lic
+  LEFT JOIN home_div hd     ON hd.lic = c.lic
   LEFT JOIN member mb ON mb.public_id = bp.public_id
   LEFT JOIN team_match_availability av ON av.user_id = mb.user_id
         AND av.bits_team_id = p_bits_team_id AND av.bits_match_id = p_bits_match_id

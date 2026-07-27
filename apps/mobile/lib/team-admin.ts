@@ -179,8 +179,29 @@ export type LineupCandidate = {
   bestVenue: BestSplit;
   bestDivision: BestSplit;
   bestSquad: BestSplit;
+  homeTeam: string | null;      // the club team they play MOST for
+  homeDivision: string | null;  // …and that team's division
   availability: AvailabilityResponse | null;
 };
+
+// Swedish division tiers, lower = higher level. Used to flag "playing down".
+export function divisionRank(name: string | null | undefined): number {
+  const n = (name ?? '').toLowerCase();
+  if (n.includes('elit')) return 1;
+  if (n.includes('allsven')) return 2;
+  if (/division\s*1|div\s*1\b/.test(n)) return 3;
+  if (/division\s*2|div\s*2\b/.test(n)) return 4;
+  if (/division\s*3|div\s*3\b/.test(n)) return 5;
+  if (/division\s*4|div\s*4\b/.test(n)) return 6;
+  return 99;
+}
+
+// Advisory (§ D 306): does this player normally play a HIGHER division than the match's?
+// A soft "check the spärr rules" flag until the round-level verified engine lands.
+export function playsDown(homeDivision: string | null, matchDivision: string | null): boolean {
+  if (!homeDivision || !matchDivision) return false;
+  return divisionRank(homeDivision) < divisionRank(matchDivision);
+}
 
 const MIN_CONTEXT_GAMES = 3; // below this a split is too noisy to lead with
 
@@ -217,6 +238,8 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         bestVenue: split(r.best_venue, r.best_venue_avg, r.best_venue_games),
         bestDivision: split(r.best_division, r.best_division_avg, r.best_division_games),
         bestSquad: split(r.best_squad, r.best_squad_avg, r.best_squad_games),
+        homeTeam: (r.home_team as string | null) ?? null,
+        homeDivision: (r.home_division as string | null) ?? null,
         availability: (r.availability as AvailabilityResponse | null) ?? null,
       }));
     },
