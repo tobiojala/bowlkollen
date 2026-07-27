@@ -97,21 +97,41 @@ export default function Laguttagning() {
 
   const remove = (publicId: string) => setSlots((prev) => prev.filter((s) => s.publicId !== publicId));
 
-  // Order the picker by who most legitimately plays THIS match, not raw snitt:
-  // available first (yes→maybe→unknown→no), then legitimacy (this team's own regulars →
-  // same/lower-division players → "nedflyttad" A-lag stars last), then fit at this centre.
+  // Rank candidates for THIS match: available first (yes→maybe→unknown→no), then
+  // legitimacy (this team's own regulars → same/lower-division → "nedflyttad" last),
+  // then fit at this centre. Shared by the picker order and the auto-suggest.
   const availRank = (c: LineupCandidate) =>
     c.availability === 'yes' ? 0 : c.availability === 'maybe' ? 1 : c.availability === 'no' ? 3 : 2;
   const legitRank = (c: LineupCandidate) =>
     c.homeTeam && team?.name && c.homeTeam === team.name ? 0 : playsDown(c.homeDivision, match?.division ?? null) ? 2 : 1;
-  const pickList = candidates
-    .filter((c) => !seated.has(c.publicId))
-    .sort(
-      (a, b) =>
-        availRank(a) - availRank(b) ||
-        legitRank(a) - legitRank(b) ||
-        (candidateFit(b).value ?? 0) - (candidateFit(a).value ?? 0),
-    );
+  const compare = (a: LineupCandidate, b: LineupCandidate) =>
+    availRank(a) - availRank(b) ||
+    legitRank(a) - legitRank(b) ||
+    (candidateFit(b).value ?? 0) - (candidateFit(a).value ?? 0);
+  const pickList = candidates.filter((c) => !seated.has(c.publicId)).sort(compare);
+
+  // Föreslå laget: fill the EMPTY starter seats with the best available candidates
+  // (never overwrites a manual pick; skips 'Nej'). Captain then tweaks.
+  const suggest = () => {
+    setSlots((prev) => {
+      const next = [...prev];
+      const taken = new Set(next.map((s) => s.publicId));
+      const pool = candidates
+        .filter((c) => !taken.has(c.publicId) && c.availability !== 'no')
+        .sort(compare);
+      let pi = 0;
+      for (const bord of BOARDS) {
+        for (const pos of [1, 2]) {
+          if (next.some((s) => !s.isReserve && s.bord === bord && s.pos === pos)) continue;
+          const c = pool[pi++];
+          if (!c) return next;
+          next.push({ publicId: c.publicId, name: c.name, bord, pos, isReserve: false });
+        }
+      }
+      return next;
+    });
+  };
+  const boardEmpty = starterCount === 0;
 
   return (
     <View style={styles.safe}>
@@ -135,6 +155,13 @@ export default function Laguttagning() {
           <Text style={styles.counter}>{starterCount}/{STARTERS} placerade</Text>
           {existing?.status === 'published' && <Text style={styles.published}>PUBLICERAD</Text>}
         </View>
+
+        {starterCount < STARTERS && (
+          <PressableScale style={styles.suggest} onPress={suggest} haptic>
+            <Ionicons name="sparkles" size={18} color={COLOR.gold} />
+            <Text style={styles.suggestText}>{boardEmpty ? 'Föreslå laget' : 'Fyll tomma platser'}</Text>
+          </PressableScale>
+        )}
 
         {BOARDS.map((bord) => (
           <View key={bord} style={styles.board}>
@@ -277,6 +304,19 @@ const styles = StyleSheet.create({
   counterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACE[6], marginBottom: SPACE[3] },
   counter: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
   published: { color: COLOR.green, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
+  suggest: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACE[2],
+    marginBottom: SPACE[4],
+    paddingVertical: SPACE[3],
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(245,194,0,0.35)',
+    backgroundColor: 'rgba(245,194,0,0.08)',
+  },
+  suggestText: { color: COLOR.gold, fontSize: TYPE.body, fontFamily: FONT.bold },
 
   board: { marginBottom: SPACE[3] },
   boardLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.2, marginBottom: SPACE[2], marginTop: SPACE[2] },
