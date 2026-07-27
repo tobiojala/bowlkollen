@@ -9,7 +9,7 @@ import { ScrollBlur } from '@/components/ScrollBlur';
 import { TeamBackOffice } from '@/components/TeamBackOffice';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { useTeam, useTeamMatches } from '@/lib/team-data';
-import { useMyTeamRole } from '@/lib/team-admin';
+import { useLineupHistory, useMyTeamRole } from '@/lib/team-admin';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 export default function TeamAdminHub() {
@@ -21,6 +21,7 @@ export default function TeamAdminHub() {
   const { data: team } = useTeam(teamId);
   const { data: role } = useMyTeamRole(teamId);
   const { data: matches = [] } = useTeamMatches(teamId);
+  const { data: history = [] } = useLineupHistory(teamId);
 
   const upcoming = matches
     .filter((m) => !m.is_finished)
@@ -76,6 +77,26 @@ export default function TeamAdminHub() {
             )}
 
             <TeamBackOffice teamId={teamId} teamName={team?.name ?? 'Lag'} isCaptain={role === 'captain'} />
+
+            {history.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>TIDIGARE LAGUTTAGNINGAR</Text>
+                {history.map((h) => (
+                  <PressableScale key={h.matchId} style={styles.histRow} onPress={() => router.push(`/matcher/${h.matchId}`)}>
+                    <Text style={styles.histDate}>{formatMatchDate(h.date)}</Text>
+                    <Text style={styles.histOpp} numberOfLines={1}>{h.opponent}</Text>
+                    <Text style={styles.histScore}>{h.ours ?? '–'}–{h.theirs ?? '–'}</Text>
+                    {h.outcome && (
+                      <View style={[styles.histBadge, { backgroundColor: h.outcome === 'W' ? COLOR.green : h.outcome === 'L' ? COLOR.red : COLOR.surface2 }]}>
+                        <Text style={[styles.histBadgeText, h.outcome === 'D' && { color: COLOR.ink2 }]}>
+                          {h.outcome === 'W' ? 'V' : h.outcome === 'L' ? 'F' : 'O'}
+                        </Text>
+                      </View>
+                    )}
+                  </PressableScale>
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -118,4 +139,11 @@ const styles = StyleSheet.create({
   rowOppName: { color: COLOR.ink, fontFamily: FONT.bold },
   rowMeta: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
+
+  histRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
+  histDate: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, width: 58 },
+  histOpp: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  histScore: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
+  histBadge: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  histBadgeText: { color: COLOR.bg, fontSize: TYPE.caption, fontFamily: FONT.bold },
 });

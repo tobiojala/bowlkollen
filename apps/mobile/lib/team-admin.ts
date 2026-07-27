@@ -336,6 +336,25 @@ export function useTeamShortcuts() {
   }));
 }
 
+// Layer 4: the team's past published lineups + result (learning/history).
+export type LineupHistoryRow = { matchId: number; date: string; opponent: string; ours: number | null; theirs: number | null; outcome: 'W' | 'L' | 'D' | null };
+export function useLineupHistory(teamId: number) {
+  return useQuery({
+    queryKey: ['lineup-history', teamId],
+    enabled: teamId > 0,
+    queryFn: async (): Promise<LineupHistoryRow[]> => {
+      const { data, error } = await db.rpc('get_team_lineup_history', { p_bits_team_id: teamId });
+      if (error) throw error;
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => {
+        const ours = (r.ours as number | null) ?? null;
+        const theirs = (r.theirs as number | null) ?? null;
+        const outcome = ours == null || theirs == null ? null : ours > theirs ? 'W' : ours < theirs ? 'L' : 'D';
+        return { matchId: r.bits_match_id as number, date: r.match_date as string, opponent: (r.opponent as string | null) ?? '', ours, theirs, outcome };
+      });
+    },
+  });
+}
+
 // Recent meetings between two teams (for opponent scouting). Banpoäng result from
 // our team's perspective (won / lost / drawn).
 export type H2HMatch = { matchId: number; date: string; ours: number | null; theirs: number | null; outcome: 'W' | 'L' | 'D' | null };
