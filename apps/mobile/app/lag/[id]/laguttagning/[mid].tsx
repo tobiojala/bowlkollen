@@ -13,11 +13,15 @@ import { ScrollBlur } from '@/components/ScrollBlur';
 import { usePrepMatch } from '@/lib/diary';
 import { formatMatchDate, relativeMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
+import { useTeam } from '@/lib/team-data';
 import {
+  candidateFit,
+  playsDown,
   useLineupCandidates,
   useRosterSearch,
   useSaveLineup,
   useTeamLineup,
+  type LineupCandidate,
   type LineupSlot,
 } from '@/lib/team-admin';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -35,6 +39,7 @@ export default function Laguttagning() {
   const matchId = Number(mid);
 
   const { data: match } = usePrepMatch(matchId);
+  const { data: team } = useTeam(teamId);
   const { data: candidates = [] } = useLineupCandidates(teamId, matchId);
   const { data: existing } = useTeamLineup(teamId, matchId);
   const save = useSaveLineup(teamId, matchId);
@@ -92,7 +97,21 @@ export default function Laguttagning() {
 
   const remove = (publicId: string) => setSlots((prev) => prev.filter((s) => s.publicId !== publicId));
 
-  const pickList = candidates.filter((c) => !seated.has(c.publicId));
+  // Order the picker by who most legitimately plays THIS match, not raw snitt:
+  // available first (yes→maybe→unknown→no), then legitimacy (this team's own regulars →
+  // same/lower-division players → "nedflyttad" A-lag stars last), then fit at this centre.
+  const availRank = (c: LineupCandidate) =>
+    c.availability === 'yes' ? 0 : c.availability === 'maybe' ? 1 : c.availability === 'no' ? 3 : 2;
+  const legitRank = (c: LineupCandidate) =>
+    c.homeTeam && team?.name && c.homeTeam === team.name ? 0 : playsDown(c.homeDivision, match?.division ?? null) ? 2 : 1;
+  const pickList = candidates
+    .filter((c) => !seated.has(c.publicId))
+    .sort(
+      (a, b) =>
+        availRank(a) - availRank(b) ||
+        legitRank(a) - legitRank(b) ||
+        (candidateFit(b).value ?? 0) - (candidateFit(a).value ?? 0),
+    );
 
   return (
     <View style={styles.safe}>

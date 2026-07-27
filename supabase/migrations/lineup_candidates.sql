@@ -48,34 +48,26 @@ AS $$
     SELECT hall_name, division_name FROM bits_matches WHERE bits_match_id = p_bits_match_id
   ),
   cand AS (
-    -- Anyone who has played for this team (all-time roster).
-    SELECT DISTINCT upper(r.lic_nbr) AS lic
-    FROM bits_match_player_results r
-    JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
-    WHERE (bm.home_bits_team_id = p_bits_team_id AND r.is_home_team)
-       OR (bm.away_bits_team_id = p_bits_team_id AND NOT r.is_home_team)
+    -- Everyone CURRENTLY licensed with the club (bits_players.club_name) — the real,
+    -- active roster across the club's teams. Excludes players who've since moved clubs
+    -- (their club_name now points elsewhere), which the old "ever played" pool leaked in.
+    SELECT DISTINCT upper(bp.lic_nbr) AS lic
+    FROM bits_players bp
+    WHERE bp.club_name = (SELECT club_name FROM bits_teams WHERE bits_team_id = p_bits_team_id)
+      AND bp.lic_nbr IS NOT NULL
     UNION
-    -- Verified members resolved via their roster match on join…
+    -- Verified app members (roster match OR claimed player) — always included, even if
+    -- their licence club text hasn't synced.
     SELECT upper(bp.lic_nbr)
     FROM team_claims tc
     JOIN bits_players bp ON bp.public_id = tc.matched_public_id
     WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
     UNION
-    -- …and via the player they've claimed (covers manual/club/invite verifications
-    -- where matched_public_id was never set — the "can't pick myself" bug).
     SELECT upper(bp.lic_nbr)
     FROM team_claims tc
     JOIN player_claims pc ON pc.user_id = tc.user_id AND pc.status = 'verified'
     JOIN bits_players bp ON bp.public_id = pc.player_id
     WHERE tc.bits_team_id = p_bits_team_id AND tc.status = 'verified' AND bp.lic_nbr IS NOT NULL
-    UNION
-    -- …and everyone who has played for ANY of the club's teams (A-lag, F1, F2…), so a
-    -- captain can pull the whole club — players move between the club's teams/divisions.
-    SELECT DISTINCT upper(r.lic_nbr)
-    FROM bits_match_player_results r
-    JOIN bits_matches bm ON bm.bits_match_id = r.bits_match_id
-    JOIN bits_teams t ON t.bits_team_id = CASE WHEN r.is_home_team THEN bm.home_bits_team_id ELSE bm.away_bits_team_id END
-    WHERE t.bits_club_id = (SELECT bits_club_id FROM bits_teams WHERE bits_team_id = p_bits_team_id)
   ),
   -- Every game each candidate has bowled, with venue, division, and the squad worn.
   games AS (
