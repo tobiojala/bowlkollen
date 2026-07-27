@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { useAuth } from '@/lib/auth';
+import { useMyTeams } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
+
+const CURRENT_SEASON = 2026;
 
 // team_match_availability + its RPCs aren't in the generated types.
 const db = supabase as unknown as SupabaseClient;
@@ -244,6 +247,57 @@ export function useLineupCandidates(teamId: number, matchId: number) {
       }));
     },
   });
+}
+
+// Each of the user's teams + its next upcoming match — powers the profile shortcut so
+// a captain reaches the lineup/availability tool in one tap instead of four.
+export type TeamShortcut = {
+  teamId: number;
+  name: string;
+  role: TeamRole;
+  next: { matchId: number; date: string; opponent: string; isHome: boolean } | null;
+};
+
+export function useTeamShortcuts() {
+  const { data: teams = [] } = useMyTeams();
+  const ids = teams.map((t) => t.teamId);
+  const { data: nextByTeam } = useQuery({
+    queryKey: ['team-next-matches', ids],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from('bits_matches')
+        .select('bits_match_id, match_date, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name')
+        .or(`home_bits_team_id.in.(${ids.join(',')}),away_bits_team_id.in.(${ids.join(',')})`)
+        .eq('season_id', CURRENT_SEASON)
+        .eq('is_finished', false)
+        .gte('match_date', today)
+        .order('match_date', { ascending: true });
+      const map = new Map<number, TeamShortcut['next']>();
+      for (const m of data ?? []) {
+        for (const tid of ids) {
+          if (map.has(tid)) continue;
+          const isHome = m.home_bits_team_id === tid;
+          if (isHome || m.away_bits_team_id === tid) {
+            map.set(tid, {
+              matchId: m.bits_match_id as number,
+              date: m.match_date as string,
+              isHome,
+              opponent: (isHome ? m.away_team_name : m.home_team_name) as string,
+            });
+          }
+        }
+      }
+      return map;
+    },
+  });
+  return teams.map<TeamShortcut>((t) => ({
+    teamId: t.teamId,
+    name: t.name,
+    role: (t.role as TeamRole) ?? 'player',
+    next: nextByTeam?.get(t.teamId) ?? null,
+  }));
 }
 
 // Free player search over the whole licence register — so a captain can seat ANY

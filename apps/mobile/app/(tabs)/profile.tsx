@@ -6,12 +6,13 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BallShelf } from '@/components/BallShelf';
+import { CaptainQuickActions } from '@/components/CaptainQuickActions';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { NextMatchCard } from '@/components/NextMatchCard';
 import { PressableScale } from '@/components/PressableScale';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
-import { useMyClaim, useMyStats, useMyTeams } from '@/lib/me';
+import { useMyClaim, useMyStats } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -28,7 +29,6 @@ export default function Profile() {
   const { data: claim } = useMyClaim();
   const verifiedClaim = claim?.status === 'verified';
   const stats = useMyStats(verifiedClaim ? claim?.publicId : undefined);
-  const { data: teams = [] } = useMyTeams();
   const qc = useQueryClient();
 
   const releaseClaim = () =>
@@ -106,6 +106,9 @@ export default function Profile() {
         {/* Next match → prep sheet (bowling diary) */}
         <NextMatchCard />
 
+        {/* Captain/member shortcuts — one tap to lineup & availability */}
+        <CaptainQuickActions />
+
         {/* Claim CTA / pending state */}
         {!claim && (
           <PressableScale style={styles.cta} onPress={() => router.push('/claim')}>
@@ -127,19 +130,6 @@ export default function Profile() {
         {/* Ball arsenal (bowling diary, Phase 2) */}
         <BallShelf />
 
-        {teams.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>DINA LAG</Text>
-            {teams.map((t) => (
-              <PressableScale key={t.teamId} style={styles.row} onPress={() => router.push(`/lag/${t.teamId}`)}>
-                <IdentityAvatar colors={teamColor(t.name)} initials={teamInitials(t.name)} size={36} />
-                <Text style={styles.rowName} numberOfLines={1}>{t.name}</Text>
-                {t.role === 'captain' && <Text style={styles.roleTag}>KAPTEN</Text>}
-                <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
-              </PressableScale>
-            ))}
-          </View>
-        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>KONTO</Text>
