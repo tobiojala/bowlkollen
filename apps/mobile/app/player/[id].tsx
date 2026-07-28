@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -20,8 +21,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
 import { ClaimedBadge } from '@/components/ClaimedBadge';
-import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { HeaderBand } from '@/components/HeaderBand';
+import { HeaderColorSheet } from '@/components/HeaderColorSheet';
+import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { useIsClaimed } from '@/lib/claimed';
+import { usePlayerHeader, useSetMyPlayerHeader } from '@/lib/appearance';
+import { useMyClaim } from '@/lib/me';
 import { PlayerAchievements } from '@/components/PlayerAchievements';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { PlayerRating } from '@/components/PlayerRating';
@@ -78,6 +83,11 @@ export default function PlayerPage() {
   const { data: followers = 0 } = useFollowCount('player', id);
   const { data: percentile } = usePlayerPercentile(id);
   const claimed = useIsClaimed(id);
+  const { data: headerColor } = usePlayerHeader(id);
+  const { data: myClaim } = useMyClaim();
+  const isOwn = myClaim?.status === 'verified' && myClaim.publicId === id;
+  const setHeader = useSetMyPlayerHeader(id);
+  const [headerOpen, setHeaderOpen] = useState(false);
 
   const stats = computePlayerStats(history);
   const { recentAvg, formDiff, matchAvgs, historyDesc } = stats;
@@ -107,7 +117,7 @@ export default function PlayerPage() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
-          <AmbientGlow color={teamColor(player.name).ring} top={insets.top - 10} />
+          <HeaderBand color={headerColor ?? teamColor(player.name).ring} />
           <View style={styles.headerRow}>
             <IdentityAvatar colors={teamColor(player.name)} initials={teamInitials(player.name)} size={64} />
             <View style={styles.headerText}>
@@ -117,7 +127,13 @@ export default function PlayerPage() {
               </View>
               {!!player.club_name && <Text style={styles.club}>{player.club_name}</Text>}
             </View>
-            <FollowButton entityType="player" entityId={id} />
+            {isOwn ? (
+              <PressableScale style={styles.editHeader} onPress={() => setHeaderOpen(true)} hitSlop={8}>
+                <Ionicons name="color-palette-outline" size={22} color={COLOR.ink} />
+              </PressableScale>
+            ) : (
+              <FollowButton entityType="player" entityId={id} />
+            )}
           </View>
 
           <PlayerRating rating={stats.rating} tier={stats.tier} topPct={topPct} onInfo={() => setSheet('rating')} />
@@ -195,6 +211,7 @@ export default function PlayerPage() {
       </Animated.View>
 
       <PlayerInfoSheet kind={sheet} stats={stats} recentAvg={recentAvg} onClose={() => setSheet(null)} />
+      <HeaderColorSheet visible={headerOpen} onClose={() => setHeaderOpen(false)} onPick={(c) => setHeader.mutate(c)} />
     </View>
   );
 }
@@ -218,6 +235,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   headerText: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  editHeader: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   sectionHeaderRow: {

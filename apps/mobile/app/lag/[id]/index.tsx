@@ -22,7 +22,8 @@ import { GlassCircle } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { CrestViewer } from '@/components/CrestViewer';
-import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { HeaderBand } from '@/components/HeaderBand';
+import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { LineupDisplay } from '@/components/LineupDisplay';
 import { MatchRow } from '@/components/MatchRow';
 import { PlayerRosterCard } from '@/components/PlayerRosterCard';
@@ -96,7 +97,7 @@ export default function TeamPage() {
         <ListSkeleton />
       ) : (
         <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
-          <AmbientGlow color={tc.ring} top={insets.top - 10} />
+          <HeaderBand color={team?.headerColor ?? tc.ring} />
           <View style={styles.heroRow}>
             <PressableScale onPress={() => team?.logoUrl && setCrestOpen(true)} disabled={!team?.logoUrl}>
               <IdentityAvatar colors={tc} initials={initials} imageUrl={team?.logoUrl} size={80} />

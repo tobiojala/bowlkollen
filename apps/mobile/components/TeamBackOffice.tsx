@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 
 import { GlassSheet } from '@/components/GlassSheet';
+import { HeaderColorSheet } from '@/components/HeaderColorSheet';
+import { useSetTeamHeader } from '@/lib/appearance';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
 import { inviteLink } from '@/lib/invites';
@@ -37,8 +39,10 @@ export function TeamBackOffice({
   const createInvite = useCreateTeamInvite(teamId);
   const setRole = useSetMemberRole(teamId);
   const setColor = useSetTeamColor(teamId);
+  const setHeader = useSetTeamHeader(teamId);
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [colorOpen, setColorOpen] = useState(false);
+  const [headerOpen, setHeaderOpen] = useState(false);
 
   const invite = () =>
     createInvite.mutate(undefined, {
@@ -103,12 +107,21 @@ export function TeamBackOffice({
       {members.length === 0 && <Text style={styles.empty}>Inga medlemmar har gått med än. Bjud in laget!</Text>}
 
       {isCaptain && (
-        <PressableScale style={styles.row} onPress={() => setColorOpen(true)}>
-          <Ionicons name="color-palette-outline" size={22} color={COLOR.ink2} />
-          <Text style={[styles.rowName, { flex: 1 }]}>Lagfärg</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
-        </PressableScale>
+        <>
+          <PressableScale style={styles.row} onPress={() => setColorOpen(true)}>
+            <Ionicons name="color-palette-outline" size={22} color={COLOR.ink2} />
+            <Text style={[styles.rowName, { flex: 1 }]}>Lagfärg (ring)</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
+          <PressableScale style={styles.row} onPress={() => setHeaderOpen(true)}>
+            <Ionicons name="image-outline" size={22} color={COLOR.ink2} />
+            <Text style={[styles.rowName, { flex: 1 }]}>Lagomslag (färg)</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
+        </>
       )}
+
+      <HeaderColorSheet visible={headerOpen} onClose={() => setHeaderOpen(false)} onPick={(c) => setHeader.mutate(c)} />
 
       <GlassSheet visible={colorOpen} onClose={() => setColorOpen(false)} title="Lagfärg">
         <Text style={styles.pickLabel}>VÄLJ RINGENS FÄRG</Text>

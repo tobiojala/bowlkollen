@@ -10,7 +10,7 @@ const PREVIOUS_SEASON = 2025;
 const STANDING_COLS =
   'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name';
 
-export type TeamIdentity = { name: string; club_name: string | null; logoUrl: string | null; ringColor: string | null };
+export type TeamIdentity = { name: string; club_name: string | null; logoUrl: string | null; ringColor: string | null; headerColor: string | null };
 
 export function useTeam(teamId: number) {
   return useQuery({
@@ -34,13 +34,15 @@ export function useTeam(teamId: number) {
         data.bits_club_id
           ? anyDb.from('bits_clubs').select('logo_url').eq('bits_id', data.bits_club_id).maybeSingle()
           : Promise.resolve({ data: null }),
-        anyDb.from('team_appearance').select('ring_color').eq('bits_team_id', teamId).maybeSingle(),
+        anyDb.from('team_appearance').select('ring_color, header_color').eq('bits_team_id', teamId).maybeSingle(),
       ]);
+      const app = appearance.data as { ring_color?: string; header_color?: string } | null;
       return {
         name: data.name as string,
         club_name: (data.club_name as string | null) ?? null,
         logoUrl: ((club.data as { logo_url?: string } | null)?.logo_url as string | null) ?? null,
-        ringColor: ((appearance.data as { ring_color?: string } | null)?.ring_color as string | null) ?? null,
+        ringColor: (app?.ring_color as string | null) ?? null,
+        headerColor: (app?.header_color as string | null) ?? null,
       };
     },
   });
