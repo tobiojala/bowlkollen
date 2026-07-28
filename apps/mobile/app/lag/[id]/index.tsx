@@ -66,7 +66,8 @@ export default function TeamPage() {
   const divisionName = matches.find((m) => m.division_name)?.division_name ?? null;
 
   const teamName = team?.name ?? 'Lag';
-  const tc = teamColor(teamName);
+  const base = teamColor(teamName);
+  const tc = team?.ringColor ? { ...base, ring: team.ringColor } : base;
   const initials = teamInitials(teamName);
   const form = computeForm(matches, teamId);
 
@@ -95,7 +96,7 @@ export default function TeamPage() {
         <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
           <AmbientGlow color={tc.ring} top={insets.top - 10} />
           <View style={styles.heroRow}>
-            <IdentityAvatar colors={tc} initials={initials} size={80} />
+            <IdentityAvatar colors={tc} initials={initials} imageUrl={team?.logoUrl} size={80} />
             <View style={styles.heroText}>
               {!!divisionName && (
                 <Text style={[styles.divLabel, { color: tc.text }]} numberOfLines={1}>

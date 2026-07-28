@@ -11,8 +11,10 @@ import { teamColor, teamInitials } from '@/lib/team-identity';
 import {
   ASSIGNABLE_ROLES,
   ROLE_LABEL,
+  TEAM_COLORS,
   useCreateTeamInvite,
   useSetMemberRole,
+  useSetTeamColor,
   useTeamMembers,
   type TeamMember,
   type TeamRole,
@@ -34,7 +36,9 @@ export function TeamBackOffice({
   const { data: members = [] } = useTeamMembers(teamId);
   const createInvite = useCreateTeamInvite(teamId);
   const setRole = useSetMemberRole(teamId);
+  const setColor = useSetTeamColor(teamId);
   const [editing, setEditing] = useState<TeamMember | null>(null);
+  const [colorOpen, setColorOpen] = useState(false);
 
   const invite = () =>
     createInvite.mutate(undefined, {
@@ -98,6 +102,30 @@ export function TeamBackOffice({
       ))}
       {members.length === 0 && <Text style={styles.empty}>Inga medlemmar har gått med än. Bjud in laget!</Text>}
 
+      {isCaptain && (
+        <PressableScale style={styles.row} onPress={() => setColorOpen(true)}>
+          <Ionicons name="color-palette-outline" size={22} color={COLOR.ink2} />
+          <Text style={[styles.rowName, { flex: 1 }]}>Lagfärg</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+        </PressableScale>
+      )}
+
+      <GlassSheet visible={colorOpen} onClose={() => setColorOpen(false)} title="Lagfärg">
+        <Text style={styles.pickLabel}>VÄLJ RINGENS FÄRG</Text>
+        <View style={styles.swatches}>
+          {TEAM_COLORS.map((c) => (
+            <PressableScale
+              key={c}
+              style={[styles.swatch, { backgroundColor: c }]}
+              onPress={() => { setColor.mutate(c); setColorOpen(false); }}
+            />
+          ))}
+        </View>
+        <PressableScale style={styles.resetColor} onPress={() => { setColor.mutate(null); setColorOpen(false); }}>
+          <Text style={styles.resetText}>Återställ till standard</Text>
+        </PressableScale>
+      </GlassSheet>
+
       <GlassSheet visible={!!editing} onClose={() => setEditing(null)} title={editing?.displayName}>
         <Text style={styles.pickLabel}>VÄLJ ROLL</Text>
         {ASSIGNABLE_ROLES.map((r) => {
@@ -142,4 +170,9 @@ const styles = StyleSheet.create({
   roleOptionOn: { backgroundColor: COLOR.gold },
   roleOptionText: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   roleOptionTextOn: { color: COLOR.bg, fontFamily: FONT.bold },
+
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3] },
+  swatch: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'rgba(255,255,255,0.14)' },
+  resetColor: { marginTop: SPACE[6], alignItems: 'center', paddingVertical: SPACE[3] },
+  resetText: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.bold },
 });

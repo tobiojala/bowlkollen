@@ -10,16 +10,38 @@ const PREVIOUS_SEASON = 2025;
 const STANDING_COLS =
   'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name';
 
+export type TeamIdentity = { name: string; club_name: string | null; logoUrl: string | null; ringColor: string | null };
+
 export function useTeam(teamId: number) {
   return useQuery({
     queryKey: ['team', teamId],
-    queryFn: async () => {
+    enabled: teamId > 0,
+    queryFn: async (): Promise<TeamIdentity | null> => {
       const { data } = await supabase
         .from('bits_teams')
-        .select('name, club_name')
+        .select('name, club_name, bits_club_id')
         .eq('bits_team_id', teamId)
         .maybeSingle();
-      return data;
+      if (!data) return null;
+      // Club crest + any captain-set ring colour, resolved separately (no FK embed).
+      // team_appearance / bits_clubs aren't fully in the generated types → untyped view.
+      const anyDb = supabase as unknown as {
+        from: (t: string) => {
+          select: (c: string) => { eq: (k: string, v: unknown) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null }> } };
+        };
+      };
+      const [club, appearance] = await Promise.all([
+        data.bits_club_id
+          ? anyDb.from('bits_clubs').select('logo_url').eq('bits_id', data.bits_club_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        anyDb.from('team_appearance').select('ring_color').eq('bits_team_id', teamId).maybeSingle(),
+      ]);
+      return {
+        name: data.name as string,
+        club_name: (data.club_name as string | null) ?? null,
+        logoUrl: ((club.data as { logo_url?: string } | null)?.logo_url as string | null) ?? null,
+        ringColor: ((appearance.data as { ring_color?: string } | null)?.ring_color as string | null) ?? null,
+      };
     },
   });
 }

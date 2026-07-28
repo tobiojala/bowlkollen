@@ -157,6 +157,21 @@ export function useSetMemberRole(teamId: number) {
   });
 }
 
+// Preset ring colours for team branding (+ null = default hashed).
+export const TEAM_COLORS = ['#f5c200', '#e05555', '#5dcaa5', '#7ab4e8', '#b98cf0', '#f0975a', '#ec6f9b', '#4dd4c2', '#9bb33e'];
+
+// Captain/board: set the team's ring colour (or null to reset). Public branding.
+export function useSetTeamColor(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ringColor: string | null) => {
+      const { error } = await db.rpc('set_team_color', { p_bits_team_id: teamId, p_ring_color: ringColor });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team', teamId] }),
+  });
+}
+
 // Any verified member can mint a shareable team invite link (the share IS the vouch).
 export function useCreateTeamInvite(teamId: number) {
   return useMutation({
