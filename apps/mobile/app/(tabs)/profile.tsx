@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BallShelf } from '@/components/BallShelf';
 import { CaptainQuickActions } from '@/components/CaptainQuickActions';
+import { ClaimedBadge } from '@/components/ClaimedBadge';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { NextMatchCard } from '@/components/NextMatchCard';
 import { SelectedCard } from '@/components/SelectedCard';
@@ -77,7 +78,10 @@ export default function Profile() {
         >
           <IdentityAvatar colors={teamColor(displayName)} initials={teamInitials(displayName)} size={60} />
           <View style={styles.who}>
-            <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+              {verified && <ClaimedBadge size={18} />}
+            </View>
             <Text style={styles.sub} numberOfLines={1}>{verified ? (claim!.club ?? 'Min spelarprofil') : email}</Text>
           </View>
           {verified && <Ionicons name="chevron-forward" size={20} color={COLOR.ink3} />}
@@ -198,7 +202,8 @@ const styles = StyleSheet.create({
     padding: SPACE[4],
   },
   who: { flex: 1, minWidth: 0 },
-  name: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, letterSpacing: -0.3 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { flexShrink: 1, color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, letterSpacing: -0.3 },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 2 },
 
   snapshot: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[4], paddingVertical: SPACE[2] },

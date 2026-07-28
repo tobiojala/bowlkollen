@@ -19,7 +19,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
+import { ClaimedBadge } from '@/components/ClaimedBadge';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
+import { useIsClaimed } from '@/lib/claimed';
 import { PlayerAchievements } from '@/components/PlayerAchievements';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { PlayerRating } from '@/components/PlayerRating';
@@ -75,6 +77,7 @@ export default function PlayerPage() {
   const { data: history = [] } = usePlayerHistory(id);
   const { data: followers = 0 } = useFollowCount('player', id);
   const { data: percentile } = usePlayerPercentile(id);
+  const claimed = useIsClaimed(id);
 
   const stats = computePlayerStats(history);
   const { recentAvg, formDiff, matchAvgs, historyDesc } = stats;
@@ -108,9 +111,10 @@ export default function PlayerPage() {
           <View style={styles.headerRow}>
             <IdentityAvatar colors={teamColor(player.name)} initials={teamInitials(player.name)} size={64} />
             <View style={styles.headerText}>
-              <Text style={styles.name} numberOfLines={2}>
-                {player.name}
-              </Text>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={2}>{player.name}</Text>
+                {claimed && <ClaimedBadge size={20} />}
+              </View>
               {!!player.club_name && <Text style={styles.club}>{player.club_name}</Text>}
             </View>
             <FollowButton entityType="player" entityId={id} />
@@ -213,6 +217,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   headerText: { flex: 1, minWidth: 0 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   sectionHeaderRow: {
