@@ -21,6 +21,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { GlassCircle } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { CrestViewer } from '@/components/CrestViewer';
 import { AmbientGlow, IdentityAvatar } from '@/components/IdentityAvatar';
 import { LineupDisplay } from '@/components/LineupDisplay';
 import { MatchRow } from '@/components/MatchRow';
@@ -76,6 +77,7 @@ export default function TeamPage() {
   };
 
   const [tableOpen, setTableOpen] = useState(false);
+  const [crestOpen, setCrestOpen] = useState(false);
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = tableOpen
@@ -96,7 +98,9 @@ export default function TeamPage() {
         <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
           <AmbientGlow color={tc.ring} top={insets.top - 10} />
           <View style={styles.heroRow}>
-            <IdentityAvatar colors={tc} initials={initials} imageUrl={team?.logoUrl} size={80} />
+            <PressableScale onPress={() => team?.logoUrl && setCrestOpen(true)} disabled={!team?.logoUrl}>
+              <IdentityAvatar colors={tc} initials={initials} imageUrl={team?.logoUrl} size={80} />
+            </PressableScale>
             <View style={styles.heroText}>
               {!!divisionName && (
                 <Text style={[styles.divLabel, { color: tc.text }]} numberOfLines={1}>
@@ -278,6 +282,8 @@ export default function TeamPage() {
           )}
         </ScrollView>
       </GlassSheet>
+
+      <CrestViewer visible={crestOpen} uri={team?.logoUrl ?? null} name={teamName} onClose={() => setCrestOpen(false)} />
     </View>
   );
 }
