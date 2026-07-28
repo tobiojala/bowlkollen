@@ -2,7 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Alert } from 'react-native';
+
 import { PressableScale } from '@/components/PressableScale';
+import { useCalendarSubs } from '@/lib/calendar-subs';
 import { relativeMatchDate } from '@/lib/format';
 import { useTeamShortcuts, type TeamShortcut } from '@/lib/team-admin';
 import { useMyUnread } from '@/lib/team-posts';
@@ -27,23 +30,33 @@ export function CaptainQuickActions() {
 function TeamCard({ t }: { t: TeamShortcut }) {
   const router = useRouter();
   const { data: unread } = useMyUnread();
+  const { isSubscribed, toggle, busy } = useCalendarSubs();
   const isCaptain = t.role === 'captain';
   const unreadCount = unread?.get(t.teamId) ?? 0;
+  const subbed = isSubscribed('team', t.teamId);
+
+  const toggleCal = async () => {
+    const res = await toggle({ type: 'team', id: t.teamId, name: t.name });
+    if (res.reason === 'permission') Alert.alert('Kalenderåtkomst nekad', 'Tillåt Bowlkollen i Inställningar.');
+    else if (res.ok && res.count != null) Alert.alert('Tillagt i kalendern', `${res.count} matcher för ${t.name}.`);
+  };
 
   return (
     <View style={styles.card}>
-      <PressableScale style={styles.head} onPress={() => router.push(`/lag/${t.teamId}/laget`)}>
-        <View style={styles.headText}>
+      <View style={styles.head}>
+        <PressableScale style={styles.headText} onPress={() => router.push(`/lag/${t.teamId}/laget`)}>
           <Text style={styles.name} numberOfLines={1}>{t.name}</Text>
           <Text style={styles.next} numberOfLines={1}>
             {t.next
               ? `Nästa: ${relativeMatchDate(t.next.date)} · ${t.next.isHome ? 'hemma mot' : 'borta mot'} ${t.next.opponent}`
               : 'Inga kommande matcher'}
           </Text>
-        </View>
+        </PressableScale>
         {isCaptain && <Text style={styles.roleTag}>KAPTEN</Text>}
-        <Ionicons name="chevron-forward" size={20} color={COLOR.ink3} />
-      </PressableScale>
+        <PressableScale onPress={toggleCal} disabled={busy} hitSlop={8}>
+          <Ionicons name={subbed ? 'calendar' : 'calendar-outline'} size={22} color={subbed ? COLOR.gold : COLOR.ink3} />
+        </PressableScale>
+      </View>
 
       <View style={styles.actions}>
         <Action
