@@ -10,7 +10,6 @@ import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { supabase } from '@/lib/supabase';
-import { useTeamLogos } from '@/lib/team-data';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { useTopScores } from '@/lib/top-scores';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -55,7 +54,6 @@ export default function Discover() {
 
   const { data, isFetching } = useSearch(debounced);
   const { data: topScores = [] } = useTopScores();
-  const { data: teamLogos } = useTeamLogos((data?.teams ?? []).map((t) => t.bits_team_id));
   const hasQuery = debounced.trim().length >= SEARCH_MIN;
 
   // Trending = the highlight reel, deduped to followable players.
@@ -154,7 +152,6 @@ export default function Discover() {
                     key={t.bits_team_id}
                     name={t.name}
                     sub={t.club_name && t.club_name !== t.name ? t.club_name : null}
-                    imageUrl={teamLogos?.get(t.bits_team_id) ?? null}
                     onPress={() => router.push(`/lag/${t.bits_team_id}`)}
                     right={<FollowButton entityType="team" entityId={String(t.bits_team_id)} />}
                   />
@@ -171,20 +168,18 @@ export default function Discover() {
 function Row({
   name,
   sub,
-  imageUrl,
   onPress,
   right,
 }: {
   name: string;
   sub?: string | null;
-  imageUrl?: string | null;
   onPress: () => void;
   right?: React.ReactNode;
 }) {
   return (
     <View style={styles.row}>
       <PressableScale style={styles.rowMain} onPress={onPress}>
-        <IdentityAvatar colors={teamColor(name)} initials={teamInitials(name)} imageUrl={imageUrl} size={44} />
+        <IdentityAvatar colors={teamColor(name)} initials={teamInitials(name)} size={44} />
         <View style={styles.rowText}>
           <Text style={styles.rowName} numberOfLines={1}>{name}</Text>
           {!!sub && <Text style={styles.rowSub} numberOfLines={1}>{sub}</Text>}

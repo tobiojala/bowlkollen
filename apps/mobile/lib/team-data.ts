@@ -46,28 +46,6 @@ export function useTeam(teamId: number) {
   });
 }
 
-// Batch team → club crest resolution (team_id → logo_url), for any list of team avatars.
-export function useTeamLogos(teamIds: number[]) {
-  const ids = [...new Set(teamIds)].filter((n) => n > 0).sort();
-  return useQuery({
-    queryKey: ['team-logos', ids],
-    enabled: ids.length > 0,
-    queryFn: async (): Promise<Map<number, string | null>> => {
-      const { data: teams } = await supabase.from('bits_teams').select('bits_team_id, bits_club_id').in('bits_team_id', ids);
-      const clubByTeam = new Map((teams ?? []).map((t) => [t.bits_team_id as number, t.bits_club_id as number | null]));
-      const clubIds = [...new Set((teams ?? []).map((t) => t.bits_club_id).filter((c): c is number => !!c))];
-      const anyDb = supabase as unknown as {
-        from: (t: string) => { select: (c: string) => { in: (k: string, v: unknown[]) => Promise<{ data: Record<string, unknown>[] | null }> } };
-      };
-      const { data: clubs } = clubIds.length ? await anyDb.from('bits_clubs').select('bits_id, logo_url').in('bits_id', clubIds) : { data: [] };
-      const logoByClub = new Map((clubs ?? []).map((c) => [c.bits_id as number, (c.logo_url as string | null) ?? null]));
-      const map = new Map<number, string | null>();
-      for (const [tid, cid] of clubByTeam) map.set(tid, (cid ? logoByClub.get(cid) : null) ?? null);
-      return map;
-    },
-  });
-}
-
 export type TeamMatch = MatchRowData & {
   home_bits_team_id: number;
   away_bits_team_id: number;
