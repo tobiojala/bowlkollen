@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BallShelf } from '@/components/BallShelf';
@@ -12,6 +12,7 @@ import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { NextMatchCard } from '@/components/NextMatchCard';
 import { SelectedCard } from '@/components/SelectedCard';
 import { PressableScale } from '@/components/PressableScale';
+import { useAppBackground } from '@/lib/app-background';
 import { signOut, useAuth } from '@/lib/auth';
 import { useMyFollowCount } from '@/lib/follows';
 import { useMyClaim, useMyStats } from '@/lib/me';
@@ -32,6 +33,7 @@ export default function Profile() {
   const verifiedClaim = claim?.status === 'verified';
   const stats = useMyStats(verifiedClaim ? claim?.publicId : undefined);
   const qc = useQueryClient();
+  const { uri: bgUri, pick: bgPick, clear: bgClear } = useAppBackground();
 
   const releaseClaim = () =>
     Alert.alert('Släpp spelarkoppling', 'Din spelarprofil kopplas bort från kontot. Du kan koppla igen när som helst.', [
@@ -65,8 +67,25 @@ export default function Profile() {
   const verified = verifiedClaim;
   const displayName = verified ? claim!.name : accountName;
 
+  const chooseBackground = () => {
+    if (bgUri) {
+      Alert.alert('Bakgrund', 'Din privata bakgrund (bara du ser den).', [
+        { text: 'Byt bild', onPress: () => bgPick() },
+        { text: 'Ta bort', style: 'destructive', onPress: () => bgClear() },
+        { text: 'Avbryt', style: 'cancel' },
+      ]);
+    } else {
+      bgPick();
+    }
+  };
+
   return (
     <View style={styles.safe}>
+      {bgUri && (
+        <ImageBackground source={{ uri: bgUri }} style={StyleSheet.absoluteFill} resizeMode="cover">
+          <View style={styles.scrim} />
+        </ImageBackground>
+      )}
       <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + SPACE[2] }]}>
         <Text style={styles.title}>Profil</Text>
 
@@ -147,6 +166,12 @@ export default function Profile() {
             <Text style={styles.count}>{followCount}</Text>
             <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
           </PressableScale>
+          <PressableScale style={styles.row} onPress={chooseBackground}>
+            <Ionicons name="image-outline" size={22} color={COLOR.ink2} />
+            <Text style={styles.rowName}>Bakgrund</Text>
+            <Text style={styles.count}>{bgUri ? 'På' : 'Av'}</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
           <PressableScale style={styles.row} onPress={() => router.push('/kalender')}>
             <Ionicons name="calendar-outline" size={22} color={COLOR.ink2} />
             <Text style={styles.rowName}>Kalender</Text>
@@ -190,6 +215,7 @@ function Snap({ value, label }: { value: string; label: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
+  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11,13,16,0.80)' },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5, paddingTop: SPACE[3], paddingBottom: SPACE[4] },
 

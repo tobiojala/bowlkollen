@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 
 import { FloatingNav } from '@/components/FloatingNav';
+import { LockScreen } from '@/components/LockScreen';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { NavScrollProvider } from '@/lib/nav-scroll';
 import { COLOR } from '@/theme';
@@ -23,6 +24,7 @@ export default function TabsLayout() {
             samples the content behind it (same as the blur bands). */}
         <ScrollBlur overTabBar />
         <FloatingNav />
+        <LockScreen />
       </View>
     </NavScrollProvider>
   );
