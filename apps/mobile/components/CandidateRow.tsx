@@ -3,9 +3,18 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
-import { candidateFit, playsDown, type AvailabilityResponse, type LineupCandidate } from '@/lib/team-admin';
+import type { EligibilityVerdict } from '@/lib/eligibility';
+import { candidateFit, type AvailabilityResponse, type LineupCandidate } from '@/lib/team-admin';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, TYPE } from '@/theme';
+
+// Eligibility (§ D 306) is shown WITHOUT colour — colour is reserved for availability.
+// State is read via icon + label + fill (solid vs outline).
+const ELIG: Record<'restricted' | 'blocked' | 'unknown', { label: string; icon: keyof typeof Ionicons.glyphMap; solid: boolean }> = {
+  blocked: { label: 'SPÄRRAD', icon: 'lock-closed', solid: true },
+  restricted: { label: 'NEDFLYTTAD', icon: 'swap-vertical', solid: false },
+  unknown: { label: 'SPÄRR?', icon: 'help-circle-outline', solid: false },
+};
 
 const AVAIL: Record<AvailabilityResponse, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
   yes: { label: 'Kan spela', icon: 'checkmark-circle', color: COLOR.green },
@@ -19,16 +28,16 @@ const AVAIL: Record<AvailabilityResponse, { label: string; icon: keyof typeof Io
 export function CandidateRow({
   c,
   onPress,
-  matchDivision,
+  eligibility,
 }: {
   c: LineupCandidate;
   onPress: () => void;
   hall?: string | null;
-  matchDivision?: string | null;
+  eligibility?: EligibilityVerdict;
 }) {
   const fit = candidateFit(c);
   const a = c.availability ? AVAIL[c.availability] : null;
-  const down = playsDown(c.homeDivision, matchDivision ?? null);
+  const elig = eligibility && eligibility.state !== 'ok' ? ELIG[eligibility.state] : null;
 
   const headLabel =
     fit.value == null ? 'Ingen data'
@@ -45,10 +54,10 @@ export function CandidateRow({
       <View style={styles.mid}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
-          {down && (
-            <View style={styles.badge}>
-              <Ionicons name="swap-vertical" size={13} color={COLOR.ink2} />
-              <Text style={styles.badgeText}>NEDFLYTTAD</Text>
+          {elig && (
+            <View style={[styles.badge, elig.solid && styles.badgeSolid]}>
+              <Ionicons name={elig.icon} size={13} color={elig.solid ? COLOR.bg : COLOR.ink2} />
+              <Text style={[styles.badgeText, elig.solid && styles.badgeTextSolid]}>{elig.label}</Text>
             </View>
           )}
         </View>
@@ -62,7 +71,7 @@ export function CandidateRow({
 
         {!!c.homeTeam && <Text style={styles.sub} numberOfLines={1}>Spelar mest i {c.homeTeam}</Text>}
         {showTotal && <Text style={styles.sub} numberOfLines={1}>Snitt totalt {c.overallAvg}</Text>}
-        {down && <Text style={styles.sub} numberOfLines={1}>Kontrollera spärr · § D 306</Text>}
+        {!!elig && !!eligibility?.reason && <Text style={styles.sub} numberOfLines={2}>{eligibility.reason}</Text>}
       </View>
 
       <View style={styles.stat}>
@@ -90,6 +99,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.surface2,
   },
   badgeText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.bold, letterSpacing: 0.4 },
+  badgeSolid: { backgroundColor: COLOR.ink, borderColor: COLOR.ink },   // 'blocked' = solid light chip (no colour)
+  badgeTextSolid: { color: COLOR.bg },
 
   pill: {
     flexDirection: 'row',

@@ -6,6 +6,8 @@ import { CandidateRow } from '@/components/CandidateRow';
 import { GlassSheet } from '@/components/GlassSheet';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
+import { lineupEligibilityIssues } from '@/lib/eligibility';
+import { makeVerdict, useLineupEligibility } from '@/lib/eligibility-data';
 import type { PrepMatch } from '@/lib/diary';
 import { formatMatchDate } from '@/lib/format';
 import { teamColor, teamInitials } from '@/lib/team-identity';
@@ -32,6 +34,8 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
   const { data: team } = useTeam(teamId);
   const { data: candidates = [] } = useLineupCandidates(teamId, matchId);
   const { data: existing } = useTeamLineup(teamId, matchId);
+  const { data: eligSig } = useLineupEligibility(teamId, matchId);
+  const verdict = makeVerdict(eligSig);
   const save = useSaveLineup(teamId, matchId);
 
   const hall = match?.hall ?? null;
@@ -56,6 +60,12 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
   const reserves = slots.filter((s) => s.isReserve).sort((a, b) => a.pos - b.pos);
   const starterCount = slots.filter((s) => !s.isReserve).length;
   const seated = new Set(slots.map((s) => s.publicId));
+
+  // § D 306: provable violations among the seated starters block publishing.
+  const eligIssues = lineupEligibilityIssues(
+    slots.filter((s) => !s.isReserve).map((s) => verdict(s.publicId).state),
+    eligSig?.isFinalRounds ?? false,
+  );
 
   const assign = (publicId: string, name: string) => {
     if (!target) return;
@@ -149,10 +159,16 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
         <PressableScale style={styles.draft} onPress={() => save.mutate({ slots, publish: false })} disabled={save.isPending}>
           <Text style={styles.draftText}>Spara utkast</Text>
         </PressableScale>
+        {eligIssues.map((issue) => (
+          <View key={issue} style={styles.eligWarn}>
+            <Ionicons name="lock-closed" size={16} color={COLOR.ink2} />
+            <Text style={styles.eligWarnText}>{issue}</Text>
+          </View>
+        ))}
         <PressableScale
-          style={[styles.publish, (starterCount !== STARTERS || save.isPending) && styles.publishOff]}
+          style={[styles.publish, (starterCount !== STARTERS || save.isPending || eligIssues.length > 0) && styles.publishOff]}
           onPress={() => save.mutate({ slots, publish: true })}
-          disabled={starterCount !== STARTERS || save.isPending}
+          disabled={starterCount !== STARTERS || save.isPending || eligIssues.length > 0}
         >
           {save.isPending ? <ActivityIndicator color={COLOR.bg} /> : <Text style={styles.publishText}>Publicera laguppställning</Text>}
         </PressableScale>
@@ -194,7 +210,7 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
             : (
               <>
                 {pickList.map((c) => (
-                  <CandidateRow key={c.publicId} c={c} hall={hall} matchDivision={match?.division} onPress={() => assign(c.publicId, c.name)} />
+                  <CandidateRow key={c.publicId} c={c} hall={hall} eligibility={verdict(c.publicId)} onPress={() => assign(c.publicId, c.name)} />
                 ))}
                 <Text style={styles.pickerHint}>Söker du någon som inte är med i laget i appen? Sök på namn ovan.</Text>
               </>
@@ -246,6 +262,8 @@ const styles = StyleSheet.create({
   publishOff: { opacity: 0.4 },
   publishText: { color: COLOR.bg, fontSize: TYPE.body, fontFamily: FONT.bold },
   publishHint: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginTop: SPACE[2] },
+  eligWarn: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2], marginTop: SPACE[4], padding: SPACE[3], borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLOR.ink4, backgroundColor: COLOR.surface2 },
+  eligWarnText: { flex: 1, color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   share: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACE[2], marginTop: SPACE[4], paddingVertical: SPACE[3] },
   shareText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
   search: { backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[3], color: COLOR.ink, fontSize: TYPE.body, marginBottom: SPACE[3] },
