@@ -328,6 +328,53 @@ export function parsePlayerTotals(scores: BitsMatchScores): ParsedPlayer[] {
   }))
 }
 
+export type ParsedDelmatchSlot = {
+  serie:      number   // 1-based
+  tableNo:    number   // physical bord, 1-based
+  order:      number   // slot within the konstellation, 1-based
+  isHomeTeam: boolean
+  playerName: string   // abbreviated as BITS gives it ("A. Molander")
+  score:      number
+}
+
+// scoreId looks like "lblSerie1Table3Order2" — Serie, physical Table (bord),
+// and the player's Order slot in the konstellation. This is what lets us
+// reconstruct the exact delmatch pairing (see bits_match_delmatch.sql).
+const DELMATCH_SCORE_ID = /Serie(\d+)Table(\d+)Order(\d+)/i
+
+/**
+ * Extract per-slot delmatch rows from a GetMatchScores response. Home/away is
+ * taken from the board half (first half of a serie's boards = home team —
+ * verified across 8/6/4-lane formats, same basis as parseTeamSeries), NOT from
+ * the scoreId, which carries no side. Rows whose scoreId doesn't match the
+ * Serie/Table/Order shape (junior/individual schemes) are skipped — grouping
+ * the returned rows by (serie, tableNo) yields each delmatch.
+ */
+export function parseMatchDelmatchSlots(scores: BitsMatchScores): ParsedDelmatchSlot[] {
+  const slots: ParsedDelmatchSlot[] = []
+  for (const serie of scores.series ?? []) {
+    const homeBoardCount = Math.floor(serie.boards.length / 2)
+    serie.boards.forEach((board, boardIdx) => {
+      for (const ps of board.scores ?? []) {
+        const m = DELMATCH_SCORE_ID.exec(ps.scoreId ?? '')
+        if (!m) continue
+        const name = ps.playerName?.trim()
+        const val  = parseInt(ps.score, 10)
+        if (!name || isNaN(val) || val <= 0) continue
+        slots.push({
+          serie:      parseInt(m[1], 10),
+          tableNo:    parseInt(m[2], 10),
+          order:      parseInt(m[3], 10),
+          isHomeTeam: boardIdx < homeBoardCount,
+          playerName: name,
+          score:      val,
+        })
+      }
+    })
+  }
+  return slots
+}
+
 export type ParsedMatchResultPlayer = {
   licNbr:      string
   fullName:    string

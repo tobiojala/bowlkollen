@@ -1,4 +1,5 @@
 import 'server-only'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabase } from '@/lib/supabase-server'
 import {
   getDivisions,
@@ -11,6 +12,7 @@ import {
   getPlayerProfileDetail,
   parsePlayerTotals,
   parseMatchResults,
+  parseMatchDelmatchSlots,
   type BitsClub,
   type BitsTeam,
 } from '@/lib/bits-client'
@@ -444,6 +446,134 @@ export async function syncPendingExactResults(limit = 200): Promise<SyncResult> 
       } catch (e) {
         result.errors.push(`match ${bits_match_id}: ${String(e)}`)
       }
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+
+  if (result.errors.length > 0) result.ok = false
+  return result
+}
+
+// ─── 2v2 / 1v1 delmatch (bord) reconstruction ────────────────────────────────
+// GetMatchScores' scoreId ("lblSerie{S}Table{T}Order{O}") encodes the physical
+// bord per serie. We store one slot row per (match, serie, table, side, order);
+// grouping by (serie, table) reproduces the delmatch. See bits_match_delmatch.sql.
+
+// Match an abbreviated GetMatchScores name to a full GetMatchResults name within
+// the same team side: "A. Molander" (home) ↔ "Alida Molander (…)" (home).
+function abbrKey(isHome: boolean, initial: string, surname: string): string {
+  return `${isHome ? 'H' : 'A'}|${initial}${surname}`.toLowerCase()
+}
+
+export async function syncBitsMatchDelmatches(bitsMatchId: number): Promise<SyncResult> {
+  const result: SyncResult = { ok: true, synced: 0, skipped: 0, errors: [] }
+  const db = createServiceSupabase()
+  // bits_match_delmatch / delmatch_synced aren't in the generated types until the
+  // migration is run + `npm run gen:types` — cast for those (per AGENTS.md).
+  const dbAny = db as unknown as SupabaseClient
+
+  try {
+    const { data: match } = await db
+      .from('bits_matches')
+      .select('match_scheme_id')
+      .eq('bits_match_id', bitsMatchId)
+      .single()
+
+    const rawScores = await getMatchScores(bitsMatchId)
+    const slots = parseMatchDelmatchSlots(rawScores)
+
+    if (slots.length > 0) {
+      // Resolve abbreviated names → lic_nbr via the authoritative results endpoint.
+      // On a collision (two same-side players share initial+surname) we store null
+      // rather than risk mis-linking to the wrong player profile.
+      const licBySide = new Map<string, string>()
+      const schemeId = (match?.match_scheme_id as string | null) ?? null
+      if (schemeId) {
+        try {
+          const res = await getMatchResults(bitsMatchId, schemeId)
+          for (const list of [res.playerListHome, res.playerListAway]) {
+            const isHome = list === res.playerListHome
+            for (const p of list ?? []) {
+              const suffix = ` (${p.licNbr})`
+              const full = p.player.endsWith(suffix) ? p.player.slice(0, -suffix.length).trim() : p.player.trim()
+              const parts = full.split(/\s+/).filter(Boolean)
+              if (parts.length < 2) continue
+              const key = abbrKey(isHome, parts[0][0], parts[parts.length - 1])
+              licBySide.set(key, licBySide.has(key) ? '' : p.licNbr)
+            }
+          }
+        } catch { /* results unavailable — store slots with null lic_nbr */ }
+      }
+
+      const rows = slots.map(s => {
+        const parts   = s.playerName.split(/\s+/).filter(Boolean)   // "A. Molander"
+        const initial = (parts[0]?.replace(/[^A-Za-zÅÄÖåäö]/g, '')[0]) ?? ''
+        const surname = parts[parts.length - 1] ?? ''
+        const lic     = licBySide.get(abbrKey(s.isHomeTeam, initial, surname))
+        return {
+          bits_match_id: bitsMatchId,
+          serie:        s.serie,
+          table_no:     s.tableNo,
+          player_order: s.order,
+          is_home_team: s.isHomeTeam,
+          player_name:  s.playerName,
+          lic_nbr:      lic ? lic : null,
+          score:        s.score,
+        }
+      })
+
+      const { error: upErr } = await dbAny
+        .from('bits_match_delmatch')
+        .upsert(rows, { onConflict: 'bits_match_id,serie,table_no,is_home_team,player_order' })
+      if (upErr) throw new Error(upErr.message)
+      result.synced = rows.length
+    } else {
+      // No Serie/Table/Order scoreIds — junior/individual scheme with no bord
+      // structure. Mark done so it stops being re-selected as pending.
+      result.skipped = 1
+    }
+
+    await dbAny
+      .from('bits_matches')
+      .update({ delmatch_synced: true })
+      .eq('bits_match_id', bitsMatchId)
+  } catch (e) {
+    result.ok = false
+    result.errors.push(String(e))
+  }
+
+  return result
+}
+
+export async function syncPendingDelmatches(limit = 200): Promise<SyncResult> {
+  const result: SyncResult = { ok: true, synced: 0, skipped: 0, errors: [] }
+  const db = createServiceSupabase() as unknown as SupabaseClient   // delmatch_synced not in generated types yet
+
+  const { data: pending, error: fetchErr } = await db
+    .from('bits_matches')
+    .select('bits_match_id')
+    .eq('is_finished', true)
+    .eq('delmatch_synced', false)
+    .order('match_date', { ascending: false })
+    .limit(limit)
+
+  if (fetchErr || !pending) {
+    result.ok = false
+    result.errors.push(fetchErr?.message ?? 'query failed')
+    return result
+  }
+  if (!pending.length) { result.skipped = 1; return result }
+  const pendingList = pending as { bits_match_id: number }[]
+
+  const CONCURRENCY = 20
+  let idx = 0
+  async function worker() {
+    while (idx < pendingList.length) {
+      const { bits_match_id } = pendingList[idx++]
+      const r = await syncBitsMatchDelmatches(bits_match_id)
+      result.synced  += r.synced
+      result.skipped += r.skipped
+      result.errors.push(...r.errors)
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker))
