@@ -29,12 +29,14 @@ import { usePlayerHeader, useSetMyPlayerHeader } from '@/lib/appearance';
 import { useMyClaim } from '@/lib/me';
 import { PlayerAchievements } from '@/components/PlayerAchievements';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
+import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { PlayerRating } from '@/components/PlayerRating';
 import { PlayerSeason } from '@/components/PlayerSeason';
 import { ProfileDNA } from '@/components/ProfileDNA';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
+import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
 import { computePlayerStats, playerAchievements } from '@/lib/player-stats';
 import { supabase } from '@/lib/supabase';
 import { teamColor, teamInitials } from '@/lib/team-identity';
@@ -82,6 +84,7 @@ export default function PlayerPage() {
   const { data: history = [] } = usePlayerHistory(id);
   const { data: followers = 0 } = useFollowCount('player', id);
   const { data: percentile } = usePlayerPercentile(id);
+  const { data: delmatchRecord } = usePlayerDelmatchRecord(id);
   const claimed = useIsClaimed(id);
   const { data: headerColor } = usePlayerHeader(id);
   const { data: myClaim } = useMyClaim();
@@ -147,6 +150,14 @@ export default function PlayerPage() {
           <PlayerAchievements items={achievements} />
 
           <PlayerSeason firstName={player.name.split(' ')[0]} stats={stats} />
+
+          {delmatchRecord && (
+            <PlayerDelmatchCard
+              record={delmatchRecord}
+              firstName={player.name.split(' ')[0]}
+              onOpenPlayer={(pid) => pid !== id && router.push(`/player/${pid}`)}
+            />
+          )}
 
           {matchAvgs.length > 2 && (
             <View style={styles.section}>
