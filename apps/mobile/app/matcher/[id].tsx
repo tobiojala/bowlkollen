@@ -13,11 +13,15 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { GlassCircle, GlassPill } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchScorecard } from '@/components/MatchScorecard';
+import { DelmatchBoard } from '@/components/DelmatchBoard';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { Segmented } from '@/components/Segmented';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
+import { computeDelmatcher, type DelmatchSlot, type DelmatchSummary } from '@/lib/delmatch';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -87,6 +91,47 @@ function useMatchResults(matchId: number) {
   });
 }
 
+function useMatchDelmatcher(matchId: number) {
+  return useQuery({
+    queryKey: ['match-delmatch', matchId],
+    queryFn: async (): Promise<DelmatchSummary> => {
+      // bits_match_delmatch isn't in the generated types yet — cast (see AGENTS.md).
+      const db = supabase as unknown as SupabaseClient;
+      const { data, error } = await db
+        .from('bits_match_delmatch')
+        .select('serie, table_no, player_order, is_home_team, player_name, lic_nbr, score')
+        .eq('bits_match_id', matchId);
+      if (error) throw error;
+      const rows = (data ?? []) as {
+        serie: number; table_no: number; player_order: number;
+        is_home_team: boolean; player_name: string; lic_nbr: string | null; score: number;
+      }[];
+
+      // Resolve licence numbers -> profile ids so bord names can open player pages.
+      const licNbrs = [...new Set(rows.map((r) => r.lic_nbr).filter(Boolean) as string[])];
+      const idMap = new Map<string, string>();
+      if (licNbrs.length) {
+        const { data: players } = await supabase
+          .from('bits_players')
+          .select('lic_nbr, public_id')
+          .in('lic_nbr', licNbrs);
+        for (const p of players ?? []) idMap.set(p.lic_nbr, p.public_id);
+      }
+
+      const slots: DelmatchSlot[] = rows.map((r) => ({
+        serie: r.serie,
+        tableNo: r.table_no,
+        order: r.player_order,
+        isHomeTeam: r.is_home_team,
+        playerName: r.player_name,
+        publicId: r.lic_nbr ? idMap.get(r.lic_nbr) ?? null : null,
+        score: r.score,
+      }));
+      return computeDelmatcher(slots);
+    },
+  });
+}
+
 export default function MatchPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -94,6 +139,8 @@ export default function MatchPage() {
   const matchId = Number(id);
   const { data: match, isLoading } = useMatch(matchId);
   const { data: results = [] } = useMatchResults(matchId);
+  const { data: delmatch } = useMatchDelmatcher(matchId);
+  const hasDelmatch = !!delmatch?.hasData;
 
   const home = results.filter((r) => r.is_home_team);
   const away = results.filter((r) => !r.is_home_team);
@@ -109,6 +156,7 @@ export default function MatchPage() {
   const openTeam = (tid: number | null) => tid != null && router.push(`/lag/${tid}`);
 
   const [cardOpen, setCardOpen] = useState(false);
+  const [cardView, setCardView] = useState<'bord' | 'serie'>('bord');
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = cardOpen
@@ -187,26 +235,50 @@ export default function MatchPage() {
       <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
         <GlassCircle icon="chevron-back" onPress={() => router.back()} accessibilityLabel="Tillbaka" />
       </View>
-      {finished && hasSeries && (
+      {finished && (hasDelmatch || hasSeries) && (
         <View style={[styles.chromeRight, { top: insets.top + 6 }]}>
-          <GlassPill icon="stats-chart-outline" label="Scorecard" onPress={() => setCardOpen(true)} />
+          <GlassPill
+            icon={hasDelmatch ? 'grid-outline' : 'stats-chart-outline'}
+            label={hasDelmatch ? 'Bord' : 'Scorecard'}
+            onPress={() => {
+              setCardView(hasDelmatch ? 'bord' : 'serie');
+              setCardOpen(true);
+            }}
+          />
         </View>
       )}
       </Animated.View>
 
       {match && (
-        <GlassSheet visible={cardOpen} onClose={() => setCardOpen(false)} title="Scorecard">
+        <GlassSheet
+          visible={cardOpen}
+          onClose={() => setCardOpen(false)}
+          title={hasDelmatch && cardView === 'bord' ? 'Bord' : 'Scorecard'}
+        >
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
-            <MatchScorecard
-              homeTeam={match.home_team_name}
-              awayTeam={match.away_team_name}
-              home={home}
-              away={away}
-              homeBanp={match.home_result}
-              awayBanp={match.away_result}
-              homePins={match.home_score}
-              awayPins={match.away_score}
-            />
+            {hasDelmatch && hasSeries && (
+              <View style={{ marginBottom: SPACE[4] }}>
+                <Segmented
+                  options={[{ key: 'bord', label: 'Bord' }, { key: 'serie', label: 'Serie' }]}
+                  value={cardView}
+                  onChange={setCardView}
+                />
+              </View>
+            )}
+            {cardView === 'bord' && delmatch ? (
+              <DelmatchBoard summary={delmatch} onOpenPlayer={(pid) => { setCardOpen(false); router.push(`/player/${pid}`); }} />
+            ) : (
+              <MatchScorecard
+                homeTeam={match.home_team_name}
+                awayTeam={match.away_team_name}
+                home={home}
+                away={away}
+                homeBanp={match.home_result}
+                awayBanp={match.away_result}
+                homePins={match.home_score}
+                awayPins={match.away_score}
+              />
+            )}
           </ScrollView>
         </GlassSheet>
       )}
