@@ -18,7 +18,7 @@ export function PlayerDelmatchCard({
   onOpenPlayer: (publicId: string) => void;
 }) {
   if (!record.hasData) return null;
-  const { record: r, milestones: m, rivalries, partners } = record;
+  const { record: r, milestones: m, rivalries, partners, recent } = record;
   const has2v2 = partners.length > 0;
 
   return (
@@ -36,6 +36,28 @@ export function PlayerDelmatchCard({
           {Math.round(r.winRate * 100)}% vinst · {r.played} delmatcher
         </Text>
       </View>
+
+      {recent.length > 0 && (
+        <View style={styles.form}>
+          <Text style={styles.blockLabel}>BORDFORM</Text>
+          <View style={styles.formRow}>
+            {recent.slice(0, 12).map((d, i) => {
+              const kind = d.outcome === 'home' ? 'V' : d.outcome === 'away' ? 'F' : 'O';
+              return (
+                <View
+                  key={`${d.matchId}-${i}`}
+                  style={[styles.dot, kind === 'V' ? styles.dotWin : kind === 'F' ? styles.dotLoss : styles.dotTie]}
+                >
+                  <Text style={[styles.dotText, kind === 'V' ? styles.dotTextWin : kind === 'F' ? styles.dotTextLoss : styles.dotTextTie]}>
+                    {kind}
+                  </Text>
+                </View>
+              );
+            })}
+            <Text style={styles.formHint}>senaste</Text>
+          </View>
+        </View>
+      )}
 
       <View style={styles.milestones}>
         <Milestone label="Bästa serie" value={String(m.bestGame)} gold={m.bestGame >= 300} />
@@ -127,6 +149,21 @@ const styles = StyleSheet.create({
   recLoss: { color: COLOR.ink3, fontSize: TYPE.hero - 6, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
   recTies: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   heroSub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold, marginTop: 2 },
+
+  form: { marginBottom: SPACE[4] },
+  formRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[1], flexWrap: 'wrap' },
+  dot: {
+    width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
+  },
+  dotWin: { backgroundColor: 'rgba(48,212,126,0.14)', borderColor: 'rgba(48,212,126,0.45)' },
+  dotLoss: { backgroundColor: 'rgba(224,85,85,0.14)', borderColor: 'rgba(224,85,85,0.45)' },
+  dotTie: { backgroundColor: COLOR.surface, borderColor: COLOR.surface2 },
+  dotText: { fontSize: TYPE.caption, fontFamily: FONT.bold },
+  dotTextWin: { color: COLOR.green },
+  dotTextLoss: { color: COLOR.red },
+  dotTextTie: { color: COLOR.ink2 },
+  formHint: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginLeft: SPACE[1] },
 
   milestones: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[2], marginBottom: SPACE[4] },
   mTile: {
