@@ -18,10 +18,12 @@ import { GlassCircle, GlassPill } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchScorecard } from '@/components/MatchScorecard';
 import { DelmatchBoard } from '@/components/DelmatchBoard';
+import { RivalryCallout } from '@/components/RivalryCallout';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { Segmented } from '@/components/Segmented';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { computeDelmatcher, type DelmatchSlot, type DelmatchSummary } from '@/lib/delmatch';
+import { useMatchRivalry } from '@/lib/match-rivalry';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -141,6 +143,7 @@ export default function MatchPage() {
   const { data: results = [] } = useMatchResults(matchId);
   const { data: delmatch } = useMatchDelmatcher(matchId);
   const hasDelmatch = !!delmatch?.hasData;
+  const { data: rivalry } = useMatchRivalry(matchId, hasDelmatch);
 
   const home = results.filter((r) => r.is_home_team);
   const away = results.filter((r) => !r.is_home_team);
@@ -224,6 +227,14 @@ export default function MatchPage() {
               </View>
               <Text style={styles.bestTotal}>{topTotal}</Text>
             </PressableScale>
+          )}
+
+          {rivalry && (
+            <RivalryCallout
+              rivalry={rivalry}
+              onOpenPlayer={(pid) => router.push(`/player/${pid}`)}
+              onOpenBord={() => { setCardView('bord'); setCardOpen(true); }}
+            />
           )}
 
           <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} topTotal={topTotal} />
