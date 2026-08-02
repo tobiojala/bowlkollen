@@ -9,6 +9,7 @@ import { GlassCircle } from '@/components/GlassButtons';
 import { MatchBallPicker } from '@/components/MatchBallPicker';
 import { OilPatternSheet } from '@/components/OilPatternSheet';
 import { PressableScale } from '@/components/PressableScale';
+import { ScoutingCard } from '@/components/ScoutingCard';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import {
   useDeleteNote,
@@ -94,6 +95,9 @@ export default function PrepPage() {
           </Text>
           <Ionicons name="chevron-forward" size={15} color={COLOR.ink4} />
         </PressableScale>
+
+        {/* Inför matchen — your head-to-head vs the opponent's roster */}
+        {match && <ScoutingCard match={match} onOpenPlayer={(pid) => router.push(`/player/${pid}`)} />}
 
         {/* Cross-center recall: what worked on this same pattern elsewhere */}
         {pattern && patternHistory && (patternHistory.balls.length > 0 || patternHistory.notes.length > 0) && (
