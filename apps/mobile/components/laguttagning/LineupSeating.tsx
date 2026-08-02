@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { CandidateRow } from '@/components/CandidateRow';
+import { KonstellationPanel } from '@/components/laguttagning/KonstellationPanel';
 import { GlassSheet } from '@/components/GlassSheet';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { PressableScale } from '@/components/PressableScale';
@@ -31,6 +33,7 @@ type Target = { bord: number; pos: number; isReserve: boolean };
 // The "Laget" tab: seat 4 banpar × 2 + reserves, auto-suggest, save/publish, share, and
 // the candidate picker. Owns its own scroll + sheet so it's a self-contained tab.
 export function LineupSeating({ teamId, matchId, match }: { teamId: number; matchId: number; match: PrepMatch | null }) {
+  const router = useRouter();
   const { data: team } = useTeam(teamId);
   const { data: candidates = [] } = useLineupCandidates(teamId, matchId);
   const { data: existing } = useTeamLineup(teamId, matchId);
@@ -85,6 +88,17 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
   };
   const remove = (publicId: string) => setSlots((prev) => prev.filter((s) => s.publicId !== publicId));
 
+  // Seat a suggested konstellation into the first fully-empty banpar.
+  const seatPair = (a: { publicId: string; name: string }, b: { publicId: string; name: string }) =>
+    setSlots((prev) => {
+      const bord = BOARDS.find((bd) => ![1, 2].some((p) => prev.some((s) => !s.isReserve && s.bord === bd && s.pos === p)));
+      if (!bord) return prev;
+      const next = prev.filter((s) => s.publicId !== a.publicId && s.publicId !== b.publicId);
+      next.push({ publicId: a.publicId, name: a.name, bord, pos: 1, isReserve: false });
+      next.push({ publicId: b.publicId, name: b.name, bord, pos: 2, isReserve: false });
+      return next;
+    });
+
   const shareLineup = () => {
     const line = (b: number) => `Banpar ${b}: ${starter(b, 1)?.name ?? '—'} / ${starter(b, 2)?.name ?? '—'}`;
     const head = match ? `Laguppställning – ${match.homeName} mot ${match.awayName}` : 'Laguppställning';
@@ -133,6 +147,13 @@ export function LineupSeating({ teamId, matchId, match }: { teamId: number; matc
             <Text style={styles.suggestText}>{starterCount === 0 ? 'Föreslå laget' : 'Fyll tomma platser'}</Text>
           </PressableScale>
         )}
+
+        <KonstellationPanel
+          candidates={candidates.map((c) => ({ publicId: c.publicId, name: c.name }))}
+          seatedIds={seated}
+          onSeatPair={seatPair}
+          onOpenPlayer={(pid) => router.push(`/player/${pid}`)}
+        />
 
         {BOARDS.map((bord) => (
           <View key={bord} style={styles.board}>
