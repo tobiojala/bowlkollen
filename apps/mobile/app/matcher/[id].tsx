@@ -18,12 +18,14 @@ import { GlassCircle, GlassPill } from '@/components/GlassButtons';
 import { GlassSheet } from '@/components/GlassSheet';
 import { MatchScorecard } from '@/components/MatchScorecard';
 import { DelmatchBoard } from '@/components/DelmatchBoard';
+import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { RivalryCallout } from '@/components/RivalryCallout';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { Segmented } from '@/components/Segmented';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { computeDelmatcher, type DelmatchSlot, type DelmatchSummary } from '@/lib/delmatch';
 import { useMatchRivalry } from '@/lib/match-rivalry';
+import type { Moment } from '@/lib/share';
 import { formatMatchDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -160,6 +162,7 @@ export default function MatchPage() {
 
   const [cardOpen, setCardOpen] = useState(false);
   const [cardView, setCardView] = useState<'bord' | 'serie'>('bord');
+  const [shareMoment, setShareMoment] = useState<Moment | null>(null);
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = cardOpen
@@ -234,6 +237,12 @@ export default function MatchPage() {
               rivalry={rivalry}
               onOpenPlayer={(pid) => router.push(`/player/${pid}`)}
               onOpenBord={() => { setCardView('bord'); setCardOpen(true); }}
+              onShare={() => setShareMoment({
+                kind: 'rivalry',
+                aName: rivalry.a.name, bName: rivalry.b.name,
+                aWins: rivalry.a.wins, bWins: rivalry.b.wins,
+                meetings: rivalry.meetings,
+              })}
             />
           )}
 
@@ -293,6 +302,8 @@ export default function MatchPage() {
           </ScrollView>
         </GlassSheet>
       )}
+
+      <MomentShareSheet moment={shareMoment} onClose={() => setShareMoment(null)} />
     </View>
   );
 }

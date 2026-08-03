@@ -28,6 +28,7 @@ import { usePlayerHeader, useSetMyPlayerHeader } from '@/lib/appearance';
 import { useMyClaim } from '@/lib/me';
 import { PlayerAchievements } from '@/components/PlayerAchievements';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
+import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { PlayerRating } from '@/components/PlayerRating';
 import { PlayerSeason } from '@/components/PlayerSeason';
@@ -36,6 +37,7 @@ import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
+import type { Moment } from '@/lib/share';
 import { computePlayerStats, playerAchievements } from '@/lib/player-stats';
 import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
@@ -63,6 +65,7 @@ export default function PlayerPage() {
   const achievements = playerAchievements(stats);
 
   const [sheet, setSheet] = useState<PlayerSheetKind>(null);
+  const [shareMoment, setShareMoment] = useState<Moment | null>(null);
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = sheet != null
@@ -133,6 +136,19 @@ export default function PlayerPage() {
               record={delmatchRecord}
               firstName={player.name.split(' ')[0]}
               onOpenPlayer={(pid) => pid !== id && router.push(`/player/${pid}`)}
+              onShare={() => setShareMoment({
+                kind: 'record',
+                name: player.name,
+                wins: delmatchRecord.record.wins,
+                losses: delmatchRecord.record.losses,
+                winRate: delmatchRecord.record.winRate,
+                played: delmatchRecord.record.played,
+                highlight: delmatchRecord.milestones.perfectGames > 0
+                  ? `${delmatchRecord.milestones.perfectGames}× 300 i en delmatch`
+                  : delmatchRecord.milestones.bestGame > 0
+                    ? `Högsta spel ${delmatchRecord.milestones.bestGame}`
+                    : undefined,
+              })}
             />
           )}
 
@@ -199,6 +215,7 @@ export default function PlayerPage() {
       </Animated.View>
 
       <PlayerInfoSheet kind={sheet} stats={stats} recentAvg={recentAvg} onClose={() => setSheet(null)} />
+      <MomentShareSheet moment={shareMoment} onClose={() => setShareMoment(null)} />
       <HeaderColorSheet visible={headerOpen} onClose={() => setHeaderOpen(false)} onPick={(c) => setHeader.mutate(c)} />
     </View>
   );

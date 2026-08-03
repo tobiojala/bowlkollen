@@ -14,10 +14,12 @@ export function RivalryCallout({
   rivalry,
   onOpenPlayer,
   onOpenBord,
+  onShare,
 }: {
   rivalry: MatchRivalry;
   onOpenPlayer: (publicId: string) => void;
   onOpenBord: () => void;
+  onShare: () => void;
 }) {
   const { a, b, meetings, tonight } = rivalry;
   const aLeads = a.wins > b.wins;
@@ -35,7 +37,7 @@ export function RivalryCallout({
   return (
     <View style={styles.wrap}>
       <Text style={styles.sectionLabel}>KVÄLLENS BORD</Text>
-      <Pressable style={styles.card} onPress={onOpenBord} accessibilityLabel="Öppna bordvyn">
+      <View style={styles.card}>
         <View style={styles.eyebrow}>
           <Ionicons name="flame" size={14} color={COLOR.gold} />
           <Text style={styles.eyebrowText}>HETASTE BORDET</Text>
@@ -60,13 +62,19 @@ export function RivalryCallout({
         </View>
 
         <View style={styles.foot}>
-          <Text style={styles.footText}>{tonightText}</Text>
-          <View style={styles.openBord}>
-            <Text style={styles.openBordText}>Bordvyn</Text>
-            <Ionicons name="chevron-forward" size={15} color={COLOR.ink3} />
+          <Text style={styles.footText} numberOfLines={1}>{tonightText}</Text>
+          <View style={styles.footActions}>
+            <Pressable style={styles.shareBtn} onPress={onShare} hitSlop={8} accessibilityLabel="Dela">
+              <Ionicons name="share-outline" size={18} color={COLOR.ink2} />
+              <Text style={styles.shareText}>Dela</Text>
+            </Pressable>
+            <Pressable style={styles.openBord} onPress={onOpenBord} hitSlop={8} accessibilityLabel="Öppna bordvyn">
+              <Text style={styles.openBordText}>Bordvyn</Text>
+              <Ionicons name="chevron-forward" size={15} color={COLOR.ink3} />
+            </Pressable>
           </View>
         </View>
-      </Pressable>
+      </View>
     </View>
   );
 }
@@ -121,7 +129,10 @@ const styles = StyleSheet.create({
   barFaint: { backgroundColor: COLOR.ink4 },
 
   foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACE[4], paddingTop: SPACE[3], borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLOR.surface2 },
-  footText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  footText: { flex: 1, minWidth: 0, color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  footActions: { flexDirection: 'row', alignItems: 'center', gap: SPACE[4] },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  shareText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.bold },
   openBord: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   openBordText: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.bold },
 });

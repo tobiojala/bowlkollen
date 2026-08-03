@@ -12,10 +12,12 @@ export function PlayerDelmatchCard({
   record,
   firstName,
   onOpenPlayer,
+  onShare,
 }: {
   record: PlayerDelmatchRecord;
   firstName: string;
   onOpenPlayer: (publicId: string) => void;
+  onShare?: () => void;
 }) {
   if (!record.hasData) return null;
   const { record: r, milestones: m, rivalries, partners, recent } = record;
@@ -23,7 +25,15 @@ export function PlayerDelmatchCard({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionLabel}>DELMATCH</Text>
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionLabel}>DELMATCH</Text>
+        {onShare && (
+          <Pressable style={styles.share} onPress={onShare} hitSlop={8} accessibilityLabel="Dela delmatchfacit">
+            <Ionicons name="share-outline" size={18} color={COLOR.ink2} />
+            <Text style={styles.shareText}>Dela</Text>
+          </Pressable>
+        )}
+      </View>
 
       <View style={styles.hero}>
         <View style={styles.recordRow}>
@@ -140,7 +150,10 @@ function FaceRow({
 
 const styles = StyleSheet.create({
   section: { marginTop: SPACE[8] },
-  sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginBottom: SPACE[3] },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[3] },
+  sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  share: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  shareText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.bold },
 
   hero: { alignItems: 'center', marginBottom: SPACE[4] },
   recordRow: { flexDirection: 'row', alignItems: 'baseline' },
