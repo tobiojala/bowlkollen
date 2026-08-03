@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -38,43 +37,9 @@ import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
 import { computePlayerStats, playerAchievements } from '@/lib/player-stats';
-import { supabase } from '@/lib/supabase';
+import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
-
-function usePlayer(publicId: string) {
-  return useQuery({
-    queryKey: ['player', publicId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_player_identity', { p_public_id: publicId });
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-  });
-}
-
-function usePlayerHistory(publicId: string) {
-  return useQuery({
-    queryKey: ['player-history', publicId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_player_match_history', { p_public_id: publicId });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-}
-
-// Percentile vs the whole field (integer: "better than X%").
-function usePlayerPercentile(publicId: string) {
-  return useQuery({
-    queryKey: ['player-percentile', publicId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_player_percentile', { p_public_id: publicId });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
 
 export default function PlayerPage() {
   const router = useRouter();
@@ -135,7 +100,19 @@ export default function PlayerPage() {
                 <Ionicons name="color-palette-outline" size={22} color={COLOR.ink} />
               </PressableScale>
             ) : (
-              <FollowButton entityType="player" entityId={id} />
+              <View style={styles.headerActions}>
+                {myClaim?.status === 'verified' && myClaim.publicId && myClaim.publicId !== id && (
+                  <PressableScale
+                    style={styles.compareBtn}
+                    onPress={() => router.push(`/compare/${id}/${myClaim.publicId}`)}
+                    hitSlop={8}
+                    accessibilityLabel="Jämför med dig"
+                  >
+                    <Ionicons name="git-compare-outline" size={22} color={COLOR.ink} />
+                  </PressableScale>
+                )}
+                <FollowButton entityType="player" entityId={id} />
+              </View>
             )}
           </View>
 
@@ -247,6 +224,8 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   editHeader: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
+  compareBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
   sectionHeaderRow: {
