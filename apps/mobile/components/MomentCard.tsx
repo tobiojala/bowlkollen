@@ -25,7 +25,7 @@ export function MomentCard({ moment }: { moment: Moment }) {
 
       <View style={styles.body}>{renderBody(moment)}</View>
 
-      <Text style={styles.footer}>Delmatcher · rivaliteter · din historik</Text>
+      <Text style={styles.footer}>Bord · rivaliteter · din historik</Text>
     </LinearGradient>
   );
 }
@@ -56,7 +56,7 @@ function renderBody(m: Moment) {
           <Text style={styles.recDash}>–</Text>
           <Text style={styles.recNum}>{m.losses}</Text>
         </View>
-        <Text style={styles.sub}>{Math.round(m.winRate * 100)}% vinst · {m.played} delmatcher</Text>
+        <Text style={styles.sub}>{Math.round(m.winRate * 100)}% vinst · {m.played} bord</Text>
         {!!m.highlight && <Text style={styles.highlight}>{m.highlight}</Text>}
       </>
     );

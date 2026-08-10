@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
   meetings: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginLeft: SPACE[1] },
 
-  tag: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.5, paddingHorizontal: SPACE[2], paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
+  tag: { fontSize: TYPE.caption, fontFamily: FONT.bold, letterSpacing: 0.5, paddingHorizontal: SPACE[2], paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
   tagBogey: { color: COLOR.red, backgroundColor: 'rgba(224,85,85,0.13)' },
   tagFav: { color: COLOR.green, backgroundColor: 'rgba(48,212,126,0.13)' },
   tagEven: { color: COLOR.ink3, backgroundColor: COLOR.surface2 },

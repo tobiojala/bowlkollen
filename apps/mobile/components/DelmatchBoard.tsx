@@ -23,7 +23,7 @@ export function DelmatchBoard({
   return (
     <View>
       <View style={styles.tally}>
-        <Text style={styles.tallyLabel}>BANPOÄNG (REKONSTRUERAT)</Text>
+        <Text style={styles.tallyLabel}>BANPOÄNG</Text>
         <View style={styles.tallyRow}>
           <Text style={[styles.tallyNum, side(summary.homeBanp, summary.awayBanp) === 'home' && styles.tallyWin]}>
             {summary.homeBanp}

@@ -26,7 +26,7 @@ export function PlayerDelmatchCard({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionLabel}>DELMATCH</Text>
+        <Text style={styles.sectionLabel}>BORD</Text>
         {onShare && (
           <Pressable style={styles.share} onPress={onShare} hitSlop={8} accessibilityLabel="Dela delmatchfacit">
             <Ionicons name="share-outline" size={18} color={COLOR.ink2} />
@@ -43,7 +43,7 @@ export function PlayerDelmatchCard({
           {r.ties > 0 && <Text style={styles.recTies}>  ({r.ties} oavgj)</Text>}
         </View>
         <Text style={styles.heroSub}>
-          {Math.round(r.winRate * 100)}% vinst · {r.played} delmatcher
+          {Math.round(r.winRate * 100)}% vinst · {r.played} bord
         </Text>
       </View>
 

@@ -144,7 +144,7 @@ export default function PlayerPage() {
                 winRate: delmatchRecord.record.winRate,
                 played: delmatchRecord.record.played,
                 highlight: delmatchRecord.milestones.perfectGames > 0
-                  ? `${delmatchRecord.milestones.perfectGames}× 300 i en delmatch`
+                  ? `${delmatchRecord.milestones.perfectGames}× 300 vid bordet`
                   : delmatchRecord.milestones.bestGame > 0
                     ? `Högsta spel ${delmatchRecord.milestones.bestGame}`
                     : undefined,

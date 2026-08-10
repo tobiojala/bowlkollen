@@ -16,12 +16,13 @@ describe('momentShareText', () => {
   });
 
   it('record includes win rate and optional highlight', () => {
-    const m: Moment = { kind: 'record', name: 'Me', wins: 223, losses: 170, winRate: 0.567, played: 394, highlight: '1× 300 i en delmatch' };
+    const m: Moment = { kind: 'record', name: 'Me', wins: 223, losses: 170, winRate: 0.567, played: 394, highlight: '1× 300 vid bordet' };
     const t = momentShareText(m);
+    expect(t).toContain('Mitt bordfacit');
     expect(t).toContain('223–170');
     expect(t).toContain('57% vinst');
-    expect(t).toContain('394 delmatcher');
-    expect(t).toContain('1× 300 i en delmatch');
+    expect(t).toContain('394 bord');
+    expect(t).toContain('1× 300 vid bordet');
   });
 
   it('milestone formats title/value/sub', () => {
@@ -34,6 +35,6 @@ describe('momentShareText', () => {
 
   it('headline is uppercase and kind-appropriate', () => {
     expect(momentHeadline({ kind: 'rivalry', aName: 'A', bName: 'B', aWins: 1, bWins: 0, meetings: 1 })).toBe('HETASTE BORDET');
-    expect(momentHeadline({ kind: 'record', name: 'x', wins: 1, losses: 0, winRate: 1, played: 1 })).toBe('DELMATCHFACIT');
+    expect(momentHeadline({ kind: 'record', name: 'x', wins: 1, losses: 0, winRate: 1, played: 1 })).toBe('BORDFACIT');
   });
 });

@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   head: { flex: 1, alignItems: 'center', gap: SPACE[1] },
   name: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold, textAlign: 'center', marginTop: SPACE[2], lineHeight: 20 },
   club: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center' },
-  tier: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 2 },
+  tier: { fontSize: TYPE.caption, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 2 },
   mot: { color: COLOR.ink4, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, paddingHorizontal: SPACE[2], marginTop: SPACE[8] },
 
   h2h: { alignItems: 'center', marginTop: SPACE[8], padding: SPACE[4], borderRadius: RADIUS.lg, backgroundColor: COLOR.surface, borderWidth: 1, borderColor: COLOR.surface2 },

@@ -59,8 +59,13 @@ export function KonstellationPanel({
               <Text style={[styles.pct, pct >= 60 && styles.pctStrong]}>{pct}%</Text>
             </View>
             {bothFree ? (
-              <PressableScale style={styles.seat} onPress={() => onSeatPair(a, b)} hitSlop={6}>
-                <Ionicons name="add" size={18} color={COLOR.bg} />
+              <PressableScale
+                style={styles.seat}
+                onPress={() => onSeatPair(a, b)}
+                hitSlop={6}
+                accessibilityLabel={`Placera ${a.name} och ${b.name}`}
+              >
+                <Ionicons name="add" size={22} color={COLOR.bg} />
               </PressableScale>
             ) : (
               <View style={styles.seated}><Ionicons name="checkmark" size={16} color={COLOR.ink3} /></View>
@@ -84,7 +89,7 @@ const styles = StyleSheet.create({
   plus: { color: COLOR.ink4, fontSize: TYPE.caption, fontFamily: FONT.bold },
   stat: { alignItems: 'flex-end', minWidth: 54 },
   rec: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold, fontVariant: ['tabular-nums'] },
-  pct: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.semibold },
+  pct: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, fontVariant: ['tabular-nums'] },
   pctStrong: { color: COLOR.green },
   seat: {
     width: 44, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center',
