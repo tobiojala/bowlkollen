@@ -1,27 +1,31 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import Animated, { runOnJS, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { formatMatchDate } from '@/lib/format';
 import type { TrendPoint } from '@/lib/player-stats';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
-const GH = 190;       // taller graph — more room
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedLine = Animated.createAnimatedComponent(Line);
+
+const GH = 190;
 const PADX = 10;
 const PADY = 26;
 const SIDE = SPACE[6];
-const CARD = SPACE[4];
-const TAIL = 5;       // how many matches the light-tail spans behind the finger
+const INSET = SPACE[4]; // horizontal inset — keeps the width we settled on
+const TAIL = 5;         // matches the light-tail spans behind the finger
+const GLIDE = 60;       // ms — softens the per-match jump without going floaty
 
-// The season match-average trend. The line sits dim by rest; on drag a directional
-// "light tail" ignites behind your finger (drag right → glow trails left, and vice
-// versa), a bright head dot leads, and the readout counts to that match. Accent is
-// green/red vs the season's first match. Snaps to latest on release.
+// The season match-average trend. Line rests dim; on drag a directional light-tail
+// ignites behind the finger (drag right → glow trails left, drag left → trails
+// right), a vertical indicator + bright head dot track the finger, and the readout
+// shows that match. Accent green/red vs the season's first match. Latest on release.
 export function ProfileTrend({ points }: { points: TrendPoint[] }) {
   const { width } = useWindowDimensions();
-  const W = width - SIDE * 2 - CARD * 2;
+  const W = width - SIDE * 2 - INSET * 2;
   const n = points.length;
 
   const prev = useRef(n - 1);
@@ -45,12 +49,22 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
   const [a, b] = tailStart <= active ? [tailStart, active] : [active, tailStart];
   const tailPath = xs.slice(a, b + 1).map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[a + i].toFixed(1)}`).join(' ');
 
-  const scrub = (i: number) => {
-    setSt((s) => {
-      const d = i > prev.current ? 1 : i < prev.current ? -1 : s.dir;
-      prev.current = i;
-      return { active: i, dir: d, dragging: true };
-    });
+  // Smooth glide of the indicator + head dot over the per-match jumps.
+  const tx = xs[active];
+  const ty = ys[active];
+  const gx = useSharedValue(tx);
+  const gy = useSharedValue(ty);
+  const lastDir = useSharedValue(1);
+  useEffect(() => {
+    gx.value = withTiming(tx, { duration: GLIDE });
+    gy.value = withTiming(ty, { duration: GLIDE });
+  }, [tx, ty, gx, gy]);
+  const dot = useAnimatedProps(() => ({ cx: gx.value, cy: gy.value }));
+  const vline = useAnimatedProps(() => ({ x1: gx.value, x2: gx.value }));
+
+  const scrub = (i: number, d: number) => {
+    prev.current = i;
+    setSt({ active: i, dir: d, dragging: true });
   };
   const release = () => {
     prev.current = n - 1;
@@ -59,12 +73,19 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
 
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
-    .onStart((e) => runOnJS(scrub)(Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1))))
-    .onUpdate((e) => runOnJS(scrub)(Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1))))
+    .onStart((e) => {
+      const i = Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1));
+      runOnJS(scrub)(i, lastDir.value);
+    })
+    .onUpdate((e) => {
+      const i = Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1));
+      if (Math.abs(e.velocityX) > 20) lastDir.value = e.velocityX > 0 ? 1 : -1; // tail follows finger motion
+      runOnJS(scrub)(i, lastDir.value);
+    })
     .onFinalize(release);
 
   return (
-    <View style={styles.card}>
+    <View>
       <View style={styles.readout}>
         <Text style={[styles.value, { color: accent }]}>{points[active].avg}</Text>
         <Text style={styles.sub} numberOfLines={1}>
@@ -77,11 +98,8 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
         <View style={{ width: W, height: GH, alignSelf: 'center' }}>
           <Svg width={W} height={GH}>
             <Defs>
-              <LinearGradient
-                id="tail"
-                gradientUnits="userSpaceOnUse"
-                x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}
-              >
+              <LinearGradient id="tail" gradientUnits="userSpaceOnUse"
+                x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}>
                 <Stop offset="0" stopColor={accent} stopOpacity={0} />
                 <Stop offset="1" stopColor={accent} stopOpacity={1} />
               </LinearGradient>
@@ -92,16 +110,18 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
 
             {dragging && a !== b && (
               <>
-                {/* soft glow of the tail, then the bright tail */}
                 <Path d={tailPath} fill="none" stroke={accent} strokeOpacity={0.18} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" />
                 <Path d={tailPath} fill="none" stroke="url(#tail)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
               </>
             )}
 
+            {/* vertical drag indicator */}
+            {dragging && <AnimatedLine animatedProps={vline} y1={PADY - 12} y2={GH} stroke={COLOR.ink3} strokeWidth={1} />}
+
             {/* head dot */}
-            <Circle cx={xs[active]} cy={ys[active]} r={dragging ? 20 : 0} fill={accent} opacity={0.12} />
-            <Circle cx={xs[active]} cy={ys[active]} r={5.5} fill={accent} />
-            <Circle cx={xs[active]} cy={ys[active]} r={2.2} fill={COLOR.bg} />
+            <AnimatedCircle animatedProps={dot} r={dragging ? 20 : 0} fill={accent} opacity={0.12} />
+            <AnimatedCircle animatedProps={dot} r={5.5} fill={accent} />
+            <AnimatedCircle animatedProps={dot} r={2.2} fill={COLOR.bg} />
           </Svg>
         </View>
       </GestureDetector>
@@ -110,9 +130,6 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLOR.surface, borderRadius: RADIUS.lg, padding: CARD, paddingBottom: SPACE[3],
-  },
   readout: { alignItems: 'center', marginBottom: SPACE[3] },
   value: { fontSize: TYPE.hero, fontFamily: FONT.scoreHeavy, letterSpacing: -3, fontVariant: ['tabular-nums'] },
   sub: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, marginTop: 2 },
