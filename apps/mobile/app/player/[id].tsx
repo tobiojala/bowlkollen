@@ -33,6 +33,7 @@ import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { MatchSheet } from '@/components/MatchSheet';
 import { WhatIf } from '@/components/WhatIf';
 import { Duell } from '@/components/Duell';
+import { ProfileChallenges } from '@/components/ProfileChallenges';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
@@ -168,6 +169,8 @@ export default function PlayerPage() {
               lastDate={historyDesc.length ? formatMatchDate(historyDesc[0].match_date) : undefined}
             />
           )}
+
+          <ProfileChallenges history={activeRows} stats={stats} prevAvg={lastSeasonAvg} />
 
           {delmatchRecord && (
             <PlayerDelmatchCard

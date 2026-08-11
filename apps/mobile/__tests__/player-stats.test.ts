@@ -6,6 +6,7 @@ import {
   cumulativeAvgPoints,
   gamePositionAvgs,
   narrativeParagraph,
+  playerChallenges,
   rhythmLabel,
   splitSeason,
   streaks,
@@ -206,6 +207,25 @@ describe('season-analysis engine', () => {
     expect(n).toHaveLength(4);
     expect(n[0]).toContain('Alex');
     expect(n.join(' ')).not.toMatch(/\b(hon|han|henne|honom)\b/);
+  });
+});
+
+describe('playerChallenges', () => {
+  const stats = computePlayerStats([
+    { match_date: '2026-01-01', opponent_name: null, division_name: null, total_result: null, is_home_team: null, series: [210, 205, 220] },
+  ]);
+  it('marks done challenges and puts not-done (nearest) first', () => {
+    const ch = playerChallenges(stats, { prevAvg: 200, streak200Best: 3 });
+    const avg = ch.find((c) => c.id === 'avg200')!;
+    expect(avg.done).toBe(true); // avg 212 ≥ 200
+    expect(avg.progress).toBe(100);
+    const streak = ch.find((c) => c.id === 'streak200')!;
+    expect(streak.done).toBe(false);
+    expect(streak.cur).toBe('3 / 5');
+    // not-done sorted before done
+    const firstDoneIdx = ch.findIndex((c) => c.done);
+    const lastNotDoneIdx = ch.map((c) => c.done).lastIndexOf(false);
+    expect(lastNotDoneIdx).toBeLessThan(firstDoneIdx);
   });
 });
 

@@ -291,3 +291,46 @@ export function playerAchievements(s: PlayerStats): Achievement[] {
   if (milestone) out.push({ id: `m${milestone}`, label: `${milestone}+ matcher`, icon: 'ribbon' });
   return out;
 }
+
+export type Challenge = { id: string; icon: string; title: string; desc: string; cur: string; progress: number; done: boolean };
+
+// In-progress challenges DERIVED from the player's own stats (no backend) — like
+// achievements but with live progress toward the next milestone. Not-done first,
+// nearest first.
+export function playerChallenges(s: PlayerStats, opts: { prevAvg?: number | null; streak200Best?: number } = {}): Challenge[] {
+  const band = (v: number, floor: number, target: number) =>
+    Math.max(0, Math.min(100, Math.round(((v - floor) / (target - floor)) * 100)));
+  const out: Challenge[] = [];
+
+  if (s.seasonAvg != null) {
+    const done = s.seasonAvg >= 200;
+    out.push({ id: 'avg200', icon: 'trending-up', title: '200-snittet', done,
+      desc: done ? 'I mål — 200+ i snitt' : `${200 - s.seasonAvg} pin kvar till 200`,
+      cur: `${s.seasonAvg} / 200`, progress: done ? 100 : band(s.seasonAvg, 150, 200) });
+  }
+  if (opts.streak200Best != null) {
+    const b = opts.streak200Best;
+    const done = b >= 5;
+    out.push({ id: 'streak200', icon: 'flame', title: 'Hetsviten', done,
+      desc: '5 spel i rad över 200', cur: `${Math.min(b, 5)} / 5`, progress: done ? 100 : Math.round((b / 5) * 100) });
+  }
+  if (s.bestGame != null) {
+    const done = s.bestGame >= 250;
+    out.push({ id: 'g250', icon: 'star', title: '250-spel', done,
+      desc: done ? `Bästa spel ${s.bestGame}` : 'Slå 250 i ett spel',
+      cur: `${s.bestGame} / 250`, progress: done ? 100 : band(s.bestGame, 180, 250) });
+  }
+  {
+    const done = s.games200 >= 10;
+    out.push({ id: 'vol200', icon: 'trophy', title: '200+-klubben', done,
+      desc: '10 spel över 200 i säsongen', cur: `${Math.min(s.games200, 10)} / 10`, progress: done ? 100 : Math.round((s.games200 / 10) * 100) });
+  }
+  if (opts.prevAvg != null && s.seasonAvg != null) {
+    const done = s.seasonAvg > opts.prevAvg;
+    out.push({ id: 'beatLast', icon: 'ribbon', title: 'Bättre än förra', done,
+      desc: `Höj snittet från ${opts.prevAvg}`, cur: `${s.seasonAvg} / ${opts.prevAvg + 1}`,
+      progress: done ? 100 : band(s.seasonAvg, Math.max(0, opts.prevAvg - 20), opts.prevAvg + 1) });
+  }
+
+  return out.sort((a, b) => Number(a.done) - Number(b.done) || b.progress - a.progress);
+}
