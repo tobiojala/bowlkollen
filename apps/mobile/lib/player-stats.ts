@@ -63,6 +63,7 @@ const avgOf = (games: number[]): number | null => (games.length ? Math.round(gam
 export type SeasonSplit = {
   activeRows: PlayerMatch[];   // current season, or all history in the offseason
   prevRows: PlayerMatch[];
+  hasCurrent: boolean;         // does the current season actually have matches? (false in preseason)
   lastSeasonAvg: number | null;
   prevMatchAvgs: number[];     // previous-season per-match averages (for the duel overlay)
 };
@@ -74,10 +75,11 @@ export function splitSeason(history: PlayerMatch[]): SeasonSplit {
   const prev = history.filter((h) => h.match_date >= SEASON.PREV && h.match_date < SEASON.CURRENT);
   const activeRows = curr.length ? curr : history;
   const prevGames = prev.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
-  const prevMatchAvgs = prev
+  const prevMatchAvgs = [...prev]
+    .sort((a, b) => a.match_date.localeCompare(b.match_date))
     .map((h) => avgOf((h.series ?? []).filter((g) => g > 0)))
     .filter((v): v is number => v !== null);
-  return { activeRows, prevRows: prev, lastSeasonAvg: avgOf(prevGames), prevMatchAvgs };
+  return { activeRows, prevRows: prev, hasCurrent: curr.length > 0, lastSeasonAvg: avgOf(prevGames), prevMatchAvgs };
 }
 
 export type TierInfo = { label: string; accent: string };

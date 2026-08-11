@@ -32,6 +32,7 @@ import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSh
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { MatchSheet } from '@/components/MatchSheet';
 import { WhatIf } from '@/components/WhatIf';
+import { Duell } from '@/components/Duell';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
@@ -62,7 +63,7 @@ export default function PlayerPage() {
   const setHeader = useSetMyPlayerHeader(id);
   const [headerOpen, setHeaderOpen] = useState(false);
 
-  const { activeRows, lastSeasonAvg } = splitSeason(history as PlayerMatch[]);
+  const { activeRows, hasCurrent, lastSeasonAvg, prevMatchAvgs } = splitSeason(history as PlayerMatch[]);
   const stats = computePlayerStats(activeRows);
   const { recentAvg, formDiff, historyDesc } = stats;
   // The RPC already returns the "top X%" (smaller = better); don't invert it.
@@ -158,6 +159,15 @@ export default function PlayerPage() {
           <PlayerAnalysis firstName={player.name.split(' ')[0]} history={activeRows} stats={stats} lastSeasonAvg={lastSeasonAvg} />
 
           <WhatIf history={activeRows} seasonAvg={stats.seasonAvg} />
+
+          {hasCurrent && prevMatchAvgs.length > 1 && stats.matchAvgs.length > 1 && (
+            <Duell
+              thisAvgs={stats.matchAvgs.map((a) => Math.round(a))}
+              lastAvgs={prevMatchAvgs}
+              firstDate={historyDesc.length ? formatMatchDate(historyDesc[historyDesc.length - 1].match_date) : undefined}
+              lastDate={historyDesc.length ? formatMatchDate(historyDesc[0].match_date) : undefined}
+            />
+          )}
 
           {delmatchRecord && (
             <PlayerDelmatchCard
