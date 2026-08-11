@@ -26,7 +26,8 @@ import { IdentityAvatar } from '@/components/IdentityAvatar';
 import { useIsClaimed } from '@/lib/claimed';
 import { usePlayerHeader, useSetMyPlayerHeader } from '@/lib/appearance';
 import { useMyClaim } from '@/lib/me';
-import { PlayerAchievements } from '@/components/PlayerAchievements';
+import { ProfileChips } from '@/components/ProfileChips';
+import { ProfileActions } from '@/components/ProfileActions';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
@@ -41,7 +42,7 @@ import type { Moment } from '@/lib/share';
 import { computePlayerStats, playerAchievements, type PlayerMatch } from '@/lib/player-stats';
 import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 export default function PlayerPage() {
   const router = useRouter();
@@ -65,6 +66,8 @@ export default function PlayerPage() {
   const pct = percentile == null ? null : Number(percentile);
   const topPct = pct != null && Number.isFinite(pct) ? pct : null;
   const achievements = playerAchievements(stats);
+  const myPid = myClaim?.status === 'verified' ? myClaim.publicId : null;
+  const canCompare = !!myPid && myPid !== id;
 
   const [sheet, setSheet] = useState<PlayerSheetKind>(null);
   const [shareMoment, setShareMoment] = useState<Moment | null>(null);
@@ -109,25 +112,15 @@ export default function PlayerPage() {
                 <Ionicons name="color-palette-outline" size={22} color={COLOR.ink} />
               </PressableScale>
             ) : (
-              <View style={styles.headerActions}>
-                {myClaim?.status === 'verified' && myClaim.publicId && myClaim.publicId !== id && (
-                  <PressableScale
-                    style={styles.compareBtn}
-                    onPress={() => router.push(`/compare/${id}/${myClaim.publicId}`)}
-                    hitSlop={8}
-                    accessibilityLabel="Jämför med dig"
-                  >
-                    <Ionicons name="git-compare-outline" size={22} color={COLOR.ink} />
-                  </PressableScale>
-                )}
-                <FollowButton entityType="player" entityId={id} />
-              </View>
+              <FollowButton entityType="player" entityId={id} />
             )}
           </View>
 
           <Text style={styles.followers}>
             <Text style={styles.followersNum}>{followers.toLocaleString('sv-SE')}</Text> följare
           </Text>
+
+          <ProfileChips skillLevel={player.licence_skill_lvl ?? null} achievements={achievements} />
 
           <ProfileHero
             stats={stats}
@@ -136,11 +129,26 @@ export default function PlayerPage() {
             topPct={topPct}
           />
 
-          <View style={styles.stats}>
-            <Stat label="SPELSTYRKA" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
-          </View>
+          <ProfileActions
+            actions={[
+              ...(canCompare
+                ? [{ icon: 'git-compare-outline' as const, label: 'Jämför', onPress: () => router.push(`/compare/${id}/${myPid}`) }]
+                : []),
+              {
+                icon: 'share-outline' as const,
+                label: 'Dela',
+                onPress: () => setShareMoment({
+                  kind: 'milestone',
+                  who: player.name,
+                  title: 'Säsongssnitt',
+                  value: String(player.licence_average ?? stats.seasonAvg ?? '–'),
+                  sub: `${stats.matchesPlayed} matcher${topPct != null ? ` · topp ${topPct}%` : ''}`,
+                }),
+              },
+            ]}
+          />
 
-          <PlayerAchievements items={achievements} />
+          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           <PlayerSeason firstName={player.name.split(' ')[0]} stats={stats} />
 
@@ -164,8 +172,6 @@ export default function PlayerPage() {
               })}
             />
           )}
-
-          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           {history.length > 0 && (
             <View style={styles.section}>
@@ -222,15 +228,6 @@ export default function PlayerPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
@@ -242,8 +239,6 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   editHeader: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
-  compareBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.medium, marginTop: 2 },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, paddingLeft: 64 + SPACE[3], marginTop: SPACE[2] },
@@ -261,21 +256,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.semibold,
     marginBottom: SPACE[2],
   },
-  stats: {
-    flexDirection: 'row',
-    gap: SPACE[3],
-    marginTop: SPACE[6],
-  },
-  stat: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLOR.surface,
-    borderRadius: RADIUS.md,
-    paddingVertical: SPACE[3],
-    paddingHorizontal: SPACE[6],
-    alignItems: 'center',
-  },
-  statValue: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.score },
-  statLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 2 },
   section: { marginTop: SPACE[8] },
   sectionLabel: {
     color: COLOR.ink3,
