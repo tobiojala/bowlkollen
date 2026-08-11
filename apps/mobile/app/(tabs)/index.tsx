@@ -4,11 +4,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, type ListRenderItem, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NextMatchCard } from '@/components/NextMatchCard';
 import { PressableScale } from '@/components/PressableScale';
 import { ListSkeleton } from '@/components/Skeleton';
 import { StoryChips, type Story } from '@/components/StoryChips';
 import { MatchCard } from '@/components/feed/MatchCard';
+import { RivalCard } from '@/components/feed/RivalCard';
 import { PromoCard } from '@/components/feed/PromoCard';
 import { StandingsCard } from '@/components/feed/StandingsCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
@@ -132,7 +132,7 @@ export default function Home() {
         </PressableScale>
       </View>
       <View style={styles.prep}>
-        <NextMatchCard />
+        <RivalCard />
       </View>
       <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
     </View>
