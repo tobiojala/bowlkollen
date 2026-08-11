@@ -1,6 +1,7 @@
 import {
   calcRating,
   computePlayerStats,
+  cumulativeAvgPoints,
   getTier,
   matchTrendPoints,
   playerAchievements,
@@ -164,5 +165,16 @@ describe('rollingRatingPoints', () => {
   });
   it('skips matches with no games', () => {
     expect(rollingRatingPoints([m('2026-01-01', []), m('2026-01-02', [200])])).toHaveLength(1);
+  });
+});
+
+describe('cumulativeAvgPoints', () => {
+  const m = (date: string, series: number[] | null) => ({
+    match_date: date, opponent_name: null, division_name: null, total_result: null, is_home_team: null, series,
+  });
+  it('is the running average of all games so far, not the per-match average', () => {
+    const pts = cumulativeAvgPoints([m('2026-01-01', [100, 100]), m('2026-01-02', [220, 220])]);
+    expect(pts[0].avg).toBe(100); // 200/2
+    expect(pts[1].avg).toBe(160); // (100+100+220+220)/4 — smoothed toward, not 220
   });
 });

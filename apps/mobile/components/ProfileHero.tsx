@@ -1,6 +1,6 @@
 import { HeroDeck } from '@/components/HeroDeck';
 import { ProfileTrend } from '@/components/ProfileTrend';
-import { matchTrendPoints, rollingRatingPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
+import { cumulativeAvgPoints, rollingRatingPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
 
 // The profile's hero deck: Säsongssnitt + BK-rating, each a big number with the
 // drag-graph. Kept out of the route file to keep it under the size budget.
@@ -15,7 +15,7 @@ export function ProfileHero({
   licenceAverage: number | null;
   topPct: number | null;
 }) {
-  const snittTrend = matchTrendPoints(history);
+  const snittTrend = cumulativeAvgPoints(history);
   const ratingTrend = rollingRatingPoints(history);
   const heroSnitt = licenceAverage ?? stats.seasonAvg ?? 0;
 

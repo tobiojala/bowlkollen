@@ -40,6 +40,21 @@ export function rollingRatingPoints(history: PlayerMatch[]): TrendPoint[] {
   return out;
 }
 
+// Running BITS-style season average — total pins ÷ games after each match. Smooth
+// and converging (unlike the per-match snitt), it's the season average as it builds.
+export function cumulativeAvgPoints(history: PlayerMatch[]): TrendPoint[] {
+  const sorted = [...history].sort((a, b) => a.match_date.localeCompare(b.match_date));
+  const games: number[] = [];
+  const out: TrendPoint[] = [];
+  for (const m of sorted) {
+    const g = (m.series ?? []).filter((x) => x > 0);
+    if (!g.length) continue;
+    games.push(...g);
+    out.push({ avg: Math.round(games.reduce((s, x) => s + x, 0) / games.length), date: m.match_date, label: m.opponent_name ?? '' });
+  }
+  return out;
+}
+
 export type TierInfo = { label: string; accent: string };
 
 export type PlayerStats = {
