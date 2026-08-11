@@ -30,6 +30,7 @@ import { ProfileChips } from '@/components/ProfileChips';
 import { ProfileActions } from '@/components/ProfileActions';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
+import { MatchSheet } from '@/components/MatchSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
@@ -71,6 +72,7 @@ export default function PlayerPage() {
 
   const [sheet, setSheet] = useState<PlayerSheetKind>(null);
   const [shareMoment, setShareMoment] = useState<Moment | null>(null);
+  const [matchSheet, setMatchSheet] = useState<PlayerMatch | null>(null);
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = sheet != null
@@ -191,7 +193,7 @@ export default function PlayerPage() {
                 )}
               </View>
               {historyDesc.map((h, i) => (
-                <View key={i} style={styles.matchRow}>
+                <PressableScale key={i} style={styles.matchRow} onPress={() => setMatchSheet(h as PlayerMatch)}>
                   <View style={styles.matchText}>
                     <Text style={styles.opponent} numberOfLines={1}>
                       {h.is_home_team ? '' : '@ '}
@@ -208,7 +210,7 @@ export default function PlayerPage() {
                     </Text>
                   </View>
                   <Text style={styles.result}>{h.total_result}</Text>
-                </View>
+                </PressableScale>
               ))}
             </View>
           )}
@@ -223,6 +225,7 @@ export default function PlayerPage() {
 
       <PlayerInfoSheet kind={sheet} stats={stats} recentAvg={recentAvg} onClose={() => setSheet(null)} />
       <MomentShareSheet moment={shareMoment} onClose={() => setShareMoment(null)} />
+      <MatchSheet match={matchSheet} seasonAvg={stats.seasonAvg} onClose={() => setMatchSheet(null)} />
       <HeaderColorSheet visible={headerOpen} onClose={() => setHeaderOpen(false)} onPick={(c) => setHeader.mutate(c)} />
     </View>
   );
