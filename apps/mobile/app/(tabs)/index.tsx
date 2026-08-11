@@ -131,10 +131,10 @@ export default function Home() {
           <Text style={[styles.note, !!note.matchId && styles.noteMatch]}>{note.text}</Text>
         </PressableScale>
       </View>
+      <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
       <View style={styles.prep}>
         <RivalCard />
       </View>
-      <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
     </View>
   );
 
