@@ -1,33 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import { GlassSheet } from '@/components/GlassSheet';
+import { PressableScale } from '@/components/PressableScale';
 import { playerChallenges, streaks, type Challenge, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const R = 26;
 const C = 2 * Math.PI * R;
 
-// Utmaningar — challenges derived from the player's own stats, each an arc ring
-// counting toward the next milestone. Gold only for a nearly-finished one.
+// Utmaningar — challenges derived from the player's own stats. A compact card that
+// opens the full arc-ring list in a glass sheet (keeps the profile uncluttered).
 export function ProfileChallenges({ history, stats, prevAvg }: { history: PlayerMatch[]; stats: PlayerStats; prevAvg?: number | null }) {
+  const [open, setOpen] = useState(false);
   const games = history.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
   const challenges = playerChallenges(stats, { prevAvg, streak200Best: streaks(games, 200).best });
   if (challenges.length === 0) return null;
+
   const done = challenges.filter((c) => c.done).length;
+  const next = challenges.find((c) => !c.done);
 
   return (
-    <View style={styles.section}>
-      <View style={styles.headerRow}>
-        <Text style={styles.header}>UTMANINGAR</Text>
-        <Text style={styles.count}>{done} av {challenges.length} klara</Text>
-      </View>
-      <View style={styles.card}>
-        {challenges.map((c, i) => (
-          <ChallengeRow key={c.id} c={c} first={i === 0} />
-        ))}
-      </View>
-    </View>
+    <>
+      <PressableScale style={styles.card} onPress={() => setOpen(true)} accessibilityLabel="Utmaningar">
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardLabel}>UTMANINGAR</Text>
+          <Text style={styles.cardSub}>{next ? `Närmast: ${next.title} · ${next.cur}` : 'Alla klara denna säsong'}</Text>
+        </View>
+        <Text style={styles.cardCount}>{done}/{challenges.length}</Text>
+        <Ionicons name="chevron-forward" size={22} color={COLOR.ink3} />
+      </PressableScale>
+
+      <GlassSheet visible={open} onClose={() => setOpen(false)} title="Utmaningar">
+        <Text style={styles.subtitle}>{done} av {challenges.length} klara denna säsong</Text>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
+          {challenges.map((c, i) => (
+            <ChallengeRow key={c.id} c={c} first={i === 0} />
+          ))}
+        </ScrollView>
+      </GlassSheet>
+    </>
   );
 }
 
@@ -67,11 +81,14 @@ function ChallengeRow({ c, first }: { c: Challenge; first: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: SPACE[8] },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: SPACE[3] },
-  header: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
-  count: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium },
-  card: { backgroundColor: COLOR.surface, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4] },
+  card: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[6],
+    backgroundColor: COLOR.surface, borderRadius: RADIUS.md, paddingVertical: SPACE[4], paddingHorizontal: SPACE[4],
+  },
+  cardLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
+  cardSub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 2 },
+  cardCount: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.scoreHeavy, fontVariant: ['tabular-nums'] },
+  subtitle: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginBottom: SPACE[4] },
   row: { flexDirection: 'row', alignItems: 'center', gap: SPACE[4], paddingVertical: SPACE[4] },
   rowBorder: { borderTopWidth: 1, borderTopColor: COLOR.hairline },
   ring: { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
