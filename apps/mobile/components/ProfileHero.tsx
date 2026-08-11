@@ -39,6 +39,7 @@ export function ProfileHero({
               projValue={stats.projectedAvg}
               lineWidth={4}
               tailLength={9}
+              yPad={0.08}
               footerLeft={`${stats.matchesPlayed} matcher`}
               footerRight={stats.projectedAvg != null ? `Prognos ${stats.projectedAvg}` : undefined}
             />
@@ -57,6 +58,7 @@ export function ProfileHero({
               caption={`${stats.tier.label}${topPct != null ? ` · Topp ${topPct}%` : ''}`}
               lineWidth={4}
               tailLength={9}
+              yPad={0.08}
               footerLeft="Betyg 0–100 mot fältet"
             />
           ),

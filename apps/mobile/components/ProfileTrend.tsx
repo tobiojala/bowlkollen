@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Mask, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { formatMatchDate } from '@/lib/format';
 import type { TrendPoint } from '@/lib/player-stats';
@@ -36,11 +36,12 @@ type Props = {
   projValue?: number | null; // dashed prognos continuation past the last match
   lineWidth?: number;   // sparkline thickness
   tailLength?: number;  // matches the drag light-tail spans behind the finger
+  yPad?: number;        // vertical headroom fraction — smaller = more zoomed in
 };
 
 export function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
-  lineWidth = 2.6, tailLength = TAIL,
+  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18,
 }: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
@@ -59,7 +60,7 @@ export function ProfileTrend({
   const vals = [...avgs, ...(hasProj ? [projValue as number] : []), ...(baseline != null ? [baseline] : [])];
   const vmin = vals.length ? Math.min(...vals) : 0;
   const vmax = vals.length ? Math.max(...vals) : 1;
-  const vpad = Math.max((vmax - vmin) * 0.18, 4);
+  const vpad = Math.max((vmax - vmin) * yPad, 2);
   const lo = vmin - vpad;
   const hi = vmax + vpad;
   const span = hi - lo || 1;
@@ -152,6 +153,15 @@ export function ProfileTrend({
                   <Stop offset="0" stopColor={color} stopOpacity={0} />
                   <Stop offset="1" stopColor={color} stopOpacity={1} />
                 </LinearGradient>
+                {/* horizontal mask so the area fades in from the left instead of a hard edge */}
+                <LinearGradient id="fadeh" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor="#000" />
+                  <Stop offset="0.16" stopColor="#fff" />
+                  <Stop offset="1" stopColor="#fff" />
+                </LinearGradient>
+                <Mask id="leftfade">
+                  <Rect x="0" y="0" width={W} height={GH} fill="url(#fadeh)" />
+                </Mask>
               </Defs>
 
               {/* gridlines + value labels */}
@@ -172,7 +182,7 @@ export function ProfileTrend({
               )}
 
               {/* area + thick gradient line */}
-              <Path d={areaPath} fill="url(#area)" />
+              <Path d={areaPath} fill="url(#area)" mask="url(#leftfade)" />
               <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
 
               {/* prognos continuation */}
