@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   runOnJS,
@@ -43,12 +43,14 @@ export function GlassSheet({
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const p = useSharedValue(0);
+  const drag = useSharedValue(0); // downward drag-to-dismiss offset
   const liquid = isLiquidGlassAvailable();
   const sheetH = height * HEIGHT_FRACTION;
 
   useEffect(() => {
     if (visible) {
       setMounted(true);
+      drag.value = 0;
       p.value = withSpring(1, RISE_SPRING);
     } else {
       p.value = withTiming(0, { duration: 220, easing: Easing.in(Easing.cubic) }, (fin) => {
@@ -57,9 +59,22 @@ export function GlassSheet({
     }
   }, [visible]);
 
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: p.value }));
+  // Drag the header down to dismiss; release short of the threshold springs back.
+  const closeDy = sheetH * 0.22;
+  const dragToClose = Gesture.Pan()
+    .onUpdate((e) => { drag.value = Math.max(0, e.translationY); })
+    .onEnd((e) => {
+      if (e.translationY > closeDy || e.velocityY > 800) {
+        runOnJS(onClose)();
+        drag.value = withTiming(0, { duration: 220 });
+      } else {
+        drag.value = withSpring(0, RISE_SPRING);
+      }
+    });
+
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: p.value * (1 - Math.min(drag.value / sheetH, 0.6)) }));
   const panelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - p.value) * (sheetH + 40) }],
+    transform: [{ translateY: (1 - p.value) * (sheetH + 40) + drag.value }],
   }));
 
   if (!mounted) return null;
@@ -89,8 +104,12 @@ export function GlassSheet({
           )}
           <View style={styles.rim} pointerEvents="none" />
 
-          <View style={styles.grabber} />
-          {!!title && <Text style={styles.title}>{title}</Text>}
+          <GestureDetector gesture={dragToClose}>
+            <View style={styles.header}>
+              <View style={styles.grabber} />
+              {!!title && <Text style={styles.title}>{title}</Text>}
+            </View>
+          </GestureDetector>
           <View style={styles.body}>{children}</View>
         </Animated.View>
       </GestureHandlerRootView>
@@ -118,6 +137,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.16)',
   },
+  header: { paddingBottom: SPACE[1] },
   grabber: {
     width: 40,
     height: 5,
