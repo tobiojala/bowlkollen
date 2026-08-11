@@ -12,8 +12,8 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
 const GH = 190;
-const PADX = 10;
-const PADY = 26;
+const PADX = 26; // ≥ the head glow radius so it never clips at the first/last match
+const PADY = 30;
 const SIDE = SPACE[6];
 const INSET = SPACE[4]; // horizontal inset — keeps the width we settled on
 const TAIL = 5;         // matches the light-tail spans behind the finger
@@ -82,7 +82,7 @@ export function ProfileTrend({ points }: { points: TrendPoint[] }) {
       if (Math.abs(e.velocityX) > 20) lastDir.value = e.velocityX > 0 ? 1 : -1; // tail follows finger motion
       runOnJS(scrub)(i, lastDir.value);
     })
-    .onFinalize(release);
+    .onFinalize(() => runOnJS(release)());
 
   return (
     <View>
