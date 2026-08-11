@@ -100,14 +100,13 @@ export function ProfileTrend({
     prev.current = n - 1;
     setSt((s) => ({ ...s, active: n - 1, dragging: false }));
   };
-  const idx = (x: number) => Math.round(Math.max(0, Math.min(1, (x - PAD_L) / dataW)) * (n - 1));
-
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
-    .onStart((e) => runOnJS(scrub)(idx(e.x), lastDir.value))
+    .onStart((e) => runOnJS(scrub)(Math.round(Math.max(0, Math.min(1, (e.x - PAD_L) / dataW)) * (n - 1)), lastDir.value))
     .onUpdate((e) => {
+      const i = Math.round(Math.max(0, Math.min(1, (e.x - PAD_L) / dataW)) * (n - 1));
       if (Math.abs(e.velocityX) > 20) lastDir.value = e.velocityX > 0 ? 1 : -1;
-      runOnJS(scrub)(idx(e.x), lastDir.value);
+      runOnJS(scrub)(i, lastDir.value);
     })
     .onFinalize(() => runOnJS(release)());
 
