@@ -72,4 +72,5 @@ export const FONT = {
   displaySemi: 'BarlowCondensed_600SemiBold',
   score: 'Sora_700Bold',                   // all scores/stat numbers
   scoreSemi: 'Sora_600SemiBold',
+  scoreHeavy: 'Sora_800ExtraBold',         // big hero totals (condensed via tight tracking)
 } as const;

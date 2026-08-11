@@ -11,6 +11,7 @@ import {
 import {
   Sora_600SemiBold,
   Sora_700Bold,
+  Sora_800ExtraBold,
 } from '@expo-google-fonts/sora';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
@@ -78,6 +79,7 @@ export default function RootLayout() {
     BarlowCondensed_700Bold,
     Sora_600SemiBold,
     Sora_700Bold,
+    Sora_800ExtraBold,
   });
 
   if (!fontsLoaded) {
