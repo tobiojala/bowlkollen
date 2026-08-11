@@ -7,6 +7,7 @@ import {
   gamePositionAvgs,
   narrativeParagraph,
   rhythmLabel,
+  splitSeason,
   streaks,
   getTier,
   matchTrendPoints,
@@ -205,6 +206,24 @@ describe('season-analysis engine', () => {
     expect(n).toHaveLength(4);
     expect(n[0]).toContain('Alex');
     expect(n.join(' ')).not.toMatch(/\b(hon|han|henne|honom)\b/);
+  });
+});
+
+describe('splitSeason', () => {
+  const m = (date: string, series: number[]) => ({
+    match_date: date, opponent_name: null, division_name: null, total_result: null, is_home_team: null, series,
+  });
+  it('splits current vs previous season and reads last-season avg', () => {
+    const r = splitSeason([m('2026-08-01', [200, 210]), m('2025-10-01', [180, 200]), m('2025-11-01', [190, 210])]);
+    expect(r.activeRows).toHaveLength(1);
+    expect(r.prevRows).toHaveLength(2);
+    expect(r.lastSeasonAvg).toBe(195); // (180+200+190+210)/4
+    expect(r.prevMatchAvgs).toEqual([190, 200]);
+  });
+  it('falls back to all history in the offseason (no current-season rows)', () => {
+    const r = splitSeason([m('2025-10-01', [180, 200])]);
+    expect(r.activeRows).toHaveLength(1);
+    expect(r.lastSeasonAvg).toBe(190);
   });
 });
 

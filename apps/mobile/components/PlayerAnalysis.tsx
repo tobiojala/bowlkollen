@@ -11,7 +11,7 @@ const ink = (a: number) => `rgba(244,245,247,${a})`;
 
 // Season analysis, ported from the web AnalysisSection: a 2×2 Prestanda grid, a
 // Spelanalys card (distribution + character + rhythm) and the season narrative.
-export function PlayerAnalysis({ firstName, history, stats }: { firstName: string; history: PlayerMatch[]; stats: PlayerStats }) {
+export function PlayerAnalysis({ firstName, history, stats, lastSeasonAvg }: { firstName: string; history: PlayerMatch[]; stats: PlayerStats; lastSeasonAvg?: number | null }) {
   const { seasonAvg, hitRate, formDiff, games200: over200, bestSeries, gamesPlayed: n } = stats;
   if (seasonAvg == null || n === 0) return null;
 
@@ -26,11 +26,11 @@ export function PlayerAnalysis({ firstName, history, stats }: { firstName: strin
   const seriesTots = sorted.map((h) => (h.series ?? []).filter((g) => g > 0).reduce((a, b) => a + b, 0));
   const bestIdx = seriesTots.indexOf(Math.max(...seriesTots));
   const bestMatch = sorted[bestIdx];
-  const lastSeasonAvg = Math.max(0, seasonAvg - 5); // no last-season data yet → sensible fallback
+  const lastAvg = lastSeasonAvg ?? Math.max(0, seasonAvg - 5); // real prev-season avg, or a sensible fallback
 
   const character = characterSentence({ hitRate, formDiff: formDiff ?? 0, consistency, seasonAvg, bestSeries: bestSeries ?? 0 });
   const narrative = narrativeParagraph({
-    firstName, seasonAvg, lastSeasonAvg, formDiff: formDiff ?? 0, hitRate, consistency,
+    firstName, seasonAvg, lastSeasonAvg: lastAvg, formDiff: formDiff ?? 0, hitRate, consistency,
     rhythmLabel: rhythm.label, bestSeries: bestSeries ?? 0, games200Plus: over200, totalGames: n,
   });
 

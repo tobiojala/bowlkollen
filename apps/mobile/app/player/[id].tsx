@@ -41,7 +41,7 @@ import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
 import type { Moment } from '@/lib/share';
-import { computePlayerStats, playerAchievements, type PlayerMatch } from '@/lib/player-stats';
+import { computePlayerStats, playerAchievements, splitSeason, type PlayerMatch } from '@/lib/player-stats';
 import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
@@ -62,7 +62,8 @@ export default function PlayerPage() {
   const setHeader = useSetMyPlayerHeader(id);
   const [headerOpen, setHeaderOpen] = useState(false);
 
-  const stats = computePlayerStats(history);
+  const { activeRows, lastSeasonAvg } = splitSeason(history as PlayerMatch[]);
+  const stats = computePlayerStats(activeRows);
   const { recentAvg, formDiff, historyDesc } = stats;
   // The RPC already returns the "top X%" (smaller = better); don't invert it.
   const pct = percentile == null ? null : Number(percentile);
@@ -127,7 +128,7 @@ export default function PlayerPage() {
 
           <ProfileHero
             stats={stats}
-            history={history as PlayerMatch[]}
+            history={activeRows}
             licenceAverage={player.licence_average ?? null}
             topPct={topPct}
             onInfoRating={() => setSheet('rating')}
@@ -152,11 +153,11 @@ export default function PlayerPage() {
             ]}
           />
 
-          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
+          <ProfilePulse history={activeRows} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
 
-          <PlayerAnalysis firstName={player.name.split(' ')[0]} history={history as PlayerMatch[]} stats={stats} />
+          <PlayerAnalysis firstName={player.name.split(' ')[0]} history={activeRows} stats={stats} lastSeasonAvg={lastSeasonAvg} />
 
-          <WhatIf history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
+          <WhatIf history={activeRows} seasonAvg={stats.seasonAvg} />
 
           {delmatchRecord && (
             <PlayerDelmatchCard

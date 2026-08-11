@@ -55,6 +55,31 @@ export function cumulativeAvgPoints(history: PlayerMatch[]): TrendPoint[] {
   return out;
 }
 
+// Season boundaries (Swedish bowling season runs Jul→Jun). Matches the web SEASON.
+export const SEASON = { CURRENT: '2026-07-01', PREV: '2025-07-01' } as const;
+
+const avgOf = (games: number[]): number | null => (games.length ? Math.round(games.reduce((a, b) => a + b, 0) / games.length) : null);
+
+export type SeasonSplit = {
+  activeRows: PlayerMatch[];   // current season, or all history in the offseason
+  prevRows: PlayerMatch[];
+  lastSeasonAvg: number | null;
+  prevMatchAvgs: number[];     // previous-season per-match averages (for the duel overlay)
+};
+
+// Split history into current / previous season. Before the new season has any
+// matches (preseason), activeRows falls back to all history so the profile isn't empty.
+export function splitSeason(history: PlayerMatch[]): SeasonSplit {
+  const curr = history.filter((h) => h.match_date >= SEASON.CURRENT);
+  const prev = history.filter((h) => h.match_date >= SEASON.PREV && h.match_date < SEASON.CURRENT);
+  const activeRows = curr.length ? curr : history;
+  const prevGames = prev.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
+  const prevMatchAvgs = prev
+    .map((h) => avgOf((h.series ?? []).filter((g) => g > 0)))
+    .filter((v): v is number => v !== null);
+  return { activeRows, prevRows: prev, lastSeasonAvg: avgOf(prevGames), prevMatchAvgs };
+}
+
 export type TierInfo = { label: string; accent: string };
 
 export type PlayerStats = {
