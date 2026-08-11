@@ -20,7 +20,7 @@ const SIDE = SPACE[6];
 const INSET = SPACE[4];
 const TAIL = 5;
 const GLIDE = 60;
-const AXIS = 12; // grid/date label size
+const AXIS = 13; // grid/date label size — at the senior-legibility floor
 
 type Props = {
   points: TrendPoint[];
@@ -194,8 +194,8 @@ export function ProfileTrend({
               <AnimatedCircle animatedProps={dot} r={2} fill={COLOR.bg} />
 
               {/* time axis */}
-              <SvgText x={PAD_L} y={GH - 6} fill={COLOR.ink4} fontSize={AXIS} fontFamily={FONT.medium}>{formatMatchDate(points[0].date)}</SvgText>
-              <SvgText x={PAD_L + dataW} y={GH - 6} fill={COLOR.ink4} fontSize={AXIS} fontFamily={FONT.medium} textAnchor="end">{formatMatchDate(points[n - 1].date)}</SvgText>
+              <SvgText x={PAD_L} y={GH - 6} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.medium}>{formatMatchDate(points[0].date)}</SvgText>
+              <SvgText x={PAD_L + dataW} y={GH - 6} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.medium} textAnchor="end">{formatMatchDate(points[n - 1].date)}</SvgText>
             </Svg>
           </View>
         </GestureDetector>
