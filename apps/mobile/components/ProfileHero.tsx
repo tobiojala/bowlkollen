@@ -1,6 +1,7 @@
 import { HeroDeck } from '@/components/HeroDeck';
 import { ProfileTrend } from '@/components/ProfileTrend';
 import { cumulativeAvgPoints, rollingRatingPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
+import { COLOR } from '@/theme';
 
 // The profile's hero deck: Säsongssnitt + BK-rating, each a big number with the
 // drag-graph. Kept out of the route file to keep it under the size budget.
@@ -33,6 +34,9 @@ export function ProfileHero({
               delta={stats.formDiff}
               deltaSuffix="form"
               caption={topPct != null ? `Topp ${topPct}% i ligan` : undefined}
+              accent={COLOR.gold}
+              baseline={stats.seasonAvg}
+              projValue={stats.projectedAvg}
               footerLeft={`${stats.matchesPlayed} matcher`}
               footerRight={stats.projectedAvg != null ? `Prognos ${stats.projectedAvg}` : undefined}
             />

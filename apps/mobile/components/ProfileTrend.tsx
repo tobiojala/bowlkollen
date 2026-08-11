@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
 import { formatMatchDate } from '@/lib/format';
 import type { TrendPoint } from '@/lib/player-stats';
@@ -11,29 +11,34 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
-const GH = 190;
-const PADX = 26; // ≥ the head glow radius so it never clips at the first/last match
-const PADY = 30;
+const GH = 204;
+const PAD_L = 30; // value-label gutter
+const PAD_R = 34; // projection + head-glow room
+const PAD_T = 24;
+const PAD_B = 22; // date axis
 const SIDE = SPACE[6];
 const INSET = SPACE[4];
 const TAIL = 5;
 const GLIDE = 60;
+const AXIS = 11; // grid/date label size — a faint guide; exact values come from the readout/scrub
 
 type Props = {
   points: TrendPoint[];
-  label?: string;         // uppercase kicker, e.g. "SÄSONGSSNITT"
-  restValue?: number;     // the big number when idle (official metric); defaults to latest point
-  delta?: number | null;  // season change shown as a green/red chip
-  deltaSuffix?: string;   // e.g. "form", "i år"
-  caption?: string;       // secondary line when idle
+  label?: string;
+  restValue?: number;
+  delta?: number | null;
+  deltaSuffix?: string;
+  caption?: string;
   footerLeft?: string;
   footerRight?: string;
+  accent?: string;      // fixed metric colour (e.g. gold for snitt); omit → trend green/red
+  baseline?: number | null; // dashed reference line (e.g. season average)
+  projValue?: number | null; // dashed prognos continuation past the last match
 };
 
-// Season trend hero card. Big ink number (the metric) + green/red delta; the line
-// rests dim and, on drag, a directional light-tail ignites behind the finger while
-// the number/caption become that match. Accent green/red vs the season's first point.
-export function ProfileTrend({ points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight }: Props) {
+export function ProfileTrend({
+  points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
+}: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
   const n = points.length;
@@ -44,16 +49,32 @@ export function ProfileTrend({ points, label, restValue, delta, deltaSuffix, cap
   const { active, dir, dragging } = st;
 
   const avgs = points.map((p) => p.avg);
-  const lo = avgs.length ? Math.min(...avgs) - 4 : 0;
-  const hi = avgs.length ? Math.max(...avgs) + 4 : 1;
-  const span = hi - lo || 1;
-  const innerW = W - PADX * 2;
-  const xs = points.map((_, i) => PADX + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW));
-  const ys = points.map((p) => PADY + (1 - (p.avg - lo) / span) * (GH - PADY * 2));
-  const linePath = xs.map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ');
+  const hasProj = projValue != null && hasGraph;
+  const usableW = W - PAD_L - PAD_R;
+  const dataW = hasProj ? usableW * 0.78 : usableW;
 
-  const up = hasGraph ? points[active].avg >= points[0].avg : true;
-  const accent = up ? COLOR.green : COLOR.red;
+  const vals = [...avgs, ...(hasProj ? [projValue as number] : []), ...(baseline != null ? [baseline] : [])];
+  const vmin = vals.length ? Math.min(...vals) : 0;
+  const vmax = vals.length ? Math.max(...vals) : 1;
+  const vpad = Math.max((vmax - vmin) * 0.18, 4);
+  const lo = vmin - vpad;
+  const hi = vmax + vpad;
+  const span = hi - lo || 1;
+  const cy = (v: number) => PAD_T + (GH - PAD_T - PAD_B) * (1 - (v - lo) / span);
+  const xs = points.map((_, i) => PAD_L + (n <= 1 ? dataW / 2 : (i / (n - 1)) * dataW));
+  const ys = points.map((p) => cy(p.avg));
+  const linePath = xs.map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ');
+  const areaBottom = GH - PAD_B;
+  const areaPath = hasGraph ? `${linePath} L ${xs[n - 1].toFixed(1)} ${areaBottom} L ${xs[0].toFixed(1)} ${areaBottom} Z` : '';
+
+  // Grid: a few "nice" reference values across the data range.
+  const range = Math.max(1, vmax - vmin);
+  const step = Math.max(5, Math.round(range / 3 / 5) * 5);
+  const gridVals: number[] = [];
+  for (let v = Math.ceil(vmin / step) * step; v <= vmax && gridVals.length < 6; v += step) gridVals.push(v);
+
+  const upTrend = hasGraph ? points[active].avg >= points[0].avg : true;
+  const color = accent ?? (upTrend ? COLOR.green : COLOR.red);
 
   const tailStart = Math.max(0, Math.min(n - 1, active - dir * TAIL));
   const [a, b] = tailStart <= active ? [tailStart, active] : [active, tailStart];
@@ -79,18 +100,17 @@ export function ProfileTrend({ points, label, restValue, delta, deltaSuffix, cap
     prev.current = n - 1;
     setSt((s) => ({ ...s, active: n - 1, dragging: false }));
   };
+  const idx = (x: number) => Math.round(Math.max(0, Math.min(1, (x - PAD_L) / dataW)) * (n - 1));
 
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
-    .onStart((e) => runOnJS(scrub)(Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1)), lastDir.value))
+    .onStart((e) => runOnJS(scrub)(idx(e.x), lastDir.value))
     .onUpdate((e) => {
-      const i = Math.round(Math.max(0, Math.min(1, (e.x - PADX) / innerW)) * (n - 1));
       if (Math.abs(e.velocityX) > 20) lastDir.value = e.velocityX > 0 ? 1 : -1;
-      runOnJS(scrub)(i, lastDir.value);
+      runOnJS(scrub)(idx(e.x), lastDir.value);
     })
     .onFinalize(() => runOnJS(release)());
 
-  // Readout — big number is the metric when idle, the scrubbed match when dragging.
   const bigValue = dragging && hasGraph ? points[active].avg : restValue ?? points[active]?.avg ?? 0;
   const subLine = dragging && hasGraph
     ? `${formatMatchDate(points[active].date)}${points[active].label ? ` · mot ${points[active].label}` : ''}`
@@ -105,8 +125,7 @@ export function ProfileTrend({ points, label, restValue, delta, deltaSuffix, cap
           <Text style={styles.value}>{bigValue}</Text>
           {showDelta ? (
             <Text style={[styles.delta, { color: delta! > 0 ? COLOR.green : COLOR.red }]}>
-              {delta! > 0 ? `↑ +${delta}` : `↓ ${Math.abs(delta!)}`}
-              {deltaSuffix ? ` ${deltaSuffix}` : ''}
+              {delta! > 0 ? `↑ +${delta}` : `↓ ${Math.abs(delta!)}`}{deltaSuffix ? ` ${deltaSuffix}` : ''}
             </Text>
           ) : null}
         </View>
@@ -118,27 +137,71 @@ export function ProfileTrend({ points, label, restValue, delta, deltaSuffix, cap
           <View style={{ width: W, height: GH, alignSelf: 'center' }}>
             <Svg width={W} height={GH}>
               <Defs>
+                <LinearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={color} stopOpacity={0.16} />
+                  <Stop offset="1" stopColor={color} stopOpacity={0} />
+                </LinearGradient>
+                <LinearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor={color} stopOpacity={0.4} />
+                  <Stop offset="1" stopColor={color} stopOpacity={1} />
+                </LinearGradient>
                 <LinearGradient id="tail" gradientUnits="userSpaceOnUse"
                   x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}>
-                  <Stop offset="0" stopColor={accent} stopOpacity={0} />
-                  <Stop offset="1" stopColor={accent} stopOpacity={1} />
+                  <Stop offset="0" stopColor={color} stopOpacity={0} />
+                  <Stop offset="1" stopColor={color} stopOpacity={1} />
                 </LinearGradient>
               </Defs>
 
-              <Path d={linePath} fill="none" stroke={COLOR.ink4} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+              {/* gridlines + value labels */}
+              {gridVals.map((v) => (
+                <Line key={`g${v}`} x1={PAD_L} y1={cy(v)} x2={W - PAD_R} y2={cy(v)} stroke={COLOR.ink} strokeOpacity={0.05} strokeWidth={1} />
+              ))}
+              {gridVals.map((v) => (
+                <SvgText key={`t${v}`} x={PAD_L - 6} y={cy(v) + 4} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.medium} textAnchor="end">{v}</SvgText>
+              ))}
 
-              {dragging && a !== b && (
+              {/* season-average reference */}
+              {baseline != null && (
                 <>
-                  <Path d={tailPath} fill="none" stroke={accent} strokeOpacity={0.18} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" />
-                  <Path d={tailPath} fill="none" stroke="url(#tail)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                  <Line x1={PAD_L} y1={cy(baseline)} x2={W - PAD_R} y2={cy(baseline)} stroke={color} strokeOpacity={0.3} strokeWidth={1} strokeDasharray="4,3" />
+                  <SvgText x={W - PAD_R} y={cy(baseline) - 5} fill={color} opacity={0.75} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
                 </>
               )}
 
-              {dragging && <AnimatedLine animatedProps={vline} y1={PADY - 12} y2={GH} stroke={COLOR.ink3} strokeWidth={1} />}
+              {/* area + thick gradient line */}
+              <Path d={areaPath} fill="url(#area)" />
+              <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
 
-              <AnimatedCircle animatedProps={dot} r={dragging ? 20 : 0} fill={accent} opacity={0.12} />
-              <AnimatedCircle animatedProps={dot} r={5.5} fill={accent} />
-              <AnimatedCircle animatedProps={dot} r={2.2} fill={COLOR.bg} />
+              {/* prognos continuation */}
+              {hasProj && (
+                <>
+                  <Line x1={xs[n - 1]} y1={PAD_T} x2={xs[n - 1]} y2={areaBottom} stroke={COLOR.ink} strokeOpacity={0.06} strokeWidth={1} />
+                  <Path d={`M ${xs[n - 1].toFixed(1)} ${ys[n - 1].toFixed(1)} L ${(W - PAD_R).toFixed(1)} ${cy(projValue as number).toFixed(1)}`}
+                    fill="none" stroke={color} strokeOpacity={0.5} strokeWidth={1.6} strokeDasharray="4,3" strokeLinecap="round" />
+                  <Circle cx={W - PAD_R} cy={cy(projValue as number)} r={3} fill={color} opacity={0.5} />
+                  <SvgText x={W - PAD_R} y={cy(projValue as number) - 6} fill={color} opacity={0.7} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">{projValue}</SvgText>
+                </>
+              )}
+
+              {/* drag light-tail */}
+              {dragging && a !== b && (
+                <>
+                  <Path d={tailPath} fill="none" stroke={color} strokeOpacity={0.18} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d={tailPath} fill="none" stroke="url(#tail)" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              )}
+
+              {dragging && <AnimatedLine animatedProps={vline} y1={PAD_T - 10} y2={areaBottom} stroke={COLOR.ink3} strokeWidth={1} />}
+
+              {/* head dot */}
+              <AnimatedCircle animatedProps={dot} r={dragging ? 22 : 0} fill={color} opacity={0.12} />
+              <AnimatedCircle animatedProps={dot} r={5} fill={color} stroke={color} strokeOpacity={0.22} strokeWidth={6} />
+              <AnimatedCircle animatedProps={dot} r={5} fill={color} />
+              <AnimatedCircle animatedProps={dot} r={2} fill={COLOR.bg} />
+
+              {/* time axis */}
+              <SvgText x={PAD_L} y={GH - 6} fill={COLOR.ink4} fontSize={AXIS} fontFamily={FONT.medium}>{formatMatchDate(points[0].date)}</SvgText>
+              <SvgText x={PAD_L + dataW} y={GH - 6} fill={COLOR.ink4} fontSize={AXIS} fontFamily={FONT.medium} textAnchor="end">{formatMatchDate(points[n - 1].date)}</SvgText>
             </Svg>
           </View>
         </GestureDetector>

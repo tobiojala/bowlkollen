@@ -156,7 +156,7 @@ export default function PlayerPage() {
             />
           )}
 
-          <ProfileDna history={history as PlayerMatch[]} />
+          <ProfileDna history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           {history.length > 0 && (
             <View style={styles.section}>

@@ -6,7 +6,7 @@ import { SPACE } from '@/theme';
 
 // ProfileDNA — snitt match för match. The raw per-match average (jagged, so it
 // shows how streaky vs steady a season was), distinct from the smooth hero curves.
-export function ProfileDna({ history }: { history: PlayerMatch[] }) {
+export function ProfileDna({ history, seasonAvg }: { history: PlayerMatch[]; seasonAvg: number | null }) {
   const points = matchTrendPoints(history);
   if (points.length < 2) return null;
   const avgs = points.map((p) => p.avg);
@@ -17,6 +17,7 @@ export function ProfileDna({ history }: { history: PlayerMatch[] }) {
         points={points}
         label="PROFIL-DNA"
         caption="Snitt match för match"
+        baseline={seasonAvg}
         footerLeft={`Lägst ${Math.min(...avgs)}`}
         footerRight={`Högst ${Math.max(...avgs)}`}
       />
