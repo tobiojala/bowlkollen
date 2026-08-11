@@ -137,12 +137,12 @@ export function ProfileTrend({
             <Svg width={W} height={GH}>
               <Defs>
                 <LinearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={color} stopOpacity={0.16} />
-                  <Stop offset="1" stopColor={color} stopOpacity={0} />
+                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.06} />
+                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0} />
                 </LinearGradient>
                 <LinearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={color} stopOpacity={0.4} />
-                  <Stop offset="1" stopColor={color} stopOpacity={1} />
+                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.28} />
+                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0.6} />
                 </LinearGradient>
                 <LinearGradient id="tail" gradientUnits="userSpaceOnUse"
                   x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}>
@@ -162,8 +162,8 @@ export function ProfileTrend({
               {/* season-average reference */}
               {baseline != null && (
                 <>
-                  <Line x1={PAD_L} y1={cy(baseline)} x2={W - PAD_R} y2={cy(baseline)} stroke={color} strokeOpacity={0.3} strokeWidth={1} strokeDasharray="4,3" />
-                  <SvgText x={W - PAD_R} y={cy(baseline) - 5} fill={color} opacity={0.75} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
+                  <Line x1={PAD_L} y1={cy(baseline)} x2={W - PAD_R} y2={cy(baseline)} stroke={COLOR.ink3} strokeWidth={1} strokeDasharray="4,3" />
+                  <SvgText x={W - PAD_R} y={cy(baseline) - 5} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
                 </>
               )}
 
@@ -176,9 +176,9 @@ export function ProfileTrend({
                 <>
                   <Line x1={xs[n - 1]} y1={PAD_T} x2={xs[n - 1]} y2={areaBottom} stroke={COLOR.ink} strokeOpacity={0.06} strokeWidth={1} />
                   <Path d={`M ${xs[n - 1].toFixed(1)} ${ys[n - 1].toFixed(1)} L ${(W - PAD_R).toFixed(1)} ${cy(projValue as number).toFixed(1)}`}
-                    fill="none" stroke={color} strokeOpacity={0.5} strokeWidth={1.6} strokeDasharray="4,3" strokeLinecap="round" />
-                  <Circle cx={W - PAD_R} cy={cy(projValue as number)} r={3} fill={color} opacity={0.5} />
-                  <SvgText x={W - PAD_R} y={cy(projValue as number) - 6} fill={color} opacity={0.7} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">{projValue}</SvgText>
+                    fill="none" stroke={COLOR.ink3} strokeWidth={1.6} strokeDasharray="4,3" strokeLinecap="round" />
+                  <Circle cx={W - PAD_R} cy={cy(projValue as number)} r={3} fill={color} opacity={0.7} />
+                  <SvgText x={W - PAD_R} y={cy(projValue as number) - 6} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">{projValue}</SvgText>
                 </>
               )}
 
