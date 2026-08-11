@@ -31,6 +31,7 @@ import { ProfileActions } from '@/components/ProfileActions';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { MatchSheet } from '@/components/MatchSheet';
+import { WhatIf } from '@/components/WhatIf';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
@@ -153,6 +154,8 @@ export default function PlayerPage() {
           <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           <PlayerAnalysis firstName={player.name.split(' ')[0]} history={history as PlayerMatch[]} stats={stats} />
+
+          <WhatIf history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           {delmatchRecord && (
             <PlayerDelmatchCard
