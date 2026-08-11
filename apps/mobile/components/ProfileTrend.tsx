@@ -33,6 +33,7 @@ type Props = {
   footerRight?: string;
   accent?: string;      // fixed metric colour (e.g. gold for snitt); omit → trend green/red
   baseline?: number | null; // dashed reference line (e.g. season average)
+  baselineLabel?: string;    // what the baseline is called (source-clear), default "snitt"
   projValue?: number | null; // dashed prognos continuation past the last match
   lineWidth?: number;   // sparkline thickness
   tailLength?: number;  // matches the drag light-tail spans behind the finger
@@ -41,7 +42,7 @@ type Props = {
 
 export function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
-  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18,
+  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18, baselineLabel = 'snitt',
 }: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
@@ -159,7 +160,7 @@ export function ProfileTrend({
                 <>
                   <Line x1={PAD_L} y1={cy(baseline)} x2={xs[n - 1]} y2={cy(baseline)} stroke={COLOR.ink3} strokeWidth={1} strokeDasharray="4,3" />
                   {/* label top-left so it clears the sparkline and the prognos on the right */}
-                  <SvgText x={PAD_L} y={PAD_T - 8} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold}>snitt {baseline}</SvgText>
+                  <SvgText x={PAD_L} y={PAD_T - 8} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold}>{baselineLabel} {baseline}</SvgText>
                 </>
               )}
 

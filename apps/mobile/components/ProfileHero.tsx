@@ -29,13 +29,14 @@ export function ProfileHero({
           element: (
             <ProfileTrend
               points={snittTrend}
-              label="SÄSONGSSNITT"
+              label={licenceAverage != null ? 'BITS-SNITT' : 'MATCHSNITT'}
               restValue={heroSnitt}
               delta={stats.formDiff}
               deltaSuffix="form"
               caption={topPct != null ? `Topp ${topPct}% i ligan` : undefined}
               accent={COLOR.gold}
               baseline={stats.seasonAvg}
+              baselineLabel="matchsnitt"
               projValue={stats.projectedAvg}
               lineWidth={5}
               tailLength={9}

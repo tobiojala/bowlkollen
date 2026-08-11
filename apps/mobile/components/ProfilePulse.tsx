@@ -19,6 +19,7 @@ export function ProfilePulse({ history, seasonAvg }: { history: PlayerMatch[]; s
         label="PROFIL-PULS"
         caption="Snitt match för match"
         baseline={seasonAvg}
+        baselineLabel="matchsnitt"
         footerLeft={`Lägst ${Math.min(...avgs)}`}
         footerRight={`Högst ${Math.max(...avgs)}`}
       />
