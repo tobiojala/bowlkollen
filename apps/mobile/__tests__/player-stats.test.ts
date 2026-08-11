@@ -1,7 +1,13 @@
 import {
   calcRating,
+  characterSentence,
   computePlayerStats,
+  consistencyLabel,
   cumulativeAvgPoints,
+  gamePositionAvgs,
+  narrativeParagraph,
+  rhythmLabel,
+  streaks,
   getTier,
   matchTrendPoints,
   playerAchievements,
@@ -165,6 +171,40 @@ describe('rollingRatingPoints', () => {
   });
   it('skips matches with no games', () => {
     expect(rollingRatingPoints([m('2026-01-01', []), m('2026-01-02', [200])])).toHaveLength(1);
+  });
+});
+
+describe('season-analysis engine', () => {
+  const m = (series: number[]) => ({
+    match_date: '2026-01-01', opponent_name: null, division_name: null, total_result: null, is_home_team: null, series,
+  });
+  it('streaks: current and best runs at/above threshold', () => {
+    expect(streaks([210, 220, 190, 205, 230], 200)).toEqual({ current: 2, best: 2 });
+    expect(streaks([190, 210, 220, 205], 200)).toEqual({ current: 3, best: 3 });
+  });
+  it('consistencyLabel maps std-dev to a word', () => {
+    expect(consistencyLabel(15)).toBe('Konsekvent');
+    expect(consistencyLabel(25)).toBe('Stabil');
+    expect(consistencyLabel(35)).toBe('Varierad');
+    expect(consistencyLabel(45)).toBe('Explosiv');
+  });
+  it('gamePositionAvgs averages by slot across varying lengths', () => {
+    // slot1: (180+200)/2=190, slot2: (200+220)/2=210, slot3: only first match =240
+    expect(gamePositionAvgs([m([180, 200, 240]), m([200, 220])])).toEqual([190, 210, 240]);
+  });
+  it('rhythmLabel reads a strong finisher', () => {
+    expect(rhythmLabel([180, 190, 205]).label).toBe('Stark avslutare');
+  });
+  it('characterSentence and narrativeParagraph produce copy without pronouns', () => {
+    const c = characterSentence({ hitRate: 70, formDiff: 5, consistency: 'Stabil', seasonAvg: 205, bestSeries: 700 });
+    expect(c).toContain('Dominant');
+    const n = narrativeParagraph({
+      firstName: 'Alex', seasonAvg: 205, lastSeasonAvg: 195, formDiff: 12, hitRate: 60,
+      consistency: 'Stabil', rhythmLabel: 'Stark avslutare', bestSeries: 700, games200Plus: 8, totalGames: 12,
+    });
+    expect(n).toHaveLength(4);
+    expect(n[0]).toContain('Alex');
+    expect(n.join(' ')).not.toMatch(/\b(hon|han|henne|honom)\b/);
   });
 });
 

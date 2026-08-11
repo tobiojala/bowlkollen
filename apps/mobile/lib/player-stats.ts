@@ -167,6 +167,89 @@ export function computePlayerStats(history: PlayerMatch[]): PlayerStats {
   };
 }
 
+// ── Season-analysis engine (ported from web lib/profile + mockup helpers) ──────
+
+// Longest and current run of games at or above threshold t.
+export function streaks(games: number[], t: number): { current: number; best: number } {
+  let best = 0;
+  let run = 0;
+  for (const g of games) {
+    if (g >= t) { run++; best = Math.max(best, run); } else run = 0;
+  }
+  let current = 0;
+  for (let i = games.length - 1; i >= 0; i--) { if (games[i] >= t) current++; else break; }
+  return { current, best };
+}
+
+export function consistencyLabel(sd: number): string {
+  return sd < 20 ? 'Konsekvent' : sd < 30 ? 'Stabil' : sd < 40 ? 'Varierad' : 'Explosiv';
+}
+
+// Average per game-position (S1..Sn) across matches, each slot over the matches
+// that reached it (handles varying series lengths).
+export function gamePositionAvgs(history: PlayerMatch[]): number[] {
+  const series = history.map((h) => (h.series ?? []).filter((g) => g > 0)).filter((s) => s.length > 0);
+  if (!series.length) return [];
+  const n = Math.max(...series.map((s) => s.length));
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const vals = series.filter((s) => s.length > i).map((s) => s[i]);
+    if (vals.length) out.push(Math.round(vals.reduce((a, b) => a + b, 0) / vals.length));
+  }
+  return out;
+}
+
+export function rhythmLabel(avgs: number[]): { label: string; detail: string } {
+  if (avgs.length < 2) return { label: '—', detail: '' };
+  const first = avgs[0];
+  const last = avgs[avgs.length - 1];
+  const max = Math.max(...avgs);
+  const diff = last - first;
+  const spread = max - Math.min(...avgs);
+  if (diff >= 12) return { label: 'Stark avslutare', detail: `+${diff}p från spel 1 till ${avgs.length}` };
+  if (diff <= -12) return { label: 'Snabbstartare', detail: `tappar ${Math.abs(diff)}p mot slutet` };
+  if (spread <= 8) return { label: 'Järnkonsekvent', detail: `bara ${spread}p skillnad spel 1–${avgs.length}` };
+  if (avgs.indexOf(max) === 1) return { label: 'Snabbt inne', detail: 'peakar i spel 2, håller sedan nivån' };
+  return { label: 'Varierad rytm', detail: `spridning ${spread}p spel 1–${avgs.length}` };
+}
+
+// One-line "what kind of bowler". Neutral — no gendered pronouns.
+export function characterSentence(s: {
+  hitRate: number; formDiff: number; consistency: string; seasonAvg: number; bestSeries: number;
+}): string {
+  const lead = s.hitRate >= 68 ? 'Dominant 200+-spjutspets'
+    : s.hitRate >= 52 ? 'Pålitlig 200+-spjutspets'
+    : s.hitRate >= 38 ? 'Allround bowlare'
+    : 'Offensiv risktagare';
+  const mod = s.formDiff >= 20 ? `i tydlig uppgång (+${s.formDiff} i form)`
+    : s.formDiff <= -15 ? `som söker formen — bästa serie ${s.bestSeries} visar kapaciteten`
+    : s.hitRate >= 60 ? `med ${s.consistency.toLowerCase()} spel och ${s.hitRate}% träffrate`
+    : `med ${s.consistency.toLowerCase()} prestationer kring ${s.seasonAvg}`;
+  return `${lead} ${mod}.`;
+}
+
+// Four-sentence season narrative. Uses the player's name (never she/he).
+export function narrativeParagraph(s: {
+  firstName: string; seasonAvg: number; lastSeasonAvg: number; formDiff: number;
+  hitRate: number; consistency: string; rhythmLabel: string; bestSeries: number;
+  games200Plus: number; totalGames: number;
+}): string[] {
+  const diff = s.seasonAvg - s.lastSeasonAvg;
+  const name = s.firstName;
+  return [
+    diff >= 8 ? `${name} har haft sin bästa säsong hittills — ett snitt på ${s.seasonAvg} är ${diff}p bättre än förra säsongens ${s.lastSeasonAvg}.`
+      : diff >= 3 ? `${name} fortsätter att förbättra sig med ett snitt på ${s.seasonAvg}, upp ${diff}p från förra säsongens ${s.lastSeasonAvg}.`
+        : diff >= -3 ? `${name} levererar en stabil säsong med ett snitt på ${s.seasonAvg} — i linje med förra säsongens ${s.lastSeasonAvg}.`
+          : `${name} snittar ${s.seasonAvg} denna säsong, något under förra årets ${s.lastSeasonAvg}, men med tydlig uppgång de senaste matcherna.`,
+    s.formDiff >= 20 ? `Formen pekar tydligt uppåt — snittet de senaste matcherna ligger ${s.formDiff}p över säsongssnittet.`
+      : s.formDiff >= 10 ? `Kurvan pekar uppåt med ett formsnitt ${s.formDiff}p över säsongssnittet — god timing inför slutspurten.`
+        : s.formDiff <= -15 ? `Formen är inte på topp just nu, men grunden är stark med ${s.hitRate}% träffrate på 200-strecket.`
+          : `Med ${s.hitRate}% träffrate och ${s.games200Plus} av ${s.totalGames} spel över 200 är grundstabiliteten hög.`,
+    `Som ${s.rhythmLabel.toLowerCase()} tar ${name} regelbundet ett kliv mot slutet — ${s.consistency.toLowerCase()} prestationer gör spelaren svår att räkna bort.`,
+    `Säsongens höjdpunkt är en serie på ${s.bestSeries} — ett bevis på att toppresultaten finns när det verkligen gäller.`,
+  ];
+}
+
 export type Achievement = { id: string; label: string; icon: string };
 
 // Earned milestone badges derived from the season stats.

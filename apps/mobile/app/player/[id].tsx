@@ -33,7 +33,7 @@ import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
-import { PlayerSeason } from '@/components/PlayerSeason';
+import { PlayerAnalysis } from '@/components/PlayerAnalysis';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
@@ -150,7 +150,7 @@ export default function PlayerPage() {
 
           <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
-          <PlayerSeason firstName={player.name.split(' ')[0]} stats={stats} />
+          <PlayerAnalysis firstName={player.name.split(' ')[0]} history={history as PlayerMatch[]} stats={stats} />
 
           {delmatchRecord && (
             <PlayerDelmatchCard
