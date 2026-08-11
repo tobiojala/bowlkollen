@@ -7,6 +7,21 @@ export type PlayerMatch = {
   series: number[] | null;
 };
 
+export type TrendPoint = { avg: number; date: string; label: string };
+
+// Chronological per-match average trend for the profile graph — one point per
+// match that was actually bowled (skips matches with no games). label = opponent.
+export function matchTrendPoints(history: PlayerMatch[]): TrendPoint[] {
+  return [...history]
+    .sort((a, b) => a.match_date.localeCompare(b.match_date))
+    .map((m) => {
+      const games = (m.series ?? []).filter((g) => g > 0);
+      const avg = games.length ? Math.round(games.reduce((s, g) => s + g, 0) / games.length) : 0;
+      return { avg, date: m.match_date, label: m.opponent_name ?? '' };
+    })
+    .filter((p) => p.avg > 0);
+}
+
 export type TierInfo = { label: string; accent: string };
 
 export type PlayerStats = {

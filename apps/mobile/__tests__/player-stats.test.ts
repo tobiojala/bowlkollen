@@ -2,6 +2,7 @@ import {
   calcRating,
   computePlayerStats,
   getTier,
+  matchTrendPoints,
   playerAchievements,
   projectSeasonAvg,
   stdDev,
@@ -129,5 +130,22 @@ describe('playerAchievements', () => {
   });
   it('awards nothing for a modest, short season', () => {
     expect(playerAchievements(computePlayerStats([match('2026-09-01', [140, 150])]))).toEqual([]);
+  });
+});
+
+describe('matchTrendPoints', () => {
+  const m = (date: string, series: number[] | null, opponent: string | null = null) => ({
+    match_date: date, opponent_name: opponent, division_name: null, total_result: null, is_home_team: null, series,
+  });
+  it('sorts chronological and averages each match', () => {
+    const pts = matchTrendPoints([m('2026-02-01', [200, 220]), m('2026-01-01', [180, 200])]);
+    expect(pts.map((p) => p.date)).toEqual(['2026-01-01', '2026-02-01']);
+    expect(pts[0].avg).toBe(190);
+    expect(pts[1].avg).toBe(210);
+  });
+  it('skips matches with no games and keeps the opponent label', () => {
+    const pts = matchTrendPoints([m('2026-01-01', [], 'X'), m('2026-01-02', [210], 'Erik')]);
+    expect(pts).toHaveLength(1);
+    expect(pts[0]).toMatchObject({ avg: 210, label: 'Erik' });
   });
 });

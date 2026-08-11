@@ -32,13 +32,13 @@ import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { PlayerRating } from '@/components/PlayerRating';
 import { PlayerSeason } from '@/components/PlayerSeason';
-import { ProfileDNA } from '@/components/ProfileDNA';
+import { ProfileTrend } from '@/components/ProfileTrend';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
 import type { Moment } from '@/lib/share';
-import { computePlayerStats, playerAchievements } from '@/lib/player-stats';
+import { computePlayerStats, matchTrendPoints, playerAchievements, type PlayerMatch } from '@/lib/player-stats';
 import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -60,7 +60,8 @@ export default function PlayerPage() {
   const [headerOpen, setHeaderOpen] = useState(false);
 
   const stats = computePlayerStats(history);
-  const { recentAvg, formDiff, matchAvgs, historyDesc } = stats;
+  const { recentAvg, formDiff, historyDesc } = stats;
+  const trend = matchTrendPoints(history as PlayerMatch[]);
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
   const achievements = playerAchievements(stats);
 
@@ -152,17 +153,10 @@ export default function PlayerPage() {
             />
           )}
 
-          {matchAvgs.length > 2 && (
+          {trend.length >= 2 && (
             <View style={styles.section}>
-              <PressableScale style={styles.sectionHeaderRow} onPress={() => setSheet('dna')} hitSlop={6}>
-                <Text style={styles.sectionLabel}>BOWLING-DNA</Text>
-                <Text style={styles.infoLink}>Vad är det?</Text>
-              </PressableScale>
-              <ProfileDNA
-                matchAvgs={matchAvgs}
-                initials={teamInitials(player.name)}
-                ringColor={teamColor(player.name).text}
-              />
+              <Text style={styles.sectionLabel}>SNITTKURVA</Text>
+              <ProfileTrend points={trend} />
             </View>
           )}
 
