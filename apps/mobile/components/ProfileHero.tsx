@@ -10,11 +10,13 @@ export function ProfileHero({
   history,
   licenceAverage,
   topPct,
+  onInfoRating,
 }: {
   stats: PlayerStats;
   history: PlayerMatch[];
   licenceAverage: number | null;
   topPct: number | null;
+  onInfoRating?: () => void;
 }) {
   const snittTrend = cumulativeAvgPoints(history);
   const ratingTrend = rollingRatingPoints(history);
@@ -60,6 +62,7 @@ export function ProfileHero({
               lineWidth={5}
               tailLength={9}
               yPad={0.05}
+              onInfo={onInfoRating}
               footerLeft="Betyg 0–100 mot fältet"
             />
           ),

@@ -130,6 +130,7 @@ export default function PlayerPage() {
             history={history as PlayerMatch[]}
             licenceAverage={player.licence_average ?? null}
             topPct={topPct}
+            onInfoRating={() => setSheet('rating')}
           />
 
           <ProfileActions
@@ -151,7 +152,7 @@ export default function PlayerPage() {
             ]}
           />
 
-          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
+          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
 
           <PlayerAnalysis firstName={player.name.split(' ')[0]} history={history as PlayerMatch[]} stats={stats} />
 

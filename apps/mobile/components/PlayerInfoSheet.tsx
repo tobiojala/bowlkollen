@@ -4,9 +4,9 @@ import { GlassSheet } from '@/components/GlassSheet';
 import type { PlayerStats } from '@/lib/player-stats';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
-export type PlayerSheetKind = 'rating' | 'dna' | null;
+export type PlayerSheetKind = 'rating' | 'puls' | null;
 
-// Explainer sheets for the BK-rating and the Bowling-DNA — the "what is this?"
+// Explainer sheets for the BK-rating and Profil-puls — the "what is this?"
 // detail views, presented as the shared glass curtain.
 export function PlayerInfoSheet({
   kind,
@@ -20,7 +20,7 @@ export function PlayerInfoSheet({
   onClose: () => void;
 }) {
   return (
-    <GlassSheet visible={kind != null} onClose={onClose} title={kind === 'dna' ? 'Bowling-DNA' : 'BK-rating'}>
+    <GlassSheet visible={kind != null} onClose={onClose} title={kind === 'puls' ? 'Profil-puls' : 'BK-rating'}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACE[8] }}>
         {kind === 'rating' ? (
           <>
@@ -37,11 +37,13 @@ export function PlayerInfoSheet({
         ) : (
           <>
             <Text style={styles.body}>
-              Bowling-DNA visar formen match för match. Varje spets är en matchs snitt — ju längre ut, desto bättre
-              match. De ljusare spetsarna är dina senaste matcher, så du ser rytmen över säsongen.
+              Profil-puls visar ditt snitt match för match — den taggiga kurvan avslöjar hur jämn eller ryckig
+              säsongen varit. Den streckade linjen är ditt matchsnitt; kvällar över den är dina bästa. Dra längs
+              kurvan för att läsa en enskild match.
             </Text>
-            <Row label="Snitt" value={stats.seasonAvg != null ? String(stats.seasonAvg) : '–'} />
+            <Row label="Matchsnitt" value={stats.seasonAvg != null ? String(stats.seasonAvg) : '–'} />
             <Row label="Form (senaste)" value={recentAvg != null ? String(recentAvg) : '–'} />
+            <Row label="Jämnhet (±)" value={String(stats.consistency)} />
             <Row label="Matcher" value={String(stats.matchesPlayed)} />
           </>
         )}

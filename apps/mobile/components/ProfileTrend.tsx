@@ -1,6 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
+import { PressableScale } from '@/components/PressableScale';
 import Animated, { runOnJS, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -38,11 +41,12 @@ type Props = {
   lineWidth?: number;   // sparkline thickness
   tailLength?: number;  // matches the drag light-tail spans behind the finger
   yPad?: number;        // vertical headroom fraction — smaller = more zoomed in
+  onInfo?: () => void;  // adds a tappable "what is this?" affordance on the label
 };
 
 export function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
-  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18, baselineLabel = 'snitt',
+  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18, baselineLabel = 'snitt', onInfo,
 }: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
@@ -123,7 +127,16 @@ export function ProfileTrend({
   return (
     <View>
       <View style={styles.readout}>
-        {label ? <Text style={styles.kicker}>{label}</Text> : null}
+        {label ? (
+          onInfo ? (
+            <PressableScale style={styles.kickerRow} onPress={onInfo} hitSlop={10} accessibilityLabel={`Om ${label}`}>
+              <Text style={styles.kicker}>{label}</Text>
+              <Ionicons name="information-circle-outline" size={18} color={COLOR.ink3} />
+            </PressableScale>
+          ) : (
+            <Text style={styles.kicker}>{label}</Text>
+          )
+        ) : null}
         <View style={styles.valueRow}>
           <Text style={styles.value}>{bigValue}</Text>
           {showDelta ? (
@@ -217,6 +230,7 @@ export function ProfileTrend({
 const styles = StyleSheet.create({
   readout: { marginBottom: SPACE[3], paddingHorizontal: INSET },
   kicker: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, textTransform: 'uppercase', marginBottom: SPACE[1] },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[1], alignSelf: 'flex-start' },
   valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[3] },
   value: { color: COLOR.ink, fontSize: TYPE.hero, fontFamily: FONT.scoreHeavy, letterSpacing: -3, fontVariant: ['tabular-nums'] },
   delta: { fontSize: TYPE.caption, fontFamily: FONT.bold, fontVariant: ['tabular-nums'] },
