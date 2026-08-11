@@ -61,7 +61,9 @@ export default function PlayerPage() {
 
   const stats = computePlayerStats(history);
   const { recentAvg, formDiff, historyDesc } = stats;
-  const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
+  // The RPC already returns the "top X%" (smaller = better); don't invert it.
+  const pct = percentile == null ? null : Number(percentile);
+  const topPct = pct != null && Number.isFinite(pct) ? pct : null;
   const achievements = playerAchievements(stats);
 
   const [sheet, setSheet] = useState<PlayerSheetKind>(null);

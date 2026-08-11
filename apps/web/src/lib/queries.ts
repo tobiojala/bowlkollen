@@ -283,7 +283,7 @@ export function usePlayerPercentile(publicId: string) {
     queryFn: async () => {
       const { data, error } = await createClient().rpc('get_player_percentile', { p_public_id: publicId })
       if (error) throw error
-      return data as number | null
+      return data == null ? null : Number(data) // numeric may arrive as a string
     },
     enabled: !!publicId,
     staleTime: STALE.LONG,
