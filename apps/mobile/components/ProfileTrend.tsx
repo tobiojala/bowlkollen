@@ -34,10 +34,13 @@ type Props = {
   accent?: string;      // fixed metric colour (e.g. gold for snitt); omit → trend green/red
   baseline?: number | null; // dashed reference line (e.g. season average)
   projValue?: number | null; // dashed prognos continuation past the last match
+  lineWidth?: number;   // sparkline thickness
+  tailLength?: number;  // matches the drag light-tail spans behind the finger
 };
 
 export function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
+  lineWidth = 2.6, tailLength = TAIL,
 }: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
@@ -76,7 +79,7 @@ export function ProfileTrend({
   const upTrend = hasGraph ? points[active].avg >= points[0].avg : true;
   const color = accent ?? (upTrend ? COLOR.green : COLOR.red);
 
-  const tailStart = Math.max(0, Math.min(n - 1, active - dir * TAIL));
+  const tailStart = Math.max(0, Math.min(n - 1, active - dir * tailLength));
   const [a, b] = tailStart <= active ? [tailStart, active] : [active, tailStart];
   const tailPath = xs.slice(a, b + 1).map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[a + i].toFixed(1)}`).join(' ');
 
@@ -169,7 +172,7 @@ export function ProfileTrend({
 
               {/* area + thick gradient line */}
               <Path d={areaPath} fill="url(#area)" />
-              <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+              <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
 
               {/* prognos continuation */}
               {hasProj && (
@@ -185,8 +188,8 @@ export function ProfileTrend({
               {/* drag light-tail */}
               {dragging && a !== b && (
                 <>
-                  <Path d={tailPath} fill="none" stroke={color} strokeOpacity={0.18} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" />
-                  <Path d={tailPath} fill="none" stroke="url(#tail)" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d={tailPath} fill="none" stroke={color} strokeOpacity={0.18} strokeWidth={lineWidth + 6} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d={tailPath} fill="none" stroke="url(#tail)" strokeWidth={lineWidth + 1} strokeLinecap="round" strokeLinejoin="round" />
                 </>
               )}
 
