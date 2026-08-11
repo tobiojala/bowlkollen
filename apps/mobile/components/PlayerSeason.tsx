@@ -1,13 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FormCurve } from '@/components/FormCurve';
 import type { PlayerStats } from '@/lib/player-stats';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 // Season analysis: a plain-language narrative, the headline numbers, and the
 // form curve — all derived from the match history.
 export function PlayerSeason({ firstName, stats }: { firstName: string; stats: PlayerStats }) {
-  const { seasonAvg, matchesPlayed, bestSeries, bestGame, games200, matchAvgs, formDiff, projectedAvg } = stats;
+  const { seasonAvg, matchesPlayed, bestSeries, bestGame, games200, formDiff, projectedAvg } = stats;
   if (matchesPlayed === 0) return null;
 
   const trend =
@@ -56,13 +55,6 @@ export function PlayerSeason({ firstName, stats }: { firstName: string; stats: P
         <Mini label="HÖGSTA SPEL" value={bestGame != null ? String(bestGame) : '–'} />
         <Mini label="200+" value={String(games200)} />
       </View>
-
-      {matchAvgs.length > 2 && (
-        <>
-          <Text style={styles.curveLabel}>FORMKURVA</Text>
-          <FormCurve values={matchAvgs} avg={seasonAvg} />
-        </>
-      )}
     </View>
   );
 }
@@ -96,12 +88,4 @@ const styles = StyleSheet.create({
   },
   miniValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score },
   miniLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontFamily: FONT.bold, letterSpacing: 0.5 },
-  curveLabel: {
-    color: COLOR.ink3,
-    fontSize: TYPE.label,
-    fontFamily: FONT.bold,
-    letterSpacing: 1.5,
-    marginTop: SPACE[6],
-    marginBottom: SPACE[2],
-  },
 });
