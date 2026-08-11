@@ -69,7 +69,6 @@ export function ProfileTrend({
   const ys = points.map((p) => cy(p.avg));
   const linePath = xs.map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ');
   const areaBottom = GH - PAD_B;
-  const areaPath = hasGraph ? `${linePath} L ${xs[n - 1].toFixed(1)} ${areaBottom} L ${xs[0].toFixed(1)} ${areaBottom} Z` : '';
 
   // Grid: a few "nice" reference values across the data range.
   const range = Math.max(1, vmax - vmin);
@@ -140,16 +139,6 @@ export function ProfileTrend({
           <View style={{ width: W, height: GH, alignSelf: 'center' }}>
             <Svg width={W} height={GH}>
               <Defs>
-                {/* line + area both fade out toward the left (older) and stay solid on the right (recent) */}
-                <LinearGradient id="area" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0} />
-                  <Stop offset="0.35" stopColor={COLOR.ink} stopOpacity={0.03} />
-                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0.14} />
-                </LinearGradient>
-                <LinearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.12} />
-                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={1} />
-                </LinearGradient>
                 <LinearGradient id="tail" gradientUnits="userSpaceOnUse"
                   x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}>
                   <Stop offset="0" stopColor={color} stopOpacity={0} />
@@ -174,9 +163,8 @@ export function ProfileTrend({
                 </>
               )}
 
-              {/* area + thick gradient line */}
-              <Path d={areaPath} fill="url(#area)" />
-              <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
+              {/* one-colour sparkline, no fill */}
+              <Path d={linePath} fill="none" stroke={COLOR.ink2} strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
 
               {/* prognos continuation */}
               {hasProj && (
