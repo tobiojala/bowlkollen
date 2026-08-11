@@ -4,9 +4,10 @@ import { ProfileTrend } from '@/components/ProfileTrend';
 import { matchTrendPoints, type PlayerMatch } from '@/lib/player-stats';
 import { SPACE } from '@/theme';
 
-// ProfileDNA — snitt match för match. The raw per-match average (jagged, so it
-// shows how streaky vs steady a season was), distinct from the smooth hero curves.
-export function ProfileDna({ history, seasonAvg }: { history: PlayerMatch[]; seasonAvg: number | null }) {
+// PROFIL-PULS — snitt match för match. The raw per-match average (jagged like an
+// EKG trace, so it shows how streaky vs steady a season was), distinct from the
+// smooth hero curves.
+export function ProfilePulse({ history, seasonAvg }: { history: PlayerMatch[]; seasonAvg: number | null }) {
   const points = matchTrendPoints(history);
   if (points.length < 2) return null;
   const avgs = points.map((p) => p.avg);
@@ -15,7 +16,7 @@ export function ProfileDna({ history, seasonAvg }: { history: PlayerMatch[]; sea
     <View style={styles.section}>
       <ProfileTrend
         points={points}
-        label="PROFIL-DNA"
+        label="PROFIL-PULS"
         caption="Snitt match för match"
         baseline={seasonAvg}
         footerLeft={`Lägst ${Math.min(...avgs)}`}

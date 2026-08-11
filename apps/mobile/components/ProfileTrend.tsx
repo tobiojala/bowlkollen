@@ -20,7 +20,7 @@ const SIDE = SPACE[6];
 const INSET = SPACE[4];
 const TAIL = 5;
 const GLIDE = 60;
-const AXIS = 11; // grid/date label size — a faint guide; exact values come from the readout/scrub
+const AXIS = 12; // grid/date label size
 
 type Props = {
   points: TrendPoint[];
@@ -159,14 +159,15 @@ export function ProfileTrend({
                 <Line key={`g${v}`} x1={PAD_L} y1={cy(v)} x2={W - PAD_R} y2={cy(v)} stroke={COLOR.ink} strokeOpacity={0.05} strokeWidth={1} />
               ))}
               {gridVals.map((v) => (
-                <SvgText key={`t${v}`} x={PAD_L - 6} y={cy(v) + 4} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.medium} textAnchor="end">{v}</SvgText>
+                <SvgText key={`t${v}`} x={PAD_L - 6} y={cy(v) + 4} fill={COLOR.ink2} fontSize={AXIS} fontFamily={FONT.semibold} textAnchor="end">{v}</SvgText>
               ))}
 
               {/* season-average reference */}
               {baseline != null && (
                 <>
                   <Line x1={PAD_L} y1={cy(baseline)} x2={W - PAD_R} y2={cy(baseline)} stroke={COLOR.ink3} strokeWidth={1} strokeDasharray="4,3" />
-                  <SvgText x={W - PAD_R} y={cy(baseline) - 5} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
+                  {/* label in the top margin so it never lies under the sparkline */}
+                  <SvgText x={W - PAD_R} y={PAD_T - 8} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
                 </>
               )}
 

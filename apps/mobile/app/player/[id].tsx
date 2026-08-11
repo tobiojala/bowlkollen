@@ -31,7 +31,7 @@ import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSh
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
 import { ProfileHero } from '@/components/ProfileHero';
-import { ProfileDna } from '@/components/ProfileDna';
+import { ProfilePulse } from '@/components/ProfilePulse';
 import { PlayerSeason } from '@/components/PlayerSeason';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
@@ -156,7 +156,7 @@ export default function PlayerPage() {
             />
           )}
 
-          <ProfileDna history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
+          <ProfilePulse history={history as PlayerMatch[]} seasonAvg={stats.seasonAvg} />
 
           {history.length > 0 && (
             <View style={styles.section}>
