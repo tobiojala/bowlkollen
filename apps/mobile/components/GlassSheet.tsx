@@ -2,12 +2,14 @@ import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useEffect, useState } from 'react';
 import {
+  Modal,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   runOnJS,
@@ -62,33 +64,37 @@ export function GlassSheet({
 
   if (!mounted) return null;
 
+  // Rendered in a Modal so the curtain escapes any parent (e.g. a ScrollView) and
+  // covers the whole screen. GestureHandlerRootView keeps gestures working inside it.
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Stäng tabell">
-          <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={styles.dim} />
-        </Pressable>
-      </Animated.View>
+    <Modal transparent statusBarTranslucent visible animationType="none" onRequestClose={onClose}>
+      <GestureHandlerRootView style={StyleSheet.absoluteFill}>
+        <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Stäng">
+            <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={styles.dim} />
+          </Pressable>
+        </Animated.View>
 
-      <Animated.View
-        style={[styles.panel, { height: sheetH, paddingBottom: insets.bottom + SPACE[4] }, panelStyle]}
-      >
-        {liquid ? (
-          <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={StyleSheet.absoluteFill} />
-        ) : (
-          <>
-            <BlurView intensity={64} tint="dark" style={StyleSheet.absoluteFill} />
-            <View style={styles.panelTint} />
-          </>
-        )}
-        <View style={styles.rim} pointerEvents="none" />
+        <Animated.View
+          style={[styles.panel, { height: sheetH, paddingBottom: insets.bottom + SPACE[4] }, panelStyle]}
+        >
+          {liquid ? (
+            <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={StyleSheet.absoluteFill} />
+          ) : (
+            <>
+              <BlurView intensity={64} tint="dark" style={StyleSheet.absoluteFill} />
+              <View style={styles.panelTint} />
+            </>
+          )}
+          <View style={styles.rim} pointerEvents="none" />
 
-        <View style={styles.grabber} />
-        {!!title && <Text style={styles.title}>{title}</Text>}
-        <View style={styles.body}>{children}</View>
-      </Animated.View>
-    </View>
+          <View style={styles.grabber} />
+          {!!title && <Text style={styles.title}>{title}</Text>}
+          <View style={styles.body}>{children}</View>
+        </Animated.View>
+      </GestureHandlerRootView>
+    </Modal>
   );
 }
 
