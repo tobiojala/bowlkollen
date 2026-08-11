@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Line, LinearGradient, Mask, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
 import { formatMatchDate } from '@/lib/format';
 import type { TrendPoint } from '@/lib/player-stats';
@@ -140,28 +140,21 @@ export function ProfileTrend({
           <View style={{ width: W, height: GH, alignSelf: 'center' }}>
             <Svg width={W} height={GH}>
               <Defs>
-                <LinearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.06} />
-                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0} />
+                {/* line + area both fade out toward the left (older) and stay solid on the right (recent) */}
+                <LinearGradient id="area" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0} />
+                  <Stop offset="0.35" stopColor={COLOR.ink} stopOpacity={0.03} />
+                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0.14} />
                 </LinearGradient>
                 <LinearGradient id="stroke" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.28} />
-                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={0.6} />
+                  <Stop offset="0" stopColor={COLOR.ink} stopOpacity={0.12} />
+                  <Stop offset="1" stopColor={COLOR.ink} stopOpacity={1} />
                 </LinearGradient>
                 <LinearGradient id="tail" gradientUnits="userSpaceOnUse"
                   x1={xs[tailStart]} y1={ys[tailStart]} x2={xs[active]} y2={ys[active]}>
                   <Stop offset="0" stopColor={color} stopOpacity={0} />
                   <Stop offset="1" stopColor={color} stopOpacity={1} />
                 </LinearGradient>
-                {/* horizontal mask so the area fades in from the left instead of a hard edge */}
-                <LinearGradient id="fadeh" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor="#000" />
-                  <Stop offset="0.16" stopColor="#fff" />
-                  <Stop offset="1" stopColor="#fff" />
-                </LinearGradient>
-                <Mask id="leftfade">
-                  <Rect x="0" y="0" width={W} height={GH} fill="url(#fadeh)" />
-                </Mask>
               </Defs>
 
               {/* gridlines + value labels */}
@@ -182,7 +175,7 @@ export function ProfileTrend({
               )}
 
               {/* area + thick gradient line */}
-              <Path d={areaPath} fill="url(#area)" mask="url(#leftfade)" />
+              <Path d={areaPath} fill="url(#area)" />
               <Path d={linePath} fill="none" stroke="url(#stroke)" strokeWidth={lineWidth} strokeLinecap="round" strokeLinejoin="round" />
 
               {/* prognos continuation */}

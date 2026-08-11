@@ -37,9 +37,9 @@ export function ProfileHero({
               accent={COLOR.gold}
               baseline={stats.seasonAvg}
               projValue={stats.projectedAvg}
-              lineWidth={4}
+              lineWidth={5}
               tailLength={9}
-              yPad={0.08}
+              yPad={0.05}
               footerLeft={`${stats.matchesPlayed} matcher`}
               footerRight={stats.projectedAvg != null ? `Prognos ${stats.projectedAvg}` : undefined}
             />
@@ -56,9 +56,9 @@ export function ProfileHero({
               delta={ratingTrend.length >= 2 ? stats.rating - ratingTrend[0].avg : null}
               deltaSuffix="i år"
               caption={`${stats.tier.label}${topPct != null ? ` · Topp ${topPct}%` : ''}`}
-              lineWidth={4}
+              lineWidth={5}
               tailLength={9}
-              yPad={0.08}
+              yPad={0.05}
               footerLeft="Betyg 0–100 mot fältet"
             />
           ),
