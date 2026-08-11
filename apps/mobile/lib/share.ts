@@ -15,15 +15,15 @@ export function momentShareText(m: Moment): string {
     case 'rivalry': {
       const leader = m.aWins > m.bWins ? m.aName : m.bWins > m.aWins ? m.bName : null;
       const standing = leader ? `${leader} leder` : 'Helt jämnt';
-      return `${m.aName} mot ${m.bName} vid bordet: ${m.aWins}–${m.bWins} genom åren, ${m.meetings} möten. ${standing}. 🎳\n\nSe era bord i ${TAG}.`;
+      return `${m.aName} mot ${m.bName} vid bordet: ${m.aWins}–${m.bWins} genom åren, ${m.meetings} möten. ${standing}.\n\nSe era bord i ${TAG}.`;
     }
     case 'record': {
       const pct = Math.round(m.winRate * 100);
       const hi = m.highlight ? `\n${m.highlight}` : '';
-      return `Mitt bordfacit: ${m.wins}–${m.losses} · ${pct}% vinst över ${m.played} bord. 🎳${hi}\n\n${TAG}.`;
+      return `Mitt bordfacit: ${m.wins}–${m.losses} · ${pct}% vinst över ${m.played} bord.${hi}\n\n${TAG}.`;
     }
     case 'milestone':
-      return `${m.title}: ${m.value}${m.sub ? ` (${m.sub})` : ''} — ${m.who}. 🎳\n\n${TAG}.`;
+      return `${m.title}: ${m.value}${m.sub ? ` (${m.sub})` : ''} — ${m.who}.\n\n${TAG}.`;
   }
 }
 

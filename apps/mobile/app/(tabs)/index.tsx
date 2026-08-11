@@ -12,9 +12,12 @@ import { MatchCard } from '@/components/feed/MatchCard';
 import { PromoCard } from '@/components/feed/PromoCard';
 import { StandingsCard } from '@/components/feed/StandingsCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
+import { useNextMatch } from '@/lib/diary';
 import { buildFeed, filterFeed, injectPromos, injectStandings, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions';
 import { useFeedStandings } from '@/lib/feed-standings';
+import { greetingFor, homeNote } from '@/lib/home-tip';
+import { useMyClaim } from '@/lib/me';
 import { useNavScroll } from '@/lib/nav-scroll';
 import { SAMPLE_PROMOS } from '@/lib/promos';
 import { supabase } from '@/lib/supabase';
@@ -48,9 +51,20 @@ export default function Home() {
   const { data: topScores = [] } = useTopScores();
   const { data: standings = [] } = useFeedStandings();
 
-  const hour = new Date().getHours();
-  const greeting = hour < 10 ? 'God morgon' : hour < 18 ? 'God dag' : 'God kväll';
+  const { data: claim } = useMyClaim();
+  const { data: nextMatch } = useNextMatch();
+  const firstName = claim?.status === 'verified' ? claim.name.split(' ')[0] : null;
+  const greetingText = greetingFor(new Date().getHours(), firstName);
   const dateStr = new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' });
+  const daysToMatch = nextMatch
+    ? Math.round((new Date(nextMatch.date).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
+    : null;
+  const note = homeNote({
+    daysToMatch,
+    opponent: nextMatch?.opponentName ?? null,
+    matchId: nextMatch?.matchId ?? null,
+    daySeed: Math.floor(Date.now() / 86_400_000),
+  });
 
   const feed = useMemo(() => {
     const base = filterFeed(buildFeed(matches, topScores), category);
@@ -107,8 +121,15 @@ export default function Home() {
   const header = (
     <View style={styles.headerWrap}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>{greeting}</Text>
-        <Text style={styles.date}>{dateStr}</Text>
+        <Text style={styles.dateKicker}>{dateStr}</Text>
+        <Text style={styles.greeting}>{greetingText}</Text>
+        <PressableScale
+          disabled={!note.matchId}
+          onPress={() => note.matchId && router.push(`/prep/${note.matchId}`)}
+          hitSlop={6}
+        >
+          <Text style={[styles.note, !!note.matchId && styles.noteMatch]}>{note.text}</Text>
+        </PressableScale>
       </View>
       <View style={styles.prep}>
         <NextMatchCard />
@@ -158,10 +179,12 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 120 },
   pad: { paddingTop: SPACE[6], paddingHorizontal: SPACE[4] },
   headerWrap: { marginBottom: SPACE[2] },
-  header: { paddingTop: SPACE[3], paddingBottom: SPACE[4], paddingHorizontal: SPACE[4] },
+  header: { alignItems: 'center', paddingTop: SPACE[4], paddingBottom: SPACE[4], paddingHorizontal: SPACE[6] },
   prep: { paddingHorizontal: SPACE[4], marginBottom: SPACE[4] },
-  greeting: { color: COLOR.ink, fontSize: 22, fontFamily: FONT.bold, letterSpacing: -0.5 },
-  date: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[1], textTransform: 'capitalize' },
+  dateKicker: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: SPACE[1] },
+  greeting: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.bold, letterSpacing: -0.5, textAlign: 'center' },
+  note: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.medium, textAlign: 'center', marginTop: SPACE[2], lineHeight: 22 },
+  noteMatch: { color: COLOR.ink },
   empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8], paddingTop: SPACE[16], gap: SPACE[3] },
   emptyTitle: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold },
   emptyBody: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center' },
