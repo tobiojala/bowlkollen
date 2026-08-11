@@ -22,17 +22,13 @@ import {
 } from '@/lib/team-admin';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
-const OPTIONS: { key: AvailabilityResponse; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
-  { key: 'yes', label: 'Ja', icon: 'checkmark-circle', color: COLOR.green },
-  { key: 'maybe', label: 'Kanske', icon: 'help-circle', color: COLOR.gold },
-  { key: 'no', label: 'Nej', icon: 'close-circle', color: COLOR.red },
+const OPTIONS: { key: AvailabilityResponse; label: string; icon: keyof typeof Ionicons.glyphMap; color: string; tint: string }[] = [
+  { key: 'yes', label: 'Ja', icon: 'checkmark', color: COLOR.green, tint: 'rgba(48,212,126,0.14)' },
+  { key: 'maybe', label: 'Kanske', icon: 'help', color: COLOR.gold, tint: 'rgba(245,194,0,0.14)' },
+  { key: 'no', label: 'Nej', icon: 'close', color: COLOR.red, tint: 'rgba(224,85,85,0.14)' },
 ];
 
-const GROUPS: { key: AvailabilityResponse; label: string }[] = [
-  { key: 'yes', label: 'SPELAR' },
-  { key: 'maybe', label: 'KANSKE' },
-  { key: 'no', label: 'SPELAR INTE' },
-];
+type Filter = 'alla' | AvailabilityResponse | 'noreply';
 
 export default function MatchAdmin() {
   const router = useRouter();
@@ -48,22 +44,39 @@ export default function MatchAdmin() {
   const { data: members = [] } = useTeamMembers(teamId);
   const setAvail = useSetAvailability(teamId, matchId);
 
-  // The nudge: verified members who haven't answered yet.
   const responded = new Set(squad.map((r) => r.userId));
   const noReply = members.filter((m) => !responded.has(m.userId));
 
-  const [note, setNote] = useState('');
-  const noteValue = note || mine?.note || '';
+  // Comment: draft = null means "untouched, show the saved note"; '' means "cleared".
+  const [draft, setDraft] = useState<string | null>(null);
+  const noteShown = draft ?? mine?.note ?? '';
 
-  const choose = (response: AvailabilityResponse) =>
-    setAvail.mutate({ response, note: (note || mine?.note) ?? null });
+  const save = (response: AvailabilityResponse, noteText: string) =>
+    setAvail.mutate({ response, note: noteText.trim() ? noteText.trim() : null });
+
+  const choose = (response: AvailabilityResponse) => save(response, noteShown);
+  const saveNote = () => {
+    if (!mine || (draft ?? '') === (mine.note ?? '')) return;
+    save(mine.response, draft ?? '');
+  };
+  const clearNote = () => {
+    setDraft('');
+    if (mine) save(mine.response, '');
+  };
+
+  const [filter, setFilter] = useState<Filter>('alla');
+  const countOf = (k: AvailabilityResponse) => squad.filter((r) => r.response === k).length;
+  const FILTERS: { key: Filter; label: string; count: number }[] = [
+    { key: 'alla', label: 'Alla', count: squad.length + noReply.length },
+    { key: 'yes', label: 'Ja', count: countOf('yes') },
+    { key: 'maybe', label: 'Kanske', count: countOf('maybe') },
+    { key: 'no', label: 'Nej', count: countOf('no') },
+    { key: 'noreply', label: 'Väntar', count: noReply.length },
+  ];
 
   return (
     <View style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]} keyboardShouldPersistTaps="handled">
         <Text style={styles.kicker}>NÄRVARO</Text>
         {match && (
           <>
@@ -74,45 +87,38 @@ export default function MatchAdmin() {
               <Text style={styles.metaStrong}>{relativeMatchDate(match.date)}</Text>
               <Text style={styles.metaDot}>·</Text>
               <Text style={styles.meta}>{formatMatchDate(match.date)}</Text>
-              {!!match.hall && (
-                <>
-                  <Text style={styles.metaDot}>·</Text>
-                  <Text style={styles.meta} numberOfLines={1}>{match.hall}</Text>
-                </>
-              )}
+              {!!match.hall && (<><Text style={styles.metaDot}>·</Text><Text style={styles.meta} numberOfLines={1}>{match.hall}</Text></>)}
             </View>
           </>
         )}
 
         {role ? (
           <>
-            {/* My answer */}
             <Text style={styles.sectionLabel}>KAN DU SPELA?</Text>
-            <View style={styles.options}>
-              {OPTIONS.map((o) => {
-                const on = mine?.response === o.key;
-                return (
-                  <PressableScale
-                    key={o.key}
-                    style={[styles.option, on && { backgroundColor: o.color, borderColor: o.color }]}
-                    onPress={() => choose(o.key)}
-                  >
-                    <Ionicons name={o.icon} size={26} color={on ? COLOR.bg : o.color} />
-                    <Text style={[styles.optionText, on && styles.optionTextOn]}>{o.label}</Text>
-                  </PressableScale>
-                );
-              })}
+            <View style={styles.answerRow}>
+              {OPTIONS.map((o) => (
+                <AnswerCircle key={o.key} opt={o} on={mine?.response === o.key} onPress={() => choose(o.key)} />
+              ))}
             </View>
-            <TextInput
-              style={styles.note}
-              value={noteValue}
-              onChangeText={setNote}
-              onBlur={() => (note || '') !== (mine?.note || '') && mine && choose(mine.response)}
-              placeholder="Kommentar (valfritt) — t.ex. kommer sent"
-              placeholderTextColor={COLOR.ink4}
-            />
 
-            {/* Captain: laguttagning (contextual lineup tool) */}
+            <View style={styles.noteWrap}>
+              <TextInput
+                style={styles.note}
+                value={noteShown}
+                onChangeText={setDraft}
+                onBlur={saveNote}
+                placeholder="Lägg till en kommentar — t.ex. kommer sent"
+                placeholderTextColor={COLOR.ink4}
+                editable={!!mine}
+              />
+              {noteShown.length > 0 && (
+                <PressableScale style={styles.noteClear} onPress={clearNote} hitSlop={8} accessibilityLabel="Ta bort kommentar">
+                  <Ionicons name="close" size={18} color={COLOR.ink3} />
+                </PressableScale>
+              )}
+            </View>
+            {!mine && <Text style={styles.noteHint}>Svara först för att lägga till en kommentar.</Text>}
+
             {role === 'captain' && (
               <PressableScale style={styles.lineupBtn} onPress={() => router.push(`/lag/${teamId}/laguttagning/${matchId}`)}>
                 <Ionicons name="clipboard" size={22} color={COLOR.gold} />
@@ -124,35 +130,21 @@ export default function MatchAdmin() {
               </PressableScale>
             )}
 
-            {/* The squad */}
-            {GROUPS.map((g) => {
-              const rows = squad.filter((r) => r.response === g.key);
-              if (rows.length === 0) return null;
-              return (
-                <View key={g.key} style={styles.group}>
-                  <Text style={styles.groupLabel}>{g.label} · {rows.length}</Text>
-                  {rows.map((r) => (
-                    <SquadRow key={r.userId} row={r} onPress={() => r.publicId && router.push(`/player/${r.publicId}`)} />
-                  ))}
-                </View>
-              );
-            })}
-            {noReply.length > 0 && (
-              <View style={styles.group}>
-                <Text style={styles.groupLabel}>HAR INTE SVARAT · {noReply.length}</Text>
-                {noReply.map((m) => (
-                  <PressableScale
-                    key={m.userId}
-                    style={styles.squadRow}
-                    onPress={() => m.publicId && router.push(`/player/${m.publicId}`)}
-                    disabled={!m.publicId}
-                  >
-                    <IdentityAvatar colors={teamColor(m.displayName)} initials={teamInitials(m.displayName)} size={36} />
-                    <Text style={[styles.squadName, { flex: 1 }]} numberOfLines={1}>{m.displayName}{m.isMe ? ' (du)' : ''}</Text>
+            {/* Squad, filtered */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={styles.filtersInner}>
+              {FILTERS.map((f) => {
+                const on = filter === f.key;
+                return (
+                  <PressableScale key={f.key} style={[styles.chip, on && styles.chipOn]} onPress={() => setFilter(f.key)}>
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{f.label}</Text>
+                    <Text style={[styles.chipCount, on && styles.chipTextOn]}>{f.count}</Text>
                   </PressableScale>
-                ))}
-              </View>
-            )}
+                );
+              })}
+            </ScrollView>
+
+            <SquadList filter={filter} squad={squad} noReply={noReply} onOpen={(pid) => router.push(`/player/${pid}`)} />
+
             {squad.length === 0 && noReply.length === 0 && <Text style={styles.empty}>Ingen har svarat än. Bli först!</Text>}
           </>
         ) : (
@@ -168,15 +160,56 @@ export default function MatchAdmin() {
   );
 }
 
-function SquadRow({ row, onPress }: { row: AvailabilityRow; onPress: () => void }) {
+function AnswerCircle({ opt, on, onPress }: { opt: (typeof OPTIONS)[number]; on: boolean; onPress: () => void }) {
   return (
-    <PressableScale style={styles.squadRow} onPress={onPress} disabled={!row.publicId}>
-      <IdentityAvatar colors={teamColor(row.displayName)} initials={teamInitials(row.displayName)} size={36} />
+    <PressableScale style={styles.opt} onPress={onPress} accessibilityLabel={opt.label} accessibilityState={{ selected: on }}>
+      <View style={[styles.ring, { borderColor: on ? opt.color : COLOR.surface2, backgroundColor: on ? opt.tint : COLOR.surface }]}>
+        <Ionicons name={opt.icon} size={30} color={on ? opt.color : COLOR.ink3} />
+      </View>
+      <Text style={[styles.optLabel, on && styles.optLabelOn]}>{opt.label}</Text>
+    </PressableScale>
+  );
+}
+
+function SquadList({ filter, squad, noReply, onOpen }: {
+  filter: Filter;
+  squad: AvailabilityRow[];
+  noReply: { userId: string; publicId: string | null; displayName: string; isMe?: boolean }[];
+  onOpen: (publicId: string) => void;
+}) {
+  const person = (name: string, pid: string | null, note: string | null, suffix: string) => (
+    <PressableScale key={pid ?? name} style={styles.squadRow} onPress={() => pid && onOpen(pid)} disabled={!pid}>
+      <IdentityAvatar colors={teamColor(name)} initials={teamInitials(name)} size={36} />
       <View style={styles.squadText}>
-        <Text style={styles.squadName} numberOfLines={1}>{row.displayName}</Text>
-        {!!row.note && <Text style={styles.squadNote} numberOfLines={1}>{row.note}</Text>}
+        <Text style={styles.squadName} numberOfLines={1}>{name}{suffix}</Text>
+        {!!note && <Text style={styles.squadNote} numberOfLines={1}>{note}</Text>}
       </View>
     </PressableScale>
+  );
+
+  if (filter === 'noreply') return <View style={styles.group}>{noReply.map((m) => person(m.displayName, m.publicId, null, m.isMe ? ' (du)' : ''))}</View>;
+  if (filter !== 'alla') return <View style={styles.group}>{squad.filter((r) => r.response === filter).map((r) => person(r.displayName, r.publicId, r.note, ''))}</View>;
+
+  // Alla → grouped
+  return (
+    <>
+      {OPTIONS.map((o) => {
+        const rows = squad.filter((r) => r.response === o.key);
+        if (!rows.length) return null;
+        return (
+          <View key={o.key} style={styles.group}>
+            <Text style={[styles.groupLabel, { color: o.color }]}>{o.label.toUpperCase()} · {rows.length}</Text>
+            {rows.map((r) => person(r.displayName, r.publicId, r.note, ''))}
+          </View>
+        );
+      })}
+      {noReply.length > 0 && (
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>VÄNTAR · {noReply.length}</Text>
+          {noReply.map((m) => person(m.displayName, m.publicId, null, m.isMe ? ' (du)' : ''))}
+        </View>
+      )}
+    </>
   );
 }
 
@@ -193,40 +226,34 @@ const styles = StyleSheet.create({
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1 },
   metaDot: { color: COLOR.ink4, fontSize: TYPE.caption },
 
-  sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginTop: SPACE[8], marginBottom: SPACE[3] },
-  options: { flexDirection: 'row', gap: SPACE[3] },
-  option: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: SPACE[4],
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLOR.hairline,
-    backgroundColor: COLOR.surface,
-  },
-  optionText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
-  optionTextOn: { color: COLOR.bg },
-  note: { marginTop: SPACE[3], backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[4], color: COLOR.ink, fontSize: TYPE.body },
+  sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginTop: SPACE[8], marginBottom: SPACE[4] },
+  answerRow: { flexDirection: 'row', justifyContent: 'center', gap: SPACE[8] },
+  opt: { alignItems: 'center', gap: SPACE[2] },
+  ring: { width: 66, height: 66, borderRadius: 33, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
+  optLabel: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.bold },
+  optLabelOn: { color: COLOR.ink },
 
-  lineupBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACE[3],
-    marginTop: SPACE[8],
-    padding: SPACE[4],
-    borderRadius: RADIUS.lg,
-    backgroundColor: 'rgba(245,194,0,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,194,0,0.24)',
-  },
+  noteWrap: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[4], backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4] },
+  note: { flex: 1, paddingVertical: SPACE[4], color: COLOR.ink, fontSize: TYPE.body },
+  noteClear: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  noteHint: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: SPACE[2] },
+
+  lineupBtn: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[8], padding: SPACE[4], borderRadius: RADIUS.lg, backgroundColor: 'rgba(245,194,0,0.08)', borderWidth: 1, borderColor: 'rgba(245,194,0,0.24)' },
   lineupText: { flex: 1, minWidth: 0, gap: 2 },
   lineupTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
   lineupBody: { color: COLOR.ink3, fontSize: TYPE.caption, lineHeight: 18 },
 
-  group: { marginTop: SPACE[8] },
+  filters: { marginTop: SPACE[8], marginHorizontal: -SPACE[6] },
+  filtersInner: { paddingHorizontal: SPACE[6], gap: SPACE[2] },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2], paddingHorizontal: SPACE[3], paddingVertical: SPACE[2], borderRadius: RADIUS.md, backgroundColor: COLOR.surface },
+  chipOn: { backgroundColor: COLOR.surface2 },
+  chipText: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.bold },
+  chipTextOn: { color: COLOR.ink },
+  chipCount: { color: COLOR.ink4, fontSize: TYPE.caption, fontFamily: FONT.bold, fontVariant: ['tabular-nums'] },
+
+  group: { marginTop: SPACE[4] },
   groupLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.2, marginBottom: SPACE[2] },
-  squadRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
+  squadRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLOR.surface2 },
   squadText: { flex: 1, minWidth: 0 },
   squadName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
   squadNote: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
