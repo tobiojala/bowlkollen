@@ -117,10 +117,10 @@ const styles = StyleSheet.create({
 
   rec: { alignItems: 'center', minWidth: 96, paddingHorizontal: SPACE[2] },
   recRow: { flexDirection: 'row', alignItems: 'baseline' },
-  recNum: { fontSize: TYPE.hero - 12, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  recNum: { fontSize: TYPE.hero - 12, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   recWin: { color: COLOR.green },
   recLose: { color: COLOR.ink3 },
-  recDash: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.display, marginHorizontal: SPACE[2] },
+  recDash: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.score, marginHorizontal: SPACE[2] },
   recCap: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, marginTop: 2 },
 
   bar: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginTop: SPACE[4], backgroundColor: COLOR.surface2 },

@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   team: { flex: 1, color: COLOR.ink2, fontSize: TYPE.title, fontFamily: FONT.semibold, letterSpacing: -0.3 },
   win: { color: COLOR.ink, fontFamily: FONT.bold },
   lose: { color: COLOR.ink3 },
-  score: { fontSize: TYPE.hero - 8, fontFamily: FONT.display, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
+  score: { fontSize: TYPE.hero - 8, fontFamily: FONT.score, fontVariant: ['tabular-nums'], minWidth: 44, textAlign: 'right' },
   sWin: { color: COLOR.ink },
   sLose: { color: COLOR.ink3 },
 

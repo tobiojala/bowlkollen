@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   subtitle: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1, marginLeft: SPACE[3] },
 
   board: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginBottom: SPACE[2] },
-  bordLabel: { width: 20, color: COLOR.ink4, fontFamily: FONT.display, fontSize: 18, textAlign: 'center' },
+  bordLabel: { width: 20, color: COLOR.ink4, fontFamily: FONT.score, fontSize: 18, textAlign: 'center' },
   pair: { flex: 1, flexDirection: 'row', gap: SPACE[3] },
   player: {
     flex: 1,

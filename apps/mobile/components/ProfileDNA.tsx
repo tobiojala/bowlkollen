@@ -121,7 +121,7 @@ export function ProfileDNA({
         {/* centre avatar with a soft glow ring */}
         <Circle cx={CX} cy={CY} r={AVATAR_R + 8} fill={GOLD} opacity={0.06} />
         <Circle cx={CX} cy={CY} r={AVATAR_R} fill={COLOR.surface2} stroke={ringColor} strokeWidth={2} />
-        <SvgText x={CX} y={CY + 6} fill={ringColor} fontSize={17} fontFamily={FONT.display} textAnchor="middle">
+        <SvgText x={CX} y={CY + 6} fill={ringColor} fontSize={17} fontFamily={FONT.score} textAnchor="middle">
           {initials}
         </SvgText>
       </Svg>

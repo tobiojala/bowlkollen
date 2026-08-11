@@ -138,10 +138,10 @@ const styles = StyleSheet.create({
 
   centre: { paddingHorizontal: SPACE[4], minWidth: 82, alignItems: 'center' },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  score: { fontSize: TYPE.body + 12, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  score: { fontSize: TYPE.body + 12, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   scoreWin: { color: COLOR.ink },
   scoreLose: { color: COLOR.ink2 },
-  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body + 4, fontFamily: FONT.display, marginHorizontal: 5 },
+  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body + 4, fontFamily: FONT.score, marginHorizontal: 5 },
 
   date: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
   vs: { color: COLOR.ink4, fontSize: TYPE.label, fontFamily: FONT.semibold, letterSpacing: 1.5, marginTop: 2 },

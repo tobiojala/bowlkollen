@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   manageBody: { color: COLOR.ink3, fontSize: TYPE.caption, lineHeight: 18 },
   statRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[6] },
   statCol: { flex: 1, alignItems: 'center', gap: 6 },
-  statValue: { fontFamily: FONT.display, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
+  statValue: { fontFamily: FONT.score, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
   statLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
   statDivider: { width: 1, alignSelf: 'stretch', backgroundColor: COLOR.hairline },
   formDots: { flexDirection: 'row', gap: 5 },

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
 
   player: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderBottomWidth: 1, borderBottomColor: COLOR.hairline },
   playerName: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  playerAvg: { color: COLOR.ink, fontFamily: FONT.display, fontSize: 22 },
+  playerAvg: { color: COLOR.ink, fontFamily: FONT.score, fontSize: 22 },
 
   empty: { color: COLOR.ink3, fontSize: TYPE.body, textAlign: 'center', paddingVertical: SPACE[12] },
 });

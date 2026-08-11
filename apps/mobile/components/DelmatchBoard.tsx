@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
   tally: { alignItems: 'center', marginBottom: SPACE[6] },
   tallyLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
   tallyRow: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[3], marginTop: 2 },
-  tallyNum: { color: COLOR.ink3, fontSize: TYPE.hero - 8, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  tallyNum: { color: COLOR.ink3, fontSize: TYPE.hero - 8, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   tallyWin: { color: COLOR.ink },
-  tallySep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.display },
+  tallySep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.score },
 
   serie: { marginBottom: SPACE[6] },
   serieHead: {
@@ -160,10 +160,10 @@ const styles = StyleSheet.create({
 
   scoreCol: { alignItems: 'center', minWidth: 116 },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  score: { fontSize: TYPE.title, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  score: { fontSize: TYPE.title, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   scoreWin: { color: COLOR.green },
   scoreLose: { color: COLOR.ink3 },
   scoreTie: { color: COLOR.ink2 },
-  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body, fontFamily: FONT.display },
+  scoreSep: { color: COLOR.ink4, fontSize: TYPE.body, fontFamily: FONT.score },
   bordLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 1 },
 });

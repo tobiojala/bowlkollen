@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
 
   snapshot: { flexDirection: 'row', alignItems: 'center', marginTop: SPACE[4], paddingVertical: SPACE[2] },
   snapCol: { flex: 1, alignItems: 'center', gap: 6 },
-  snapValue: { fontFamily: FONT.display, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
+  snapValue: { fontFamily: FONT.score, fontSize: 26, color: COLOR.ink, letterSpacing: -0.5 },
   snapLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, color: COLOR.ink3 },
   snapDivider: { width: 1, alignSelf: 'stretch', backgroundColor: COLOR.hairline },
   formVal: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },

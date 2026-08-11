@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   formRow: { flexDirection: 'row', gap: 3 },
 
   summary: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[2], marginTop: SPACE[3], marginBottom: SPACE[1] },
-  sumNum: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  sumNum: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   sumLbl: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[2], borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLOR.surface2 },

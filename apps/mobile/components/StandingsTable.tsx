@@ -76,9 +76,9 @@ const styles = StyleSheet.create({
   num: { width: 28, textAlign: 'right' },
   record: { width: 60, textAlign: 'right' },
   ptsCol: { width: 36, textAlign: 'right' },
-  numTxt: { fontFamily: FONT.display, fontSize: 15, color: COLOR.ink, fontVariant: ['tabular-nums'] },
+  numTxt: { fontFamily: FONT.score, fontSize: 15, color: COLOR.ink, fontVariant: ['tabular-nums'] },
   teamTxt: { fontFamily: FONT.semibold, fontSize: TYPE.body, color: COLOR.ink },
   teamStrong: { fontFamily: FONT.bold },
-  pts: { fontFamily: FONT.display, fontSize: 17, color: COLOR.ink, fontVariant: ['tabular-nums'] },
+  pts: { fontFamily: FONT.score, fontSize: 17, color: COLOR.ink, fontVariant: ['tabular-nums'] },
   gold: { color: COLOR.gold },
 });

@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE[4],
     alignItems: 'center',
   },
-  statValue: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.display },
+  statValue: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.score },
   statLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontFamily: FONT.bold, letterSpacing: 1, marginTop: 2 },
   section: { marginTop: SPACE[8] },
   sectionLabel: {

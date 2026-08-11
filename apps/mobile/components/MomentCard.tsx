@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
   names: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, textAlign: 'center', lineHeight: 26 },
   name: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold, textAlign: 'center', lineHeight: 28 },
   recRow: { flexDirection: 'row', alignItems: 'baseline', marginVertical: SPACE[1] },
-  recNum: { color: COLOR.ink2, fontSize: TYPE.hero, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  recNum: { color: COLOR.ink2, fontSize: TYPE.hero, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   recWin: { color: COLOR.gold },
-  recDash: { color: COLOR.ink4, fontSize: TYPE.hero - 12, fontFamily: FONT.display, marginHorizontal: SPACE[3] },
-  bigValue: { color: COLOR.gold, fontSize: TYPE.hero + 16, fontFamily: FONT.display, fontVariant: ['tabular-nums'], lineHeight: TYPE.hero + 18 },
+  recDash: { color: COLOR.ink4, fontSize: TYPE.hero - 12, fontFamily: FONT.score, marginHorizontal: SPACE[3] },
+  bigValue: { color: COLOR.gold, fontSize: TYPE.hero + 16, fontFamily: FONT.score, fontVariant: ['tabular-nums'], lineHeight: TYPE.hero + 18 },
   sub: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.semibold, textAlign: 'center', marginTop: SPACE[1] },
   highlight: { color: COLOR.green, fontSize: TYPE.caption, fontFamily: FONT.bold, textAlign: 'center', marginTop: SPACE[1] },
 

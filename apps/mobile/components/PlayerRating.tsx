@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.surface,
   },
   left: { alignItems: 'center', gap: SPACE[2] },
-  rating: { color: COLOR.ink, fontSize: 48, fontFamily: FONT.display, letterSpacing: -1 },
+  rating: { color: COLOR.ink, fontSize: 48, fontFamily: FONT.score, letterSpacing: -1 },
   tier: {
     paddingHorizontal: SPACE[3],
     paddingVertical: 3,

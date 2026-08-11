@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLOR.bg,
   },
-  initials: { fontFamily: FONT.display, letterSpacing: 0.5 },
+  initials: { fontFamily: FONT.score, letterSpacing: 0.5 },
   glowWrap: {
     position: 'absolute',
     left: 0,

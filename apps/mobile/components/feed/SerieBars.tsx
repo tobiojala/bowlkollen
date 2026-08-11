@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end' },
   col: { flex: 1, alignItems: 'center', gap: 6 },
   track: { width: '100%', height: H, justifyContent: 'flex-end' },
-  val: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  val: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
 });

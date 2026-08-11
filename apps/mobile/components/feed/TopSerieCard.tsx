@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   badgeText: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
 
-  total: { color: COLOR.ink, fontSize: 68, fontFamily: FONT.display, letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
+  total: { color: COLOR.ink, fontSize: 68, fontFamily: FONT.score, letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
   totalGold: { color: COLOR.gold },
 
   bottom: { gap: SPACE[3] },

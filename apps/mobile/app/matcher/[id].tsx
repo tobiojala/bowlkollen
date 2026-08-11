@@ -351,10 +351,10 @@ const styles = StyleSheet.create({
   teamLose: { color: COLOR.ink3 },
   heroCentre: { paddingHorizontal: SPACE[4], alignItems: 'center', gap: 4 },
   pointsRow: { flexDirection: 'row', alignItems: 'baseline' },
-  points: { fontSize: TYPE.hero, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  points: { fontSize: TYPE.hero, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   pWin: { color: COLOR.ink },
   pLose: { color: COLOR.ink3 },
-  pSep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.display, marginHorizontal: SPACE[2] },
+  pSep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.score, marginHorizontal: SPACE[2] },
   pointsLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
   heroDate: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold },
 
@@ -375,5 +375,5 @@ const styles = StyleSheet.create({
   bestText: { flex: 1, minWidth: 0 },
   bestLabel: { color: COLOR.gold, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
   bestName: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold, marginTop: 2 },
-  bestTotal: { color: COLOR.gold, fontSize: TYPE.title + 4, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  bestTotal: { color: COLOR.gold, fontSize: TYPE.title + 4, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
 });

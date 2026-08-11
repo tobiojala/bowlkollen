@@ -68,6 +68,8 @@ export const FONT = {
   medium: 'DMSans_500Medium',
   semibold: 'DMSans_600SemiBold',
   bold: 'DMSans_700Bold',
-  display: 'BarlowCondensed_700Bold',
+  display: 'BarlowCondensed_700Bold',      // brand/wordmark only
   displaySemi: 'BarlowCondensed_600SemiBold',
+  score: 'Sora_700Bold',                   // all scores/stat numbers
+  scoreSemi: 'Sora_600SemiBold',
 } as const;

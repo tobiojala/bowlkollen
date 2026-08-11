@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   teamL: { textAlign: 'left' },
   teamR: { textAlign: 'right' },
   result: { alignItems: 'center', paddingHorizontal: SPACE[3], gap: 2 },
-  banp: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  banp: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   banpSep: { color: COLOR.ink4 },
   banpLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
   wonLine: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginBottom: SPACE[4] },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
 
   row: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[3], borderTopWidth: 1, borderTopColor: COLOR.hairline },
   serieLabel: { width: 62, color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
-  pins: { width: 52, color: COLOR.ink, fontSize: TYPE.body + 1, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  pins: { width: 52, color: COLOR.ink, fontSize: TYPE.body + 1, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   pinsR: { textAlign: 'right' },
   pinsWin: { color: COLOR.green },
   pinsLose: { color: COLOR.ink3 },

@@ -47,6 +47,6 @@ const styles = StyleSheet.create({
   },
   name: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold, textAlign: 'center', letterSpacing: -0.2 },
   meta: { alignItems: 'center', gap: 1 },
-  avg: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  avg: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   matcher: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.medium },
 });

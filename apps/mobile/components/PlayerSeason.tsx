@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   strong: { color: COLOR.ink, fontFamily: FONT.bold },
   prognos: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[2], marginTop: SPACE[4] },
   prognosLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
-  prognosValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display },
+  prognosValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score },
   prognosHint: { color: COLOR.ink3, fontSize: TYPE.caption },
   grid: { flexDirection: 'row', gap: SPACE[2], marginTop: SPACE[4] },
   mini: {
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  miniValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display },
+  miniValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score },
   miniLabel: { color: COLOR.ink3, fontSize: TYPE.micro, fontFamily: FONT.bold, letterSpacing: 0.5 },
   curveLabel: {
     color: COLOR.ink3,

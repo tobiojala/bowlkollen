@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   rank: { width: 22, color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.bold },
   name: { flex: 1, color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
   nameSubject: { color: COLOR.ink, fontFamily: FONT.bold },
-  points: { width: 34, textAlign: 'right', color: COLOR.ink, fontSize: TYPE.body + 1, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  points: { width: 34, textAlign: 'right', color: COLOR.ink, fontSize: TYPE.body + 1, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   gold: { color: COLOR.gold },
   footer: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
 });

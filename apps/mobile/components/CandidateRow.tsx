@@ -117,6 +117,6 @@ const styles = StyleSheet.create({
   sub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.medium },
 
   stat: { alignItems: 'center', width: 78 },
-  statValue: { color: COLOR.ink, fontFamily: FONT.display, fontSize: 32, letterSpacing: -0.5 },
+  statValue: { color: COLOR.ink, fontFamily: FONT.score, fontSize: 32, letterSpacing: -0.5 },
   statLabel: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold, textAlign: 'center', marginTop: 1 },
 });

@@ -8,6 +8,10 @@ import {
   DMSans_600SemiBold,
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
+import {
+  Sora_600SemiBold,
+  Sora_700Bold,
+} from '@expo-google-fonts/sora';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -72,6 +76,8 @@ export default function RootLayout() {
     DMSans_700Bold,
     BarlowCondensed_600SemiBold,
     BarlowCondensed_700Bold,
+    Sora_600SemiBold,
+    Sora_700Bold,
   });
 
   if (!fontsLoaded) {

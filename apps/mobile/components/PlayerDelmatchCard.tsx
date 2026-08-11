@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
 
   hero: { alignItems: 'center', marginBottom: SPACE[4] },
   recordRow: { flexDirection: 'row', alignItems: 'baseline' },
-  recWin: { color: COLOR.ink, fontSize: TYPE.hero - 6, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
-  recSep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.display, marginHorizontal: SPACE[2] },
-  recLoss: { color: COLOR.ink3, fontSize: TYPE.hero - 6, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  recWin: { color: COLOR.ink, fontSize: TYPE.hero - 6, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
+  recSep: { color: COLOR.ink4, fontSize: TYPE.title, fontFamily: FONT.score, marginHorizontal: SPACE[2] },
+  recLoss: { color: COLOR.ink3, fontSize: TYPE.hero - 6, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   recTies: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   heroSub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold, marginTop: 2 },
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.surface, borderRadius: RADIUS.md,
     paddingVertical: SPACE[3], paddingHorizontal: SPACE[2],
   },
-  mValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  mValue: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   mValueGold: { color: COLOR.gold },
   mLabel: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 1, textAlign: 'center' },
 
