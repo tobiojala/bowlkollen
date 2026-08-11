@@ -55,7 +55,7 @@ export function ProfileTrend({
   const avgs = points.map((p) => p.avg);
   const hasProj = projValue != null && hasGraph;
   const usableW = W - PAD_L - PAD_R;
-  const dataW = hasProj ? usableW * 0.78 : usableW;
+  const dataW = hasProj ? usableW * 0.85 : usableW;
 
   const vals = [...avgs, ...(hasProj ? [projValue as number] : []), ...(baseline != null ? [baseline] : [])];
   const vmin = vals.length ? Math.min(...vals) : 0;
@@ -72,7 +72,7 @@ export function ProfileTrend({
 
   // Grid: a few "nice" reference values across the data range.
   const range = Math.max(1, vmax - vmin);
-  const step = Math.max(5, Math.round(range / 3 / 5) * 5);
+  const step = [1, 2, 5, 10, 20, 25, 50, 100].find((s) => s >= range / 4) ?? 100;
   const gridVals: number[] = [];
   for (let v = Math.ceil(vmin / step) * step; v <= vmax && gridVals.length < 6; v += step) gridVals.push(v);
 
@@ -157,9 +157,9 @@ export function ProfileTrend({
               {/* season-average reference */}
               {baseline != null && (
                 <>
-                  <Line x1={PAD_L} y1={cy(baseline)} x2={W - PAD_R} y2={cy(baseline)} stroke={COLOR.ink3} strokeWidth={1} strokeDasharray="4,3" />
-                  {/* label in the top margin so it never lies under the sparkline */}
-                  <SvgText x={W - PAD_R} y={PAD_T - 8} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold} textAnchor="end">snitt {baseline}</SvgText>
+                  <Line x1={PAD_L} y1={cy(baseline)} x2={xs[n - 1]} y2={cy(baseline)} stroke={COLOR.ink3} strokeWidth={1} strokeDasharray="4,3" />
+                  {/* label top-left so it clears the sparkline and the prognos on the right */}
+                  <SvgText x={PAD_L} y={PAD_T - 8} fill={COLOR.ink3} fontSize={AXIS} fontFamily={FONT.bold}>snitt {baseline}</SvgText>
                 </>
               )}
 
