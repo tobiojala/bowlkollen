@@ -22,6 +22,24 @@ export function matchTrendPoints(history: PlayerMatch[]): TrendPoint[] {
     .filter((p) => p.avg > 0);
 }
 
+// Rolling BK-rating trend — the rating recomputed after each match on all games so
+// far, so the hero graph shows how the rating climbed/fell across the season.
+export function rollingRatingPoints(history: PlayerMatch[]): TrendPoint[] {
+  const sorted = [...history].sort((a, b) => a.match_date.localeCompare(b.match_date));
+  const games: number[] = [];
+  const out: TrendPoint[] = [];
+  for (const m of sorted) {
+    const g = (m.series ?? []).filter((x) => x > 0);
+    if (!g.length) continue;
+    games.push(...g);
+    const avg = Math.round(games.reduce((s, x) => s + x, 0) / games.length);
+    const best = Math.max(...games);
+    const over200 = games.filter((x) => x >= 200).length;
+    out.push({ avg: calcRating(avg, best, over200, true), date: m.match_date, label: m.opponent_name ?? '' });
+  }
+  return out;
+}
+
 export type TierInfo = { label: string; accent: string };
 
 export type PlayerStats = {

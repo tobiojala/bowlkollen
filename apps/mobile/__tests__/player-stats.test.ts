@@ -4,6 +4,7 @@ import {
   getTier,
   matchTrendPoints,
   playerAchievements,
+  rollingRatingPoints,
   projectSeasonAvg,
   stdDev,
   type PlayerMatch,
@@ -147,5 +148,21 @@ describe('matchTrendPoints', () => {
     const pts = matchTrendPoints([m('2026-01-01', [], 'X'), m('2026-01-02', [210], 'Erik')]);
     expect(pts).toHaveLength(1);
     expect(pts[0]).toMatchObject({ avg: 210, label: 'Erik' });
+  });
+});
+
+describe('rollingRatingPoints', () => {
+  const m = (date: string, series: number[] | null, opponent: string | null = null) => ({
+    match_date: date, opponent_name: opponent, division_name: null, total_result: null, is_home_team: null, series,
+  });
+  it('recomputes the rating cumulatively per match, chronological', () => {
+    const pts = rollingRatingPoints([m('2026-02-01', [230, 240]), m('2026-01-01', [150, 160])]);
+    expect(pts.map((p) => p.date)).toEqual(['2026-01-01', '2026-02-01']);
+    // rating after the strong second match should exceed the weak first
+    expect(pts[1].avg).toBeGreaterThan(pts[0].avg);
+    expect(pts.every((p) => p.avg >= 0 && p.avg <= 99)).toBe(true);
+  });
+  it('skips matches with no games', () => {
+    expect(rollingRatingPoints([m('2026-01-01', []), m('2026-01-02', [200])])).toHaveLength(1);
   });
 });

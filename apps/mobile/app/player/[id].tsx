@@ -30,15 +30,14 @@ import { PlayerAchievements } from '@/components/PlayerAchievements';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
-import { PlayerRating } from '@/components/PlayerRating';
+import { ProfileHero } from '@/components/ProfileHero';
 import { PlayerSeason } from '@/components/PlayerSeason';
-import { ProfileTrend } from '@/components/ProfileTrend';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { useFollowCount } from '@/lib/follows';
 import { formatMatchDate } from '@/lib/format';
 import { usePlayerDelmatchRecord } from '@/lib/player-delmatch';
 import type { Moment } from '@/lib/share';
-import { computePlayerStats, matchTrendPoints, playerAchievements, type PlayerMatch } from '@/lib/player-stats';
+import { computePlayerStats, playerAchievements, type PlayerMatch } from '@/lib/player-stats';
 import { usePlayer, usePlayerHistory, usePlayerPercentile } from '@/lib/player-queries';
 import { teamColor, teamInitials } from '@/lib/team-identity';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
@@ -61,7 +60,6 @@ export default function PlayerPage() {
 
   const stats = computePlayerStats(history);
   const { recentAvg, formDiff, historyDesc } = stats;
-  const trend = matchTrendPoints(history as PlayerMatch[]);
   const topPct = typeof percentile === 'number' ? Math.max(1, 100 - percentile) : null;
   const achievements = playerAchievements(stats);
 
@@ -120,11 +118,15 @@ export default function PlayerPage() {
             )}
           </View>
 
-          <PlayerRating rating={stats.rating} tier={stats.tier} topPct={topPct} onInfo={() => setSheet('rating')} />
+          <ProfileHero
+            stats={stats}
+            history={history as PlayerMatch[]}
+            licenceAverage={player.licence_average ?? null}
+            topPct={topPct}
+          />
 
           <View style={styles.stats}>
-            <Stat label="SNITT" value={player.licence_average ? String(player.licence_average) : '–'} />
-            <Stat label="NIVÅ" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
+            <Stat label="SPELSTYRKA" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
             <Stat label="FÖLJARE" value={String(followers)} />
           </View>
 
@@ -151,13 +153,6 @@ export default function PlayerPage() {
                     : undefined,
               })}
             />
-          )}
-
-          {trend.length >= 2 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>SNITTKURVA</Text>
-              <ProfileTrend points={trend} />
-            </View>
           )}
 
           {history.length > 0 && (
