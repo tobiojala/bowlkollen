@@ -98,7 +98,11 @@ export default function PlayerPage() {
                 <Text style={styles.name} numberOfLines={2}>{player.name}</Text>
                 {claimed && <ClaimedBadge size={20} />}
               </View>
-              {!!player.club_name && <Text style={styles.club}>{player.club_name}</Text>}
+              {!!player.club_name && (
+                <Text style={styles.club} numberOfLines={1}>
+                  {[player.club_name, historyDesc[0]?.division_name].filter(Boolean).join(' · ')}
+                </Text>
+              )}
             </View>
             {isOwn ? (
               <PressableScale style={styles.editHeader} onPress={() => setHeaderOpen(true)} hitSlop={8}>
@@ -121,6 +125,10 @@ export default function PlayerPage() {
             )}
           </View>
 
+          <Text style={styles.followers}>
+            <Text style={styles.followersNum}>{followers.toLocaleString('sv-SE')}</Text> följare
+          </Text>
+
           <ProfileHero
             stats={stats}
             history={history as PlayerMatch[]}
@@ -130,7 +138,6 @@ export default function PlayerPage() {
 
           <View style={styles.stats}>
             <Stat label="SPELSTYRKA" value={player.licence_skill_lvl ? String(player.licence_skill_lvl) : '–'} />
-            <Stat label="FÖLJARE" value={String(followers)} />
           </View>
 
           <PlayerAchievements items={achievements} />
@@ -238,7 +245,9 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: SPACE[2] },
   compareBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
-  club: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: 2 },
+  club: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.medium, marginTop: 2 },
+  followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, paddingLeft: 64 + SPACE[3], marginTop: SPACE[2] },
+  followersNum: { color: COLOR.ink2, fontFamily: FONT.semibold },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,10 +267,11 @@ const styles = StyleSheet.create({
     marginTop: SPACE[6],
   },
   stat: {
-    flex: 1,
+    alignSelf: 'flex-start',
     backgroundColor: COLOR.surface,
     borderRadius: RADIUS.md,
-    paddingVertical: SPACE[4],
+    paddingVertical: SPACE[3],
+    paddingHorizontal: SPACE[6],
     alignItems: 'center',
   },
   statValue: { color: COLOR.ink, fontSize: TYPE.title + 4, fontFamily: FONT.score },
