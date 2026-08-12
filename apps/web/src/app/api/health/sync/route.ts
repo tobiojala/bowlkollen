@@ -1,3 +1,4 @@
+// Deploy target: apps/web on wip/local-atlas (Vercel project bowlkollen-brain).
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-server'
