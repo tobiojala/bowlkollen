@@ -65,14 +65,17 @@ export function GlassSheet({
     .onUpdate((e) => { drag.value = Math.max(0, e.translationY); })
     .onEnd((e) => {
       if (e.translationY > closeDy || e.velocityY > 800) {
-        runOnJS(onClose)();
-        drag.value = withTiming(0, { duration: 220 });
+        // one continuous throw off-screen, carrying the finger's velocity, THEN unmount
+        drag.value = withTiming(sheetH + 40, {
+          duration: Math.max(160, Math.min(320, (sheetH - e.translationY) / Math.max(600, e.velocityY) * 1000)),
+          easing: Easing.out(Easing.cubic),
+        }, (fin) => { if (fin) runOnJS(onClose)(); });
       } else {
-        drag.value = withSpring(0, RISE_SPRING);
+        drag.value = withSpring(0, { ...RISE_SPRING, velocity: e.velocityY });
       }
     });
 
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: p.value * (1 - Math.min(drag.value / sheetH, 0.6)) }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: p.value * Math.max(0, 1 - drag.value / sheetH) }));
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: (1 - p.value) * (sheetH + 40) + drag.value }],
   }));
