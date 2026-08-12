@@ -56,13 +56,18 @@ function useDivision(divisionId: number) {
 function useDivisionSeasons(divisionId: number) {
   return useQuery({
     queryKey: ['division-seasons', divisionId],
-    queryFn: async (): Promise<number[]> => {
+    queryFn: async (): Promise<{ all: number[]; withResults: number[] }> => {
       const { data, error } = await supabase
         .from('bits_matches')
-        .select('season_id')
+        .select('season_id, is_finished')
         .eq('bits_division_id', divisionId);
       if (error) throw error;
-      return [...new Set((data ?? []).map((r) => r.season_id as number))].sort((a, b) => b - a);
+      const rows = (data ?? []) as { season_id: number; is_finished: boolean }[];
+      const uniq = (xs: number[]) => [...new Set(xs)].sort((a, b) => b - a);
+      return {
+        all: uniq(rows.map((r) => r.season_id)),
+        withResults: uniq(rows.filter((r) => r.is_finished).map((r) => r.season_id)),
+      };
     },
   });
 }
@@ -89,9 +94,12 @@ export default function DivisionPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const divisionId = Number(id);
   const { data: division } = useDivision(divisionId);
-  const { data: seasons = [] } = useDivisionSeasons(divisionId);
+  const { data: seasonData } = useDivisionSeasons(divisionId);
+  const seasons = seasonData?.all ?? [];
   const [picked, setPicked] = useState<number | null>(null);
-  const season = picked ?? seasons[0] ?? null;
+  // Default to the newest season that has actually been played (so the table shows
+  // in preseason); fall back to the newest season overall.
+  const season = picked ?? seasonData?.withResults[0] ?? seasons[0] ?? null;
   const { data: matches = [], isLoading } = useDivisionSeasonMatches(divisionId, season);
 
   const divisionName = division?.name ?? matches[0]?.division_name ?? 'Division';

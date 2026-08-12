@@ -27,14 +27,16 @@ function useSearch(query: string) {
     queryKey: ['discover', q],
     enabled: q.length >= SEARCH_MIN,
     queryFn: async () => {
-      const [playersRes, teamsRes] = await Promise.all([
-        supabase
-          .from('bits_players')
-          .select('public_id, first_name, sur_name, club_name')
-          .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
-          .limit(20),
-        supabase.from('bits_teams').select('bits_team_id, name, club_name').ilike('name', `%${q}%`).limit(12),
-      ]);
+      // Match each word against first OR surname (ANDed across words) so a full
+      // "Förnamn Efternamn" resolves — the old single-%q% check matched neither field.
+      const words = q.split(/\s+/).map((w) => w.replace(/[%,()]/g, '')).filter(Boolean);
+      let playersQ = supabase.from('bits_players').select('public_id, first_name, sur_name, club_name');
+      let teamsQ = supabase.from('bits_teams').select('bits_team_id, name, club_name');
+      for (const w of words) {
+        playersQ = playersQ.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`);
+        teamsQ = teamsQ.ilike('name', `%${w}%`);
+      }
+      const [playersRes, teamsRes] = await Promise.all([playersQ.limit(20), teamsQ.limit(12)]);
       return { players: (playersRes.data ?? []) as Player[], teams: (teamsRes.data ?? []) as Team[] };
     },
   });
