@@ -9,16 +9,17 @@ import {
   syncPendingMatchScores,
 } from '@/lib/bits-sync'
 
-// Called every few hours by pg_cron (supabase/migrations/bits_sync_cron.sql).
-// Auth: Authorization: Bearer $CRON_SECRET header.
-export async function POST(req: Request) {
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // seconds — bump on Vercel Pro if the daily player sync needs longer
+
+// Runs the BITS sync. Triggered by pg_cron (POST, supabase/migrations/bits_sync_cron.sql)
+// OR Vercel Cron (GET, vercel.json) — both authenticate with $CRON_SECRET.
+function authed(req: Request): boolean {
   const secret = process.env.CRON_SECRET
-  const auth = req.headers.get('authorization') ?? ''
+  return !!secret && (req.headers.get('authorization') ?? '') === `Bearer ${secret}`
+}
 
-  if (!secret || auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+async function runSync() {
   // Bowling season runs Jul→Jun; season_id is the starting calendar year. Using
   // getFullYear() directly would target the wrong (future, empty) season Jan–Jun and
   // silently stop updating the live season — so pin to the July boundary.
@@ -59,5 +60,15 @@ export async function POST(req: Request) {
     /* logging must never fail the sync */
   }
 
-  return NextResponse.json(summary)
+  return summary
+}
+
+export async function POST(req: Request) {
+  if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return NextResponse.json(await runSync())
+}
+
+export async function GET(req: Request) {
+  if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return NextResponse.json(await runSync())
 }
