@@ -11,7 +11,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const season = new Date().getFullYear()
+  // Bowling season runs Jul→Jun; season_id is the starting calendar year. Using
+  // getFullYear() directly would target the wrong (future, empty) season Jan–Jun and
+  // silently stop updating the live season — so pin to the July boundary.
+  const now = new Date()
+  const season = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1
 
   const [matchesResult, scoresResult, exactResult, delmatchResult] = await Promise.allSettled([
     syncBitsMatchesForSeason(season),
