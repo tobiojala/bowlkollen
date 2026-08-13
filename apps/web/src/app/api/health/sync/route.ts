@@ -1,4 +1,5 @@
 // Deploy target: apps/web on wip/local-atlas (Vercel project bowlkollen-brain).
+// (pnpm build-scripts approved via root package.json onlyBuiltDependencies)
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-server'

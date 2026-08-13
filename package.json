@@ -10,5 +10,8 @@
     "web:test": "pnpm --filter @bowlkollen/web test",
     "mobile": "pnpm --filter @bowlkollen/mobile",
     "mobile:dev": "pnpm --filter @bowlkollen/mobile start"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@sentry/cli", "esbuild", "sharp", "unrs-resolver"]
   }
 }
