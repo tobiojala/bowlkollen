@@ -1,5 +1,4 @@
-// Deploy target: apps/web on wip/local-atlas (Vercel project bowlkollen-brain).
-// (pnpm build-scripts approved via root package.json onlyBuiltDependencies)
+// Sync health endpoint (see SYNC_SETUP.md). Deployed via Vercel from apps/web.
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-server'
