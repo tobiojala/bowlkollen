@@ -26,9 +26,9 @@
   --color-surface:   #14171c;
   --color-surface-2: #1c2127;
   --color-ink:       #f4f5f7;                   /* primary text   */
-  --color-ink-2:     rgba(244,245,247,0.64);    /* secondary text */
-  --color-ink-3:     rgba(244,245,247,0.40);    /* muted text     */
-  --color-ink-4:     rgba(244,245,247,0.24);    /* faint/disabled */
+  --color-ink-2:     rgba(244,245,247,0.72);    /* secondary text — senior-legible (WCAG AA) */
+  --color-ink-3:     rgba(244,245,247,0.56);    /* muted, still readable — floor for real text */
+  --color-ink-4:     rgba(244,245,247,0.34);    /* hairlines / disabled / decoration ONLY */
   --color-hairline:  rgba(244,245,247,0.07);
 
   /* ── Light surface palette ── */
@@ -40,11 +40,14 @@
 
   /* ── Brand colours ── */
   --color-gold:          #f5c200;   /* achievements, active selections, milestones   */
-  --color-green:         #5dcaa5;   /* form, improvement, streaks, positive          */
-  --color-blue:          #7ab4e8;   /* info, history, comparison, previous season    */
-  --color-blue-muted:    #5a82b4;   /* action blue (upcoming matches, buttons)       */
+  --color-green:         #30d47e;   /* positive: wins, gains, improvement (brand DNA) */
   --color-red:           #e05555;   /* danger, relegation, negative                  */
-  --color-pink:          #d94a90;   /* special events                                */
+  /* DEPRECATED — not part of the brand DNA. Migrate to ink (info/comparison) or
+     green (positive). Kept only so un-redesigned pages still compile; do NOT use
+     in new code. Removed per-page during the fintech redesign. */
+  --color-blue:          #7ab4e8;
+  --color-blue-muted:    #5a82b4;
+  --color-pink:          #d94a90;
 
   /* ── Motion: duration scale ── */
   --duration-instant:    80ms;
@@ -77,13 +80,15 @@
   --text-title:          24px;
   --text-title--line-height: 1.15;
   --text-title--letter-spacing: -0.015em;
-  --text-body:           15px;
+  --text-body:           16px;   /* readable floor (senior-first) */
   --text-body--line-height: 1.5;
-  --text-caption:        13px;
+  --text-caption:        14px;   /* smallest a value/date/label may use */
   --text-caption--line-height: 1.4;
-  --text-label:          11px;
+  --text-label:          12px;   /* uppercase decoration tags only */
   --text-label--line-height: 1.2;
   --text-label--letter-spacing: 0.08em;
+  --text-micro:          11px;   /* absolute floor — decoration only, never real text */
+  --text-micro--line-height: 1.2;
 }
 
 body {

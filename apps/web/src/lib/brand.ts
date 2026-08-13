@@ -16,9 +16,9 @@ export const COLOR = {
 
   // Ink — opacity scale, dark-first
   ink:  '#f4f5f7',
-  ink2: 'rgba(244,245,247,0.64)',
-  ink3: 'rgba(244,245,247,0.40)',
-  ink4: 'rgba(244,245,247,0.24)',
+  ink2: 'rgba(244,245,247,0.72)',  // senior-legible (WCAG AA)
+  ink3: 'rgba(244,245,247,0.56)',  // floor for real text
+  ink4: 'rgba(244,245,247,0.34)',  // hairlines / disabled / decoration only
 
   hairline: 'rgba(244,245,247,0.07)',
 
@@ -36,8 +36,9 @@ export const COLOR = {
 // ── Typography ────────────────────────────────────────────────────────────────
 
 export const FONT = {
-  display: "var(--font-display, 'Barlow Condensed', system-ui)",  // scores, hero stats
+  display: "var(--font-display, 'Barlow Condensed', system-ui)",  // wordmark / brand only
   body:    "var(--font-body, 'DM Sans', system-ui)",              // all other text
+  score:   "var(--font-score, 'Sora', system-ui)",                // scores & stat numbers (600/700/800)
 } as const
 
 // ── Type scale (mobile-first, nothing below 11px) ─────────────────────────────
@@ -45,10 +46,10 @@ export const FONT = {
 export const TYPE = {
   hero:    52,   // fullscreen score / season stat
   title:   24,   // page/section title
-  body:    15,   // main content
-  caption: 13,   // supporting detail
-  label:   11,   // uppercase metadata, badges
-  micro:    9,   // absolute floor — counters, timestamps
+  body:    16,   // main content — readable floor (senior-first)
+  caption: 14,   // supporting detail — smallest for a value/date/label
+  label:   12,   // uppercase metadata, badges (decoration)
+  micro:   11,   // absolute floor — decoration only, never real text
 } as const
 
 // ── Spacing — 8pt grid ────────────────────────────────────────────────────────
