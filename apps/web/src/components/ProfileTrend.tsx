@@ -103,7 +103,7 @@ export default function ProfileTrend({
 
   const bigValue = hover && n ? points[active].avg : restValue ?? points[active]?.avg ?? 0
   const subLine = hover && n
-    ? `${points[active].date}${points[active].label ? ` · mot ${points[active].label}` : ''}${onSelect ? '  ·  öppna matchen →' : ''}`
+    ? `${points[active].date}${points[active].label ? ` · mot ${points[active].label}` : ''}`
     : caption
   const showDelta = !hover && delta != null && delta !== 0
   const t = (x: number, y: number, fill: string, anchor: 'start' | 'end' = 'start', weight = 500) => ({

@@ -195,7 +195,7 @@ export default function PlayerProfileView({
               <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>PROFIL-PULS</div>
               <ProfileTrend
                 points={pulsPoints}
-                caption="Snitt match för match · tryck för matchen"
+                caption="Snitt match för match"
                 baseline={seasonAvg}
                 baselineLabel="matchsnitt"
                 footerLeft={`Lägst ${Math.min(...pulsPoints.map((p) => p.avg))}`}
