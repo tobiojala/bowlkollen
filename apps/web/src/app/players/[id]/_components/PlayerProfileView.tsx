@@ -5,11 +5,12 @@ import { useState } from 'react'
 import Reveal from '@/components/Reveal'
 import FollowButton from '@/components/FollowButton'
 import PublicHeader from '@/components/PublicHeader'
+import ProfileTrend from '@/components/ProfileTrend'
+import { matchTrendPoints } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
 import IdentitySection, { type Achievement } from '@/app/mockup/_components/IdentitySection'
-import DnaSection      from '@/app/mockup/_components/DnaSection'
 import AnalysisSection from '@/app/mockup/_components/AnalysisSection'
 import FeedSection     from '@/app/mockup/_components/FeedSection'
 
@@ -17,7 +18,6 @@ import CurveSheet    from '@/app/mockup/_components/sheets/CurveSheet'
 import WhatIfSheet   from '@/app/mockup/_components/sheets/WhatIfSheet'
 import DuellSheet    from '@/app/mockup/_components/sheets/DuellSheet'
 import MatchSheet    from '@/app/mockup/_components/sheets/MatchSheet'
-import DnaInfoSheet  from '@/app/mockup/_components/sheets/DnaInfoSheet'
 import BkRatingSheet from '@/app/mockup/_components/sheets/BkRatingSheet'
 
 const BG  = '#0b0d10'
@@ -66,8 +66,6 @@ export default function PlayerProfileView({
   const [expanded, setExpanded]     = useState<SheetType>(null)
   const [curveMetric, setCurveMetric] = useState<Metric>('snitt')
   const [matchTapped, setMatchTapped] = useState<number | null>(null)
-  const [dnaSpoke, setDnaSpoke]       = useState<number | null>(null)
-  const [dnaInfoOpen, setDnaInfoOpen] = useState(false)
 
   const { matchAvgs, seasonAvg, recentAvg, formDiff, lastSeasonAvg } = data
   const allGames   = data.matches.flatMap(m => m.games.filter(g => g > 0))
@@ -79,7 +77,7 @@ export default function PlayerProfileView({
   const lastDate   = data.matches[data.matches.length - 1]?.date ?? ''
 
   const close    = () => { setExpanded(null); setMatchTapped(null) }
-  const closeAll = () => { close(); setDnaSpoke(null); setDnaInfoOpen(false) }
+  const closeAll = () => { close() }
   const openMatch = (i: number) => { setMatchTapped(i); setExpanded('match') }
 
   const onShare = () => {
@@ -88,7 +86,8 @@ export default function PlayerProfileView({
     }
   }
 
-  const isSheetOpen = expanded !== null || dnaSpoke !== null || dnaInfoOpen
+  const pulsPoints = matchTrendPoints(data.matches)
+  const isSheetOpen = expanded !== null
 
   // No matches yet — show a quiet identity header + empty state.
   if (!data.hasData) {
@@ -185,15 +184,18 @@ export default function PlayerProfileView({
           </div>
 
           <div className="pp-main">
-          {matchAvgs.length > 2 && (
-            <DnaSection
-              matchAvgs={matchAvgs}
-              overlayAvgs={prevMatchAvgs}
-              initials={initials}
-              isLive={false}
-              onTapSpoke={setDnaSpoke}
-              onDnaTap={() => setDnaInfoOpen(true)}
-            />
+          {pulsPoints.length > 1 && (
+            <section style={{ padding: '28px 20px 0' }}>
+              <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>PROFIL-PULS</div>
+              <ProfileTrend
+                points={pulsPoints}
+                caption="Snitt match för match"
+                baseline={seasonAvg}
+                baselineLabel="matchsnitt"
+                footerLeft={`Lägst ${Math.min(...pulsPoints.map((p) => p.avg))}`}
+                footerRight={`Högst ${Math.max(...pulsPoints.map((p) => p.avg))}`}
+              />
+            </section>
           )}
 
           <Reveal direction="up" distance={16}>
@@ -278,25 +280,6 @@ export default function PlayerProfileView({
         />
       )}
 
-      {dnaSpoke !== null && (
-        <MatchSheet
-          match={data.matches[dnaSpoke]}
-          matchIdx={dnaSpoke}
-          totalMatches={data.matches.length}
-          seasonAvg={seasonAvg}
-          isDnaSpoke
-          onClose={() => setDnaSpoke(null)}
-        />
-      )}
-
-      {dnaInfoOpen && (
-        <DnaInfoSheet
-          matchAvgs={matchAvgs}
-          matchCount={data.matches.length}
-          initials={initials}
-          onClose={() => setDnaInfoOpen(false)}
-        />
-      )}
     </main>
   )
 }

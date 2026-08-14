@@ -137,3 +137,41 @@ export function buildProfileData(
     lastSeasonAvg, projSeasonAvg, projDiff, hasData,
   }
 }
+
+// ── Trend points for the ProfileTrend graph (mirror native) ───────────────────
+import { calcRating } from './player-stats'
+
+export type TrendPoint = { avg: number; date: string; label: string }
+
+/** Running BITS-style average (total pins ÷ games after each match) — smooth. */
+export function cumulativeAvgPoints(matches: ProfileMatch[]): TrendPoint[] {
+  const games: number[] = []
+  const out: TrendPoint[] = []
+  for (const m of matches) {
+    const g = m.games.filter((x) => x > 0)
+    if (!g.length) continue
+    games.push(...g)
+    out.push({ avg: mean(games), date: m.date, label: m.opp })
+  }
+  return out
+}
+
+/** Rolling BK-rating recomputed after each match on all games so far (ours). */
+export function rollingRatingPoints(matches: ProfileMatch[]): TrendPoint[] {
+  const games: number[] = []
+  const out: TrendPoint[] = []
+  for (const m of matches) {
+    const g = m.games.filter((x) => x > 0)
+    if (!g.length) continue
+    games.push(...g)
+    out.push({ avg: calcRating(mean(games), Math.max(...games), games.filter((x) => x >= 200).length, true), date: m.date, label: m.opp })
+  }
+  return out
+}
+
+/** Raw per-match average (jagged) — the PROFIL-PULS line. */
+export function matchTrendPoints(matches: ProfileMatch[]): TrendPoint[] {
+  return matches
+    .map((m) => { const g = m.games.filter((x) => x > 0); return { avg: g.length ? mean(g) : 0, date: m.date, label: m.opp } })
+    .filter((p) => p.avg > 0)
+}

@@ -2,8 +2,9 @@
 
 import { useState, useRef } from 'react'
 import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
-import { HeroCurve } from '@/components/mockup/Curves'
-import { HeroNumber, ActionRow, ActionButton } from '@/components/ui/primitives'
+import ProfileTrend from '@/components/ProfileTrend'
+import { ActionRow, ActionButton } from '@/components/ui/primitives'
+import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import { COLORS } from '../data'
 
@@ -58,61 +59,49 @@ export default function IdentitySection({
   const [activeHero, setActiveHero] = useState(0)
   const heroRowRef = useRef<HTMLDivElement>(null)
 
-  const { matchAvgs, seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, projDiff, matches } = data
+  const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
   // Hero snitt = official BITS licence_average; fall back to our computed seasonAvg.
   const heroSnitt   = licenceAverage ?? seasonAvg
   const heroFormDiff = recentAvg - heroSnitt
-  const firstDate = matches[0]?.date ?? ''
-  const lastDate  = matches[matches.length - 1]?.date ?? ''
+
+  // Trend lines mirror native ProfileTrend: snitt = smooth running BITS average,
+  // BK = rolling rating recomputed each match, ranking = raw per-match points.
+  const snittPoints = cumulativeAvgPoints(matches)
+  const bkPoints    = rollingRatingPoints(matches)
+  const rankingPoints: TrendPoint[] = (rankingPts ?? []).map((v, i) => ({
+    avg: v, date: matches[i]?.date ?? '', label: matches[i]?.opp ?? '',
+  }))
 
   type HeroCard = {
     key: HeroMetric; label: string; value: number; delta: number; deltaSuffix: string
-    caption: React.ReactNode; color: string; data: number[]; proj?: number
-    footer: React.ReactNode; ready?: boolean
+    caption: string; color: string; points: TrendPoint[]
+    baseline?: number; proj?: number
+    footerLeft: string; footerRight?: string; ready?: boolean
   }
 
   const heroCards: HeroCard[] = [
     {
-      key: 'snitt', label: 'BITS-snitt', value: heroSnitt, delta: heroFormDiff, deltaSuffix: ' form',
+      key: 'snitt', label: 'BITS-snitt', value: heroSnitt, delta: heroFormDiff, deltaSuffix: 'form',
       caption: bkRating !== null
-        ? <>Top {bkTopPct}% i ligan · BK Rating <span style={{ color: INK, fontWeight: 700 }}>{bkRating}</span></>
-        : <>Top {bkTopPct}% i ligan</>,
-      color: '#f5c200', data: matchAvgs, proj: recentAvg,
-      footer: (
-        <>
-          <span style={{ fontSize: 11, color: INK4 }}>{firstDate}</span>
-          <span style={{ fontSize: 12, color: INK3 }}>{matches.length} matcher · förra säsongen {lastSeasonAvg}</span>
-          <span style={{ fontSize: 12, color: INK3 }}>
-            Prognos <span style={{ fontWeight: 700, color: projDiff >= 0 ? '#5dcaa5' : '#e05555', fontVariantNumeric: 'tabular-nums' }}>{projSeasonAvg}</span>
-          </span>
-        </>
-      ),
+        ? `Topp ${bkTopPct}% i ligan · BK Rating ${bkRating}`
+        : `Topp ${bkTopPct}% i ligan`,
+      color: '#f5c200', points: snittPoints, baseline: seasonAvg, proj: projSeasonAvg,
+      footerLeft: `${matches.length} matcher`,
+      footerRight: lastSeasonAvg ? `Förra säsongen ${lastSeasonAvg}` : undefined,
     },
     {
       key: 'bk', label: 'BK Rating', value: bkRating ?? 0,
-      delta: bkRating !== null && bkProgress?.length ? bkRating - bkProgress[0] : 0, deltaSuffix: ' i år',
-      caption: <>Bowlkollens prestationsbetyg · Top {bkTopPct}% i ligan</>,
-      color: '#5dcaa5', data: bkProgress ?? [], ready: bkRating !== null,
-      footer: (
-        <>
-          <span style={{ fontSize: 11, color: INK4 }}>{firstDate}</span>
-          <span style={{ fontSize: 12, color: INK3 }}>betyg 0–100 mot fältet</span>
-          <span style={{ fontSize: 11, color: INK4 }}>{lastDate}</span>
-        </>
-      ),
+      delta: bkRating !== null && bkPoints.length ? bkRating - bkPoints[0].avg : 0, deltaSuffix: 'i år',
+      caption: `Bowlkollens prestationsbetyg · Topp ${bkTopPct}% i ligan`,
+      color: '#30d47e', points: bkPoints, ready: bkRating !== null,
+      footerLeft: 'Betyg 0–100 mot fältet', footerRight: `Topp ${bkTopPct}%`,
     },
     ...(rankingPts?.length ? [{
       key: 'ranking' as const, label: 'Rankingpoäng', value: rankingPts.reduce((a, b) => a + b),
-      delta: rankingPts[rankingPts.length - 1], deltaSuffix: ' senaste',
-      caption: <>Poäng till seriens individuella ranking</>,
-      color: '#9ca5b3', data: rankingPts,
-      footer: (
-        <>
-          <span style={{ fontSize: 11, color: INK4 }}>{firstDate}</span>
-          <span style={{ fontSize: 12, color: INK3 }}>max 8 poäng per match</span>
-          <span style={{ fontSize: 11, color: INK4 }}>{lastDate}</span>
-        </>
-      ),
+      delta: rankingPts[rankingPts.length - 1], deltaSuffix: 'senaste',
+      caption: 'Poäng till seriens individuella ranking',
+      color: '#9ca5b3', points: rankingPoints,
+      footerLeft: 'Max 8 poäng per match',
     }] : []),
   ]
 
@@ -206,17 +195,25 @@ export default function IdentitySection({
                   </div>
                 </div>
               ) : (
-                <>
-                  <HeroNumber label={c.label} value={c.value} delta={c.delta} deltaSuffix={c.deltaSuffix} caption={c.caption} />
-                  <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
-                    style={{ marginTop: 18, cursor: 'pointer' }}>
-                    <HeroCurve data={c.data} seasonAvg={c.key === 'snitt' ? seasonAvg : undefined}
-                      projAvg={c.proj} color={c.color} gid={`hero_${c.key}`} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-                      {c.footer}
-                    </div>
-                  </div>
-                </>
+                <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
+                  style={{ cursor: 'pointer' }}>
+                  <ProfileTrend
+                    points={c.points}
+                    label={c.label}
+                    restValue={c.value}
+                    delta={c.delta}
+                    deltaSuffix={c.deltaSuffix}
+                    caption={c.caption}
+                    accent={c.color}
+                    baseline={c.baseline}
+                    projValue={c.proj}
+                    footerLeft={c.footerLeft}
+                    footerRight={c.footerRight}
+                    lineWidth={5}
+                    tailLength={9}
+                    yPad={0.05}
+                  />
+                </div>
               )}
             </div>
           ))}
