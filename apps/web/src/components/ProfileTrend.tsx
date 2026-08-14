@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { COLOR, FONT, TYPE } from '@/lib/brand'
 
 export type TrendPoint = { avg: number; date: string; label: string }
@@ -8,13 +8,12 @@ export type TrendPoint = { avg: number; date: string; label: string }
 // Web mirror of the native ProfileTrend graph: solid ink line, gridlines + value
 // labels, dashed "snitt" baseline, dashed prognos, and a colour-only dot + light-
 // tail that follows the cursor on HOVER (drag → hover is the only platform change).
-const W = 600
 const H = 190
-const PAD_L = 34
+const PAD_L = 40
 const PAD_R = 40
 const PAD_T = 26
 const PAD_B = 24
-const AXIS = 13
+const AXIS = 13   // real px — viewBox width tracks the render width, so 1 unit = 1px
 const BODY = "var(--font-body, 'DM Sans'), system-ui"
 const ink = (o: number) => `rgba(244,245,247,${o})`
 
@@ -41,6 +40,18 @@ export default function ProfileTrend({
   const gid = useId()
   const svgRef = useRef<SVGSVGElement>(null)
   const prev = useRef(points.length - 1)
+  // A fixed-width viewBox shrinks all SVG text on narrow hero cards (~340px → 0.57×,
+  // so 13px reads at ~7px). Instead track the real render width as the viewBox width
+  // → 1 unit = 1px, so AXIS/dot sizes are true pixels at every card size.
+  const [renderW, setRenderW] = useState(0)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([e]) => setRenderW(e.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const W = renderW > 0 ? renderW : 340
   const n = points.length
   const [active, setActive] = useState(n - 1)
   const [dir, setDir] = useState(1)
