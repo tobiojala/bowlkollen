@@ -87,6 +87,12 @@ export default function PlayerProfileView({
   }
 
   const pulsPoints = matchTrendPoints(data.matches)
+  // matchTrendPoints drops matches with no played games, so point index ≠ match
+  // index — keep a parallel map so a tapped point opens the right match sheet.
+  const pulsIdx = data.matches.reduce<number[]>((acc, m, i) => {
+    if (m.games.some((g) => g > 0)) acc.push(i)
+    return acc
+  }, [])
   const isSheetOpen = expanded !== null
 
   // No matches yet — show a quiet identity header + empty state.
@@ -189,11 +195,12 @@ export default function PlayerProfileView({
               <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>PROFIL-PULS</div>
               <ProfileTrend
                 points={pulsPoints}
-                caption="Snitt match för match"
+                caption="Snitt match för match · tryck för matchen"
                 baseline={seasonAvg}
                 baselineLabel="matchsnitt"
                 footerLeft={`Lägst ${Math.min(...pulsPoints.map((p) => p.avg))}`}
                 footerRight={`Högst ${Math.max(...pulsPoints.map((p) => p.avg))}`}
+                onSelect={(i) => openMatch(pulsIdx[i])}
               />
             </section>
           )}

@@ -20,8 +20,11 @@ const ink = (o: number) => `rgba(244,245,247,${o})`
 export default function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight,
   accent, baseline, baselineLabel = 'snitt', projValue, lineWidth = 2.6, tailLength = 5, yPad = 0.18,
+  onSelect,
 }: {
   points: TrendPoint[]
+  /** When set, the scrubbed point becomes clickable — fires with its index. */
+  onSelect?: (index: number) => void
   label?: string
   restValue?: number
   delta?: number | null
@@ -96,9 +99,11 @@ export default function ProfileTrend({
   }
   const onLeave = () => { setActive(n - 1); prev.current = n - 1; setHover(false) }
 
+  const onClick = () => { if (onSelect && hover && n) onSelect(active) }
+
   const bigValue = hover && n ? points[active].avg : restValue ?? points[active]?.avg ?? 0
   const subLine = hover && n
-    ? `${points[active].date}${points[active].label ? ` · mot ${points[active].label}` : ''}`
+    ? `${points[active].date}${points[active].label ? ` · mot ${points[active].label}` : ''}${onSelect ? '  ·  öppna matchen →' : ''}`
     : caption
   const showDelta = !hover && delta != null && delta !== 0
   const t = (x: number, y: number, fill: string, anchor: 'start' | 'end' = 'start', weight = 500) => ({
@@ -122,7 +127,7 @@ export default function ProfileTrend({
       </div>
 
       {/* graph */}
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', cursor: 'crosshair' }} onMouseMove={onMove} onMouseLeave={onLeave}>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', cursor: onSelect ? 'pointer' : 'crosshair' }} onMouseMove={onMove} onMouseLeave={onLeave} onClick={onClick}>
         {n >= 2 && (
           <>
             <defs>
