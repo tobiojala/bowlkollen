@@ -28,7 +28,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  if (pathname === '/landing') return <>{children}</>
+  // Standalone surfaces — no 600px app column / bottom nav. Landing + the
+  // shareable public pages (they carry their own header, built wide for desktop).
+  if (pathname === '/landing' || pathname.startsWith('/players/')) return <>{children}</>
 
   return (
     <>

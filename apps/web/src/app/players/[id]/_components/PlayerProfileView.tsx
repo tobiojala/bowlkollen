@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import Reveal from '@/components/Reveal'
 import FollowButton from '@/components/FollowButton'
+import PublicHeader from '@/components/PublicHeader'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
@@ -93,6 +94,7 @@ export default function PlayerProfileView({
   if (!data.hasData) {
     return (
       <main style={{ minHeight: '100vh', background: BG, color: INK }}>
+        <PublicHeader />
         <div style={{ maxWidth: 600, margin: '0 auto', padding: '32px 20px 120px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
@@ -128,7 +130,16 @@ export default function PlayerProfileView({
       <style>{`
         @keyframes count-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .hero-in { animation: count-in 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+        /* Public player page — single column on mobile, wide magazine on desktop */
+        .pp-canvas { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
+        @media (min-width: 1024px) {
+          .pp-canvas { max-width: 1160px; padding-left: 32px; padding-right: 32px; }
+          .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 40px; align-items: start; }
+          .pp-side { position: sticky; top: 24px; align-self: start; }
+        }
       `}</style>
+      <PublicHeader />
 
       <div style={{
         transition: 'filter 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1)',
@@ -136,7 +147,7 @@ export default function PlayerProfileView({
         transform: isSheetOpen ? 'scale(0.97)' : 'scale(1)',
         transformOrigin: 'center 40%',
       }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 120 }}>
+        <div className="pp-canvas">
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, padding: '12px 20px 0' }}>
             {isOwner && onEdit && (
@@ -154,6 +165,8 @@ export default function PlayerProfileView({
             )}
           </div>
 
+          <div className="pp-grid">
+          <div className="pp-side">
           <IdentitySection
             data={data}
             identity={identity}
@@ -169,7 +182,9 @@ export default function PlayerProfileView({
             onOpenH2H={onOpenH2H}
             onShare={onShare}
           />
+          </div>
 
+          <div className="pp-main">
           {matchAvgs.length > 2 && (
             <DnaSection
               matchAvgs={matchAvgs}
@@ -202,6 +217,8 @@ export default function PlayerProfileView({
               onOpenMatch={openMatch}
             />
           </Reveal>
+          </div>
+          </div>
         </div>
       </div>
 
