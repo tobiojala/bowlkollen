@@ -18,8 +18,9 @@ const LINKS = [
   { label: 'Tävlingar', href: '/tavlingar' },
 ] as const
 
-// Surfaces that own their chrome (auth flows, captain sub-tools).
-const HIDE = ['/intern', '/laguttagning', '/tillganglighet', '/login', '/onboarding', '/auth', '/reset-password']
+// Only the focused auth/onboarding flows go chromeless — every other surface
+// (including captain sub-tools) keeps the nav so you never lose navigation.
+const HIDE = ['/login', '/onboarding', '/auth', '/reset-password']
 
 function isActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')

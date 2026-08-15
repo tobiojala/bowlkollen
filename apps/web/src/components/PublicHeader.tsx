@@ -1,8 +1,26 @@
-import Link from 'next/link'
+'use client'
 
-// Header for the standalone public pages (player / team / division). Wordmark home
-// + a quiet login CTA. Centered to the same wide canvas as the page below it.
+import Link from 'next/link'
+import { useSession } from '@/lib/queries'
+import WebNav from '@/components/WebNav'
+
+// Header for the standalone public pages (player / team / division).
+// Logged-in visitors get the full app nav so they never lose navigation while
+// browsing; logged-out outside visitors get a clean minimal share header
+// (just the wordmark + a login CTA) suited to a link shared out of the app.
 export default function PublicHeader() {
+  const { data: session } = useSession()
+
+  if (session?.user) {
+    // WebNav is fixed — reserve its height so page content clears it.
+    return (
+      <>
+        <WebNav />
+        <div style={{ height: 64 }} />
+      </>
+    )
+  }
+
   return (
     <header
       style={{
