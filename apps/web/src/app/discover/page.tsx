@@ -202,8 +202,18 @@ export default function DiscoverPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 20px 80px' }}>
+      <style>{`
+        .disc-wrap { max-width: 600px; margin: 0 auto; padding: 20px 20px 80px; }
+        .disc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (min-width: 1024px) {
+          .disc-wrap { max-width: 1160px; padding: 28px 32px 96px; }
+          .disc-narrow { max-width: 640px; margin: 0 auto; }
+          .disc-cards { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+        }
+      `}</style>
+      <div className="disc-wrap">
 
+        <div className="disc-narrow">
         {/* Search bar */}
         <div style={{ position: 'relative' }}>
           <Search size={16} color={COLOR.ink3} style={{ position: 'absolute', left: 14, top: '50%',
@@ -257,6 +267,7 @@ export default function DiscoverPage() {
             )}
           </>
         )}
+        </div>{/* disc-narrow */}
 
         {/* Default: browse sections */}
         {!isSearching && (
@@ -288,14 +299,14 @@ export default function DiscoverPage() {
 
             <SectionLabel label="Aktiva spelare" />
             {recentLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="disc-cards">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="skeleton"
                     style={{ height: 148, borderRadius: 16, background: COLOR.surface }} />
                 ))}
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="disc-cards">
                 {recent.map(p => <PlayerCard key={p.id} p={p} />)}
               </div>
             )}
