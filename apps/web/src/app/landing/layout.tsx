@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/constants'
 import '../globals.css'
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     title: 'Bowlkollen – Live bowling för svenska ligor',
     description: 'Följ live-resultat, spelarstatistik och alla divisioner i svensk bowling. Anmäl dig för tidig tillgång.',
     type: 'website',
-    url: 'https://bowlkollen.vercel.app',
+    url: SITE_URL,
     siteName: 'Bowlkollen',
     locale: 'sv_SE',
   },
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     description: 'Följ live-resultat, spelarstatistik och alla divisioner i svensk bowling.',
   },
   alternates: {
-    canonical: 'https://bowlkollen.vercel.app',
+    canonical: SITE_URL,
   },
   robots: {
     index: true,

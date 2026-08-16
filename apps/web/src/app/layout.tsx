@@ -4,6 +4,7 @@ import { Barlow_Condensed, DM_Sans, Sora } from 'next/font/google'
 import ThemeProvider from '@/components/ThemeProvider'
 import AppShell from '@/components/AppShell'
 import QueryProvider from '@/components/QueryProvider'
+import { SITE_URL } from '@/lib/constants'
 import './globals.css'
 
 const barlow = Barlow_Condensed({
@@ -28,7 +29,13 @@ const sora = Sora({
   display: 'swap',
 })
 
-export const metadata: Metadata = { title: 'Bowlkollen', description: 'Live bowlingsajt for svenska ligan' }
+// metadataBase resolves every relative OG/canonical URL across the app to the
+// canonical domain — set once here so per-page metadata can stay relative.
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: 'Bowlkollen',
+  description: 'Live bowlingsajt for svenska ligan',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

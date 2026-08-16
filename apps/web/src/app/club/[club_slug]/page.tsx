@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
+import { SITE_HOST } from '@/lib/constants'
 
 type Props = { params: Promise<{ club_slug: string }> }
 type Team = { id: string; name: string; club: string; city: string | null; club_slug: string; team_path: string | null }
@@ -86,7 +87,7 @@ export default function ClubPage({ params }: Props) {
                 <span style={{ fontSize: 11, color: C.textMuted }}>{teams.length} lag</span>
               </div>
               <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
-                bowlkollen.vercel.app/{clubSlug}
+                {SITE_HOST}/{clubSlug}
               </div>
             </div>
           </div>
@@ -119,7 +120,7 @@ export default function ClubPage({ params }: Props) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{shortName(t.name)}</div>
                 <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>
-                  bowlkollen.vercel.app/{clubSlug}/{t.team_path}
+                  {SITE_HOST}/{clubSlug}/{t.team_path}
                 </div>
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, color: dc, background: dc + '18', borderRadius: 6, padding: '3px 10px' }}>

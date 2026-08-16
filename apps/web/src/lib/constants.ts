@@ -113,6 +113,12 @@ export const GATE_EXEMPT_PATHS = [
   '/api',
 ] as const
 
+// ── Canonical site URL — the single source for metadata, OG, canonical + share ─
+// links. Override per deploy with NEXT_PUBLIC_SITE_URL (preview builds); defaults
+// to the production domain. SITE_HOST is the bare host for display copy.
+export const SITE_URL  = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bowlkollen.se').replace(/\/+$/, '')
+export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '')
+
 // ── Auto-Story Engine ─────────────────────────────────────────────────────────
 
 export const TEAM_EVENT = {

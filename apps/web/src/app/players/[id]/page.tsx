@@ -24,7 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title,
     description,
     ...(p.isJunior && !p.isClaimed ? { robots: { index: false, follow: false } } : {}),
-    openGraph: { title, description, type: 'profile', siteName: 'Bowlkollen' },
+    alternates: { canonical: `/players/${id}` },
+    openGraph: { title, description, type: 'profile', siteName: 'Bowlkollen', url: `/players/${id}` },
     twitter: { card: 'summary', title, description },
   }
 }
