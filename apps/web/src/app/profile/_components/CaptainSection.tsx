@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Shield, ChevronRight, Clock } from 'lucide-react'
+import { Shield, ChevronRight, Clock, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import ClubClaimPanel from './ClubClaimPanel'
 
 const INK = '#f4f5f7'
 const INK3 = 'rgba(244,245,247,0.56)'
@@ -25,21 +26,23 @@ function roleLabel(role: string) {
 // club_claims and doorways into the team admin hub (lineup, availability, notis).
 export default function CaptainSection() {
   const [claims, setClaims] = useState<ClubClaim[] | null>(null)
+  const [adding, setAdding] = useState(false)
 
-  useEffect(() => {
-    ;(async () => {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setClaims([]); return }
-      const { data } = await supabase
-        .from('club_claims')
-        .select('id, team_id, role, status, teams:team_id(name, club)')
-        .eq('user_id', session.user.id)
-      setClaims((data as unknown as ClubClaim[]) ?? [])
-    })()
+  const fetchClaims = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setClaims([]); return }
+    const { data } = await supabase
+      .from('club_claims')
+      .select('id, team_id, role, status, teams:team_id(name, club)')
+      .eq('user_id', session.user.id)
+    setClaims((data as unknown as ClubClaim[]) ?? [])
+    setAdding(false)
   }, [])
 
-  if (!claims || claims.length === 0) return null
+  useEffect(() => { fetchClaims() }, [fetchClaims])
+
+  if (!claims) return null
 
   return (
     <>
@@ -70,6 +73,21 @@ export default function CaptainSection() {
           ? <div key={c.id} style={{ ...style, opacity: 0.7 }}>{inner}</div>
           : <Link key={c.id} href={`/team/${c.team_id}/intern`} style={style}>{inner}</Link>
       })}
+
+      {adding ? (
+        <div style={{ background: SURFACE, borderRadius: 16, padding: 16 }}>
+          <ClubClaimPanel onClaimed={fetchClaims} />
+        </div>
+      ) : (
+        <button onClick={() => setAdding(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, cursor: 'pointer',
+            background: 'none', border: `1px dashed ${HAIR}`, width: '100%', textAlign: 'left' }}>
+          <Plus size={20} color={INK3} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: INK3 }}>
+            {claims.length ? 'Koppla ett lag till' : 'Är du lagledare? Koppla ditt lag'}
+          </span>
+        </button>
+      )}
     </>
   )
 }
