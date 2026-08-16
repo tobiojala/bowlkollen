@@ -13,6 +13,7 @@ import ClaimPanel from './_components/ClaimPanel'
 import CaptainSection from './_components/CaptainSection'
 import SelectedCard from './_components/SelectedCard'
 import NextMatchCard from './_components/NextMatchCard'
+import BallShelf from './_components/BallShelf'
 
 // Dark, native-matching palette (mirrors PlayerProfileView so /profile and the
 // full /players/[id] page it doorways into read as one surface).
@@ -200,6 +201,9 @@ export default function ProfilePage() {
 
         {/* Captain/board shortcut → team admin (lineup, availability, notis) */}
         <CaptainSection />
+
+        {/* Ball arsenal — your bag */}
+        <BallShelf />
 
         {/* KONTO — open rows, hairline-separated (no card) */}
         <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '36px 2px 0' }}>KONTO</div>
