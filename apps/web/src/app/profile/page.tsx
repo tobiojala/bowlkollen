@@ -92,7 +92,7 @@ export default function ProfilePage() {
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.4, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+          <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.3, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
           {verified && <BadgeCheck size={18} color={GOLD} fill={GOLD} fillOpacity={0.18} />}
         </div>
         <div style={{ fontSize: 14, color: INK3, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
@@ -101,21 +101,23 @@ export default function ProfilePage() {
     </>
   )
 
+  // Identity is the one surface card; everything else sits open on the bg with
+  // hairline dividers — the native Profil treatment.
   const identityStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 14, padding: '16px', textDecoration: 'none',
-    background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16,
+    display: 'flex', alignItems: 'center', gap: 16, padding: 16, textDecoration: 'none',
+    background: SURFACE, borderRadius: 16,
   }
 
   const rowStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 14, padding: '15px 16px',
-    textDecoration: 'none', color: INK, borderBottom: `1px solid ${HAIR}`,
+    display: 'flex', alignItems: 'center', gap: 12, padding: '13px 2px',
+    textDecoration: 'none', color: INK, borderTop: `1px solid ${HAIR}`,
   }
 
   return (
     <main style={{ minHeight: '100vh', background: BG, color: INK, fontFamily: "var(--font-body,'DM Sans'),system-ui" }}>
-      <div style={{ padding: '20px 16px 48px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '16px 24px 96px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-        <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: '4px 4px 8px' }}>Profil</h1>
+        <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: -0.5, margin: '8px 0 8px' }}>Profil</h1>
 
         {/* Identity — your claimed player if verified (doorway to full profile) */}
         {verified ? (
@@ -124,26 +126,26 @@ export default function ProfilePage() {
           <div style={identityStyle}>{identityInner}</div>
         )}
 
-        {/* Season snapshot — another doorway to the full player page */}
+        {/* Season snapshot — borderless, another doorway to the full player page */}
         {verified && stats && (
           <Link href={`/players/${claim!.publicId}`}
-            style={{ display: 'flex', textDecoration: 'none', background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16, padding: '16px 8px' }}>
+            style={{ display: 'flex', textDecoration: 'none', padding: '8px 0', marginTop: 4 }}>
             <Snap value={stats.seasonAvg ? String(stats.seasonAvg) : '–'} label="SNITT" />
             <Divider />
             <Snap value={String(stats.matches.length)} label="MATCHER" />
             <Divider />
             <div style={{ flex: 1, textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 5 }}>
-                <span style={{ fontFamily: "var(--font-score,'Sora'),system-ui", fontSize: 24, fontWeight: 800, color: INK, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontFamily: "var(--font-score,'Sora'),system-ui", fontSize: 26, fontWeight: 700, color: INK, letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>
                   {stats.recentAvg ? String(stats.recentAvg) : '–'}
                 </span>
                 {!!stats.formDiff && (
-                  <span style={{ fontSize: 13, fontWeight: 700, color: stats.formDiff > 0 ? GREEN : RED }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: stats.formDiff > 0 ? GREEN : RED }}>
                     {stats.formDiff > 0 ? '▲' : '▼'} {Math.abs(stats.formDiff)}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', marginTop: 4 }}>FORM</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.08em', marginTop: 6 }}>FORM</div>
             </div>
           </Link>
         )}
@@ -151,37 +153,35 @@ export default function ProfilePage() {
         {/* Claim CTA / pending / inline connect flow */}
         {claimLoaded && !claim && !showClaim && (
           <button onClick={() => setShowClaim(true)}
-            style={{ ...identityStyle, cursor: 'pointer', textAlign: 'left' }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <UserPlus size={22} color={GOLD} />
-            </div>
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%',
+              background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.24)' }}>
+            <UserPlus size={24} color={GOLD} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: INK }}>Koppla din spelarprofil</div>
               <div style={{ fontSize: 14, color: INK3, marginTop: 2 }}>Hitta dig själv för att se din statistik och rating.</div>
             </div>
-            <ChevronRight size={20} color={INK4} />
+            <ChevronRight size={18} color={INK4} />
           </button>
         )}
         {claimLoaded && !claim && showClaim && (
-          <div style={{ background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16, padding: 16 }}>
+          <div style={{ background: SURFACE, borderRadius: 16, padding: 16 }}>
             <ClaimPanel onClaimed={fetchClaim} />
           </div>
         )}
         {claim?.status === 'pending' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
             <Clock size={18} color={INK3} />
-            <span style={{ fontSize: 14, color: INK2 }}>Din spelarkoppling väntar på granskning.</span>
+            <span style={{ fontSize: 14, color: INK3 }}>Din spelarkoppling väntar på granskning.</span>
           </div>
         )}
 
-        {/* KONTO */}
-        <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.1em', padding: '20px 4px 8px' }}>KONTO</div>
-        <div style={{ background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16, overflow: 'hidden' }}>
+        {/* KONTO — open rows, hairline-separated (no card) */}
+        <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '36px 2px 0' }}>KONTO</div>
+        <div>
           <Link href="/following" style={rowStyle}>
             <Users size={22} color={INK2} />
             <span style={{ flex: 1, fontSize: 16, fontWeight: 600 }}>Följer</span>
-            <span style={{ fontSize: 15, color: INK3, fontVariantNumeric: 'tabular-nums' }}>{follows.length}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: INK3, fontVariantNumeric: 'tabular-nums' }}>{follows.length}</span>
             <ChevronRight size={18} color={INK4} />
           </Link>
           <Link href="/invite" style={rowStyle}>
@@ -189,11 +189,14 @@ export default function ProfilePage() {
             <span style={{ flex: 1, fontSize: 16, fontWeight: 600 }}>Lös in inbjudningskod</span>
             <ChevronRight size={18} color={INK4} />
           </Link>
-          <button onClick={signOut} style={{ ...rowStyle, borderBottom: 'none', width: '100%', background: 'none', cursor: 'pointer' }}>
-            <LogOut size={22} color={INK2} />
-            <span style={{ flex: 1, fontSize: 16, fontWeight: 600, textAlign: 'left' }}>Logga ut</span>
-          </button>
         </div>
+
+        <button onClick={signOut}
+          style={{ marginTop: 36, padding: '16px', borderRadius: 12, cursor: 'pointer',
+            background: 'none', border: `1px solid ${HAIR}`, width: '100%',
+            fontSize: 16, fontWeight: 700, color: RED }}>
+          Logga ut
+        </button>
       </div>
     </main>
   )
@@ -202,8 +205,8 @@ export default function ProfilePage() {
 function Snap({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ flex: 1, textAlign: 'center' }}>
-      <div style={{ fontFamily: "var(--font-score,'Sora'),system-ui", fontSize: 24, fontWeight: 800, color: INK, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', marginTop: 4 }}>{label}</div>
+      <div style={{ fontFamily: "var(--font-score,'Sora'),system-ui", fontSize: 26, fontWeight: 700, color: INK, letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.08em', marginTop: 6 }}>{label}</div>
     </div>
   )
 }
