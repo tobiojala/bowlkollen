@@ -2,9 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Bookmark, Trash2, MapPin } from 'lucide-react'
+import { ChevronLeft, Bookmark, Trash2, MapPin, Droplet, ChevronRight, X } from 'lucide-react'
 import { useSession } from '@/lib/queries'
-import { usePrepMatch, useMatchNotes, useHallNotes, useSaveNote, useDeleteNote, type Note } from '@/lib/diary'
+import {
+  usePrepMatch, useMatchNotes, useHallNotes, useSaveNote, useDeleteNote,
+  useMatchPattern, useSetMatchPattern, useOilProfiles, usePatternHistory, type Note,
+} from '@/lib/diary'
+import ScoutingCard from './ScoutingCard'
 
 const BG = '#0b0d10'
 const INK = '#f4f5f7'
@@ -28,12 +32,24 @@ export default function PrepClient({ matchId }: { matchId: number }) {
   const { data: hallNotes = [] } = useHallNotes(match?.hall)
   const save = useSaveNote()
   const del = useDeleteNote()
+  const { data: pattern = null } = useMatchPattern(matchId)
+  const setPattern = useSetMatchPattern()
+  const { data: patternHistory = [] } = usePatternHistory(pattern, matchId)
   const [draft, setDraft] = useState('')
+  const [patternOpen, setPatternOpen] = useState(false)
 
   if (!isLoading && !session) { if (typeof window !== 'undefined') window.location.href = '/login'; return null }
 
   // Recall = notes from earlier visits to this center, not this match.
   const recall = hallNotes.filter((n) => n.matchId !== matchId)
+  const scoutMatch = match
+    ? { homeTeamId: match.homeTeamId, awayTeamId: match.awayTeamId, homeName: match.homeName, awayName: match.awayName }
+    : null
+
+  const choosePattern = (p: string | null) => {
+    if (match) setPattern.mutate({ matchId, pattern: p, hall: match.hall })
+    setPatternOpen(false)
+  }
 
   const submit = () => {
     const body = draft.trim()
@@ -72,6 +88,25 @@ export default function PrepClient({ matchId }: { matchId: number }) {
           )}
         </div>
 
+        {/* Oil pattern chip → picker */}
+        <div>
+          <button onClick={() => setPatternOpen((o) => !o)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '12px 16px', borderRadius: 12, cursor: 'pointer',
+              background: SURFACE, border: `1px solid ${pattern ? 'rgba(245,194,0,0.3)' : HAIR}` }}>
+            <Droplet size={18} color={pattern ? GOLD : INK3} fill={pattern ? GOLD : 'none'} />
+            <span style={{ flex: 1, textAlign: 'left', fontSize: 16, fontWeight: pattern ? 700 : 500, color: pattern ? INK : INK3 }}>
+              {pattern ?? 'Lägg till oljebild'}
+            </span>
+            {pattern
+              ? <span onClick={(e) => { e.stopPropagation(); choosePattern(null) }}><X size={18} color={INK4} /></span>
+              : <ChevronRight size={18} color={INK4} />}
+          </button>
+          {patternOpen && <OilPicker current={pattern} onPick={choosePattern} />}
+        </div>
+
+        {/* Inför mötet — head-to-head vs the opponent's roster */}
+        <ScoutingCard match={scoutMatch} />
+
         {/* Note composer */}
         <div style={{ background: SURFACE, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <textarea
@@ -94,6 +129,17 @@ export default function PrepClient({ matchId }: { matchId: number }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '4px 2px' }}>DENNA MATCH</div>
             {matchNotes.map((n) => <NoteRow key={n.id} note={n} onDelete={() => del.mutate(n.id)} />)}
+          </div>
+        )}
+
+        {/* Cross-center recall: same oil pattern elsewhere */}
+        {pattern && patternHistory.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px' }}>
+              <Droplet size={16} color={GOLD} fill={GOLD} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, letterSpacing: '0.1em' }}>SAMMA OLJEBILD — {pattern.toUpperCase()}</span>
+            </div>
+            {patternHistory.map((n) => <NoteRow key={n.id} note={n} onDelete={() => del.mutate(n.id)} muted />)}
           </div>
         )}
 
@@ -126,6 +172,32 @@ function NoteRow({ note, onDelete, muted }: { note: Note; onDelete: () => void; 
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
         <Trash2 size={18} color={INK4} />
       </button>
+    </div>
+  )
+}
+
+function OilPicker({ current, onPick }: { current: string | null; onPick: (p: string) => void }) {
+  const { data: profiles = [] } = useOilProfiles()
+  const [free, setFree] = useState('')
+  return (
+    <div style={{ marginTop: 8, background: SURFACE, borderRadius: 12, padding: 8, display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 320, overflowY: 'auto' }}>
+      <div style={{ display: 'flex', gap: 8, padding: 8 }}>
+        <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Egen oljebild…"
+          style={{ flex: 1, background: BG, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '10px 12px', color: INK, fontSize: 15, outline: 'none' }} />
+        <button onClick={() => free.trim() && onPick(free.trim())} disabled={!free.trim()}
+          style={{ background: GOLD, color: '#1a1400', border: 'none', borderRadius: 999, padding: '0 16px', fontSize: 14, fontWeight: 700, cursor: free.trim() ? 'pointer' : 'default', opacity: free.trim() ? 1 : 0.5 }}>
+          Välj
+        </button>
+      </div>
+      {profiles.map((p) => (
+        <button key={p.name} onClick={() => onPick(p.name)}
+          style={{ display: 'flex', alignItems: 'baseline', gap: 8, textAlign: 'left', padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+            background: current === p.name ? 'rgba(245,194,0,0.10)' : 'transparent', border: 'none' }}>
+          <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: current === p.name ? GOLD : INK }}>{p.name}</span>
+          {p.lengthFt != null && <span style={{ fontSize: 13, color: INK3 }}>{p.lengthFt} ft</span>}
+          {p.category && <span style={{ fontSize: 13, color: INK4 }}>{p.category}</span>}
+        </button>
+      ))}
     </div>
   )
 }

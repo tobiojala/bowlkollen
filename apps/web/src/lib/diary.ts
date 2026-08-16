@@ -64,7 +64,7 @@ export function useNextMatch() {
 
 export type PrepMatch = {
   matchId: number; date: string; hall: string | null; division: string | null
-  homeName: string; awayName: string
+  homeName: string; awayName: string; homeTeamId: number | null; awayTeamId: number | null
 }
 
 export function usePrepMatch(matchId: number) {
@@ -74,7 +74,7 @@ export function usePrepMatch(matchId: number) {
     queryFn: async (): Promise<PrepMatch | null> => {
       const { data } = await createClient()
         .from('bits_matches')
-        .select('bits_match_id, match_date, hall_name, division_name, home_team_name, away_team_name')
+        .select('bits_match_id, match_date, hall_name, division_name, home_team_name, away_team_name, home_bits_team_id, away_bits_team_id')
         .eq('bits_match_id', matchId).maybeSingle()
       const m = data as Record<string, unknown> | null
       if (!m) return null
@@ -82,6 +82,7 @@ export function usePrepMatch(matchId: number) {
         matchId: m.bits_match_id as number, date: m.match_date as string,
         hall: (m.hall_name as string | null) ?? null, division: (m.division_name as string | null) ?? null,
         homeName: m.home_team_name as string, awayName: m.away_team_name as string,
+        homeTeamId: (m.home_bits_team_id as number | null) ?? null, awayTeamId: (m.away_bits_team_id as number | null) ?? null,
       }
     },
   })
@@ -152,6 +153,78 @@ export function useDeleteNote() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['match-notes'] })
       qc.invalidateQueries({ queryKey: ['hall-notes'] })
+    },
+  })
+}
+
+// ── Oil pattern (match_prep) + SvBF oil profiles ──────────────────────────────
+export type OilProfile = { name: string; lengthFt: number | null; ratio: number | null; category: string | null; description: string | null }
+
+/** Public SvBF oil profiles to pick from; [] before seeding (falls back to free entry). */
+export function useOilProfiles() {
+  return useQuery({
+    queryKey: ['oil-profiles'],
+    staleTime: 60 * 60_000,
+    queryFn: async (): Promise<OilProfile[]> => {
+      const { data } = await untyped()
+        .from('oil_profiles').select('name, length_ft, ratio, category, description').order('length_ft', { ascending: true })
+      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        name: r.name as string, lengthFt: (r.length_ft as number | null) ?? null, ratio: (r.ratio as number | null) ?? null,
+        category: (r.category as string | null) ?? null, description: (r.description as string | null) ?? null,
+      }))
+    },
+  })
+}
+
+export function useMatchPattern(matchId: number | null | undefined) {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  return useQuery({
+    queryKey: ['match-pattern', uid, matchId],
+    enabled: !!uid && matchId != null,
+    queryFn: async (): Promise<string | null> => {
+      const { data } = await untyped()
+        .from('match_prep').select('oil_pattern').eq('user_id', uid!).eq('bits_match_id', matchId!).maybeSingle()
+      return ((data as Record<string, unknown> | null)?.oil_pattern as string | null) ?? null
+    },
+  })
+}
+
+export function useSetMatchPattern() {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: { matchId: number; pattern: string | null; hall: string | null }) => {
+      const { error } = await untyped().from('match_prep').upsert(
+        { user_id: uid, bits_match_id: v.matchId, oil_pattern: v.pattern, hall_name: v.hall, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,bits_match_id' },
+      )
+      if (error) throw error
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['match-pattern', uid, v.matchId] })
+      qc.invalidateQueries({ queryKey: ['pattern-history', uid] })
+    },
+  })
+}
+
+/** Notes I wrote on this same oil pattern at OTHER matches — cross-center recall. */
+export function usePatternHistory(pattern: string | null | undefined, excludeMatchId: number) {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  return useQuery({
+    queryKey: ['pattern-history', uid, pattern, excludeMatchId],
+    enabled: !!uid && !!pattern,
+    queryFn: async (): Promise<Note[]> => {
+      const { data: preps } = await untyped()
+        .from('match_prep').select('bits_match_id').eq('user_id', uid!).eq('oil_pattern', pattern!).neq('bits_match_id', excludeMatchId)
+      const ids = ((preps ?? []) as Record<string, unknown>[]).map((p) => p.bits_match_id as number)
+      if (ids.length === 0) return []
+      const { data } = await untyped()
+        .from('player_notes').select('id, bits_match_id, hall_name, body, created_at')
+        .eq('user_id', uid!).in('bits_match_id', ids).order('created_at', { ascending: false }).limit(5)
+      return ((data ?? []) as Record<string, unknown>[]).map(mapNote)
     },
   })
 }
