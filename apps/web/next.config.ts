@@ -18,9 +18,5 @@ const nextConfig: NextConfig = {
     '192.168.*.*',
     '172.20.10.*',    // iPhone personal hotspot
   ],
-  async redirects() {
-    if (process.env.NODE_ENV !== 'production') return []
-    return [{ source: '/', destination: '/landing', permanent: false }]
-  },
 };
 export default nextConfig;
