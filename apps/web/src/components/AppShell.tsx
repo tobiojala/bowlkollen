@@ -11,9 +11,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // pages (they carry their own header, built wide for desktop).
   if (pathname === '/landing' || pathname.startsWith('/players/')) return <>{children}</>
 
-  // Wide surfaces keep the nav but manage their own (desktop-dashboard) width,
-  // instead of the 600px app column that everything else still uses.
-  const wide = pathname === '/'
+  // Wide surfaces keep the nav but manage their own (desktop) width instead of
+  // the 600px app column. A route is added here only once its page carries a
+  // responsive desktop layout of its own.
+  const WIDE = ['/', '/schema', '/discover', '/divisioner', '/tavlingar']
+  const wide = WIDE.includes(pathname) || pathname.startsWith('/lag/')
 
   return (
     <>

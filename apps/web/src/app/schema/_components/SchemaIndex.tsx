@@ -23,11 +23,7 @@ function shortDivName(name: string): string {
 
 function SectionLabel({ text, count }: { text: string; count: number }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: SPACE[2],
-      position: 'sticky', top: 0, zIndex: 5, background: COLOR.bg,
-      padding: '14px 20px 10px',
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], padding: '14px 16px 10px' }}>
       <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2 }}>{text}</span>
       <span style={{ fontSize: 13, fontWeight: 600, color: COLOR.ink2 }}>{count}</span>
     </div>
@@ -107,14 +103,24 @@ export function SchemaIndex() {
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: `${SPACE[4]}px 0 96px` }}>
+      <style>{`
+        .schema-wrap { max-width: 600px; margin: 0 auto; padding: 16px 0 96px; }
+        .schema-search { margin: 0 20px 20px; }
+        .schema-grid { display: flex; flex-direction: column; gap: 12px; padding: 0 20px; }
+        .schema-card { background: ${COLOR.surface}; border-radius: 16px; overflow: hidden; }
+        @media (min-width: 1024px) {
+          .schema-wrap { max-width: 1160px; padding: 28px 32px 96px; }
+          .schema-search { max-width: 640px; margin: 0 auto 28px; }
+          .schema-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; align-items: start; padding: 0; }
+        }
+      `}</style>
+      <div className="schema-wrap">
 
         {/* Search — first thing, finds teams and divisions */}
-        <div style={{
+        <div className="schema-search" style={{
           display: 'flex', alignItems: 'center', gap: SPACE[2],
           background: COLOR.surface, border: `1px solid ${COLOR.hairline}`,
           borderRadius: RADIUS.lg, padding: `${SPACE[3]}px ${SPACE[4]}px`,
-          margin: `0 20px ${SPACE[4]}px`,
         }}>
           <Search size={17} color={COLOR.ink2} />
           <input
@@ -143,34 +149,36 @@ export function SchemaIndex() {
         {/* ── Search results ── */}
         {!isLoading && searching && (
           <>
-            {clubHits.length > 0 && (
-              <section style={{ marginBottom: SPACE[4] }}>
-                <SectionLabel text="KLUBBAR" count={clubHits.length} />
-                {clubHits.map(c => (
-                  <Link key={c.bits_id} href={`/clubs/${c.bits_id}`} style={rowStyle} {...hover}>
-                    <Users size={16} color={COLOR.ink3} style={{ flexShrink: 0 }} />
-                    <span style={nameStyle}>{c.name}</span>
-                    <Chevron />
-                  </Link>
-                ))}
-              </section>
-            )}
-
-            {divHits.length > 0 && (
-              <section style={{ marginBottom: SPACE[4] }}>
-                <SectionLabel text="DIVISIONER" count={divHits.length} />
-                {divHits.map(d => {
-                  const tc = TIER_COLOR[divisionTier(d.name)] ?? COLOR.ink3
-                  return (
-                    <Link key={d.bits_division_id} href={`/divisioner/${d.bits_division_id}`} style={rowStyle} {...hover}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
-                      <span style={nameStyle}>{d.name}</span>
+            <div className="schema-grid">
+              {clubHits.length > 0 && (
+                <section className="schema-card">
+                  <SectionLabel text="KLUBBAR" count={clubHits.length} />
+                  {clubHits.map(c => (
+                    <Link key={c.bits_id} href={`/clubs/${c.bits_id}`} style={rowStyle} {...hover}>
+                      <Users size={16} color={COLOR.ink3} style={{ flexShrink: 0 }} />
+                      <span style={nameStyle}>{c.name}</span>
                       <Chevron />
                     </Link>
-                  )
-                })}
-              </section>
-            )}
+                  ))}
+                </section>
+              )}
+
+              {divHits.length > 0 && (
+                <section className="schema-card">
+                  <SectionLabel text="DIVISIONER" count={divHits.length} />
+                  {divHits.map(d => {
+                    const tc = TIER_COLOR[divisionTier(d.name)] ?? COLOR.ink3
+                    return (
+                      <Link key={d.bits_division_id} href={`/divisioner/${d.bits_division_id}`} style={rowStyle} {...hover}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
+                        <span style={nameStyle}>{d.name}</span>
+                        <Chevron />
+                      </Link>
+                    )
+                  })}
+                </section>
+              )}
+            </div>
 
             {noHits && (
               <div style={{ textAlign: 'center', padding: `${SPACE[8]}px 20px`, color: COLOR.ink2, fontSize: TYPE.body }}>
@@ -180,31 +188,32 @@ export function SchemaIndex() {
           </>
         )}
 
-        {/* ── Browse (no search) ── */}
-        {!isLoading && browse && [...browse.entries()].map(([tier, tierDivs]) => {
-          const tc = TIER_COLOR[tier] ?? COLOR.ink3
-          return (
-            <section key={tier} style={{ marginBottom: SPACE[4] }}>
-              <div style={{
-                position: 'sticky', top: 0, zIndex: 5, background: COLOR.bg,
-                display: 'flex', alignItems: 'center', gap: SPACE[2], padding: '14px 20px 10px',
-              }}>
-                <div style={{ width: 3, height: 14, borderRadius: 2, background: tc, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: tc }}>
-                  {tier.toUpperCase()}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: COLOR.ink2 }}>{tierDivs.length}</span>
-              </div>
-              {tierDivs.map(div => (
-                <Link key={div.bits_division_id} href={`/divisioner/${div.bits_division_id}`} style={rowStyle} {...hover}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
-                  <span style={nameStyle}>{shortDivName(div.name)}</span>
-                  <Chevron />
-                </Link>
-              ))}
-            </section>
-          )
-        })}
+        {/* ── Browse (no search) — the division catalog as a wall of tier cards ── */}
+        {!isLoading && browse && (
+          <div className="schema-grid">
+            {[...browse.entries()].map(([tier, tierDivs]) => {
+              const tc = TIER_COLOR[tier] ?? COLOR.ink3
+              return (
+                <section key={tier} className="schema-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], padding: '14px 16px 10px' }}>
+                    <div style={{ width: 3, height: 14, borderRadius: 2, background: tc, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: tc }}>
+                      {tier.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: COLOR.ink2 }}>{tierDivs.length}</span>
+                  </div>
+                  {tierDivs.map(div => (
+                    <Link key={div.bits_division_id} href={`/divisioner/${div.bits_division_id}`} style={rowStyle} {...hover}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
+                      <span style={nameStyle}>{shortDivName(div.name)}</span>
+                      <Chevron />
+                    </Link>
+                  ))}
+                </section>
+              )
+            })}
+          </div>
+        )}
       </div>
     </main>
   )
