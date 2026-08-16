@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Users, Ticket, LogOut, UserPlus, Clock, BadgeCheck } from 'lucide-react'
+import { ChevronRight, Users, Ticket, UserPlus, Clock, BadgeCheck, Unlink, Trash2 } from 'lucide-react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import { useSession, usePlayerBitsResults, useFollows } from '@/lib/queries'
 import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
 import { SEASON } from '@/lib/constants'
 import ClaimPanel from './_components/ClaimPanel'
 import CaptainSection from './_components/CaptainSection'
+import SelectedCard from './_components/SelectedCard'
 
 // Dark, native-matching palette (mirrors PlayerProfileView so /profile and the
 // full /players/[id] page it doorways into read as one surface).
@@ -71,6 +73,19 @@ export default function ProfilePage() {
   const stats = verified && activeRows.length ? buildProfileFromBitsRows(activeRows) : null
 
   const signOut = async () => { await createClient().auth.signOut(); window.location.href = '/' }
+
+  const releaseClaim = async () => {
+    if (!window.confirm('Släpp spelarkopplingen? Du kan koppla igen när som helst.')) return
+    await (createClient() as unknown as SupabaseClient).rpc('release_player_claim')
+    fetchClaim()
+  }
+
+  const deleteAccount = async () => {
+    if (!window.confirm('Radera kontot och all din data permanent? Detta går inte att ångra.')) return
+    await (createClient() as unknown as SupabaseClient).rpc('delete_my_account')
+    await createClient().auth.signOut()
+    window.location.href = '/'
+  }
 
   if (sessionLoading || !session) return <main style={{ minHeight: '100vh', background: BG }} />
 
@@ -176,6 +191,9 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* "Du är uttagen" — a captain published a lineup you're in */}
+        <SelectedCard />
+
         {/* Captain/board shortcut → team admin (lineup, availability, notis) */}
         <CaptainSection />
 
@@ -193,6 +211,17 @@ export default function ProfilePage() {
             <span style={{ flex: 1, fontSize: 16, fontWeight: 600 }}>Lös in inbjudningskod</span>
             <ChevronRight size={18} color={INK4} />
           </Link>
+          {!!claim && (
+            <button onClick={releaseClaim} style={{ ...rowStyle, width: '100%', background: 'none', cursor: 'pointer' }}>
+              <Unlink size={22} color={INK2} />
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 600, textAlign: 'left' }}>Släpp spelarkoppling</span>
+              <ChevronRight size={18} color={INK4} />
+            </button>
+          )}
+          <button onClick={deleteAccount} style={{ ...rowStyle, width: '100%', background: 'none', cursor: 'pointer' }}>
+            <Trash2 size={22} color={RED} />
+            <span style={{ flex: 1, fontSize: 16, fontWeight: 600, textAlign: 'left', color: RED }}>Radera konto</span>
+          </button>
         </div>
 
         <button onClick={signOut}
