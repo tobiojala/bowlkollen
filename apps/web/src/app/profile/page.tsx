@@ -12,6 +12,7 @@ import { SEASON } from '@/lib/constants'
 import ClaimPanel from './_components/ClaimPanel'
 import CaptainSection from './_components/CaptainSection'
 import SelectedCard from './_components/SelectedCard'
+import NextMatchCard from './_components/NextMatchCard'
 
 // Dark, native-matching palette (mirrors PlayerProfileView so /profile and the
 // full /players/[id] page it doorways into read as one surface).
@@ -193,6 +194,9 @@ export default function ProfilePage() {
 
         {/* "Du är uttagen" — a captain published a lineup you're in */}
         <SelectedCard />
+
+        {/* Next fixture → prep sheet (Prepare pillar) */}
+        <NextMatchCard />
 
         {/* Captain/board shortcut → team admin (lineup, availability, notis) */}
         <CaptainSection />
