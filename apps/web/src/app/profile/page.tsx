@@ -9,6 +9,7 @@ import { useSession, usePlayerBitsResults, useFollows } from '@/lib/queries'
 import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
 import { SEASON } from '@/lib/constants'
 import ClaimPanel from './_components/ClaimPanel'
+import CaptainSection from './_components/CaptainSection'
 
 // Dark, native-matching palette (mirrors PlayerProfileView so /profile and the
 // full /players/[id] page it doorways into read as one surface).
@@ -174,6 +175,9 @@ export default function ProfilePage() {
             <span style={{ fontSize: 14, color: INK3 }}>Din spelarkoppling väntar på granskning.</span>
           </div>
         )}
+
+        {/* Captain/board shortcut → team admin (lineup, availability, notis) */}
+        <CaptainSection />
 
         {/* KONTO — open rows, hairline-separated (no card) */}
         <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '36px 2px 0' }}>KONTO</div>
