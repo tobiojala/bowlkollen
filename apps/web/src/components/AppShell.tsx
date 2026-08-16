@@ -11,12 +11,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // pages (they carry their own header, built wide for desktop).
   if (pathname === '/landing' || pathname.startsWith('/players/')) return <>{children}</>
 
+  // Wide surfaces keep the nav but manage their own (desktop-dashboard) width,
+  // instead of the 600px app column that everything else still uses.
+  const wide = pathname === '/'
+
   return (
     <>
       <AuthRedirect />
       <WebNav />
-      {/* Offset the fixed 64px top bar; content stays in the app column for now. */}
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      {/* Offset the fixed 64px top bar. */}
+      <div style={{ maxWidth: wide ? '100%' : 600, margin: '0 auto' }}>
         <div className="main-content" style={{ paddingTop: 64, paddingBottom: 48 }}>{children}<Footer /></div>
       </div>
     </>

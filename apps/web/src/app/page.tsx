@@ -6,11 +6,13 @@ import {
   useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
   useMyTeamId, useBitsMatchFeed, useBitsTopScores,
 } from '@/lib/queries'
+import { Calendar, Layers, Users, Trophy, Target, ChevronRight } from 'lucide-react'
 import HomeTabRow, { type FeedFilterType } from './home/_components/HomeTabRow'
 import { LiveAlertBanner } from './home/_components/LiveAlertBanner'
 import { MatcherTab } from './home/_components/MatcherTab'
 import { FeedSection } from './home/_components/FeedSection'
 import { OnboardingCard } from './home/_components/OnboardingCard'
+import NextMatchCard from './profile/_components/NextMatchCard'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { getLiveCompetitions } from '@/lib/competitions'
@@ -65,7 +67,17 @@ export default function Home() {
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, paddingBottom: 100 }}>
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <style>{`
+        .home-wrap { max-width: 600px; margin: 0 auto; }
+        .home-grid { display: block; }
+        .home-side { display: none; }
+        @media (min-width: 1024px) {
+          .home-wrap { max-width: 1160px; padding: 0 32px; }
+          .home-grid { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 40px; align-items: start; }
+          .home-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 88px; }
+        }
+      `}</style>
+      <div className="home-wrap">
 
         {/* Greeting — scrolls away naturally with the rest of the page */}
         <div style={{ padding: '12px 20px 4px' }}>
@@ -76,6 +88,9 @@ export default function Home() {
             {new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' })}
           </div>
         </div>
+
+        <div className="home-grid">
+        <div className="home-main">
 
         {/* Filter squircles */}
         <HomeTabRow active={filter} onChange={setFilter} />
@@ -148,7 +163,41 @@ export default function Home() {
           </div>
         )}
 
+        </div>{/* home-main */}
+
+        {/* Desktop sidebar — your next match + quick access to the worlds */}
+        <aside className="home-side">
+          <NextMatchCard />
+          <QuickAccess />
+        </aside>
+        </div>{/* home-grid */}
+
       </div>
     </main>
+  )
+}
+
+const QUICK = [
+  { label: 'Schema',    href: '/schema',     icon: Calendar },
+  { label: 'Serier',    href: '/divisioner', icon: Layers },
+  { label: 'Spelare',   href: '/discover',   icon: Users },
+  { label: 'Tävlingar', href: '/tavlingar',  icon: Trophy },
+  { label: 'Tipsligan', href: '/prediktion', icon: Target },
+] as const
+
+function QuickAccess() {
+  return (
+    <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
+      <div style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.12em', padding: '14px 16px 8px' }}>UTFORSKA</div>
+      {QUICK.map(({ label, href, icon: Icon }) => (
+        <Link key={href} href={href}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', textDecoration: 'none',
+            color: COLOR.ink, borderTop: `1px solid ${COLOR.hairline}` }}>
+          <Icon size={20} color={COLOR.ink2} />
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{label}</span>
+          <ChevronRight size={18} color={COLOR.ink4} />
+        </Link>
+      ))}
+    </div>
   )
 }
