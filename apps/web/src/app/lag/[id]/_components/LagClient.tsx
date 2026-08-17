@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { Megaphone } from 'lucide-react'
 import Reveal from '@/components/Reveal'
-import { COLOR, FONT, SPACE } from '@/lib/brand'
+import { COLOR, FONT, RADIUS, SPACE } from '@/lib/brand'
 import { useTeamClaim } from '@/lib/queries'
 import type { MatchRow, TeamStanding } from '@/lib/division-standings'
 import { DivisionMatches } from '@/app/divisioner/[id]/_components/DivisionMatches'
@@ -75,6 +76,16 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
         <div style={{ padding: '0 20px' }}>
           <LagLineupPreview teamId={teamId} nextMatch={nextMatch} />
           <CaptainToolbar teamId={teamId} claim={claim ?? null} upcoming={upcoming.slice(0, 2)} />
+          {claim?.status === 'verified' && (
+            <Link href={`/lag/${teamId}/nyheter`} style={{
+              display: 'flex', alignItems: 'center', gap: 10, marginTop: SPACE[4],
+              padding: SPACE[3], borderRadius: RADIUS.lg, background: COLOR.surface, textDecoration: 'none',
+            }}>
+              <Megaphone size={18} color={COLOR.gold} />
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 700, color: COLOR.ink }}>Anslagstavla</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </Link>
+          )}
         </div>
 
         <StandingsLadder teamId={teamId} divisionId={ladderDivisionId} standings={ladderStandings} historical={ladderHistorical} />
