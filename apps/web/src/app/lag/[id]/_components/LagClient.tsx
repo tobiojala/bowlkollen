@@ -44,7 +44,19 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 96 }}>
+      <style>{`
+        .lag-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 96px; }
+        .lag-grid { display: block; }
+        .lag-side { }
+        @media (min-width: 1024px) {
+          .lag-wrap { max-width: 1160px; padding: 0 32px 96px; }
+          .lag-grid { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 40px; align-items: start; }
+          .lag-side { position: sticky; top: 88px; }
+        }
+      `}</style>
+      <div className="lag-wrap">
+        <div className="lag-grid">
+        <div className="lag-main">
 
         <LagHero
           teamId={teamId}
@@ -67,9 +79,19 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
 
         <StandingsLadder teamId={teamId} divisionId={ladderDivisionId} standings={ladderStandings} historical={ladderHistorical} />
 
-        {/* Trupp — the roster, each player a doorway into their profile */}
+        {/* Their season */}
+        <Reveal direction="up" delay={0.05}>
+          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2, padding: `${SPACE[6]}px 20px 4px` }}>
+            MATCHER
+          </div>
+          <DivisionMatches matches={matches} teamHref={teamHref} />
+        </Reveal>
+
+        </div>{/* lag-main */}
+
+        {/* Trupp — the roster, a persistent sidebar on desktop; each row a doorway */}
         {roster.length > 0 && (
-          <Reveal direction="up" distance={16}>
+          <aside className="lag-side">
             <section style={{ marginTop: SPACE[4] }}>
               <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2, padding: '0 20px 10px' }}>
                 TRUPP
@@ -93,16 +115,9 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
                 </Link>
               ))}
             </section>
-          </Reveal>
+          </aside>
         )}
-
-        {/* Their season */}
-        <Reveal direction="up" delay={0.05}>
-          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2, padding: `${SPACE[6]}px 20px 4px` }}>
-            MATCHER
-          </div>
-          <DivisionMatches matches={matches} teamHref={teamHref} />
-        </Reveal>
+        </div>{/* lag-grid */}
       </div>
     </main>
   )
