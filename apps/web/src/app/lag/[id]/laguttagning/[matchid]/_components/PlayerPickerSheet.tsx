@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import type { RosterPlayer } from '@/lib/queries'
+import { candidateFit, playsDown, FIT_LABEL, type LineupCandidate } from '@/lib/lineup-aids'
 
 const COL = 'max(0px, calc(50vw - 300px))'
 
@@ -20,12 +21,15 @@ type Props = {
   usedPublicIds:           string[]
   availabilityByPublicId:  Record<string, string | undefined>
   onPick:                  (publicId: string, name: string) => void
+  /** get_lineup_candidates keyed by publicId — the context-aware fit + plays-down aid. */
+  candidates?:             Record<string, LineupCandidate>
+  matchDivision?:          string | null
 }
 
 /** Bottom sheet roster picker — sorted (by sortRosterForPicker upstream) so
  * available players surface first, each row showing real stats, not a fake
  * tier/rating badge. */
-export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availabilityByPublicId, onPick }: Props) {
+export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availabilityByPublicId, onPick, candidates, matchDivision }: Props) {
   return (
     <AnimatePresence>
       {open && (
@@ -54,6 +58,9 @@ export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availa
               {roster.map(p => {
                 const used   = usedPublicIds.includes(p.publicId)
                 const avInfo = AV_LABEL[availabilityByPublicId[p.publicId] ?? '']
+                const cand   = candidates?.[p.publicId]
+                const fit    = cand ? candidateFit(cand) : null
+                const down   = cand ? playsDown(cand.homeDivision, matchDivision ?? null) : false
                 return (
                   <button
                     key={p.publicId}
@@ -70,9 +77,22 @@ export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availa
                     <span style={{ flex: 1, fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.name}
                     </span>
+                    {down && (
+                      <span title="Spelar normalt en högre division — kontrollera spärrreglerna"
+                        style={{ fontSize: 11, fontWeight: 800, color: COLOR.gold, background: 'rgba(245,194,0,0.14)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>
+                        ↑ spelar upp
+                      </span>
+                    )}
                     {avInfo && <span style={{ fontSize: TYPE.caption, fontWeight: 700, color: avInfo.color, flexShrink: 0 }}>{avInfo.label}</span>}
-                    <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, minWidth: 70, textAlign: 'right', flexShrink: 0 }}>
-                      {p.licenceAverage ? `snitt ${p.licenceAverage}` : '—'}
+                    <span style={{ minWidth: 78, textAlign: 'right', flexShrink: 0 }}>
+                      {fit && fit.value != null ? (
+                        <>
+                          <span style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink, fontVariantNumeric: 'tabular-nums' }}>{fit.value}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: COLOR.ink3 }}>{FIT_LABEL[fit.context]}</span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{p.licenceAverage ? `snitt ${p.licenceAverage}` : '—'}</span>
+                      )}
                     </span>
                   </button>
                 )

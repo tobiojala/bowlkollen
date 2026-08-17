@@ -8,6 +8,7 @@ import {
   useTeamLineup, useSaveTeamLineup, type LineupSlot,
 } from '@/lib/queries'
 import { isLineupComplete, sortRosterForPicker } from '@/lib/lineup'
+import { useLineupCandidates } from '@/lib/lineup-aids'
 import { shortName } from '@/lib/utils'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { LineupBoardGrid } from './_components/LineupBoardGrid'
@@ -32,6 +33,7 @@ export default function LaguttagningPage({ params }: Props) {
   const { data: match, isLoading: matchLoading } = useBitsMatch(matchId)
   const { data: roster = [] }    = useTeamRoster(teamId)
   const { data: responses = [] } = useTeamAvailability(teamId, matchId)
+  const { data: candidates = [] } = useLineupCandidates(teamId, matchId)
   const { data: lineup, isLoading: lineupLoading } = useTeamLineup(teamId, matchId)
   const { mutate: save, isPending: saving, error: saveError } = useSaveTeamLineup(teamId, matchId)
 
@@ -63,6 +65,8 @@ export default function LaguttagningPage({ params }: Props) {
 
   const availabilityByPublicId: Record<string, string | undefined> = {}
   responses.forEach(r => { if (r.publicId) availabilityByPublicId[r.publicId] = r.response })
+
+  const candByPublicId = Object.fromEntries(candidates.map(c => [c.publicId, c]))
 
   const sortedRoster = sortRosterForPicker(roster, availabilityByPublicId)
   const usedPublicIds = slots.map(s => s.publicId)
@@ -165,6 +169,8 @@ export default function LaguttagningPage({ params }: Props) {
         roster={sortedRoster}
         usedPublicIds={usedPublicIds}
         availabilityByPublicId={availabilityByPublicId}
+        candidates={candByPublicId}
+        matchDivision={match.division_name}
         onPick={onPick}
       />
     </main>
