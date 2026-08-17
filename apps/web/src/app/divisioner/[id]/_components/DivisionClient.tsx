@@ -7,6 +7,7 @@ import { COLOR, FONT, SPACE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR, type TeamStanding, type MatchRow } from '@/lib/division-standings'
 import { DivisionActions } from './DivisionActions'
 import { DivisionMatches } from './DivisionMatches'
+import { DivisionStandings } from './DivisionStandings'
 import { StandingsSheet } from './StandingsSheet'
 
 type Props = {
@@ -37,7 +38,17 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, matches, 
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 96 }}>
+      <style>{`
+        .div-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 96px; }
+        .div-grid { display: block; }
+        .div-standings { display: none; }
+        @media (min-width: 1024px) {
+          .div-wrap { max-width: 1160px; padding: 0 32px 96px; }
+          .div-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+          .div-standings { display: block; position: sticky; top: 88px; }
+        }
+      `}</style>
+      <div className="div-wrap">
 
         {/* Header — back steps lens → division → schema */}
         <div style={{ padding: `${SPACE[6]}px ${SPACE[4]}px ${SPACE[2]}px` }}>
@@ -77,8 +88,20 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, matches, 
           )}
         </div>
 
-        {/* The schedule is the page */}
-        <DivisionMatches matches={matches} teamHref={teamHref} />
+        <div className="div-grid">
+          {/* Desktop: standings table sits beside the schedule (mobile uses the sheet) */}
+          <aside className="div-standings">
+            <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2, padding: `0 ${SPACE[2]}px ${SPACE[3]}px` }}>
+              TABELL
+            </div>
+            <DivisionStandings standings={standings} tierColor={tierColor} />
+          </aside>
+
+          {/* The schedule is the page */}
+          <div className="div-schedule">
+            <DivisionMatches matches={matches} teamHref={teamHref} />
+          </div>
+        </div>
       </div>
 
       <StandingsSheet
