@@ -110,10 +110,23 @@ export default function LoginPage() {
   const [magicLoading, setMagicLoading] = useState(false)
   const [magicSent, setMagicSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [inviteCode, setInviteCode] = useState('')
 
   useEffect(() => {
     if (session) router.replace('/')
   }, [session, router])
+
+  // Surface the invite-gated-signup / auth errors passed back by /auth/callback.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('error')
+    if (p === 'invite') setError('Registrering kräver en inbjudan. Ange din kod eller öppna din inbjudningslänk.')
+    else if (p === 'auth') setError('Inloggningen misslyckades. Försök igen.')
+  }, [])
+
+  const redeemInvite = () => {
+    const c = inviteCode.trim()
+    if (c) window.location.href = `/invite/${encodeURIComponent(c)}`
+  }
 
   const signInWithGoogle = async () => {
     setGoogleLoading(true)
@@ -268,6 +281,36 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          {/* Invite code — required to create a new account during soft-launch */}
+          <div style={{ marginTop: SPACE[6], paddingTop: SPACE[4], borderTop: `1px solid ${COLOR.hairline}` }}>
+            <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginBottom: SPACE[2], textAlign: 'center' }}>
+              Ny här? Registrering kräver en inbjudningskod.
+            </div>
+            <div style={{ display: 'flex', gap: SPACE[2] }}>
+              <input
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') redeemInvite() }}
+                placeholder="Inbjudningskod"
+                autoComplete="off"
+                style={{
+                  flex: 1, background: COLOR.surface2, border: `1px solid ${COLOR.hairline}`,
+                  borderRadius: RADIUS.md, padding: `12px ${SPACE[3]}px`, fontSize: TYPE.body,
+                  color: COLOR.ink, outline: 'none', fontFamily: 'var(--font-body)',
+                }}
+              />
+              <button onClick={redeemInvite} disabled={!inviteCode.trim()}
+                style={{
+                  background: inviteCode.trim() ? COLOR.surface2 : 'transparent',
+                  border: `1px solid ${COLOR.hairline}`, borderRadius: RADIUS.md, padding: `0 ${SPACE[4]}px`,
+                  fontSize: TYPE.body, fontWeight: 700, color: inviteCode.trim() ? COLOR.ink : COLOR.ink4,
+                  cursor: inviteCode.trim() ? 'pointer' : 'default', fontFamily: 'var(--font-body)',
+                }}>
+                Lös in
+              </button>
+            </div>
+          </div>
 
           {/* Terms */}
           <p style={{ marginTop: SPACE[6], textAlign: 'center', fontSize: 11, color: COLOR.ink4, lineHeight: 1.6 }}>

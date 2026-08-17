@@ -27,19 +27,30 @@ export async function GET(request: Request) {
       }
     )
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      const seenOnboarding = data.session?.user.user_metadata?.onboarding_seen === true
+    if (!error && data.session) {
+      const user = data.session.user
+      const seenOnboarding = user.user_metadata?.onboarding_seen === true
+      const inviteCode = verifyInviteCookie(cookieStore.get('bk_invite')?.value ?? '')
 
-      // Attribute the signup to whichever invite link brought this person
-      // in — first-login only (seenOnboarding flips true once onboarding
-      // completes/skips), so a repeat magic-link click can't double-insert.
-      if (!seenOnboarding && data.session) {
-        const inviteCode = verifyInviteCookie(cookieStore.get('bk_invite')?.value ?? '')
-        if (inviteCode) {
-          await createServiceSupabase()
-            .from('invite_redemptions')
-            .upsert({ code: inviteCode, user_id: data.session.user.id }, { onConflict: 'user_id', ignoreDuplicates: true })
-        }
+      // Invite-gated SIGNUP (viewing stays open). A brand-new account that
+      // arrives without a valid invite is rejected and removed; existing users
+      // always pass. Gate is on by default — set DISABLE_SIGNUP_GATE=true at
+      // public launch to open registration.
+      const isNewUser  = Date.now() - new Date(user.created_at).getTime() < 120_000
+      const signupGated = process.env.DISABLE_SIGNUP_GATE !== 'true'
+      if (signupGated && isNewUser && !inviteCode) {
+        try { await createServiceSupabase().auth.admin.deleteUser(user.id) } catch {}
+        await supabase.auth.signOut()
+        return NextResponse.redirect(origin + '/login?error=invite')
+      }
+
+      // Attribute the signup to whichever invite link brought this person in —
+      // first-login only (seenOnboarding flips true once onboarding completes),
+      // so a repeat magic-link click can't double-insert.
+      if (!seenOnboarding && inviteCode) {
+        await createServiceSupabase()
+          .from('invite_redemptions')
+          .upsert({ code: inviteCode, user_id: user.id }, { onConflict: 'user_id', ignoreDuplicates: true })
       }
 
       return NextResponse.redirect(origin + (seenOnboarding ? '/' : '/onboarding'))
