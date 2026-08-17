@@ -124,7 +124,15 @@ export default function ClubPage({ params }: Props) {
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
+      <style>{`
+        .club-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 48px; }
+        .club-teams { display: flex; flex-direction: column; gap: 8px; }
+        @media (min-width: 1024px) {
+          .club-wrap { max-width: 1160px; }
+          .club-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        }
+      `}</style>
+      <div className="club-wrap">
 
         {/* Header */}
         <div style={{
@@ -193,7 +201,7 @@ export default function ClubPage({ params }: Props) {
               <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, letterSpacing: '-0.01em', padding: `0 ${SPACE[1]}px ${SPACE[3]}px` }}>
                 Lag ({bitsTeams.length})
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+              <div className="club-teams">
                 {bitsTeams.map(bt => {
                   const ourTeam  = findOurTeam(bt)
                   // Link straight to the team page — the two-segment

@@ -15,7 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // the 600px app column. A route is added here only once its page carries a
   // responsive desktop layout of its own.
   const WIDE = ['/', '/schema', '/discover', '/divisioner', '/tavlingar']
-  const wide = WIDE.includes(pathname) || pathname.startsWith('/lag/') || pathname.startsWith('/divisioner/')
+  const wide = WIDE.includes(pathname) || pathname.startsWith('/lag/') || pathname.startsWith('/divisioner/') || pathname.startsWith('/clubs/')
 
   return (
     <>
