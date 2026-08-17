@@ -12,6 +12,7 @@ import { useLineupCandidates } from '@/lib/lineup-aids'
 import { shortName } from '@/lib/utils'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { LineupBoardGrid } from './_components/LineupBoardGrid'
+import { KonstellationPanel } from './_components/KonstellationPanel'
 import { PlayerPickerSheet } from './_components/PlayerPickerSheet'
 
 type Props = { params: Promise<{ id: string; matchid: string }> }
@@ -130,6 +131,12 @@ export default function LaguttagningPage({ params }: Props) {
 
         {(isCaptain || lineup) && (
           <LineupBoardGrid slots={isCaptain ? slots : (lineup?.slots ?? [])} editable={isCaptain} onSlotClick={onSlotClick} />
+        )}
+
+        {isCaptain && candidates.length >= 2 && (
+          <div style={{ marginTop: SPACE[6] }}>
+            <KonstellationPanel candidates={candidates.map(c => ({ publicId: c.publicId, name: c.name }))} />
+          </div>
         )}
 
         {isCaptain && (
