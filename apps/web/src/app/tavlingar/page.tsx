@@ -199,7 +199,7 @@ export default function TavlingarPage() {
       </div>
 
       {/* Sticky filter row */}
-      <div style={{ position: 'sticky', top: 56, background: C.bg, zIndex: 30,
+      <div style={{ position: 'sticky', top: 64, background: C.bg, zIndex: 30,
         borderBottom: '1px solid ' + C.border }}>
         <div style={{ overflowX: 'auto', scrollbarWidth: 'none', display: 'flex',
           gap: 6, padding: '7px 12px' } as any}>
@@ -225,7 +225,7 @@ export default function TavlingarPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 48 }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', paddingBottom: 48 }}>
 
         {/* Favorites section */}
         <AnimatePresence>
