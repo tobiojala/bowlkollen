@@ -133,7 +133,19 @@ export default function ProfilePage() {
 
   return (
     <main style={{ minHeight: '100vh', background: BG, color: INK, fontFamily: "var(--font-body,'DM Sans'),system-ui" }}>
-      <div style={{ padding: '16px 24px 96px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <style>{`
+        .prof-side, .prof-main { display: flex; flex-direction: column; gap: 12px; }
+        .prof-wrap { max-width: 600px; margin: 0 auto; }
+        .prof-grid { display: flex; flex-direction: column; gap: 12px; padding: 16px 24px 96px; }
+        @media (min-width: 1024px) {
+          .prof-wrap { max-width: 1000px; }
+          .prof-grid { display: grid; grid-template-columns: 360px 1fr; gap: 40px; align-items: start; padding: 24px 32px 96px; }
+          .prof-side { position: sticky; top: 88px; }
+        }
+      `}</style>
+      <div className="prof-wrap">
+        <div className="prof-grid">
+        <div className="prof-side">
 
         <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: -0.5, margin: '8px 0 8px' }}>Profil</h1>
 
@@ -167,7 +179,9 @@ export default function ProfilePage() {
             </div>
           </Link>
         )}
+        </div>{/* prof-side */}
 
+        <div className="prof-main">
         {/* Claim CTA / pending / inline connect flow */}
         {claimLoaded && !claim && !showClaim && (
           <button onClick={() => setShowClaim(true)}
@@ -238,6 +252,8 @@ export default function ProfilePage() {
             fontSize: 16, fontWeight: 700, color: RED }}>
           Logga ut
         </button>
+        </div>{/* prof-main */}
+        </div>{/* prof-grid */}
       </div>
     </main>
   )
