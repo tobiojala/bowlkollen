@@ -1,15 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { Megaphone } from 'lucide-react'
 import Reveal from '@/components/Reveal'
-import { COLOR, FONT, RADIUS, SPACE } from '@/lib/brand'
-import { useTeamClaim } from '@/lib/queries'
+import { COLOR, FONT, SPACE } from '@/lib/brand'
 import type { MatchRow, TeamStanding } from '@/lib/division-standings'
 import { DivisionMatches } from '@/app/divisioner/[id]/_components/DivisionMatches'
 import { LagHero } from './LagHero'
 import { StandingsLadder } from './StandingsLadder'
-import { CaptainToolbar } from './CaptainToolbar'
 import { LagLineupPreview } from './LagLineupPreview'
 
 type Standing      = { rank: number; total: number; points: number; played: number }
@@ -33,7 +30,6 @@ type Props = {
 
 export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, hallId, hallName, matches, standing, standings, prevSeason, roster }: Props) {
   const teamHref = (bitsId: number) => bitsId === teamId ? `/lag/${teamId}` : `/lag/${bitsId}`
-  const { data: claim } = useTeamClaim(teamId)
 
   // Early season — no finished matches yet. Fall back to last season's table.
   const ladderHistorical  = standings.length === 0 && !!prevSeason
@@ -74,18 +70,9 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
         />
 
         <div style={{ padding: '0 20px' }}>
+          {/* Public: the published lineup for the next match (member-only admin
+              tools — availability, laguttagning, anslagstavla — live on Profil). */}
           <LagLineupPreview teamId={teamId} nextMatch={nextMatch} />
-          <CaptainToolbar teamId={teamId} claim={claim ?? null} upcoming={upcoming.slice(0, 2)} />
-          {claim?.status === 'verified' && (
-            <Link href={`/lag/${teamId}/nyheter`} style={{
-              display: 'flex', alignItems: 'center', gap: 10, marginTop: SPACE[4],
-              padding: SPACE[3], borderRadius: RADIUS.lg, background: COLOR.surface, textDecoration: 'none',
-            }}>
-              <Megaphone size={18} color={COLOR.gold} />
-              <span style={{ flex: 1, fontSize: 16, fontWeight: 700, color: COLOR.ink }}>Anslagstavla</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </Link>
-          )}
         </div>
 
         <StandingsLadder teamId={teamId} divisionId={ladderDivisionId} standings={ladderStandings} historical={ladderHistorical} />
