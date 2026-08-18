@@ -46,9 +46,9 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
-| Home feed | ✅ `/` (ranking engine) | 🟡 `(tabs)/index` (`feed.ts`) | **Web ahead**: `scoreEntry` ranking (recency + event boosts + tier + affinity) vs native date-only `buildFeed`. Native = adopt ranking. |
+| Home feed | ✅ `/` (ranking engine) | ✅ `(tabs)/index` | **Parity (2026-08-18):** native `buildFeed` now uses `rankScore` ported from web's `scoreEntry` (recency + event/serie boosts); upcoming still leads. |
 | Feed cards (social posts + react) | ✅ (`feed_reactions`) | ✅ (`feed-reactions.ts`) | Both like/save/share. |
-| **Auto-Story Engine** | ✅ (BITS, fixed 2026-08-18) | ❌ | **Web-only.** The narrative "Remember" pillar. Native has no story events. Big gap. |
+| **Auto-Story Engine** | ✅ (BITS, fixed 2026-08-18) | ✅ read+render (2026-08-18) | **Parity on consumption.** Generation stays server-side on the web brain (cron/route writes `team_events`); native reads by `bits_team_id` (`lib/story-events.ts`) and renders `StoryCard`. The "Remember" pillar is now on both. |
 | Follow (players/teams) | ✅ `/following` | ✅ `/following` (`follows.ts`) | Both (IG-style counts). |
 | Discover / Hitta | ✅ `/discover` | ✅ `(tabs)/discover` | Both. |
 
@@ -86,7 +86,8 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Onboarding | ✅ both | |
 
 ## Biggest gaps right now
-1. **Auto-Story Engine → native** (World 3) — the Remember pillar exists only on web.
-2. **Home-feed ranking → native** (World 3) — native still date-only.
+1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
+2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
 3. **Web missing: in-team invite redeem + eligibility** (Worlds 2/4) — the two places native leads, which the parity rule says web must cover.
-4. **Foundational: shared theme tokens in core** — unblocks non-divergent design for both apps.
+4. **Native missing web-only surfaces** (World 5 + Competitions): clubs, halls, klotshopar, tävlingar, Tipsligan, SM-slutspel, Atlas map, division-browse, team-compare.
+5. **Foundational: shared theme tokens in core** ✅ core set done; remaining = reconcile web's `@/lib/theme` light palette + migrate 89 static pages to `useColors()`.
