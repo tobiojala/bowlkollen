@@ -400,6 +400,7 @@ export type TeamEventReaction = {
 export type TeamEvent = {
   id: string
   team_id: string
+  bits_team_id?: number | null
   team?: { id: string; name: string }
   event_type: TeamEventType
   event_date: string        // ISO date string

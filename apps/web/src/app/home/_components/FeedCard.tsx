@@ -45,16 +45,21 @@ function accentFor(event: TeamEvent): string {
   return COLOR.gold
 }
 
+// bits events carry bits_team_id (match_id is a bits_match_id) → BITS routes.
+function teamLinkFor(event: TeamEvent): string {
+  return event.bits_team_id ? `/lag/${event.bits_team_id}` : `/teams/${event.team_id}`
+}
+
 function linkFor(event: TeamEvent): string {
   const p = event.payload
   if (event.match_id && (event.event_type === 'match_result' || event.event_type === 'match_preview')) {
-    return `/matches/${event.match_id}`
+    return event.bits_team_id ? `/matcher/${event.match_id}` : `/matches/${event.match_id}`
   }
   if (event.event_type === 'personal_best' || event.event_type === 'form_rising' || event.event_type === 'player_milestone') {
     const playerId = (p as PersonalBestPayload | FormRisingPayload).player_id
     if (playerId) return `/players/${playerId}`
   }
-  return `/teams/${event.team_id}`
+  return teamLinkFor(event)
 }
 
 function fmtDate(dateStr: string): string {
@@ -108,10 +113,10 @@ export function FeedCard({ event, myTeamId }: { event: TeamEvent; myTeamId?: str
         eventId={event.id}
         reactions={event.reactions}
         followType="team"
-        followId={event.team_id}
+        followId={event.bits_team_id ? String(event.bits_team_id) : event.team_id}
         saveKey={event.id}
         shareTitle={event.title}
-        shareUrl={`/teams/${event.team_id}`}
+        shareUrl={teamLinkFor(event)}
       />
 
       {event.body && (

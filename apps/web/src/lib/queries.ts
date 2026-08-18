@@ -659,17 +659,30 @@ export function useHomeFeed(teamIds: string[]) {
   return useQuery<TeamEvent[]>({
     queryKey: ['feed', 'home', teamIds.slice().sort().join(',')],
     queryFn: async () => {
-      if (!teamIds.length) return []
-      const { data, error } = await createClient()
+      // Follows are bits_team_id — the Auto-Story Engine now keys team_events by
+      // bits_team_id (see sync-bits-team-events.ts), so read by that.
+      const bitsIds = teamIds.map(Number).filter(n => Number.isFinite(n) && n > 0)
+      if (!bitsIds.length) return []
+      const supabase = createClient()
+      const { data, error } = await supabase
         .from('team_events')
-        .select('*, team:teams(id,name), reactions:team_event_reactions(id, user_id, reaction)')
-        .in('team_id', teamIds)
+        .select('*, reactions:team_event_reactions(id, user_id, reaction)')
+        .in('bits_team_id', bitsIds)
         .eq('is_hidden', false)
         .order('event_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(40)
       if (error) throw error
-      return (data ?? []) as TeamEvent[]
+      const events = (data ?? []) as unknown as TeamEvent[]
+
+      // Attach the team name from bits_teams (bits events have no legacy team join).
+      const ids = [...new Set(events.map(e => e.bits_team_id).filter((n): n is number => !!n))]
+      if (ids.length) {
+        const { data: teams } = await supabase.from('bits_teams').select('bits_team_id, name').in('bits_team_id', ids)
+        const nameById = new Map(((teams ?? []) as { bits_team_id: number; name: string }[]).map(t => [t.bits_team_id, t.name]))
+        for (const e of events) if (e.bits_team_id) e.team = { id: String(e.bits_team_id), name: nameById.get(e.bits_team_id) ?? 'Lag' }
+      }
+      return events
     },
     enabled: teamIds.length > 0,
     staleTime: STALE.SHORT,
