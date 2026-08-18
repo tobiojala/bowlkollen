@@ -17,17 +17,22 @@ function useFollowsWithNames(follows: Follow[]) {
     queryKey: ['follows-names', playerIds.sort().join(','), teamIds.sort().join(',')],
     queryFn: async () => {
       const supabase = createClient()
+      // Follows are bits ids: players = bits_players.public_id, teams = bits_team_id.
       const [{ data: players }, { data: teams }] = await Promise.all([
         playerIds.length
-          ? supabase.from('players').select('id,name').in('id', playerIds)
+          ? supabase.from('bits_players').select('public_id, first_name, sur_name').in('public_id', playerIds)
           : Promise.resolve({ data: [] }),
         teamIds.length
-          ? supabase.from('teams').select('id,name').in('id', teamIds)
+          ? supabase.from('bits_teams').select('bits_team_id, name').in('bits_team_id', teamIds.map(Number))
           : Promise.resolve({ data: [] }),
       ])
       const nameMap: Record<string, string> = {}
-      for (const p of players ?? []) nameMap[`player:${p.id}`] = p.name
-      for (const t of teams   ?? []) nameMap[`team:${t.id}`]   = t.name
+      for (const p of (players ?? []) as { public_id: string; first_name: string | null; sur_name: string | null }[]) {
+        nameMap[`player:${p.public_id}`] = `${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim() || 'Spelare'
+      }
+      for (const t of (teams ?? []) as { bits_team_id: number; name: string }[]) {
+        nameMap[`team:${t.bits_team_id}`] = t.name
+      }
       return nameMap
     },
     enabled: follows.length > 0,
@@ -37,7 +42,7 @@ function useFollowsWithNames(follows: Follow[]) {
 
 function FollowRow({ follow, name }: { follow: Follow; name: string }) {
   const isPlayer = follow.entity_type === 'player'
-  const href     = isPlayer ? `/players/${follow.entity_id}` : `/team/${follow.entity_id}`
+  const href     = isPlayer ? `/players/${follow.entity_id}` : `/lag/${follow.entity_id}`
   const Icon     = isPlayer ? User : Users
 
   return (
