@@ -3,8 +3,8 @@
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { FeedCard } from './FeedCard'
 import { PlayerResultCard } from './PlayerResultCard'
-import { BitsScoreCard } from './BitsScoreCard'
 import { FeedMatchCard } from './FeedMatchCard'
+import { TopScoreCard } from './TopScoreCard'
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import type { FeedFilterType } from './HomeTabRow'
@@ -163,7 +163,10 @@ export function FeedSection({
   playerIds: string[]
 }) {
   const feed = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
-  const postKeys = feed.filter(e => e.kind === 'bits_match').map(e => `m${(e.data as BitsMatchFeed).bits_match_id}`)
+  const postKeys = feed.flatMap(e =>
+    e.kind === 'bits_match' ? [`m${(e.data as BitsMatchFeed).bits_match_id}`]
+    : e.kind === 'bits_score' ? [`s${(e.data as BitsTopScore).matchId}-${(e.data as BitsTopScore).playerName}`]
+    : [])
   const { data: reactions } = useFeedReactions(postKeys)
   const { toggleLike, toggleSave } = useReactionActions()
 
@@ -184,8 +187,11 @@ export function FeedSection({
             match={{ bitsMatchId: m.bits_match_id, date: m.match_date, homeTeam: m.home_team_name, awayTeam: m.away_team_name,
               homeResult: m.home_result, awayResult: m.away_result, division: m.division_name, hall: m.hall_name, finished: m.is_finished }} />
         }
-        if (entry.kind === 'bits_score')
-          return <BitsScoreCard key={`bs-${entry.data.matchId}-${entry.data.playerName}`} item={entry.data} />
+        if (entry.kind === 'bits_score') {
+          const s = entry.data
+          const r = reactions?.get(`s${s.matchId}-${s.playerName}`) ?? { likes: 0, liked: false, saved: false }
+          return <TopScoreCard key={`bs-${s.matchId}-${s.playerName}`} item={s} reaction={r} onLike={toggleLike} onSave={toggleSave} />
+        }
       })}
     </div>
   )
