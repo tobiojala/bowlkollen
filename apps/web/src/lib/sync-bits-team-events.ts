@@ -299,7 +299,9 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
 function eventKey(type: string, matchId: string | null, date: string, player = '') { return `${type}|${matchId ?? ''}|${date}|${player}` }
 
 async function flush(svc: SupabaseClient, inserts: Record<string, unknown>[]) {
-  if (inserts.length) await svc.from('team_events').insert(inserts)
+  if (!inserts.length) return
+  const { error } = await svc.from('team_events').insert(inserts)
+  if (error) throw new Error(`team_events insert failed: ${error.message} (${error.code ?? 'no-code'})${error.details ? ' — ' + error.details : ''}`)
 }
 
 function outcomeOf(my: number | null, opp: number | null): 'W' | 'D' | 'L' | null {

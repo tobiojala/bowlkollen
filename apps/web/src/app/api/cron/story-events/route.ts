@@ -44,10 +44,12 @@ async function run(opts: { since: string | null; teamId: number | null; limit: n
   }
 
   let events = 0
+  const errors: string[] = []
   for (const id of ids) {
-    try { events += await syncBitsTeamEvents(id, engineFloor) } catch { /* one team failing shouldn't abort the sweep */ }
+    try { events += await syncBitsTeamEvents(id, engineFloor) }
+    catch (e) { errors.push(`${id}: ${e instanceof Error ? e.message : String(e)}`) } // one team failing shouldn't abort the sweep
   }
-  return { teams: ids.length, events }
+  return { teams: ids.length, events, ...(errors.length ? { errors: errors.slice(0, 5) } : {}) }
 }
 
 export async function POST(req: Request) {

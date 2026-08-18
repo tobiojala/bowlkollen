@@ -66,12 +66,17 @@ It just stops being the *primary* surface.
 
 ## Phased roadmap
 
-**Phase 0 — Foundation (blocked on: clean tree + accounts started)**
-1. Land/commit the in-flight team-claims work; run the pending Supabase migrations.
-2. Install pnpm + eas-cli; init Expo dev on a physical phone via Expo Go.
-3. Convert repo to pnpm/Turbo monorepo: move Next app to `apps/web`, extract `packages/core`.
-4. Scaffold `apps/mobile` (Expo Router); import from `packages/core`.
-5. **Prove the pipeline early:** one screen → EAS build → runs on a real phone. (Not a submission — insurance.)
+**Phase 0 — Foundation** — _in progress_
+1. ✅ Landed/committed the in-flight team-claims work; ran the pending Supabase migrations (fixed `invite_scoped_claims` 42P13 idempotency).
+2. ✅ pnpm 11.15 via corepack (sandbox blocks a global bin shim → use `corepack pnpm …`). `eas` runs via `npx eas-cli`.
+3. ✅ Converted repo to a **pnpm workspace**: Next app moved to `apps/web` (build verified green), root is a private orchestrator, `.npmrc` `node-linker=hoisted`, CI updated to pnpm+filters. Turbo deferred until `apps/mobile` exists. `packages/core` extraction NOT done yet (deliberately — do it incrementally after mobile scaffolds).
+4. ⬜ Scaffold `apps/mobile` (Expo Router) — **NEXT**.
+5. ⬜ **Prove the pipeline early:** one screen → EAS build → runs on a real phone. (Not a submission — insurance.)
+
+**Owner actions outstanding from Phase 0:**
+- Vercel: set project **Root Directory → `apps/web`** before the next deploy (nothing breaks until you deploy).
+- Delete `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` from `.env.local` + Vercel env (landmine; currently unreferenced so not yet leaking).
+- Store accounts: Apple Developer + Google Play enrollment (lead time).
 
 **Phase 1 — Core loop (native)**
 Port in order, onto the working pipeline: design tokens + theme → auth (SecureStore) →
