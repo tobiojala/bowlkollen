@@ -119,7 +119,19 @@ staleTime: STALE.MEDIUM    // 5m   — standings, session
 staleTime: STALE.LONG      // 10m  — slow-moving data
 ```
 
+## Enforcement — these rules are machine-checked, not aspirational
+`apps/web` runs a **standards ratchet** (`scripts/check-standards.mjs`) on every
+`npm run build` (via `prebuild`). It fails the build if a change *adds* a
+violation of: no `any`, no removed-blue palette, no `<img>`, no `<a href>` for
+internal routes, or a file over 300 lines. Existing debt is grandfathered in
+`scripts/standards-baseline.json` — **debt may only go down**. Run it yourself
+with `npm run check:standards`. If you legitimately lowered debt, tighten the
+baseline with `npm run check:standards -- --update-baseline` (never bump it up to
+dodge a rule). This exists because standards drifted across fresh sessions — the
+ratchet is what makes them stick.
+
 ## Quick checklist before finishing any task
+- [ ] `npm run check:standards` green (the ratchet — see Enforcement above)
 - [ ] No new `any` types — used `src/lib/types.ts`
 - [ ] No magic numbers — used `src/lib/constants.ts`
 - [ ] `useColors()` not manual theme switch

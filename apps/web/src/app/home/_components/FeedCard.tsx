@@ -97,7 +97,8 @@ export function FeedCard({ event, myTeamId }: { event: TeamEvent; myTeamId?: str
             <span style={{ fontSize: TYPE.label, fontWeight: 700, letterSpacing: '0.08em', color: accent }}>
               {label}
             </span>
-            <span style={{ fontSize: TYPE.label, color: isMyTeam ? COLOR.gold : COLOR.ink2 }}>
+            {/* team name + date carry meaning → caption (14px), never label (12px, decoration) */}
+            <span style={{ fontSize: TYPE.caption, color: isMyTeam ? COLOR.gold : COLOR.ink2 }}>
               {teamName ? `${teamName} · ` : ''}{dateStr}
             </span>
           </div>

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/check-standards.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:standards": "node scripts/check-standards.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
