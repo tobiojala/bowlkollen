@@ -63,7 +63,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ❌ | **Web-only.** |
 | Tipsligan (predictions) | ✅ `/prediktion`, `/puls` | ❌ | **Web-only.** |
 | SM-slutspel | ✅ `/sm-slutspel` | ❌ | **Web-only.** |
-| Eligibility (spelklarhet) | 🟡 _?_ | ✅ (`eligibility.ts`) | **Native ahead** (hard-block parked). Gap: web eligibility surface. |
+| Eligibility (spelklarhet) | 🟡 engine ready | ✅ (in laguttagning) | **Engine now SHARED** in `@bowlkollen/core` (`eligibility.ts`, SvBF §D306, 13 tests). Native surfaces it in laguttagning (CandidateRow/LineupSeating). **Remaining for web:** a data resolver (mirror native `eligibility-data.ts`) + warnings in web's laguttagning UI. |
 | Calendar (.ics / subscribe) | 🟡 `.ics` export in `/schema` | ✅ `/kalender` (`calendar-subs.ts`) | Different shapes; roughly covered both ways. |
 
 ## World 5 — Bowling (the wider sport)
@@ -81,6 +81,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Item | Status | Notes |
 |---|:--:|---|
 | **Theme tokens** | 🟡 in progress | **Shared set DONE (2026-08-18):** `packages/core/src/tokens.ts` = canonical `COLOR`/`TYPE`/`SPACE`/`RADIUS`; web `brand.ts` + native `theme.ts` both re-export it (FONT stays per-app, MOTION web-only). Web + native colour can no longer diverge. **Remaining:** web still has a *second*, older colour system — `@/lib/theme` (`useColors()`, 47 pages) with conflicting values (green `#5dcaa5` vs core `#30d47e`, deprecated blue/pink) + the only light-mode palette. Reconcile it onto core and pick the canonical green → then the 89 static `brand.COLOR` pages can migrate to `useColors()`. |
+| **Shared logic in core** | ✅ growing | `packages/core`: `standings`, `tokens` (colour/type/space/radius), `eligibility` (SvBF §D306). Pattern: pure + shared logic goes here so web/native can't diverge. |
 | **Standards ratchet** | ✅ web | `apps/web/scripts/check-standards.mjs` on `prebuild`. Extend to `apps/mobile` next. |
 | Auth / session | ✅ both | |
 | Onboarding | ✅ both | |
