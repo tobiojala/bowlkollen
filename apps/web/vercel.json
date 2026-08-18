@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/story-events", "schedule": "0 6 * * *" }
+  ]
+}
