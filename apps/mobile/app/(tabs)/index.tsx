@@ -11,11 +11,13 @@ import { MatchCard } from '@/components/feed/MatchCard';
 import { RivalCard } from '@/components/feed/RivalCard';
 import { PromoCard } from '@/components/feed/PromoCard';
 import { StandingsCard } from '@/components/feed/StandingsCard';
+import { StoryCard } from '@/components/feed/StoryCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
 import { useNextMatch } from '@/lib/diary';
 import { buildFeed, filterFeed, injectPromos, injectStandings, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions';
 import { useFeedStandings } from '@/lib/feed-standings';
+import { storyEventHref, useHomeStoryEvents } from '@/lib/story-events';
 import { greetingFor, homeNote } from '@/lib/home-tip';
 import { useMyClaim } from '@/lib/me';
 import { useNavScroll } from '@/lib/nav-scroll';
@@ -50,6 +52,7 @@ export default function Home() {
   const { data: matches = [], isLoading } = useMyMatches();
   const { data: topScores = [] } = useTopScores();
   const { data: standings = [] } = useFeedStandings();
+  const { data: storyEvents = [] } = useHomeStoryEvents();
 
   const { data: claim } = useMyClaim();
   const { data: nextMatch } = useNextMatch();
@@ -67,10 +70,10 @@ export default function Home() {
   });
 
   const feed = useMemo(() => {
-    const base = filterFeed(buildFeed(matches, topScores), category);
+    const base = filterFeed(buildFeed(matches, topScores, storyEvents), category);
     // Standings + sponsored posts only mix into the full stream, not filtered views.
     return category === 'Allt' ? injectPromos(injectStandings(base, standings), SAMPLE_PROMOS) : base;
-  }, [matches, topScores, standings, category]);
+  }, [matches, topScores, storyEvents, standings, category]);
 
   // Likes/saves for every likeable post in the feed, in one batched query.
   const reactionKeys = useMemo(() => feed.filter((i) => i.kind !== 'promo').map((i) => i.key), [feed]);
@@ -103,6 +106,15 @@ export default function Home() {
             match={item.match}
             upcoming={item.upcoming}
             onPress={() => router.push(`/matcher/${item.match.bits_match_id}`)}
+            {...common}
+          />
+        );
+      }
+      if (item.kind === 'event') {
+        return (
+          <StoryCard
+            event={item.event}
+            onPress={() => router.push(storyEventHref(item.event) as never)}
             {...common}
           />
         );

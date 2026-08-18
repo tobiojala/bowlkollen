@@ -1,5 +1,6 @@
 import type { FeedStanding } from '@/lib/feed-standings';
 import type { Promo } from '@/lib/promos';
+import type { TeamEvent } from '@/lib/story-events';
 import type { TopScore } from '@/lib/top-scores';
 
 // One match from get_user_season_matches (followed scope).
@@ -20,14 +21,40 @@ export type FeedMatch = {
 export type FeedItem =
   | { kind: 'match'; key: string; ts: string; upcoming: boolean; match: FeedMatch }
   | { kind: 'serie'; key: string; ts: string; score: TopScore }
+  | { kind: 'event'; key: string; ts: string; event: TeamEvent }
   | { kind: 'promo'; key: string; ts: string; promo: Promo }
   | { kind: 'standings'; key: string; ts: string; standing: FeedStanding };
 
 export type FeedCategory = 'Allt' | 'Matcher' | 'Serier';
 
+// Feed ranking — ported from web (apps/web FeedSection.scoreEntry): recency base
+// (100 → 0 over ~14 days, future clamped so upcoming reads as "now") plus affinity
+// boosts. The native stream is already followed-scoped, so there's no separate
+// "followed" boost — everything here is already someone the user follows.
+const EVENT_BOOST: Partial<Record<string, number>> = {
+  promotion_clinched: 50, personal_best: 35, win_streak: 25, unbeaten_run: 20,
+  comeback_win: 20, revenge_win: 20, giant_killer: 20, rivalry_match: 15,
+  division_climbed: 15, player_milestone: 12, form_rising: 10, match_result: 5,
+  match_preview: 5, lineup_announced: 3, captain_post: 2,
+};
+
+function rankScore(item: FeedItem): number {
+  const daysAgo = Math.max(0, (Date.now() - new Date(item.ts).getTime()) / 86_400_000);
+  let score = Math.max(0, 100 - daysAgo * 7);
+  if (item.kind === 'event') score += 80 + (EVENT_BOOST[item.event.event_type] ?? 5);
+  if (item.kind === 'match' && item.match.is_finished) score += 8;
+  if (item.kind === 'serie') {
+    const t = item.score.total;
+    score += t >= 300 ? 40 : t >= 270 ? 20 : t >= 250 ? 10 : 0;
+  }
+  return score;
+}
+
 // An organic, mixed stream (not rigid sections): upcoming matches lead (soonest
-// first), then results + top series interleave by recency so it reads like a feed.
-export function buildFeed(matches: FeedMatch[], topScores: TopScore[]): FeedItem[] {
+// first), then results + top series + story events interleave by rank so the feed
+// surfaces the meaningful moments (a personal best, a segersvit) not just the
+// most recent fixture.
+export function buildFeed(matches: FeedMatch[], topScores: TopScore[], events: TeamEvent[] = []): FeedItem[] {
   const upcoming: FeedItem[] = matches
     .filter((m) => !m.is_finished)
     .sort((a, b) => a.match_date.localeCompare(b.match_date))
@@ -44,7 +71,9 @@ export function buildFeed(matches: FeedMatch[], topScores: TopScore[]): FeedItem
     score: s,
   }));
 
-  const rest = [...results, ...series].sort((a, b) => b.ts.localeCompare(a.ts));
+  const story: FeedItem[] = events.map((e) => ({ kind: 'event', key: `e${e.id}`, ts: e.event_date, event: e }));
+
+  const rest = [...results, ...series, ...story].sort((a, b) => rankScore(b) - rankScore(a));
   return [...upcoming, ...rest];
 }
 
