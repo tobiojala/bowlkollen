@@ -166,6 +166,7 @@ export function FeedSection({
   const postKeys = feed.flatMap(e =>
     e.kind === 'bits_match' ? [`m${(e.data as BitsMatchFeed).bits_match_id}`]
     : e.kind === 'bits_score' ? [`s${(e.data as BitsTopScore).matchId}-${(e.data as BitsTopScore).playerName}`]
+    : e.kind === 'player' ? [`p${(e.data as FeedPlayerResult).playerId}-${(e.data as FeedPlayerResult).matchId}`]
     : [])
   const { data: reactions } = useFeedReactions(postKeys)
   const { toggleLike, toggleSave } = useReactionActions()
@@ -178,8 +179,11 @@ export function FeedSection({
       {feed.map((entry, i) => {
         if (entry.kind === 'event')
           return <FeedCard key={entry.data.id} event={entry.data} myTeamId={myTeamId} />
-        if (entry.kind === 'player')
-          return <PlayerResultCard key={`pr-${entry.data.playerId}-${entry.data.matchId}`} item={entry.data} />
+        if (entry.kind === 'player') {
+          const pr = entry.data
+          const r = reactions?.get(`p${pr.playerId}-${pr.matchId}`) ?? { likes: 0, liked: false, saved: false }
+          return <PlayerResultCard key={`pr-${pr.playerId}-${pr.matchId}`} item={pr} reaction={r} onLike={toggleLike} onSave={toggleSave} />
+        }
         if (entry.kind === 'bits_match') {
           const m = entry.data
           const r = reactions?.get(`m${m.bits_match_id}`) ?? { likes: 0, liked: false, saved: false }
