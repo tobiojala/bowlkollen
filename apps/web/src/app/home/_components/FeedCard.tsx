@@ -50,9 +50,11 @@ function teamLinkFor(event: TeamEvent): string {
   return event.bits_team_id ? `/lag/${event.bits_team_id}` : `/teams/${event.team_id}`
 }
 
+const MATCH_LINKED: TeamEventType[] = ['match_result', 'match_preview', 'revenge_win', 'giant_killer', 'comeback_win']
+
 function linkFor(event: TeamEvent): string {
   const p = event.payload
-  if (event.match_id && (event.event_type === 'match_result' || event.event_type === 'match_preview')) {
+  if (event.match_id && MATCH_LINKED.includes(event.event_type)) {
     return event.bits_team_id ? `/matcher/${event.match_id}` : `/matches/${event.match_id}`
   }
   if (event.event_type === 'personal_best' || event.event_type === 'form_rising' || event.event_type === 'player_milestone') {

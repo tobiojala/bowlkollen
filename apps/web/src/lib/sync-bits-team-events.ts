@@ -15,7 +15,7 @@ type RawBitsMatch = {
   home_bits_team_id: number | null; away_bits_team_id: number | null
   home_team_name: string; away_team_name: string; division_name: string | null
 }
-type RawScore = { bits_match_id: number; player_name: string; score: number; is_home_team: boolean | null }
+type RawResult = { bits_match_id: number; lic_nbr: string; player_name: string; series: number[] | null; is_home_team: boolean }
 
 export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string = SEASON.CURRENT): Promise<number> {
   const pub = createPublicSupabase()
@@ -38,14 +38,16 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
   const existingSet = new Set(((existing ?? []) as { event_type: string; match_id: string | null; event_date: string; payload: Record<string, unknown> | null }[])
     .map((e) => eventKey(e.event_type, e.match_id, e.event_date, (e.payload?.player_name as string | undefined) ?? '')))
 
-  // Per-player serie scores for the top-scorer line.
-  const { data: scoresRaw } = await pub
-    .from('bits_match_scores').select('bits_match_id, player_name, score, is_home_team')
+  // Per-player exact results (has lic_nbr → resolves to public_id, and the games array).
+  const { data: resultsRaw } = await pub
+    .from('bits_match_player_results').select('bits_match_id, lic_nbr, player_name, series, is_home_team')
     .in('bits_match_id', matches.map((m) => m.bits_match_id))
-  const scoresByMatch = new Map<number, RawScore[]>()
-  for (const s of (scoresRaw ?? []) as RawScore[]) {
-    const arr = scoresByMatch.get(s.bits_match_id) ?? []
-    arr.push(s); scoresByMatch.set(s.bits_match_id, arr)
+  const resultsByMatch = new Map<number, RawResult[]>()
+  const nameToLic = new Map<string, string>()
+  for (const r of (resultsRaw ?? []) as RawResult[]) {
+    const arr = resultsByMatch.get(r.bits_match_id) ?? []
+    arr.push(r); resultsByMatch.set(r.bits_match_id, arr)
+    nameToLic.set(r.player_name, r.lic_nbr)
   }
 
   const inserts: Record<string, unknown>[] = []
@@ -61,7 +63,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     if (myScore == null || oppScore == null) continue
     const oppName = isHome ? m.away_team_name : m.home_team_name
     const result = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D'
-    const top = bestScorer((scoresByMatch.get(m.bits_match_id) ?? []).filter((s) => !!s.is_home_team === isHome))
+    const top = bestScorer((resultsByMatch.get(m.bits_match_id) ?? []).filter((r) => !!r.is_home_team === isHome))
 
     const payload: MatchResultPayload = {
       opponent_id: '', opponent_name: oppName, my_score: myScore, opp_score: oppScore,
@@ -112,8 +114,8 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
   const perMatch = matches.map((m) => {
     const isHome = m.home_bits_team_id === bitsTeamId
     const byPlayer = new Map<string, number[]>()
-    for (const s of (scoresByMatch.get(m.bits_match_id) ?? []).filter((x) => !!x.is_home_team === isHome)) {
-      const arr = byPlayer.get(s.player_name) ?? []; arr.push(s.score); byPlayer.set(s.player_name, arr)
+    for (const r of (resultsByMatch.get(m.bits_match_id) ?? []).filter((x) => !!x.is_home_team === isHome)) {
+      byPlayer.set(r.player_name, (r.series ?? []).filter((g) => g > 0))
     }
     return { match: m, byPlayer }
   })
@@ -205,6 +207,90 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     }
   }
 
+  // ── revenge_win + giant_killer (emotional wins) ──────────────────────────
+  if (inserts.length < MAX) {
+    // Rough standings from the team's own completed matches (as the legacy did).
+    const pts: Record<number, number> = {}
+    for (const m of matches) {
+      const h = m.home_bits_team_id, a = m.away_bits_team_id
+      if (h == null || a == null || m.home_result == null || m.away_result == null) continue
+      pts[h] ??= 0; pts[a] ??= 0
+      if (m.home_result > m.away_result) pts[h] += 2
+      else if (m.home_result < m.away_result) pts[a] += 2
+      else { pts[h]++; pts[a]++ }
+    }
+    const rankOf = (tid: number) => {
+      const sorted = Object.entries(pts).sort((x, y) => y[1] - x[1])
+      const idx = sorted.findIndex(([id]) => Number(id) === tid)
+      return idx === -1 ? 99 : idx + 1
+    }
+
+    for (let i = 1; i < matches.length && inserts.length < MAX; i++) {
+      const m = matches[i]
+      const isHome = m.home_bits_team_id === bitsTeamId
+      const my = isHome ? m.home_result : m.away_result
+      const opp = isHome ? m.away_result : m.home_result
+      if (my == null || opp == null || my <= opp) continue // wins only
+      const oppTeamId = isHome ? m.away_bits_team_id : m.home_bits_team_id
+      const oppName = isHome ? m.away_team_name : m.home_team_name
+      const date = m.match_date.slice(0, 10)
+      if (oppTeamId == null) continue
+
+      // revenge_win — beat an opponent who beat us in our last meeting
+      if (!existingSet.has(eventKey('revenge_win', String(m.bits_match_id), date))) {
+        const prev = matches.slice(0, i).reverse().find((p) =>
+          (p.home_bits_team_id === bitsTeamId && p.away_bits_team_id === oppTeamId) ||
+          (p.away_bits_team_id === bitsTeamId && p.home_bits_team_id === oppTeamId))
+        if (prev) {
+          const pHome = prev.home_bits_team_id === bitsTeamId
+          const pMy = pHome ? prev.home_result : prev.away_result
+          const pOpp = pHome ? prev.away_result : prev.home_result
+          if (pMy != null && pOpp != null && pMy < pOpp) {
+            inserts.push({
+              team_id: null, bits_team_id: bitsTeamId, event_type: 'revenge_win', event_date: date,
+              match_id: String(m.bits_match_id), featured_player_id: null,
+              title: `Hämnades mot ${oppName}`, body: `Vann efter förlusten mot ${oppName} förra mötet.`,
+              payload: { opponent_id: '', opponent_name: oppName, my_score: my, opp_score: opp },
+              captain_note: null, is_pinned: false, is_hidden: false,
+            })
+            existingSet.add(eventKey('revenge_win', String(m.bits_match_id), date))
+          }
+        }
+      }
+
+      // giant_killer — beat a team ≥ GAP positions above us
+      if (inserts.length < MAX && !existingSet.has(eventKey('giant_killer', String(m.bits_match_id), date))) {
+        const myRank = rankOf(bitsTeamId), oppRank = rankOf(oppTeamId)
+        if (oppRank !== 99 && myRank - oppRank >= TEAM_EVENT.GIANT_KILLER_GAP) {
+          inserts.push({
+            team_id: null, bits_team_id: bitsTeamId, event_type: 'giant_killer', event_date: date,
+            match_id: String(m.bits_match_id), featured_player_id: null,
+            title: `Slog ${oppRank === 1 ? 'serieledaren' : `${oppRank}:an i tabellen`}`,
+            body: `${my}–${opp} mot ett lag ${myRank - oppRank} platser högre upp.`,
+            payload: { opponent_id: '', opponent_name: oppName, my_score: my, opp_score: opp, rank_gap: myRank - oppRank },
+            captain_note: null, is_pinned: false, is_hidden: false,
+          })
+          existingSet.add(eventKey('giant_killer', String(m.bits_match_id), date))
+        }
+      }
+    }
+  }
+
+  // Resolve player names → public_id (via lic_nbr) so per-player cards deep-link
+  // to the profile instead of falling back to the team.
+  const lics = [...new Set(nameToLic.values())]
+  if (lics.length) {
+    const { data: players } = await pub.from('bits_players').select('lic_nbr, public_id').in('lic_nbr', lics)
+    const licToPublic = new Map(((players ?? []) as { lic_nbr: string; public_id: string | null }[]).map((p) => [p.lic_nbr, p.public_id]))
+    for (const ins of inserts) {
+      const pl = ins.payload as { player_name?: string; player_id?: string } | undefined
+      if (pl && pl.player_id === '' && pl.player_name) {
+        const publicId = licToPublic.get(nameToLic.get(pl.player_name) ?? '')
+        if (publicId) pl.player_id = publicId
+      }
+    }
+  }
+
   await flush(svc, inserts)
   return inserts.length
 }
@@ -221,11 +307,12 @@ function outcomeOf(my: number | null, opp: number | null): 'W' | 'D' | 'L' | nul
   return my > opp ? 'W' : my < opp ? 'L' : 'D'
 }
 
-function bestScorer(rows: RawScore[]): { name: string; high: number } | null {
-  const byPlayer = new Map<string, number>()
-  for (const r of rows) byPlayer.set(r.player_name, Math.max(byPlayer.get(r.player_name) ?? 0, r.score))
+function bestScorer(rows: RawResult[]): { name: string; high: number } | null {
   let best: { name: string; high: number } | null = null
-  for (const [name, high] of byPlayer) if (high > (best?.high ?? 0)) best = { name, high }
+  for (const r of rows) {
+    const high = Math.max(...(r.series ?? []).filter((g) => g > 0), 0)
+    if (high > (best?.high ?? 0)) best = { name: r.player_name, high }
+  }
   return best
 }
 
