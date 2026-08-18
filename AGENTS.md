@@ -30,7 +30,7 @@ Never write `const C = theme === 'dark' ? dark : light` or import from `@/lib/co
 The palette is near-black tonal with **one** brand accent. Colour carries meaning; it is never decoration.
 - **Ink** (`INK`/`INK2`/`INK3`/`INK4`, i.e. `C.text` → `C.textMuted`) — the default for everything: scores, names, labels, counts, countdowns, "kommande", history, comparison. Most of the UI is ink.
 - **Gold** `#f5c200` (`C.accent`) — the single brand accent, kept on a tight budget. Only: the active state, a live/now focal point, or a genuine milestone (PB, 300, championship). If two golds are fighting for attention, one of them is wrong.
-- **Green/teal** `#5dcaa5` (`C.green`) — **positive only**: upward deltas, growth/improvement, gains in a table (points ahead, +pins, rising form, a win as a positive outcome).
+- **Green** `#30d47e` (`C.green`) — **positive only**: upward deltas, growth/improvement, gains in a table (points ahead, +pins, rising form, a win as a positive outcome). Canonical value lives in `@bowlkollen/core` (`packages/core/src/tokens.ts`); web + native both read it.
 - **Red** `#e05555` (`C.red`) — negative: downward deltas, losses, relegation, danger.
 - **Blue — removed.** Do not use `C.blue`/`C.blueMuted` or `#7ab4e8`/`#5a82b4` in new code. Replace info/upcoming/comparison blue with ink; replace "good outcome" blue with green. (`C.blue` stays defined only so the un-migrated long tail compiles.)
 - **Division colours** (`divisions.ts`) are a separate categorical identity system, not part of this semantic palette.

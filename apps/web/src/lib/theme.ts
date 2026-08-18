@@ -1,7 +1,10 @@
-// Canonical design tokens as typed JS constants.
-// These mirror the @theme values in globals.css exactly.
-// Use these in components that still need JS color values (inline styles, SVG fills, etc.)
-// New code: prefer Tailwind classes (bg-gold, text-green, border-dark-border, etc.)
+// Web JS color values for inline styles / SVG fills. Brand + semantic colours
+// (gold/green/red) come from the ONE cross-platform source `@bowlkollen/core`
+// so this system can't diverge from brand.ts / native. Surface variants and the
+// light palette are still web-only here (core owns the dark near-black set; a
+// shared light palette is the next reconciliation step). New code: prefer
+// Tailwind classes (bg-gold, text-green, …) or useColors().
+import { COLOR as CORE } from '@bowlkollen/core'
 
 export const colors = {
   // Surfaces — near-black, desaturated. Elevation = tonal step, not borders.
@@ -17,13 +20,13 @@ export const colors = {
   lightBorder:  '#e8e0d4',
   lightMuted:   '#6b7a8d',
 
-  // Brand
-  gold:         '#f5c200',   // achievements, active, milestones
-  green:        '#5dcaa5',   // form, improvement, positive
-  blue:         '#7ab4e8',   // DEPRECATED — removed from the palette; do not use in new code (kept so the un-migrated long tail compiles)
-  blueMuted:    '#5a82b4',   // DEPRECATED — see above
-  red:          '#e05555',   // danger, relegation
-  pink:         '#d94a90',   // special events
+  // Brand + semantic — sourced from core (single source of truth)
+  gold:         CORE.gold,    // achievements, active, milestones
+  green:        CORE.green,   // form, improvement, positive (#30d47e — canonical)
+  red:          CORE.red,     // danger, relegation
+  blue:         '#7ab4e8',    // DEPRECATED — removed from the palette; do not use in new code (kept so the un-migrated long tail compiles)
+  blueMuted:    '#5a82b4',    // DEPRECATED — see above
+  pink:         '#d94a90',    // special events
 } as const
 
 export type ColorKey = keyof typeof colors
