@@ -17,7 +17,7 @@ type RawBitsMatch = {
 }
 type RawScore = { bits_match_id: number; player_name: string; score: number; is_home_team: boolean | null }
 
-export async function syncBitsTeamEvents(bitsTeamId: number): Promise<number> {
+export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string = SEASON.CURRENT): Promise<number> {
   const pub = createPublicSupabase()
   const svc = createServiceSupabase() as unknown as SupabaseClient // bits_team_id isn't in generated types
 
@@ -26,7 +26,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number): Promise<number> {
     .select('bits_match_id, match_date, home_result, away_result, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, division_name')
     .or(`home_bits_team_id.eq.${bitsTeamId},away_bits_team_id.eq.${bitsTeamId}`)
     .eq('is_finished', true)
-    .gte('match_date', SEASON.CURRENT)
+    .gte('match_date', seasonFloor)
     .order('match_date', { ascending: true })
   const matches = (matchesRaw ?? []) as RawBitsMatch[]
   if (!matches.length) return 0
