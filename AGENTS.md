@@ -119,6 +119,14 @@ staleTime: STALE.MEDIUM    // 5m   — standings, session
 staleTime: STALE.LONG      // 10m  — slow-moving data
 ```
 
+## Parity — web must match native (check before building)
+Before building or moving a feature, consult **`PARITY.md`** (the web↔native
+matrix) and update the affected cell in the same change. Standing rule: **web
+must have FULL parity with native** — every native feature is doable on web too,
+laid out for the wider screen. Web is never a subset. Theme colour is being
+unified in `packages/core` so the two apps can't diverge (see PARITY.md
+foundational row).
+
 ## Enforcement — these rules are machine-checked, not aspirational
 `apps/web` runs a **standards ratchet** (`scripts/check-standards.mjs`) on every
 `npm run build` (via `prebuild`). It fails the build if a change *adds* a
