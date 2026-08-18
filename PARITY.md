@@ -80,7 +80,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 
 | Item | Status | Notes |
 |---|:--:|---|
-| **Theme tokens** | 🔜 planned | **Decision (2026-08-18): unify in `packages/core`.** brand.COLOR (web) + `theme.ts` (native) both read ONE token source so colour can't diverge; `useColors()` stays the consumption API. Today: web is split — 47 pages `useColors()`, 89 pages static `brand.COLOR` (dark-only). |
+| **Theme tokens** | 🟡 in progress | **Shared set DONE (2026-08-18):** `packages/core/src/tokens.ts` = canonical `COLOR`/`TYPE`/`SPACE`/`RADIUS`; web `brand.ts` + native `theme.ts` both re-export it (FONT stays per-app, MOTION web-only). Web + native colour can no longer diverge. **Remaining:** web still has a *second*, older colour system — `@/lib/theme` (`useColors()`, 47 pages) with conflicting values (green `#5dcaa5` vs core `#30d47e`, deprecated blue/pink) + the only light-mode palette. Reconcile it onto core and pick the canonical green → then the 89 static `brand.COLOR` pages can migrate to `useColors()`. |
 | **Standards ratchet** | ✅ web | `apps/web/scripts/check-standards.mjs` on `prebuild`. Extend to `apps/mobile` next. |
 | Auth / session | ✅ both | |
 | Onboarding | ✅ both | |
