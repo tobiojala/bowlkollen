@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import Reveal from '@/components/Reveal'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
@@ -30,6 +31,12 @@ type Props = {
 
 export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, hallId, hallName, matches, standing, standings, prevSeason, roster }: Props) {
   const teamHref = (bitsId: number) => bitsId === teamId ? `/lag/${teamId}` : `/lag/${bitsId}`
+
+  // Lazy story generation: viewing a team ensures its feed events exist (no-op
+  // for logged-out visitors; idempotent + current-season only, so it's cheap).
+  useEffect(() => {
+    fetch(`/api/story/ensure-team?team=${teamId}`, { method: 'POST' }).catch(() => {})
+  }, [teamId])
 
   // Early season — no finished matches yet. Fall back to last season's table.
   const ladderHistorical  = standings.length === 0 && !!prevSeason
