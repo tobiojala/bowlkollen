@@ -3,8 +3,9 @@
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { FeedCard } from './FeedCard'
 import { PlayerResultCard } from './PlayerResultCard'
-import BitsMatchRow from './BitsMatchRow'
 import { BitsScoreCard } from './BitsScoreCard'
+import { FeedMatchCard } from './FeedMatchCard'
+import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import type { FeedFilterType } from './HomeTabRow'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
@@ -161,10 +162,12 @@ export function FeedSection({
   teamIds: string[]
   playerIds: string[]
 }) {
-  if (isLoading) return <FeedSkeleton />
-
   const feed = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
+  const postKeys = feed.filter(e => e.kind === 'bits_match').map(e => `m${(e.data as BitsMatchFeed).bits_match_id}`)
+  const { data: reactions } = useFeedReactions(postKeys)
+  const { toggleLike, toggleSave } = useReactionActions()
 
+  if (isLoading) return <FeedSkeleton />
   if (feed.length === 0) return null
 
   return (
@@ -174,8 +177,13 @@ export function FeedSection({
           return <FeedCard key={entry.data.id} event={entry.data} myTeamId={myTeamId} />
         if (entry.kind === 'player')
           return <PlayerResultCard key={`pr-${entry.data.playerId}-${entry.data.matchId}`} item={entry.data} />
-        if (entry.kind === 'bits_match')
-          return <BitsMatchRow key={entry.data.bits_match_id} m={entry.data} index={i} teamIds={teamIds} />
+        if (entry.kind === 'bits_match') {
+          const m = entry.data
+          const r = reactions?.get(`m${m.bits_match_id}`) ?? { likes: 0, liked: false, saved: false }
+          return <FeedMatchCard key={m.bits_match_id} reaction={r} onLike={toggleLike} onSave={toggleSave}
+            match={{ bitsMatchId: m.bits_match_id, date: m.match_date, homeTeam: m.home_team_name, awayTeam: m.away_team_name,
+              homeResult: m.home_result, awayResult: m.away_result, division: m.division_name, hall: m.hall_name, finished: m.is_finished }} />
+        }
         if (entry.kind === 'bits_score')
           return <BitsScoreCard key={`bs-${entry.data.matchId}-${entry.data.playerName}`} item={entry.data} />
       })}
