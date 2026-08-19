@@ -10,6 +10,7 @@ import { COLOR, SPACE, TYPE, RADIUS } from '@/lib/brand'
 import FollowButton from '@/components/FollowButton'
 import TeamPicker from './TeamPicker'
 import SuggestionTiers from './SuggestionTiers'
+import { WelcomeChooser } from './WelcomeChooser'
 import { ClaimTeamSheet } from '@/app/lag/[id]/_components/ClaimTeamSheet'
 import type { AnonViewSuggestion, FollowEntityType } from '@/lib/types'
 
@@ -47,6 +48,8 @@ function useResolveAnonSuggestions(suggestions: AnonViewSuggestion[]) {
 
 export default function OnboardingClient({ inviteTeam, inviteCode }: { inviteTeam: InviteTeam | null; inviteCode: string | null }) {
   const router = useRouter()
+  // Arriving via an invite is itself a vouch → treat as the player door, skip the choice.
+  const [mode, setMode]           = useState<'choose' | 'fan' | 'player'>(inviteTeam ? 'player' : 'choose')
   const [anonId, setAnonId]       = useState<string | null>(null)
   const [pickedTeam, setPickedTeam] = useState<{ id: number; name: string } | null>(inviteTeam)
   const [claimOpen, setClaimOpen] = useState(false)
@@ -68,14 +71,26 @@ export default function OnboardingClient({ inviteTeam, inviteCode }: { inviteTea
     router.push('/')
   }
 
+  if (mode === 'choose') {
+    return (
+      <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', padding: `${SPACE[12]}px ${SPACE[4]}px`, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh' }}>
+          <WelcomeChooser onFan={() => setMode('fan')} onPlayer={() => setMode('player')} />
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, paddingBottom: 120 }}>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: `${SPACE[8]}px ${SPACE[4]}px` }}>
         <h1 style={{ fontSize: TYPE.title, fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-          Välkommen till Bowlkollen
+          {mode === 'player' ? 'Ditt lag' : 'Följ bowling'}
         </h1>
         <p style={{ fontSize: TYPE.body, color: COLOR.ink2, marginTop: SPACE[2] }}>
-          Följ ditt lag och dina lagkamrater för en feed som känns som din egen.
+          {mode === 'player'
+            ? 'Följ ditt lag först — sen kopplar vi din spelarprofil.'
+            : 'Följ lag och spelare för en feed som känns som din egen.'}
         </p>
 
         {resolved.length > 0 && (
@@ -94,7 +109,7 @@ export default function OnboardingClient({ inviteTeam, inviteCode }: { inviteTea
         )}
 
         <section style={{ marginTop: SPACE[8] }}>
-          <div style={sectionLabel}>VILKET LAG ÄR DITT?</div>
+          <div style={sectionLabel}>{mode === 'player' ? 'VILKET LAG ÄR DITT?' : 'VILKA LAG VILL DU FÖLJA?'}</div>
           {!pickedTeam ? (
             <TeamPicker onPicked={(id, name) => setPickedTeam({ id, name })} />
           ) : (
@@ -112,34 +127,40 @@ export default function OnboardingClient({ inviteTeam, inviteCode }: { inviteTea
             </div>
           )}
 
-          {/* Arrived via a teammate's or admin's invite link — the vouch
-              already happened, so skip straight to claiming instead of just
-              following. */}
-          {inviteTeam && pickedTeam?.id === inviteTeam.id && (
-            <div style={{ marginTop: SPACE[3], padding: '12px 14px', background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.25)', borderRadius: RADIUS.md }}>
-              <div style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink }}>Du blev inbjuden till {inviteTeam.name}</div>
-              <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 2, marginBottom: SPACE[2] }}>
-                Gör anspråk på din plats i laget — det tar bara ditt licensnummer.
+          {/* Player door — claim your BITS profile for the picked team. An invite
+              is a vouch (instant); otherwise it's a request that gets reviewed. */}
+          {mode === 'player' && pickedTeam && (() => {
+            const invited = !!inviteTeam && pickedTeam.id === inviteTeam.id
+            return (
+              <div style={{ marginTop: SPACE[3], padding: '12px 14px', background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.25)', borderRadius: RADIUS.md }}>
+                <div style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink }}>
+                  {invited ? `Du blev inbjuden till ${pickedTeam.name}` : `Spelar du i ${pickedTeam.name}?`}
+                </div>
+                <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 2, marginBottom: SPACE[2] }}>
+                  {invited
+                    ? 'Gör anspråk på din plats i laget — det tar bara ditt licensnummer.'
+                    : 'Koppla din spelarprofil för din egen statistik och dagbok. Utan inbjudan granskas kopplingen först.'}
+                </div>
+                <button
+                  onClick={() => setClaimOpen(true)}
+                  style={{ padding: '8px 14px', borderRadius: RADIUS.md, border: 'none', background: COLOR.gold, color: '#1a1400', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Gör anspråk
+                </button>
               </div>
-              <button
-                onClick={() => setClaimOpen(true)}
-                style={{ padding: '8px 14px', borderRadius: RADIUS.md, border: 'none', background: COLOR.gold, color: '#1a1400', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-              >
-                Gör anspråk
-              </button>
-            </div>
-          )}
+            )
+          })()}
         </section>
 
         {pickedTeam && <SuggestionTiers bitsTeamId={pickedTeam.id} />}
 
-        {inviteTeam && (
+        {pickedTeam && (
           <ClaimTeamSheet
             open={claimOpen}
             onClose={() => setClaimOpen(false)}
-            teamId={inviteTeam.id}
-            teamName={inviteTeam.name}
-            inviteCode={inviteCode ?? undefined}
+            teamId={pickedTeam.id}
+            teamName={pickedTeam.name}
+            inviteCode={inviteTeam && pickedTeam.id === inviteTeam.id ? (inviteCode ?? undefined) : undefined}
           />
         )}
 
