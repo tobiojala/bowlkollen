@@ -9,9 +9,11 @@ import {
 } from '@/lib/queries'
 import { isLineupComplete, sortRosterForPicker } from '@/lib/lineup'
 import { useLineupCandidates } from '@/lib/lineup-aids'
+import { useLineupEligibility, makeVerdict, isFinalRoundsOf, lineupEligibilityIssues } from '@/lib/eligibility'
 import { shortName } from '@/lib/utils'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { LineupBoardGrid } from './_components/LineupBoardGrid'
+import { EligibilityBanner } from './_components/EligibilityBanner'
 import { KonstellationPanel } from './_components/KonstellationPanel'
 import { PlayerPickerSheet } from './_components/PlayerPickerSheet'
 
@@ -36,6 +38,7 @@ export default function LaguttagningPage({ params }: Props) {
   const { data: responses = [] } = useTeamAvailability(teamId, matchId)
   const { data: candidates = [] } = useLineupCandidates(teamId, matchId)
   const { data: lineup, isLoading: lineupLoading } = useTeamLineup(teamId, matchId)
+  const { data: eligibilitySig } = useLineupEligibility(teamId, matchId)
   const { mutate: save, isPending: saving, error: saveError } = useSaveTeamLineup(teamId, matchId)
 
   const isCaptain = !!session && claim?.status === 'verified' && claim.role === 'captain'
@@ -72,6 +75,15 @@ export default function LaguttagningPage({ params }: Props) {
   const sortedRoster = sortRosterForPicker(roster, availabilityByPublicId)
   const usedPublicIds = slots.map(s => s.publicId)
   const complete = isLineupComplete(slots)
+
+  // § D 306 farm-team eligibility (shared engine in @bowlkollen/core). Only the
+  // seated starters (not reserves) count toward the lineup-level spärr check.
+  const verdictFor = makeVerdict(eligibilitySig)
+  const displaySlots = isCaptain ? slots : (lineup?.slots ?? [])
+  const eligibilityIssues = lineupEligibilityIssues(
+    displaySlots.filter(s => !s.isReserve).map(s => verdictFor(s.publicId).state),
+    isFinalRoundsOf(eligibilitySig),
+  )
 
   const onSlotClick = (bord: number, pos: number, isReserve: boolean) => {
     const existing = slots.find(s => s.bord === bord && s.pos === pos && s.isReserve === isReserve)
@@ -130,7 +142,10 @@ export default function LaguttagningPage({ params }: Props) {
         )}
 
         {(isCaptain || lineup) && (
-          <LineupBoardGrid slots={isCaptain ? slots : (lineup?.slots ?? [])} editable={isCaptain} onSlotClick={onSlotClick} />
+          <>
+            <LineupBoardGrid slots={displaySlots} editable={isCaptain} onSlotClick={onSlotClick} verdictFor={verdictFor} />
+            <EligibilityBanner issues={eligibilityIssues} />
+          </>
         )}
 
         {isCaptain && candidates.length >= 2 && (
