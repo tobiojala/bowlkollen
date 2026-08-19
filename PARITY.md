@@ -27,7 +27,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Oil profiles | ✅ `/oljeprofiler` | 🟡 (in diary) | Web has a dedicated page; native folds oil into diary. Gap: native dedicated oil surface. |
 | Scouting | ✅ (profile) | ✅ `scouting.ts` | Both. |
 | Compare (players) | ✅ `/compare/[a]/[b]` | ✅ `/compare/[a]/[b]` | Both. |
-| Compare (teams) | ✅ `/compare/teams/…` | ❌ | **Web ahead** — native has no team compare. |
+| Compare (teams) | ⚠️ legacy data | ❌ | Web's `/compare/teams/…` reads the DEPRECATED legacy `teams`/`matches` tables (uuid), like the story engine did — likely stale/empty now. **Don't port as-is**: rebuild on BITS (`bits_teams`/`bits_matches` + a team `get_h2h`) first, then bring to native. |
 
 ## World 2 — My Team
 
@@ -90,5 +90,9 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
 3. ~~Web missing eligibility~~ ✅ done (2026-08-19). **In-team invite redeem** still open — ⚠️ blocked on a security design (native's version grants membership from a license number; see AGENTS.md security rule 5 + `claim_identity_hardening`). Needs a vouched/code-based design before porting.
-4. **Native missing web-only surfaces** (World 5 + Competitions): clubs, halls, klotshopar, tävlingar, Tipsligan, SM-slutspel, Atlas map, division-browse, team-compare. ← now the main convergence work.
+4. **Native missing web-only surfaces** (World 5 + Competitions) — now the main convergence work. Audited for data-readiness (2026-08-19):
+   - **Clean to build on native now** (solid own/BITS data): `klotshopar` (`pro_shops` table), `divisioner` browse (BITS), `clubs` (BITS). ← recommended order.
+   - **Needs a BITS rebuild first** (currently on deprecated legacy tables): `team-compare`.
+   - **Blocked on external / partnership**: `tavlingar` (bowlres partnership pending).
+   - **Own tables, medium**: `Tipsligan`/`prediktion`, `SM-slutspel` (hardcoded bracket), `Atlas map` (parked per memory).
 5. **Foundational: shared theme tokens in core** ✅ core set done; remaining = reconcile web's `@/lib/theme` light palette + migrate 89 static pages to `useColors()`.
