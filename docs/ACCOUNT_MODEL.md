@@ -50,15 +50,17 @@ use-capped, revocable, attributed.
 - [x] **Both apps' join UI:** optional invite-code field (vouch = instant); licence-only
       reworded to "granskas först" (web ClaimTeamSheet, native ga-med). This is also the
       web in-team join-via-code (closes PARITY gap 3a).
-- [ ] **Follow-up:** derive a verified *player_claim* from a vouched, roster-matched
-      *team_claim* (`matched_public_id`), so the code path gives instant player
-      verification too — otherwise a licence-only player claim waits for admin review.
-- [ ] Later: BankID (Lane 3).
+- [x] **Follow-up:** derive a verified *player_claim* from a vouched, roster-matched
+      *team_claim* (`matched_public_id`) — in `account_verification_hardening.sql`, so
+      joining via a code gives instant player identity too (never stomps a different
+      verified claim). Licence-only (no code) still → pending admin review.
+- [ ] Later: BankID (Lane 3) — instant self-verify when there's no code at all.
 
-## ⚠ Open decision — player verification without a code
-With the hardening, a player who claims by **licence alone** is now PENDING until a
-captain/admin approves (no instant self-verify). Instant verification comes from a
-team **invite code**. If waiting-on-admin is too much friction, do the follow-up above
-(code+roster-match → instant player verify) or bring BankID forward.
+## Player verification — how each path resolves now
+- **Invite code + licence on roster** → team **and** player verified instantly.
+- **Invite code, licence not on roster** → team verified (vouched); player profile
+  can be claimed/reviewed separately.
+- **Licence only, no code** → pending captain/admin review (the anti-fake default).
+- **Future:** BankID covers instant self-verify with no code.
 
 See [[project_standards_and_parity]] and PARITY.md (Worlds 2/3).

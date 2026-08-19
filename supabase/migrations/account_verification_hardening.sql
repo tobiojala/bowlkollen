@@ -138,6 +138,20 @@ BEGIN
     UPDATE team_claims SET role = 'captain' WHERE id = v_claim_id;
   END IF;
 
+  -- Instant player verification via the code path: a vouched (verified) team
+  -- claim whose licence matched the roster tells us exactly which player this is
+  -- (vouch + roster match + self-supplied licence = strong). Verify their
+  -- player_claim too, so joining via a code gives full identity, not a pending
+  -- profile. Never stomps an existing verified claim for a *different* player.
+  IF v_status = 'verified' AND v_matched_public_id IS NOT NULL THEN
+    INSERT INTO player_claims (user_id, player_id, status, claimed_at, verified_at)
+    VALUES (auth.uid(), v_matched_public_id, 'verified', now(), now())
+    ON CONFLICT (user_id) DO UPDATE
+      SET player_id = excluded.player_id, status = 'verified',
+          claimed_at = excluded.claimed_at, verified_at = excluded.verified_at
+      WHERE player_claims.status <> 'verified' OR player_claims.player_id = excluded.player_id;
+  END IF;
+
   RETURN jsonb_build_object('claim_id', v_claim_id, 'status', v_status);
 END;
 $$;
