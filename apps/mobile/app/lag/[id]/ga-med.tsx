@@ -22,12 +22,13 @@ export default function JoinTeam() {
   const { data: team } = useTeam(teamId);
   const join = useJoinTeam(teamId);
   const [lic, setLic] = useState('');
+  const [code, setCode] = useState('');
   const [result, setResult] = useState<'verified' | 'pending' | null>(null);
 
   const name = team?.name ?? 'Laget';
 
   const submit = () =>
-    join.mutate({ licNbr: lic }, { onSuccess: (status) => setResult(status) });
+    join.mutate({ licNbr: lic, inviteCode: code.trim() || null }, { onSuccess: (status) => setResult(status) });
 
   return (
     <View style={styles.safe}>
@@ -59,9 +60,20 @@ export default function JoinTeam() {
               </View>
             </View>
             <Text style={styles.lead}>
-              Spelar du i {name}? Bekräfta med ditt licensnummer så blir du medlem — då kan du svara
-              på närvaro och laget kan sätta laguppställning.
+              Spelar du i {name}? Har du en inbjudningskod från laget blir du medlem direkt. Annars
+              anger du ditt licensnummer och kopplingen granskas först.
             </Text>
+
+            <Text style={styles.label}>INBJUDNINGSKOD (OM DU HAR EN)</Text>
+            <TextInput
+              style={styles.input}
+              value={code}
+              onChangeText={setCode}
+              placeholder="Kod från laget"
+              placeholderTextColor={COLOR.ink4}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
 
             <Text style={styles.label}>LICENSNUMMER</Text>
             <TextInput
@@ -74,8 +86,8 @@ export default function JoinTeam() {
               autoCorrect={false}
             />
             <Text style={styles.hint}>
-              Matchar licensen lagets trupp eller klubb kopplas du direkt. Annars granskas kopplingen manuellt.
-              Alla går med som spelare — roller (kapten m.m.) sätter laget själva efteråt.
+              Med en giltig kod kopplas du direkt (någon i laget har bjudit in dig). Utan kod granskas
+              kopplingen manuellt. Alla går med som spelare — roller (kapten m.m.) sätter laget själva efteråt.
             </Text>
 
             <PressableScale

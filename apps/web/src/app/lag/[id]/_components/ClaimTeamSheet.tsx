@@ -20,15 +20,16 @@ type Props = {
 
 export function ClaimTeamSheet({ open, onClose, teamId, teamName, inviteCode }: Props) {
   const [lic,    setLic]    = useState('')
+  const [code,   setCode]   = useState(inviteCode ?? '')
   const [result, setResult] = useState<'verified' | 'pending' | null>(null)
   const { mutate, isPending, error } = useSubmitTeamClaim(teamId)
 
   const submit = () => {
     if (!lic.trim() || isPending) return
-    mutate({ licNbr: lic.trim(), inviteCode }, { onSuccess: status => setResult(status) })
+    mutate({ licNbr: lic.trim(), inviteCode: code.trim() || undefined }, { onSuccess: status => setResult(status) })
   }
 
-  const close = () => { setLic(''); setResult(null); onClose() }
+  const close = () => { setLic(''); setCode(inviteCode ?? ''); setResult(null); onClose() }
 
   return (
     <AnimatePresence>
@@ -89,10 +90,24 @@ export function ClaimTeamSheet({ open, onClose, teamId, teamName, inviteCode }: 
                   </button>
                 </div>
                 <div style={{ fontSize: 14, color: COLOR.ink2, lineHeight: 1.55, marginBottom: SPACE[4] }}>
-                  Ange ditt <strong style={{ color: COLOR.ink }}>licensnummer</strong> så verifierar vi att du tillhör
-                  {' '}{teamName}. Spelar du i laget blir du medlem direkt.
+                  Har du en <strong style={{ color: COLOR.ink }}>inbjudningskod</strong> från laget blir du medlem direkt.
+                  Annars anger du ditt <strong style={{ color: COLOR.ink }}>licensnummer</strong> och kopplingen till
+                  {' '}{teamName} granskas först.
                 </div>
 
+                <input
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') submit() }}
+                  placeholder="Inbjudningskod (om du har en)"
+                  autoComplete="off"
+                  style={{
+                    width: '100%', boxSizing: 'border-box', marginBottom: SPACE[2],
+                    padding: `${SPACE[3]}px ${SPACE[4]}px`, borderRadius: RADIUS.lg,
+                    background: COLOR.bg, border: `1px solid ${COLOR.hairline}`,
+                    fontSize: 16, color: COLOR.ink, outline: 'none',
+                  }}
+                />
                 <input
                   value={lic}
                   onChange={e => setLic(e.target.value)}
@@ -123,7 +138,7 @@ export function ClaimTeamSheet({ open, onClose, teamId, teamName, inviteCode }: 
                     cursor: !lic.trim() || isPending ? 'default' : 'pointer', opacity: !lic.trim() || isPending ? 0.6 : 1,
                   }}
                 >
-                  {isPending ? 'Verifierar…' : 'Gå med i laget'}
+                  {isPending ? 'Skickar…' : code.trim() ? 'Gå med i laget' : 'Skicka för granskning'}
                 </button>
                 <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, textAlign: 'center', marginTop: SPACE[3] }}>
                   Ditt licensnummer används bara för att verifiera dig.

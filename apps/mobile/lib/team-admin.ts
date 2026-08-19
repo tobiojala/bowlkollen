@@ -13,8 +13,9 @@ const db = supabase as unknown as SupabaseClient;
 export type TeamRole = 'captain' | 'player' | 'lagledare' | 'styrelse' | 'reserv';
 export type AvailabilityResponse = 'yes' | 'maybe' | 'no';
 
-// Join a team as a verified member (role 'player'). License that played for the team
-// or is licensed with its club auto-verifies an adult; juniors/non-matches → pending.
+// Join a team (role 'player'). A valid invite code (a vouch from a verified member)
+// → verified instantly; licence alone → pending review (see account_verification_
+// hardening.sql / docs/ACCOUNT_MODEL.md). Juniors always pending.
 // An optional team-scoped invite code is the vouching signal. p_invite_code is always
 // sent (null when absent) so PostgREST resolves to the hardened 3-arg submit_team_claim
 // rather than erroring on the legacy overload.
