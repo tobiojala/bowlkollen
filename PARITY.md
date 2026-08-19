@@ -70,7 +70,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
-| Clubs | ✅ `/clubs/[bitsId]`, `/club/[slug]` | ❌ | **Web-only.** |
+| Clubs | ✅ `/clubs/[bitsId]` (redesigned, BITS-native) | ✅ `/club/[id]` | **Parity (2026-08-19)** — `lib/clubs.ts` + native screen; teams link to `/lag`, reachable from the team page. Web redesigned to the design language (no emoji, tokens, `/lag` links). Legacy `/club/[slug]` (old useColors) still exists — retire it. |
 | Halls / venues | ✅ `/hallar`, `/hallar/[id]` | ❌ | **Web-only.** |
 | Klotshopar | ✅ `/klotshopar` | ✅ `/klotshopar` | **Parity (2026-08-19)** — native `lib/pro-shops.ts` + screen + Profil "BOWLING" entry. |
 
