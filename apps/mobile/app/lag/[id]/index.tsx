@@ -112,9 +112,17 @@ export default function TeamPage() {
                 {teamName}
               </Text>
               {team?.club_name && team.club_name !== teamName && (
-                <Text style={styles.club} numberOfLines={1}>
-                  {team.club_name}
-                </Text>
+                team.bits_club_id ? (
+                  <PressableScale onPress={() => router.push(`/club/${team.bits_club_id}` as never)} hitSlop={6}>
+                    <Text style={[styles.club, styles.clubLink]} numberOfLines={1}>
+                      {team.club_name}
+                    </Text>
+                  </PressableScale>
+                ) : (
+                  <Text style={styles.club} numberOfLines={1}>
+                    {team.club_name}
+                  </Text>
+                )
               )}
             </View>
           </View>
@@ -335,6 +343,7 @@ const styles = StyleSheet.create({
   divLabel: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1, marginBottom: 3 },
   name: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
   club: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 2 },
+  clubLink: { color: COLOR.ink2, textDecorationLine: 'underline' },
   followRow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] },
   followers: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   manage: {

@@ -10,7 +10,7 @@ const PREVIOUS_SEASON = 2025;
 const STANDING_COLS =
   'bits_match_id, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, home_result, away_result, is_finished, match_date, round_id, hall_name';
 
-export type TeamIdentity = { name: string; club_name: string | null; logoUrl: string | null; ringColor: string | null; headerColor: string | null };
+export type TeamIdentity = { name: string; club_name: string | null; bits_club_id: number | null; logoUrl: string | null; ringColor: string | null; headerColor: string | null };
 
 export function useTeam(teamId: number) {
   return useQuery({
@@ -40,6 +40,7 @@ export function useTeam(teamId: number) {
       return {
         name: data.name as string,
         club_name: (data.club_name as string | null) ?? null,
+        bits_club_id: (data.bits_club_id as number | null) ?? null,
         logoUrl: ((club.data as { logo_url?: string } | null)?.logo_url as string | null) ?? null,
         ringColor: (app?.ring_color as string | null) ?? null,
         headerColor: (app?.header_color as string | null) ?? null,
