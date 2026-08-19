@@ -63,7 +63,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ❌ | **Web-only.** |
 | Tipsligan (predictions) | ✅ `/prediktion`, `/puls` | ❌ | **Web-only.** |
 | SM-slutspel | ✅ `/sm-slutspel` | ❌ | **Web-only.** |
-| Eligibility (spelklarhet) | 🟡 engine ready | ✅ (in laguttagning) | **Engine now SHARED** in `@bowlkollen/core` (`eligibility.ts`, SvBF §D306, 13 tests). Native surfaces it in laguttagning (CandidateRow/LineupSeating). **Remaining for web:** a data resolver (mirror native `eligibility-data.ts`) + warnings in web's laguttagning UI. |
+| Eligibility (spelklarhet) | ✅ (in laguttagning) | ✅ (in laguttagning) | **Parity (2026-08-19).** Shared engine in `@bowlkollen/core` (`eligibility.ts`, SvBF §D306, 13 tests). Web: `lib/eligibility.ts` (same `get_lineup_eligibility` RPC) + per-slot mark + `EligibilityBanner`. Native: CandidateRow/LineupSeating. Needs `lineup_eligibility.sql` RPC live (degrades safely if absent). |
 | Calendar (.ics / subscribe) | 🟡 `.ics` export in `/schema` | ✅ `/kalender` (`calendar-subs.ts`) | Different shapes; roughly covered both ways. |
 
 ## World 5 — Bowling (the wider sport)
@@ -89,6 +89,6 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 ## Biggest gaps right now
 1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
-3. **Web missing: in-team invite redeem + eligibility** (Worlds 2/4) — the two places native leads, which the parity rule says web must cover.
-4. **Native missing web-only surfaces** (World 5 + Competitions): clubs, halls, klotshopar, tävlingar, Tipsligan, SM-slutspel, Atlas map, division-browse, team-compare.
+3. ~~Web missing eligibility~~ ✅ done (2026-08-19). **In-team invite redeem** still open — ⚠️ blocked on a security design (native's version grants membership from a license number; see AGENTS.md security rule 5 + `claim_identity_hardening`). Needs a vouched/code-based design before porting.
+4. **Native missing web-only surfaces** (World 5 + Competitions): clubs, halls, klotshopar, tävlingar, Tipsligan, SM-slutspel, Atlas map, division-browse, team-compare. ← now the main convergence work.
 5. **Foundational: shared theme tokens in core** ✅ core set done; remaining = reconcile web's `@/lib/theme` light palette + migrate 89 static pages to `useColors()`.
