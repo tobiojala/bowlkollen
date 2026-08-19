@@ -42,16 +42,23 @@ auto-granted — only by an existing captain/admin; every grant runs through a
 use-capped, revocable, attributed.
 
 ## Build checklist (piece by piece; keep this list current)
-- [ ] **Security core (DB):** ensure licence-based grants are PENDING everywhere.
-      Reverses the old "adult licence auto-verifies" behaviour
-      (`project_claim_license_verification`). Migration for: `player_claims`
-      licence path → pending; native team join (`useJoinTeam`) → pending.
-- [ ] **Native onboarding:** two-door welcome intro. ← starting here
-- [ ] **Web onboarding:** two-door welcome intro (match native).
-- [ ] **Web team-join:** "Gå med med kod" UI calling `redeem_team_invite`
-      (Lane 1) + licence→pending request (Lane 2). Mirror native, hardened.
-- [ ] **Native ga-med:** harden to pending (remove instant licence grant).
-- [ ] **Both:** promote the code path; make licence clearly "request → review".
+- [x] **Native onboarding:** two-door welcome (`components/WelcomeChooser.tsx`).
+- [x] **Web onboarding:** two-door welcome (matches native).
+- [x] **Security core (DB):** `account_verification_hardening.sql` — `submit_team_claim`
+      verified only via a vouch (code); `submit_player_claim` + licence-only → pending.
+      Reverses `claim_license_verification.sql`. **⚠ Run in Supabase after review.**
+- [x] **Both apps' join UI:** optional invite-code field (vouch = instant); licence-only
+      reworded to "granskas först" (web ClaimTeamSheet, native ga-med). This is also the
+      web in-team join-via-code (closes PARITY gap 3a).
+- [ ] **Follow-up:** derive a verified *player_claim* from a vouched, roster-matched
+      *team_claim* (`matched_public_id`), so the code path gives instant player
+      verification too — otherwise a licence-only player claim waits for admin review.
 - [ ] Later: BankID (Lane 3).
+
+## ⚠ Open decision — player verification without a code
+With the hardening, a player who claims by **licence alone** is now PENDING until a
+captain/admin approves (no instant self-verify). Instant verification comes from a
+team **invite code**. If waiting-on-admin is too much friction, do the follow-up above
+(code+roster-match → instant player verify) or bring BankID forward.
 
 See [[project_standards_and_parity]] and PARITY.md (Worlds 2/3).

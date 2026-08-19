@@ -39,7 +39,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Lineup builder (laguttagning) | ✅ `/lag/[id]/laguttagning/[mid]` | ✅ `/lag/[id]/laguttagning/[mid]` | Both. Suggestion tool + hierarchy + konstellationer now on **both** (native-first `konstellationer.ts`; web caught up this session). |
 | Availability (tillgänglighet) | ✅ `/lag/[id]/tillganglighet/[mid]` | ✅ (`team-admin.ts`) | Both. |
 | Anslagstavla (nyheter) | ✅ `/lag/[id]/nyheter` | ✅ `/lag/[id]/nyheter` (`team-posts.ts`) | Both. |
-| In-team invite redeem (gå med) | 🟡 (signup gate `/invite/[code]`) | ✅ `/lag/[id]/ga-med` (`invites.ts`) | **Native ahead** — web has invite-gating at signup, but no in-team "join this team via code". Gap: web. |
+| In-team join (kod / licens) | ✅ ClaimTeamSheet | ✅ `/lag/[id]/ga-med` | **Parity (2026-08-19)** — both take an optional invite code (vouch → instant) + licence (→ pending review). Same RPC `submit_team_claim`, same security (`account_verification_hardening.sql`). |
 | Admin (claims/players/bits) | ✅ `/admin/*` | ➖ | Web-only console by design. |
 
 ## World 3 — My People (follow / feed)
@@ -89,7 +89,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 ## Biggest gaps right now
 1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
-3. ~~Web missing eligibility~~ ✅ done (2026-08-19). **In-team invite redeem** still open — ⚠️ blocked on a security design (native's version grants membership from a license number; see AGENTS.md security rule 5 + `claim_identity_hardening`). Needs a vouched/code-based design before porting.
+3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **awaiting run**). See docs/ACCOUNT_MODEL.md.
 4. **Native missing web-only surfaces** (World 5 + Competitions) — now the main convergence work. Audited for data-readiness (2026-08-19):
    - **Clean to build on native now** (solid own/BITS data): `klotshopar` (`pro_shops` table), `divisioner` browse (BITS), `clubs` (BITS). ← recommended order.
    - **Needs a BITS rebuild first** (currently on deprecated legacy tables): `team-compare`.
