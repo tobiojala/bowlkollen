@@ -72,7 +72,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 |---|:--:|:--:|---|
 | Clubs | ✅ `/clubs/[bitsId]`, `/club/[slug]` | ❌ | **Web-only.** |
 | Halls / venues | ✅ `/hallar`, `/hallar/[id]` | ❌ | **Web-only.** |
-| Klotshopar | ✅ `/klotshopar` | ❌ | **Web-only.** |
+| Klotshopar | ✅ `/klotshopar` | ✅ `/klotshopar` | **Parity (2026-08-19)** — native `lib/pro-shops.ts` + screen + Profil "BOWLING" entry. |
 
 ---
 
