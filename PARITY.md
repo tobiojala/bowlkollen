@@ -59,7 +59,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Match page | ✅ `/matcher/[id]` | ✅ `/matcher/[id]` | Both. Scorecard/serie sheet — _verify native has it_. |
 | Schema (season) | ✅ `/schema` | ✅ `(tabs)/schema` | Both. |
 | Schema Atlas / map | ✅ `/schema/atlas`, `/atlas/karta` | ❌ | **Web ahead** — no native atlas/map. |
-| Division browse + detail | ✅ `/divisioner`, `/divisioner/[id]` | 🟡 `/division/[id]` | **Web ahead** — native has detail but no browse-all index. |
+| Division browse + detail | ✅ `/schema` (+ `/divisioner/[id]`) | ✅ schema tab (+ `/division/[id]`) | **Parity** — native's schema tab already browses all divisions (`useDivisions` → `bits_divisions`, grouped by tier, searchable). Web's `/divisioner` redirects to `/schema`. (Matrix corrected 2026-08-19.) |
 | Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ❌ | **Web-only.** |
 | Tipsligan (predictions) | ✅ `/prediktion`, `/puls` | ❌ | **Web-only.** |
 | SM-slutspel | ✅ `/sm-slutspel` | ❌ | **Web-only.** |
@@ -91,7 +91,8 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
 3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **awaiting run**). See docs/ACCOUNT_MODEL.md.
 4. **Native missing web-only surfaces** (World 5 + Competitions) — now the main convergence work. Audited for data-readiness (2026-08-19):
-   - **Clean to build on native now** (solid own/BITS data): `klotshopar` (`pro_shops` table), `divisioner` browse (BITS), `clubs` (BITS). ← recommended order.
+   - **Done:** `klotshopar` (native, 2026-08-19); `divisioner` browse (already existed on native's schema tab — matrix was wrong).
+   - **Clean to build next** (solid BITS data): `clubs`.
    - **Needs a BITS rebuild first** (currently on deprecated legacy tables): `team-compare`.
    - **Blocked on external / partnership**: `tavlingar` (bowlres partnership pending).
    - **Own tables, medium**: `Tipsligan`/`prediktion`, `SM-slutspel` (hardcoded bracket), `Atlas map` (parked per memory).
