@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { InviteGate } from '@/components/InviteGate';
 import OnboardingSuggestions from '@/components/OnboardingSuggestions';
 import { PressableScale } from '@/components/PressableScale';
+import { WelcomeChooser } from '@/components/WelcomeChooser';
 import { useToggleFollow } from '@/lib/follows';
 import { useMyTeams } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
@@ -45,6 +46,7 @@ export default function Onboarding() {
   const { data: teams = [], isLoading: teamsLoading } = useMyTeams();
   const hasAccess = teams.length > 0;
 
+  const [mode, setMode] = useState<'choose' | 'fan' | 'player'>('choose');
   const [text, setText] = useState('');
   const [debounced, setDebounced] = useState('');
   const [picked, setPicked] = useState<{ id: number; name: string } | null>(null);
@@ -73,12 +75,23 @@ export default function Onboarding() {
   }
   if (!hasAccess) return <InviteGate />;
 
+  // Two-door welcome (docs/ACCOUNT_MODEL.md): fans/family and players both start
+  // here. Players are routed to the claim flow after following.
+  if (mode === 'choose') {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <WelcomeChooser onFan={() => setMode('fan')} onPlayer={() => setMode('player')} />
+      </SafeAreaView>
+    );
+  }
+
   async function finish() {
     setFinishing(true);
     // Completion lives in auth user_metadata; the root navigator redirects home
     // once the session updates. Belt-and-suspenders replace here too.
     await supabase.auth.updateUser({ data: { onboarding_seen: true } });
-    router.replace('/');
+    // Players continue to claim their BITS profile; fans go straight to the feed.
+    router.replace(mode === 'player' ? '/claim' : '/');
   }
 
   const showEmpty =
@@ -91,12 +104,14 @@ export default function Onboarding() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.kicker}>BOWLKOLLEN</Text>
-        <Text style={styles.h1}>Välkommen</Text>
+        <Text style={styles.h1}>{mode === 'player' ? 'Ditt lag' : 'Följ bowling'}</Text>
         <Text style={styles.sub}>
-          Följ ditt lag för en feed som känns som din egen.
+          {mode === 'player'
+            ? 'Följ ditt lag först — sen kopplar vi din spelarprofil.'
+            : 'Följ lag och spelare för en feed som känns som din egen.'}
         </Text>
 
-        <Text style={styles.label}>VILKET LAG ÄR DITT?</Text>
+        <Text style={styles.label}>{mode === 'player' ? 'VILKET LAG ÄR DITT?' : 'VILKA LAG VILL DU FÖLJA?'}</Text>
 
         {picked ? (
           <View style={styles.pickedRow}>
@@ -137,7 +152,7 @@ export default function Onboarding() {
             {finishing ? (
               <ActivityIndicator color={COLOR.bg} />
             ) : (
-              <Text style={styles.primaryText}>Klar</Text>
+              <Text style={styles.primaryText}>{mode === 'player' ? 'Fortsätt — koppla din profil' : 'Klar'}</Text>
             )}
           </PressableScale>
         )}
