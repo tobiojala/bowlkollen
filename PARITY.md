@@ -27,8 +27,8 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Oil profiles | ✅ `/oljeprofiler` | 🟡 (in diary) | Web has a dedicated page; native folds oil into diary. Gap: native dedicated oil surface. |
 | Scouting | ✅ (profile) | ✅ `scouting.ts` | Both. |
 | Compare (players) | ✅ `/compare/[a]/[b]` | ✅ `/compare/[a]/[b]` | Both. |
-| Team stats (deep) | ✅ `/lag/[id]/statistik` | 🔜 | **NEW (2026-08-19)** — the team's answer to the player profile. Engine `computeTeamStats` in `@bowlkollen/core` (snitt/form/trend/home-away/highs/per-player, 8 tests); web page with ProfileTrend glow graph. Native page = next. |
-| Compare (teams) | 🔜 engine ready | ❌ | `compareTeamStats` is in core; the old `/compare/teams/…` (deprecated legacy tables) to be replaced by a BITS compare view built on the team-stats engine. |
+| Team stats (deep) | ✅ `/lag/[id]/statistik` (+ inline summary + OG share card) | ✅ `/lag/[id]/statistik` (+ inline summary) | **Parity (2026-08-19)** — shared `computeTeamStats` engine (pinfall-first, 9 tests); both apps: summary on team page + deep page (ProfileTrend). Web also has a sponsor OG share card + Dela. |
+| Compare (teams) | ✅ `/compare/teams/[id1]/[id2]` (BITS) | 🔜 | Rebuilt BITS-native on `computeTeamStats` (was on deprecated legacy tables) + opponent picker. Native compare = next. |
 
 ## World 2 — My Team
 
