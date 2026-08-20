@@ -1,13 +1,30 @@
+import { Ionicons } from '@expo/vector-icons';
+import { File, Paths } from 'expo-file-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassCircle } from '@/components/GlassButtons';
+import { PressableScale } from '@/components/PressableScale';
 import { ProfileTrend } from '@/components/ProfileTrend';
 import { useTeam } from '@/lib/team-data';
 import { useTeamStats } from '@/lib/team-stats';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 import type { TeamStats } from '@bowlkollen/core';
+
+// Download the web-generated share card PNG and hand it to the OS share sheet
+// (→ Instagram, stories, lagchatt). Same card as web /statistik/card.
+async function shareStatsCard(teamId: number) {
+  try {
+    const dest = new File(Paths.cache, `lag-${teamId}-statistik.png`);
+    try { if (dest.exists) dest.delete(); } catch { /* recreate below */ }
+    const file = await File.downloadFileAsync(`https://bowlkollen.se/lag/${teamId}/statistik/card`, dest);
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(file.uri, { mimeType: 'image/png', UTI: 'public.png' });
+    }
+  } catch { /* ignore — sharing best-effort */ }
+}
 
 // Deep team statistics — native parity with web /lag/[id]/statistik, same core
 // engine. Pinfall-first hero, the ProfileTrend glow graph, home/away, highs, and
@@ -31,7 +48,18 @@ export default function TeamStatistik() {
         ) : !data ? (
           <Text style={styles.empty}>Ingen färdigspelad match att visa statistik för än.</Text>
         ) : (
-          <StatsBody stats={data.stats} season={data.season} />
+          <>
+            <StatsBody stats={data.stats} season={data.season} />
+            <View style={styles.actions}>
+              <PressableScale style={styles.shareBtn} onPress={() => shareStatsCard(teamId)} haptic>
+                <Ionicons name="share-outline" size={18} color={COLOR.bg} />
+                <Text style={styles.shareText}>Dela statistik</Text>
+              </PressableScale>
+              <PressableScale style={styles.compareBtn} onPress={() => router.push(`/compare/teams/${teamId}` as never)}>
+                <Text style={styles.compareText}>Jämför lag</Text>
+              </PressableScale>
+            </View>
+          </>
         )}
       </ScrollView>
       <View style={[styles.chromeLeft, { top: insets.top + 6 }]}>
@@ -172,4 +200,10 @@ const styles = StyleSheet.create({
 
   dot: { width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   dotText: { fontSize: 12, fontFamily: FONT.bold },
+
+  actions: { flexDirection: 'row', gap: SPACE[3], marginTop: SPACE[6] },
+  shareBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: COLOR.gold, borderRadius: RADIUS.lg, paddingVertical: SPACE[3] },
+  shareText: { color: COLOR.bg, fontSize: TYPE.body, fontFamily: FONT.bold },
+  compareBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOR.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: COLOR.hairline, borderRadius: RADIUS.lg, paddingVertical: SPACE[3] },
+  compareText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
 });
