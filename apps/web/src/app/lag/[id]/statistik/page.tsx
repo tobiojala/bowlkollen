@@ -41,7 +41,17 @@ export default function TeamStatistikPage({ params }: Props) {
             Ingen färdigspelad match att visa statistik för än.
           </div>
         ) : (
-          <TeamStatsView stats={data.stats} season={data.season} />
+          <>
+            <TeamStatsView stats={data.stats} season={data.season} />
+            <Link href={`/compare/teams/${teamId}`} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              marginTop: SPACE[6], padding: `${SPACE[3]}px`, borderRadius: 14,
+              border: `1px solid ${COLOR.hairline}`, background: COLOR.surface,
+              fontSize: 14, fontWeight: 700, color: COLOR.ink2, textDecoration: 'none',
+            }}>
+              Jämför med annat lag
+            </Link>
+          </>
         )}
       </div>
     </main>
