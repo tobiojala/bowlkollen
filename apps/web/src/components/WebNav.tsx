@@ -10,11 +10,13 @@ import NotificationBell from '@/components/NotificationBell'
 // The web app's real top nav — persistent bar on desktop, burger below the
 // breakpoint. Replaces the mobile-style glass nav + floating bottom tabs.
 // Categories map to the Constitution's Five Worlds; evolve the set as we grow.
+// Shared primary nav (web + native): Hem · Schema · Hitta · Tävlingar · Profil.
+// 'Serier' dropped (it redirected to Schema); 'Spelare' → 'Hitta' (players AND
+// teams AND the Bowling-world hub). Profil is the CTA on the right.
 const LINKS = [
   { label: 'Hem',       href: '/' },
   { label: 'Schema',    href: '/schema' },
-  { label: 'Serier',    href: '/divisioner' },
-  { label: 'Spelare',   href: '/discover' },
+  { label: 'Hitta',     href: '/discover' },
   { label: 'Tävlingar', href: '/tavlingar' },
 ] as const
 
