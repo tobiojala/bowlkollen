@@ -3,7 +3,7 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, Home, Search, User } from 'lucide-react-native';
+import { Calendar, Home, Search, Trophy, User } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -28,6 +28,7 @@ const TABS: { icon: LucideIcon; href: string }[] = [
   { icon: Home, href: '/' },
   { icon: Calendar, href: '/schema' },
   { icon: Search, href: '/discover' },
+  { icon: Trophy, href: '/tavlingar' },
   { icon: User, href: '/profile' },
 ];
 

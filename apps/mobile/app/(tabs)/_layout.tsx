@@ -18,6 +18,7 @@ export default function TabsLayout() {
           <Tabs.Screen name="index" />
           <Tabs.Screen name="schema" />
           <Tabs.Screen name="discover" />
+          <Tabs.Screen name="tavlingar" />
           <Tabs.Screen name="profile" />
         </Tabs>
         {/* Overlays share one compositing layer over the content, so the glass
