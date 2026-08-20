@@ -114,11 +114,28 @@ export default function Discover() {
               </>
             )}
 
+            <Text style={styles.sectionLabel}>UTFORSKA BOWLING</Text>
             <PressableScale style={styles.explore} onPress={() => router.push('/schema')}>
               <Ionicons name="grid-outline" size={22} color={COLOR.gold} />
               <View style={styles.exploreText}>
-                <Text style={styles.exploreTitle}>Utforska divisioner</Text>
+                <Text style={styles.exploreTitle}>Divisioner</Text>
                 <Text style={styles.exploreBody}>Bläddra alla serier och hitta lag att följa.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
+            <PressableScale style={styles.explore} onPress={() => router.push('/hallar' as never)}>
+              <Ionicons name="location-outline" size={22} color={COLOR.gold} />
+              <View style={styles.exploreText}>
+                <Text style={styles.exploreTitle}>Hallar</Text>
+                <Text style={styles.exploreBody}>Bowlinghallar i Sverige — adress, banor och bokning.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
+            <PressableScale style={styles.explore} onPress={() => router.push('/klotshopar' as never)}>
+              <Ionicons name="storefront-outline" size={22} color={COLOR.gold} />
+              <View style={styles.exploreText}>
+                <Text style={styles.exploreTitle}>Klotshopar</Text>
+                <Text style={styles.exploreBody}>Pro shops — borrning, utrustning och kontakt.</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
             </PressableScale>

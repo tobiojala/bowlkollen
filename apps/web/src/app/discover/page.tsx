@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Search, X, Trophy } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
 import { STALE } from '@/lib/constants'
 import { COLOR } from '@/lib/brand'
 import FollowButton from '@/components/FollowButton'
+import { DiscoverExplore } from './_components/DiscoverExplore'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -272,30 +273,7 @@ export default function DiscoverPage() {
         {/* Default: browse sections */}
         {!isSearching && (
           <>
-            {/* Seriespel entry */}
-            <SectionLabel label="Seriespel" />
-            <Link href="/divisioner" style={{ textDecoration: 'none', display: 'block', marginBottom: 10 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 14,
-                background: COLOR.surface, borderRadius: 16, padding: '16px 18px',
-              }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: 'rgba(245,194,0,0.10)', border: '1px solid rgba(245,194,0,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  <Trophy size={20} color={COLOR.gold} strokeWidth={1.8} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: COLOR.ink }}>Alla divisioner</div>
-                  <div style={{ fontSize: 12, color: COLOR.ink3, marginTop: 2 }}>Elitserien · Allsvenskan · Division 1–5</div>
-                </div>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke={COLOR.ink4} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </div>
-            </Link>
+            <DiscoverExplore />
 
             <SectionLabel label="Aktiva spelare" />
             {recentLoading ? (
