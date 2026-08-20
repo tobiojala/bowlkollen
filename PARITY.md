@@ -28,7 +28,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Scouting | ✅ (profile) | ✅ `scouting.ts` | Both. |
 | Compare (players) | ✅ `/compare/[a]/[b]` | ✅ `/compare/[a]/[b]` | Both. |
 | Team stats (deep) | ✅ `/lag/[id]/statistik` (+ inline summary + OG share card) | ✅ `/lag/[id]/statistik` (+ inline summary) | **Parity (2026-08-19)** — shared `computeTeamStats` engine (pinfall-first, 9 tests); both apps: summary on team page + deep page (ProfileTrend). Web also has a sponsor OG share card + Dela. |
-| Compare (teams) | ✅ `/compare/teams/[id1]/[id2]` (BITS) | 🔜 | Rebuilt BITS-native on `computeTeamStats` (was on deprecated legacy tables) + opponent picker. Native compare = next. |
+| Compare (teams) | ✅ `/compare/teams/[id1]/[id2]` (BITS) | ✅ `/compare/teams/[a]/[b]` | **Parity (2026-08-19)** — both on `computeTeamStats` + opponent picker; leading side green. |
 
 ## World 2 — My Team
 
@@ -72,7 +72,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
 | Clubs | ✅ `/clubs/[bitsId]` (redesigned, BITS-native) | ✅ `/club/[id]` | **Parity (2026-08-19)** — `lib/clubs.ts` + native screen; teams link to `/lag`, reachable from the team page. Web redesigned to the design language (no emoji, tokens, `/lag` links). Legacy `/club/[slug]` (old useColors) still exists — retire it. |
-| Halls / venues | ✅ `/hallar`, `/hallar/[id]` | ❌ | **Web-only.** |
+| Halls / venues | ✅ `/hallar`, `/hallar/[id]` | ✅ `/hallar` | **Parity (2026-08-19)** — native `lib/halls.ts` (`bowling_centers`) + screen (map/boka/scoring/specs) + Profil BOWLING entry. |
 | Klotshopar | ✅ `/klotshopar` | ✅ `/klotshopar` | **Parity (2026-08-19)** — native `lib/pro-shops.ts` + screen + Profil "BOWLING" entry. |
 
 ---
@@ -91,9 +91,5 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
 3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **APPLIED in prod**). See docs/ACCOUNT_MODEL.md.
-4. **Native missing web-only surfaces** (World 5 + Competitions) — the main remaining convergence work. Audited for data-readiness (2026-08-19):
-   - **Done native:** `klotshopar`, `clubs`, `divisioner` browse (schema tab), team stats (summary + deep page).
-   - **Team stats — web ahead:** native still missing the **team compare** view + **image-card share** (web has both).
-   - **Native-missing, clean to build:** `Tipsligan`/`prediktion`, `SM-slutspel` (own/hardcoded data), `hallar` (venues).
-   - **Blocked/parked:** `tavlingar` (bowlres partnership pending), `Atlas map` (parked per memory).
-5. **Foundational: shared theme tokens in core** ✅ core set done; remaining = reconcile web's `@/lib/theme` light palette + migrate 89 static pages to `useColors()`.
+4. **Native brought up (2026-08-19):** team stats (summary + deep + compare + image share), `clubs`, `klotshopar`, `hallar`, `divisioner` browse. **Remaining native-missing (lower priority):** `Tipsligan`/`prediktion` (bigger prediction game), `SM-slutspel` (seasonal, hardcoded bracket). **Blocked/parked:** `tavlingar` (bowlres partnership), `Atlas map` (parked).
+5. **Foundational loose ends (next):** (a) extend the standards ratchet to `apps/mobile`; (b) theme reconciliation — reconcile web's older `@/lib/theme` (`useColors`, 47 pages) onto core + migrate the 89 static `brand.COLOR` pages; (c) retire legacy `/club/[slug]`; (d) verify the OG bildkort font.
