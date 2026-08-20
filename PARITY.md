@@ -82,8 +82,8 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Item | Status | Notes |
 |---|:--:|---|
 | **Theme tokens** | 🟡 in progress | **Shared set DONE (2026-08-18):** `packages/core/src/tokens.ts` = canonical `COLOR`/`TYPE`/`SPACE`/`RADIUS`; web `brand.ts` + native `theme.ts` both re-export it (FONT stays per-app, MOTION web-only). Web + native colour can no longer diverge. **Remaining:** web still has a *second*, older colour system — `@/lib/theme` (`useColors()`, 47 pages) with conflicting values (green `#5dcaa5` vs core `#30d47e`, deprecated blue/pink) + the only light-mode palette. Reconcile it onto core and pick the canonical green → then the 89 static `brand.COLOR` pages can migrate to `useColors()`. |
-| **Shared logic in core** | ✅ growing | `packages/core`: `standings`, `tokens` (colour/type/space/radius), `eligibility` (SvBF §D306). Pattern: pure + shared logic goes here so web/native can't diverge. |
-| **Standards ratchet** | ✅ web | `apps/web/scripts/check-standards.mjs` on `prebuild`. Extend to `apps/mobile` next. |
+| **Shared logic in core** | ✅ growing | `packages/core`: `standings`, `tokens`, `eligibility` (SvBF §D306), `team-stats` (`computeTeamStats`/`compareTeamStats`). Pattern: pure + shared logic goes here so web/native can't diverge. |
+| **Standards ratchet** | ✅ both apps | web on `prebuild`, native on `pretest` (`scripts/check-standards.mjs` each). Debt-only-down. |
 | Auth / session | ✅ both | |
 | Onboarding | ✅ both | |
 
@@ -92,4 +92,4 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
 3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **APPLIED in prod**). See docs/ACCOUNT_MODEL.md.
 4. **Native brought up (2026-08-19):** team stats (summary + deep + compare + image share), `clubs`, `klotshopar`, `hallar`, `divisioner` browse. **Remaining native-missing (lower priority):** `Tipsligan`/`prediktion` (bigger prediction game), `SM-slutspel` (seasonal, hardcoded bracket). **Blocked/parked:** `tavlingar` (bowlres partnership), `Atlas map` (parked).
-5. **Foundational loose ends (next):** (a) extend the standards ratchet to `apps/mobile`; (b) theme reconciliation — reconcile web's older `@/lib/theme` (`useColors`, 47 pages) onto core + migrate the 89 static `brand.COLOR` pages; (c) retire legacy `/club/[slug]`; (d) verify the OG bildkort font.
+5. **Foundational loose ends:** ✅ (a) ratchet extended to `apps/mobile`; ✅ (c) legacy `/club/[slug]` retired → redirect. **Remaining:** (b) theme — tokens + green already unified in core (the "can't diverge" goal is met); what's left is a LARGE, mostly-mechanical migration of the 89 static `brand.COLOR` pages to `useColors()` for full light-mode reactivity (dark-first works today) — best as its own focused/delegated sweep, not urgent. (d) verify the OG bildkort font (user to eyeball).
