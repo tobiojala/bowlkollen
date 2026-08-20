@@ -8,6 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "check:standards": "node scripts/check-standards.mjs",
+    "pretest": "node scripts/check-standards.mjs",
     "test": "jest"
   },
   "jest": {

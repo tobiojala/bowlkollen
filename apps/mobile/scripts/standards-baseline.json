@@ -1,0 +1,16 @@
+{
+  "no-any": {
+    "lib/player-stats.ts": 1
+  },
+  "no-blue": {
+    "lib/team-admin.ts": 1
+  },
+  "max-lines": {
+    "app/lag/[id]/index.tsx": 393,
+    "app/matcher/[id].tsx": 380,
+    "app/player/[id].tsx": 302,
+    "lib/diary.ts": 433,
+    "lib/player-stats.ts": 337,
+    "lib/team-admin.ts": 498
+  }
+}
