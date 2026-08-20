@@ -2,7 +2,7 @@
 
 import { use } from 'react'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Share2 } from 'lucide-react'
 import { useTeamStats, useBitsTeamName } from '@/lib/team-stats-data'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { TeamStatsView } from './_components/TeamStatsView'
@@ -16,6 +16,13 @@ export default function TeamStatistikPage({ params }: Props) {
   const teamId = Number(id)
   const { data: teamName } = useBitsTeamName(teamId)
   const { data, isLoading } = useTeamStats(teamId)
+
+  const share = () => {
+    if (typeof navigator === 'undefined') return
+    const url = location.href
+    if (navigator.share) navigator.share({ title: `${teamName ?? 'Lagstatistik'} · Bowlkollen`, url }).catch(() => {})
+    else navigator.clipboard?.writeText(url).catch(() => {})
+  }
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
@@ -43,14 +50,23 @@ export default function TeamStatistikPage({ params }: Props) {
         ) : (
           <>
             <TeamStatsView stats={data.stats} season={data.season} />
-            <Link href={`/compare/teams/${teamId}`} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              marginTop: SPACE[6], padding: `${SPACE[3]}px`, borderRadius: 14,
-              border: `1px solid ${COLOR.hairline}`, background: COLOR.surface,
-              fontSize: 14, fontWeight: 700, color: COLOR.ink2, textDecoration: 'none',
-            }}>
-              Jämför med annat lag
-            </Link>
+            <div style={{ display: 'flex', gap: SPACE[3], marginTop: SPACE[6] }}>
+              <button onClick={share} style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: `${SPACE[3]}px`, borderRadius: 14, border: 'none', background: COLOR.gold,
+                fontSize: 14, fontWeight: 800, color: '#1a1400', cursor: 'pointer',
+              }}>
+                <Share2 size={16} /> Dela statistik
+              </button>
+              <Link href={`/compare/teams/${teamId}`} style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: `${SPACE[3]}px`, borderRadius: 14,
+                border: `1px solid ${COLOR.hairline}`, background: COLOR.surface,
+                fontSize: 14, fontWeight: 700, color: COLOR.ink2, textDecoration: 'none',
+              }}>
+                Jämför lag
+              </Link>
+            </div>
           </>
         )}
       </div>
