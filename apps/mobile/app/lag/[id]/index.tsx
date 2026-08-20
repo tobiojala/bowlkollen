@@ -28,6 +28,7 @@ import { LineupDisplay } from '@/components/LineupDisplay';
 import { MatchRow } from '@/components/MatchRow';
 import { PlayerRosterCard } from '@/components/PlayerRosterCard';
 import { StandingsLadder } from '@/components/StandingsLadder';
+import { TeamStatsSummary } from '@/components/TeamStatsSummary';
 import { StandingsTable } from '@/components/StandingsTable';
 import { useAuth } from '@/lib/auth';
 import { useFollowCount } from '@/lib/follows';
@@ -196,6 +197,10 @@ export default function TeamPage() {
               onOpenDivision={() => setTableOpen(true)}
             />
           )}
+
+          <View style={{ marginTop: SPACE[4] }}>
+            <TeamStatsSummary teamId={teamId} />
+          </View>
 
           {upcoming[0] && (
             <LineupDisplay
