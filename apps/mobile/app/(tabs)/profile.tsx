@@ -160,6 +160,11 @@ export default function Profile() {
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>BOWLING</Text>
+          <PressableScale style={styles.row} onPress={() => router.push('/hallar' as never)}>
+            <Ionicons name="location-outline" size={22} color={COLOR.ink2} />
+            <Text style={styles.rowName}>Hallar</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLOR.ink4} />
+          </PressableScale>
           <PressableScale style={styles.row} onPress={() => router.push('/klotshopar' as never)}>
             <Ionicons name="storefront-outline" size={22} color={COLOR.ink2} />
             <Text style={styles.rowName}>Klotshopar</Text>
