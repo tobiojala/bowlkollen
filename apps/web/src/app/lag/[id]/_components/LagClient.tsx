@@ -9,6 +9,7 @@ import { DivisionMatches } from '@/app/divisioner/[id]/_components/DivisionMatch
 import { LagHero } from './LagHero'
 import { StandingsLadder } from './StandingsLadder'
 import { LagLineupPreview } from './LagLineupPreview'
+import { TeamStatsSummary } from './TeamStatsSummary'
 
 type Standing      = { rank: number; total: number; points: number; played: number }
 type SeasonSummary = { seasonLabel: string; divisionId: number; divisionName: string | null; standing: Standing; standings: TeamStanding[] }
@@ -85,18 +86,7 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
         <StandingsLadder teamId={teamId} divisionId={ladderDivisionId} standings={ladderStandings} historical={ladderHistorical} />
 
         <div style={{ padding: `${SPACE[4]}px 20px 0` }}>
-          <Link href={`/lag/${teamId}/statistik`} style={{
-            display: 'flex', alignItems: 'center', gap: SPACE[3], textDecoration: 'none',
-            background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, borderRadius: 16, padding: '14px 18px',
-          }}>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 16, fontWeight: 700, color: COLOR.ink }}>Lagstatistik</span>
-              <span style={{ display: 'block', fontSize: 13, color: COLOR.ink3, marginTop: 2 }}>Säsongssnitt, form, hemma/borta och spelarnas snitt</span>
-            </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
+          <TeamStatsSummary teamId={teamId} />
         </div>
 
         {/* Their season */}
