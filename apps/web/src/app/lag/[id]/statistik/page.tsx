@@ -2,7 +2,7 @@
 
 import { use } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, Share2 } from 'lucide-react'
+import { ChevronLeft, Share2, Image as ImageIcon } from 'lucide-react'
 import { useTeamStats, useBitsTeamName } from '@/lib/team-stats-data'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { TeamStatsView } from './_components/TeamStatsView'
@@ -17,10 +17,23 @@ export default function TeamStatistikPage({ params }: Props) {
   const { data: teamName } = useBitsTeamName(teamId)
   const { data, isLoading } = useTeamStats(teamId)
 
-  const share = () => {
+  // Share the actual image card where the platform supports it (mobile share
+  // sheet → Instagram, stories, etc.); otherwise fall back to the link (which
+  // carries the same card as a preview) or copying the URL.
+  const share = async () => {
     if (typeof navigator === 'undefined') return
     const url = location.href
-    if (navigator.share) navigator.share({ title: `${teamName ?? 'Lagstatistik'} · Bowlkollen`, url }).catch(() => {})
+    const title = `${teamName ?? 'Lagstatistik'} · Bowlkollen`
+    try {
+      const res = await fetch(`/lag/${teamId}/statistik/card`)
+      const blob = await res.blob()
+      const file = new File([blob], `${(teamName ?? 'lag').replace(/\s+/g, '-').toLowerCase()}-statistik.png`, { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title })
+        return
+      }
+    } catch { /* fall through to link/copy */ }
+    if (navigator.share) navigator.share({ title, url }).catch(() => {})
     else navigator.clipboard?.writeText(url).catch(() => {})
   }
 
@@ -67,6 +80,13 @@ export default function TeamStatistikPage({ params }: Props) {
                 Jämför lag
               </Link>
             </div>
+            <Link href={`/lag/${teamId}/statistik/card`} target="_blank" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              marginTop: SPACE[3], padding: `${SPACE[2]}px`,
+              fontSize: 13, fontWeight: 600, color: COLOR.ink3, textDecoration: 'none',
+            }}>
+              <ImageIcon size={14} /> Öppna bildkort
+            </Link>
           </>
         )}
       </div>
