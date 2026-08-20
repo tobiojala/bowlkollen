@@ -40,7 +40,7 @@ export type PlayerStatLine = {
 
 export type SplitStat = { average: number | null; wins: number; losses: number; draws: number; played: number };
 
-export type TrendPoint = { matchId: number; date: string; average: number; outcome: Outcome | null; opponent: string };
+export type TrendPoint = { matchId: number; date: string; average: number; teamTotal: number; outcome: Outcome | null; opponent: string };
 
 export type TeamStats = {
   played: number;
@@ -49,7 +49,9 @@ export type TeamStats = {
   banFor: number;
   banAgainst: number;
   form: Outcome[];                // most-recent first (up to 6)
-  teamAverage: number | null;     // mean pins/game across every team game
+  teamAverage: number | null;     // mean pins/game across every team game (per-bowler)
+  totalPinfall: number;           // season cumulative team pins (the "wow" number)
+  pinfallPerMatch: number | null; // avg TEAM total per match — the team-scale headline
   trend: TrendPoint[];            // chronological (oldest → newest)
   home: SplitStat;
   away: SplitStat;
@@ -81,6 +83,8 @@ export function computeTeamStats(teamId: number, matches: TeamStatMatch[], resul
   const record = { wins: 0, losses: 0, draws: 0 };
   let banFor = 0, banAgainst = 0;
   const allGames: number[] = [];
+  let totalPinfall = 0;
+  let matchesWithPins = 0;
   const trend: TrendPoint[] = [];
   const outcomes: (Outcome | null)[] = [];
   const home: SplitStat = { average: null, wins: 0, losses: 0, draws: 0, played: 0 };
@@ -124,7 +128,11 @@ export function computeTeamStats(teamId: number, matches: TeamStatMatch[], resul
 
     allGames.push(...matchGames);
     const matchAvg = mean(matchGames);
-    if (matchGames.length) trend.push({ matchId: m.bits_match_id, date, average: matchAvg, outcome: out, opponent });
+    if (matchGames.length) {
+      trend.push({ matchId: m.bits_match_id, date, average: matchAvg, teamTotal: matchPins, outcome: out, opponent });
+      totalPinfall += matchPins;
+      matchesWithPins++;
+    }
     outcomes.push(out);
     if (matchPins > 0 && matchPins > (highMatch?.total ?? 0)) highMatch = { total: matchPins, date, opponent };
 
@@ -156,6 +164,8 @@ export function computeTeamStats(teamId: number, matches: TeamStatMatch[], resul
     banAgainst,
     form: outcomes.filter((o): o is Outcome => o !== null).reverse().slice(0, 6),
     teamAverage: allGames.length ? mean(allGames) : null,
+    totalPinfall,
+    pinfallPerMatch: matchesWithPins ? Math.round(totalPinfall / matchesWithPins) : null,
     trend,
     home,
     away,

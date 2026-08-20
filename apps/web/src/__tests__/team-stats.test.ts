@@ -42,6 +42,11 @@ describe('computeTeamStats', () => {
     expect(s.teamAverage).toBe(190)
   })
 
+  it('total pinfall and pinfall/match are team-scale (opponent games excluded)', () => {
+    expect(s.totalPinfall).toBe(2280)      // 1140 + 1140
+    expect(s.pinfallPerMatch).toBe(1140)   // 2280 / 2 matches
+  })
+
   it('splits home vs away', () => {
     expect(s.home.played).toBe(1)
     expect(s.home.wins).toBe(1)
@@ -63,6 +68,6 @@ describe('computeTeamStats', () => {
 
   it('trend is chronological with per-match average + outcome', () => {
     expect(s.trend.map(t => t.matchId)).toEqual([1, 2])
-    expect(s.trend[0]).toMatchObject({ average: 190, outcome: 'W', opponent: 'Lag200' })
+    expect(s.trend[0]).toMatchObject({ average: 190, teamTotal: 1140, outcome: 'W', opponent: 'Lag200' })
   })
 })

@@ -39,8 +39,7 @@ function Stat({ label, value, sub, accent }: { label: string; value: string; sub
 }
 
 export function TeamStatsView({ stats, season }: { stats: TeamStats; season: 'current' | 'last' }) {
-  const { record } = stats
-  const trendPoints = stats.trend.map(t => ({ avg: t.average, date: t.date, label: t.opponent }))
+  const trendPoints = stats.trend.map(t => ({ avg: t.teamTotal, date: t.date, label: t.opponent }))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[4] }}>
@@ -54,12 +53,12 @@ export function TeamStatsView({ stats, season }: { stats: TeamStats; season: 'cu
       <div style={{ background: COLOR.surface, border: `1px solid ${COLOR.hairline}`, borderRadius: RADIUS.xl, padding: SPACE[6] }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: SPACE[4] }}>
           <div>
-            <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, textTransform: 'uppercase' }}>Säsongssnitt</div>
+            <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, textTransform: 'uppercase' }}>Pinfall / match</div>
             <div style={{ fontSize: 52, fontWeight: 800, color: COLOR.gold, fontFamily: FONT.score, lineHeight: 1, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-              {stats.teamAverage ?? '–'}
+              {stats.pinfallPerMatch != null ? stats.pinfallPerMatch.toLocaleString('sv-SE') : '–'}
             </div>
             <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 6 }}>
-              {stats.played} {stats.played === 1 ? 'match' : 'matcher'} · {record.wins}–{record.losses}{record.draws ? `–${record.draws}` : ''} · {stats.winPct}% vinst
+              {stats.totalPinfall.toLocaleString('sv-SE')} pins totalt{stats.teamAverage != null ? ` · snitt/serie ${stats.teamAverage}` : ''} · {stats.played} {stats.played === 1 ? 'match' : 'matcher'} · {stats.winPct}% vinst
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: SPACE[2] }}>
@@ -73,9 +72,9 @@ export function TeamStatsView({ stats, season }: { stats: TeamStats; season: 'cu
       {trendPoints.length >= 2 && (
         <ProfileTrend
           points={trendPoints}
-          label="Lagsnitt per match"
-          restValue={stats.teamAverage ?? undefined}
-          baseline={stats.teamAverage}
+          label="Pinfall per match"
+          restValue={stats.pinfallPerMatch ?? undefined}
+          baseline={stats.pinfallPerMatch}
           caption={`${trendPoints.length} matcher`}
           accent={COLOR.gold}
         />
