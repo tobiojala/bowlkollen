@@ -12,6 +12,11 @@ than a ✅ you assumed.
 
 **Legend:** ✅ full · 🟡 partial / different shape · ❌ missing · ➖ n/a by design
 
+**Shared IA (design-polish phase, 2026-08-19):** both apps use one primary nav —
+**Hem · Schema · Hitta · Tävlingar · Profil**. World-5 reference (divisioner,
+klubbar, hallar, klotshopar) lives under **Hitta → Utforska bowling**; **Profil is
+"me" only**. Next polish phases: shared component primitives, then motion.
+
 Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a human check).
 
 ---
@@ -61,7 +66,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Schema (season) | ✅ `/schema` | ✅ `(tabs)/schema` | Both. |
 | Schema Atlas / map | ✅ `/schema/atlas`, `/atlas/karta` | ❌ | **Web ahead** — no native atlas/map. |
 | Division browse + detail | ✅ `/schema` (+ `/divisioner/[id]`) | ✅ schema tab (+ `/division/[id]`) | **Parity** — native's schema tab already browses all divisions (`useDivisions` → `bits_divisions`, grouped by tier, searchable). Web's `/divisioner` redirects to `/schema`. (Matrix corrected 2026-08-19.) |
-| Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ❌ | **Web-only.** |
+| Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ✅ `(tabs)/tavlingar` | **Parity (2026-08-19)** — curated list moved to `@bowlkollen/core` (`competitions.ts`); both render it. 5th shared tab. |
 | Tipsligan (predictions) | ✅ `/prediktion`, `/puls` | ❌ | **Web-only.** |
 | SM-slutspel | ✅ `/sm-slutspel` | ❌ | **Web-only.** |
 | Eligibility (spelklarhet) | ✅ (in laguttagning) | ✅ (in laguttagning) | **Parity (2026-08-19).** Shared engine in `@bowlkollen/core` (`eligibility.ts`, SvBF §D306, 13 tests). Web: `lib/eligibility.ts` (same `get_lineup_eligibility` RPC) + per-slot mark + `EligibilityBanner`. Native: CandidateRow/LineupSeating. Needs `lineup_eligibility.sql` RPC live (degrades safely if absent). |
