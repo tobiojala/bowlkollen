@@ -90,11 +90,10 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 ## Biggest gaps right now
 1. ~~Auto-Story Engine → native~~ ✅ done (2026-08-18) — read+render ported.
 2. ~~Home-feed ranking → native~~ ✅ done (2026-08-18).
-3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **awaiting run**). See docs/ACCOUNT_MODEL.md.
-4. **Native missing web-only surfaces** (World 5 + Competitions) — now the main convergence work. Audited for data-readiness (2026-08-19):
-   - **Done:** `klotshopar` (native, 2026-08-19); `divisioner` browse (already existed on native's schema tab — matrix was wrong).
-   - **Clean to build next** (solid BITS data): `clubs`.
-   - **Needs a BITS rebuild first** (currently on deprecated legacy tables): `team-compare`.
-   - **Blocked on external / partnership**: `tavlingar` (bowlres partnership pending).
-   - **Own tables, medium**: `Tipsligan`/`prediktion`, `SM-slutspel` (hardcoded bracket), `Atlas map` (parked per memory).
+3. ~~Web missing eligibility~~ ✅ + ~~in-team join~~ ✅ done (2026-08-19). Unified account model shipped (two-door onboarding both apps; code-vouched verification, licence→pending — `account_verification_hardening.sql` **APPLIED in prod**). See docs/ACCOUNT_MODEL.md.
+4. **Native missing web-only surfaces** (World 5 + Competitions) — the main remaining convergence work. Audited for data-readiness (2026-08-19):
+   - **Done native:** `klotshopar`, `clubs`, `divisioner` browse (schema tab), team stats (summary + deep page).
+   - **Team stats — web ahead:** native still missing the **team compare** view + **image-card share** (web has both).
+   - **Native-missing, clean to build:** `Tipsligan`/`prediktion`, `SM-slutspel` (own/hardcoded data), `hallar` (venues).
+   - **Blocked/parked:** `tavlingar` (bowlres partnership pending), `Atlas map` (parked per memory).
 5. **Foundational: shared theme tokens in core** ✅ core set done; remaining = reconcile web's `@/lib/theme` light palette + migrate 89 static pages to `useColors()`.
