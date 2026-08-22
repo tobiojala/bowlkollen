@@ -6,8 +6,12 @@ import { COLOR, FONT } from '@/lib/brand'
 import { useColors } from '@/components/ThemeProvider'
 import { buildBrackets } from './bracket'
 import { ChampionBracket } from './ChampionBracket'
+import { PrognosView } from './PrognosView'
+import { useSlutspelPrognos, type GenderPrognos } from './prognos'
 
 type Tab = 'herrar' | 'damer'
+type View = 'resultat' | 'kommande'
+const EMPTY_PROGNOS: GenderPrognos = { top4: [], meaningful: false }
 
 const NAV_H = 56
 const GOLD  = COLOR.gold
@@ -24,7 +28,10 @@ export function SmSlutspelClient() {
   })
   const { herrar, damer } = useMemo(() => buildBrackets(), [])
 
+  const [view, setView] = useState<View>('resultat')
+  const { data: prognos } = useSlutspelPrognos()
   const activeBracket   = tab === 'herrar' ? herrar : damer
+  const activePrognos   = (tab === 'herrar' ? prognos?.herrar : prognos?.damer) ?? EMPTY_PROGNOS
   const hasChampions    = STATUS === 'avslutad' && (!!herrar.champion || !!damer.champion)
 
   return (
@@ -34,7 +41,22 @@ export function SmSlutspelClient() {
         {/* ── Gold accent line ────────────────────────────────────────────── */}
         <div style={{ height: 3, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
 
-        {hasChampions ? (
+        {/* View toggle — the finished slutspel vs the live prognosis */}
+        <div style={{ display: 'flex', gap: 6, padding: '16px 16px 0' }}>
+          {([['resultat', 'Slutspel 2026'], ['kommande', 'Kommande']] as const).map(([v, label]) => {
+            const active = view === v
+            return (
+              <button key={v} onClick={() => setView(v)} style={{
+                flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                fontFamily: FONT.body, fontSize: 13, fontWeight: 700, letterSpacing: 0.4,
+                background: active ? C.surface : 'transparent', color: active ? C.text : C.textMuted,
+                WebkitTapHighlightColor: 'transparent',
+              }}>{label}</button>
+            )
+          })}
+        </div>
+
+        {view === 'resultat' && (hasChampions ? (
           /* ── CHAMPION HERO — first thing you see when the title is decided ── */
           <div style={{
             padding: '40px 20px 32px',
@@ -124,7 +146,7 @@ export function SmSlutspelClient() {
               {herrar.venue} · {herrar.dates}
             </div>
           </div>
-        )}
+        ))}
 
         {/* ── Tab selector ───────────────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 6, padding: '16px 16px 0' }}>
@@ -147,8 +169,10 @@ export function SmSlutspelClient() {
           })}
         </div>
 
-        {/* ── Bracket ────────────────────────────────────────────────────── */}
-        <ChampionBracket bracket={activeBracket} />
+        {/* ── Bracket (finished) or live prognosis (kommande) ─────────────── */}
+        {view === 'resultat'
+          ? <ChampionBracket bracket={activeBracket} />
+          : <PrognosView prognos={activePrognos} seasonLabel={prognos?.seasonLabel ?? ''} />}
 
       </div>
 
