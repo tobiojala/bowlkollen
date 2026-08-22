@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { shortName } from '@/lib/utils'
 import { groupByRound } from '@/lib/rounds'
 import type { MatchRow } from '@/lib/division-standings'
@@ -28,8 +28,8 @@ function TeamLine({ name, bitsId, score, win, finished, teamHref }: {
       <span
         onClick={bitsId != null ? (e => { e.preventDefault(); e.stopPropagation(); router.push(teamHref(bitsId)) }) : undefined}
         style={{
-          flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: emph ? 700 : 600,
-          color: emph ? COLOR.ink : COLOR.ink2,
+          flex: 1, minWidth: 0, fontSize: 18, fontWeight: emph ? 700 : 600,
+          color: emph ? COLOR.ink : COLOR.ink2, letterSpacing: '-0.01em',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           cursor: bitsId != null ? 'pointer' : 'default',
         }}
@@ -56,11 +56,14 @@ function Fixture({ m, teamHref }: { m: MatchRow; teamHref: (bitsId: number) => s
 
   return (
     <Link href={`/matcher/${m.bits_match_id}`} style={{
-      display: 'block', textDecoration: 'none', background: COLOR.surface,
-      borderRadius: RADIUS.lg, padding: SPACE[4], WebkitTapHighlightColor: 'transparent',
-    }}>
+      display: 'block', textDecoration: 'none', padding: `${SPACE[4]}px ${SPACE[1]}px`,
+      borderTop: `1px solid ${COLOR.hairline}`, WebkitTapHighlightColor: 'transparent',
+    }}
+      onMouseEnter={e => (e.currentTarget.style.background = `${COLOR.ink}05`)}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
       <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, marginBottom: SPACE[3] }}>{meta}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3] }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
         <TeamLine name={m.home_team_name} bitsId={m.home_bits_team_id} score={m.home_result} win={hw} finished={done} teamHref={teamHref} />
         <TeamLine name={m.away_team_name} bitsId={m.away_bits_team_id} score={m.away_result} win={aw} finished={done} teamHref={teamHref} />
       </div>
@@ -77,9 +80,7 @@ function RoundBlock({ label, hint, matches, teamHref }: {
         <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2 }}>{label.toUpperCase()}</span>
         {hint && <span style={{ marginLeft: 'auto', fontSize: TYPE.caption, fontWeight: 700, color: COLOR.gold }}>{hint}</span>}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
-        {matches.map(m => <Fixture key={m.bits_match_id} m={m} teamHref={teamHref} />)}
-      </div>
+      {matches.map(m => <Fixture key={m.bits_match_id} m={m} teamHref={teamHref} />)}
     </section>
   )
 }
