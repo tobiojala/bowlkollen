@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
-import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { shortName } from '@/lib/utils'
 import { groupByRound } from '@/lib/rounds'
 import type { MatchRow } from '@/lib/division-standings'
@@ -15,30 +15,29 @@ function dateTag(iso: string): string {
   const d = new Date(iso.slice(0, 10) + 'T12:00:00')
   return `${DAY_SE[d.getDay()]} ${d.getDate()} ${MON_SE[d.getMonth()]}`
 }
-
-function hueOf(name: string) { return name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360 }
 function initialsOf(name: string) { return shortName(name).split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
 
-// ── One team's line: colour avatar + name (a doorway) + its score ─────────────
+// One team's line: a tonal avatar, the name (a doorway), and its banpoäng.
+// Ink-first — winner in ink, loser in ink2 (still WCAG-AA legible, per BRAND
+// "names/scores are all ink"). No ink3/ink4 on meaningful text, no borders.
 function TeamLine({ name, bitsId, score, win, finished, teamHref }: {
   name: string; bitsId: number | null; score: number | null; win: boolean; finished: boolean; teamHref: (id: number) => string
 }) {
   const router = useRouter()
-  const h = hueOf(name)
-  const nameColor = !finished ? COLOR.ink : win ? COLOR.ink : COLOR.ink3
+  const emph = !finished || win // upcoming: both full ink; finished: winner full, loser ink2
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: '2px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
       <span style={{
-        width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-        background: `hsla(${h},45%,45%,0.18)`, border: `1px solid hsla(${h},45%,55%,0.35)`,
-        color: `hsl(${h},55%,72%)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 11, fontWeight: 800,
+        width: 34, height: 34, borderRadius: '50%', flexShrink: 0, background: COLOR.surface2,
+        color: COLOR.ink2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 12, fontWeight: 800, letterSpacing: '0.02em',
       }}>{initialsOf(name)}</span>
 
       <span
         onClick={bitsId != null ? (e => { e.preventDefault(); e.stopPropagation(); router.push(teamHref(bitsId)) }) : undefined}
         style={{
-          flex: 1, minWidth: 0, fontSize: 16, fontWeight: win ? 700 : 600, color: nameColor,
+          flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: emph ? 700 : 600,
+          color: emph ? COLOR.ink : COLOR.ink2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           cursor: bitsId != null ? 'pointer' : 'default',
         }}
@@ -46,15 +45,17 @@ function TeamLine({ name, bitsId, score, win, finished, teamHref }: {
 
       {finished && (
         <span style={{
-          flexShrink: 0, minWidth: 28, textAlign: 'right', fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums',
-          fontSize: 22, fontWeight: 800, color: win ? COLOR.ink : COLOR.ink3,
+          flexShrink: 0, minWidth: 26, textAlign: 'right', fontFamily: FONT.score,
+          fontVariantNumeric: 'tabular-nums', fontSize: 24, fontWeight: 800,
+          color: win ? COLOR.ink : COLOR.ink2,
         }}>{score}</span>
       )}
     </div>
   )
 }
 
-// ── One fixture — a clean stacked scoreboard: meta line, then a line per team ──
+// A fixture — a tonal surface card (no border), a clean meta line, then a line
+// per team. The card is the tap target (→ match); team names are inner doorways.
 function Fixture({ m, teamHref }: { m: MatchRow; teamHref: (bitsId: number) => string }) {
   const done = !!(m.is_finished && m.home_result != null && m.away_result != null)
   const hw = done && m.home_result! > m.away_result!
@@ -63,17 +64,11 @@ function Fixture({ m, teamHref }: { m: MatchRow; teamHref: (bitsId: number) => s
 
   return (
     <Link href={`/matcher/${m.bits_match_id}`} style={{
-      display: 'block', textDecoration: 'none', padding: `${SPACE[3]}px ${SPACE[4]}px`,
-      borderTop: `1px solid ${COLOR.hairline}`, WebkitTapHighlightColor: 'transparent',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.background = `${COLOR.ink}05`)}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-    >
-      <div style={{ fontSize: 13, color: COLOR.ink3, marginBottom: SPACE[2], display: 'flex', alignItems: 'center', gap: 6 }}>
-        {!done && <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLOR.gold }} />}
-        {meta}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[1] }}>
+      display: 'block', textDecoration: 'none', background: COLOR.surface,
+      borderRadius: RADIUS.lg, padding: SPACE[4], WebkitTapHighlightColor: 'transparent',
+    }}>
+      <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, marginBottom: SPACE[3] }}>{meta}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3] }}>
         <TeamLine name={m.home_team_name} bitsId={m.home_bits_team_id} score={m.home_result} win={hw} finished={done} teamHref={teamHref} />
         <TeamLine name={m.away_team_name} bitsId={m.away_bits_team_id} score={m.away_result} win={aw} finished={done} teamHref={teamHref} />
       </div>
@@ -81,22 +76,23 @@ function Fixture({ m, teamHref }: { m: MatchRow; teamHref: (bitsId: number) => s
   )
 }
 
-function RoundBlock({ label, hint, gold, matches, teamHref }: {
-  label: string; hint?: string; gold?: boolean; matches: MatchRow[]; teamHref: (bitsId: number) => string
+function RoundBlock({ label, hint, matches, teamHref }: {
+  label: string; hint?: string; matches: MatchRow[]; teamHref: (bitsId: number) => string
 }) {
   return (
-    <section style={{ marginBottom: SPACE[2] }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: `${SPACE[6]}px ${SPACE[4]}px ${SPACE[2]}px` }}>
+    <section>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: `${SPACE[6]}px ${SPACE[1]}px ${SPACE[3]}px` }}>
         <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2 }}>{label.toUpperCase()}</span>
-        {hint && <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: gold ? 700 : 500, color: gold ? COLOR.gold : COLOR.ink3 }}>{hint}</span>}
+        {hint && <span style={{ marginLeft: 'auto', fontSize: TYPE.caption, fontWeight: 700, color: COLOR.gold }}>{hint}</span>}
       </div>
-      {matches.map(m => <Fixture key={m.bits_match_id} m={m} teamHref={teamHref} />)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
+        {matches.map(m => <Fixture key={m.bits_match_id} m={m} teamHref={teamHref} />)}
+      </div>
     </section>
   )
 }
 
-// Summary by default — next round + last round — with an inline "hela säsongen"
-// expand (no sheet): the rest of the rounds unfold in place.
+// Summary by default (next + last round), inline "hela säsongen" expand — no sheet.
 export function DivisionMatches({ matches, teamHref }: { matches: MatchRow[]; teamHref: (bitsId: number) => string }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -111,21 +107,21 @@ export function DivisionMatches({ matches, teamHref }: { matches: MatchRow[]; te
   const lastRound = played[0]
   const hasMore = rounds.length > (nextRound ? 1 : 0) + (lastRound ? 1 : 0)
 
-  if (expanded) {
-    return (
-      <div>
-        {upcoming.map((g, i) => <RoundBlock key={g.key} label={g.label} hint={i === 0 ? 'spelas härnäst' : undefined} gold={i === 0} matches={g.matches} teamHref={teamHref} />)}
-        {played.map(g => <RoundBlock key={g.key} label={g.label} matches={g.matches} teamHref={teamHref} />)}
-        <ExpandButton label="Visa mindre" open onClick={() => setExpanded(false)} />
-      </div>
-    )
-  }
-
   return (
-    <div>
-      {nextRound && <RoundBlock label="Nästa omgång" hint="spelas härnäst" gold matches={nextRound.matches} teamHref={teamHref} />}
-      {lastRound && <RoundBlock label="Senaste omgången" matches={lastRound.matches} teamHref={teamHref} />}
-      {hasMore && <ExpandButton label="Visa hela säsongen" onClick={() => setExpanded(true)} />}
+    <div style={{ padding: `0 ${SPACE[4]}px` }}>
+      {expanded ? (
+        <>
+          {upcoming.map((g, i) => <RoundBlock key={g.key} label={g.label} hint={i === 0 ? 'spelas härnäst' : undefined} matches={g.matches} teamHref={teamHref} />)}
+          {played.map(g => <RoundBlock key={g.key} label={g.label} matches={g.matches} teamHref={teamHref} />)}
+          <ExpandButton label="Visa mindre" open onClick={() => setExpanded(false)} />
+        </>
+      ) : (
+        <>
+          {nextRound && <RoundBlock label="Nästa omgång" hint="spelas härnäst" matches={nextRound.matches} teamHref={teamHref} />}
+          {lastRound && <RoundBlock label="Senaste omgången" matches={lastRound.matches} teamHref={teamHref} />}
+          {hasMore && <ExpandButton label="Visa hela säsongen" onClick={() => setExpanded(true)} />}
+        </>
+      )}
     </div>
   )
 }
@@ -134,9 +130,8 @@ function ExpandButton({ label, open, onClick }: { label: string; open?: boolean;
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%',
-      margin: `${SPACE[3]}px 0`, padding: `${SPACE[3]}px`, borderRadius: 12,
-      background: 'transparent', border: `1px solid ${COLOR.hairline}`, color: COLOR.ink2,
-      fontSize: 14, fontWeight: 700, cursor: 'pointer',
+      marginTop: SPACE[4], padding: SPACE[3], borderRadius: 12,
+      background: COLOR.surface, border: 'none', color: COLOR.ink2, fontSize: 14, fontWeight: 700, cursor: 'pointer',
     }}>
       {label}
       <ChevronDown size={16} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
