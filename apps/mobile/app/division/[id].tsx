@@ -192,6 +192,10 @@ export default function DivisionPage() {
               {matches.length === 0 && upcoming.length === 0 && (
                 <Text style={styles.empty}>Ingen säsongsdata för den här divisionen ännu.</Text>
               )}
+
+              {matches.length > 0 && (
+                <Text style={styles.footStat}>{past.length} spelade · {upcoming.length} kommande</Text>
+              )}
             </ScrollView>
           )}
 
@@ -271,4 +275,5 @@ const styles = StyleSheet.create({
   },
   link: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
   empty: { color: COLOR.ink3, fontSize: TYPE.body, marginTop: SPACE[8], textAlign: 'center' },
+  footStat: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: SPACE[8], textAlign: 'center' },
 });

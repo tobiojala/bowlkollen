@@ -63,11 +63,6 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           <h1 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', color: COLOR.ink, margin: 0 }}>
             {teamFilterName ?? divisionName}
           </h1>
-          <div style={{ fontSize: 14, color: COLOR.ink2, marginTop: SPACE[1] }}>
-            {teamFilterName
-              ? `${played} spelade · ${upcoming} kommande`
-              : `Säsong ${seasonYear} · ${played} spelade · ${upcoming} kommande`}
-          </div>
 
           {teamFilterName ? (
             <Link href={`/divisioner/${divisionId}`} style={{
@@ -100,6 +95,12 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           <div className="div-schedule">
             <DivisionMatches matches={matches} teamHref={teamHref} />
           </div>
+        </div>
+
+        {/* Quiet season summary at the foot — for anyone who wants the counts,
+            out of the way of the header. */}
+        <div style={{ padding: `${SPACE[8]}px 20px 0`, fontSize: 13, color: COLOR.ink3, textAlign: 'center' }}>
+          Säsong {seasonYear} · {played} spelade · {upcoming} kommande
         </div>
       </div>
     </main>
