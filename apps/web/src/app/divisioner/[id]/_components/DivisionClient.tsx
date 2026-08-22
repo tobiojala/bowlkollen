@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR, type TeamStanding, type MatchRow } from '@/lib/division-standings'
 import { DivisionActions } from './DivisionActions'
@@ -80,6 +80,22 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           )}
 
           <SeasonPills divisionId={divisionId} seasons={seasons} selected={seasonYear} teamId={teamFilterId} />
+
+          {/* Elitserien's season ends in the SM-slutspel — it belongs here, not
+              in Competitions. Shown on both Elitserien Herrar and Damer. */}
+          {tier === 'Elitserien' && (
+            <Link href="/sm-slutspel" style={{
+              display: 'flex', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4],
+              padding: `${SPACE[3]}px ${SPACE[4]}px`, background: `${COLOR.gold}18`, borderRadius: 16, textDecoration: 'none',
+            }}>
+              <Trophy size={20} color={COLOR.gold} strokeWidth={2} />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: COLOR.ink }}>SM-slutspel</span>
+                <span style={{ display: 'block', fontSize: 13, color: COLOR.ink3, marginTop: 2 }}>Seriens avslut — semifinaler och final</span>
+              </span>
+              <ChevronRight size={16} color={COLOR.ink3} />
+            </Link>
+          )}
         </div>
 
         <div className="div-grid">
