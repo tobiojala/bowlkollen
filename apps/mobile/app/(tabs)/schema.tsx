@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -80,15 +81,23 @@ export default function Home() {
     <View style={styles.safe}>
       <View style={[styles.top, { paddingTop: insets.top + SPACE[2] }]}>
         <Text style={styles.title}>Schema</Text>
-        <TextInput
-          style={styles.search}
-          value={text}
-          onChangeText={setText}
-          placeholder="Sök lag eller division…"
-          placeholderTextColor={COLOR.ink4}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={18} color={COLOR.ink3} />
+          <TextInput
+            style={styles.search}
+            value={text}
+            onChangeText={setText}
+            placeholder="Sök lag eller division…"
+            placeholderTextColor={COLOR.ink4}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {text.length > 0 && (
+            <PressableScale onPress={() => setText('')} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color={COLOR.ink3} />
+            </PressableScale>
+          )}
+        </View>
       </View>
 
       {isLoading ? (
@@ -160,14 +169,18 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   top: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[3], gap: SPACE[3] },
   title: { color: COLOR.ink, fontSize: TYPE.title + 8, fontFamily: FONT.bold, letterSpacing: -0.5 },
-  search: {
-    backgroundColor: COLOR.surface2,
-    borderRadius: RADIUS.md,
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACE[2],
+    backgroundColor: COLOR.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: COLOR.hairline,
+    borderRadius: RADIUS.lg,
     paddingHorizontal: SPACE[4],
-    paddingVertical: SPACE[4],
-    color: COLOR.ink,
-    fontSize: TYPE.body,
+    paddingVertical: SPACE[3],
   },
+  search: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.regular, padding: 0 },
   body: { paddingHorizontal: SPACE[6] },
   list: { paddingHorizontal: SPACE[6], paddingBottom: 120 },
   tierText: {
