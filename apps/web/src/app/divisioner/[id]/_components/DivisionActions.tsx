@@ -1,9 +1,8 @@
 'use client'
 
-import { Heart, CalendarPlus, ListOrdered } from 'lucide-react'
+import { Heart, CalendarPlus, Download } from 'lucide-react'
 import { useSession, useIsFollowing, useToggleFollow } from '@/lib/queries'
-import { DownloadMenu, type CsvScope } from '@/components/DownloadMenu'
-import { COLOR, SPACE } from '@/lib/brand'
+import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { toCsv, downloadText, fileStem } from '@/lib/csv'
 import type { MatchRow } from '@/lib/division-standings'
 
@@ -11,23 +10,35 @@ type Props = {
   divisionId:   number
   divisionName: string
   matches:      MatchRow[]
-  onShowTable:  () => void
 }
-
-const ghost = (accent?: string): React.CSSProperties => ({
-  display: 'flex', alignItems: 'center', gap: 6,
-  padding: '6px 2px', background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 14, fontWeight: 600, color: accent ?? COLOR.ink2,
-  WebkitTapHighlightColor: 'transparent', whiteSpace: 'nowrap',
-})
 
 function fmtDate(iso: string) {
   return new Date(iso + (iso.length <= 10 ? 'T12:00:00' : '')).toLocaleString('sv-SE', {
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    year: 'numeric', month: '2-digit', day: '2-digit',
   })
 }
 
-export function DivisionActions({ divisionId, divisionName, matches, onShowTable }: Props) {
+// A native-style action button — icon over label, on a tonal surface (no border).
+function ActionButton({ icon, label, onClick, disabled, accent }: {
+  icon: React.ReactNode; label: string; onClick: () => void; disabled?: boolean; accent?: string
+}) {
+  return (
+    <button onClick={onClick} disabled={disabled} style={{
+      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: SPACE[1],
+      background: COLOR.surface, border: 'none', borderRadius: RADIUS.md, padding: `${SPACE[3]}px`,
+      cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.5 : 1,
+      WebkitTapHighlightColor: 'transparent',
+    }}>
+      {icon}
+      <span style={{ fontSize: TYPE.caption, fontWeight: 600, color: accent ?? COLOR.ink }}>{label}</span>
+    </button>
+  )
+}
+
+// Follow · Kalender · Export — same button row as native ScheduleActions. The
+// standings table is shown in the layout (aside on desktop, inline on mobile),
+// so there's no "Tabell" action here.
+export function DivisionActions({ divisionId, divisionName, matches }: Props) {
   const { data: session }        = useSession()
   const isFollowing              = useIsFollowing('division', String(divisionId))
   const { mutate: toggleFollow, isPending } = useToggleFollow('division', String(divisionId))
@@ -36,11 +47,8 @@ export function DivisionActions({ divisionId, divisionName, matches, onShowTable
     window.location.href = `webcal://${window.location.host}/api/calendar/division/${divisionId}`
   }
 
-  const downloadCsv = (scope: CsvScope) => {
-    const picked = scope === 'upcoming' ? matches.filter(m => !m.is_finished)
-                 : scope === 'played'   ? matches.filter(m => m.is_finished)
-                 : matches
-    const rows = picked.map(m => [
+  const exportCsv = () => {
+    const rows = matches.map(m => [
       fmtDate(m.match_date), m.round_id ?? '',
       m.home_team_name, m.away_team_name,
       m.is_finished ? (m.home_result ?? '') : '',
@@ -48,30 +56,24 @@ export function DivisionActions({ divisionId, divisionName, matches, onShowTable
       m.is_finished ? 'Spelad' : 'Kommande',
     ])
     const csv = toCsv(['Datum', 'Omgång', 'Hemmalag', 'Bortalag', 'Hemma', 'Borta', 'Status'], rows)
-    const suffix = scope === 'all' ? '' : `-${scope === 'upcoming' ? 'kommande' : 'spelade'}`
-    downloadText(`${fileStem(divisionName)}-${new Date().getFullYear()}${suffix}.csv`, csv, 'text/csv')
+    downloadText(`${fileStem(divisionName)}-${new Date().getFullYear()}.csv`, csv, 'text/csv')
   }
 
+  const upcomingCount = matches.filter(m => !m.is_finished).length
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[6], flexWrap: 'wrap', marginTop: SPACE[4] }}>
-      <button onClick={onShowTable} style={ghost(COLOR.ink)}>
-        <ListOrdered size={16} strokeWidth={2} color={COLOR.ink} />
-        Tabell
-      </button>
-
+    <div style={{ display: 'flex', gap: SPACE[2], marginTop: SPACE[4] }}>
       {session && (
-        <button onClick={() => toggleFollow()} disabled={isPending} style={ghost(isFollowing ? COLOR.gold : COLOR.ink2)}>
-          <Heart size={16} strokeWidth={2} color={isFollowing ? COLOR.gold : COLOR.ink2} fill={isFollowing ? COLOR.gold : 'none'} />
-          {isFollowing ? 'Följer' : 'Följ'}
-        </button>
+        <ActionButton
+          icon={<Heart size={20} strokeWidth={2} color={isFollowing ? COLOR.gold : COLOR.ink} fill={isFollowing ? COLOR.gold : 'none'} />}
+          label={isFollowing ? 'Följer' : 'Följ'}
+          accent={isFollowing ? COLOR.gold : undefined}
+          onClick={() => toggleFollow()}
+          disabled={isPending}
+        />
       )}
-
-      <button onClick={subscribe} style={ghost()}>
-        <CalendarPlus size={16} strokeWidth={2} color={COLOR.ink2} />
-        Kalender
-      </button>
-
-      <DownloadMenu onPick={downloadCsv} />
+      <ActionButton icon={<CalendarPlus size={20} strokeWidth={2} color={COLOR.ink} />} label="Kalender" onClick={subscribe} disabled={upcomingCount === 0} />
+      <ActionButton icon={<Download size={20} strokeWidth={2} color={COLOR.ink} />} label="Export" onClick={exportCsv} disabled={matches.length === 0} />
     </div>
   )
 }

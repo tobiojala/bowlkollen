@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
@@ -8,7 +7,6 @@ import { divisionTier, TIER_COLOR, type TeamStanding, type MatchRow } from '@/li
 import { DivisionActions } from './DivisionActions'
 import { DivisionMatches } from './DivisionMatches'
 import { DivisionStandings } from './DivisionStandings'
-import { StandingsSheet } from './StandingsSheet'
 import { SeasonPills } from './SeasonPills'
 
 type Props = {
@@ -23,8 +21,6 @@ type Props = {
 }
 
 export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, matches, standings, teamFilterName, teamFilterId }: Props) {
-  const [tableOpen, setTableOpen] = useState(false)
-
   // In the lens, tapping the focused team drills into its team page; tapping an
   // opponent switches the lens to them. In the full division every team → lens.
   const teamHref = (bitsId: number) =>
@@ -43,11 +39,11 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
       <style>{`
         .div-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 96px; }
         .div-grid { display: block; }
-        .div-standings { display: none; }
+        .div-standings { display: block; margin-bottom: 24px; }
         @media (min-width: 1024px) {
           .div-wrap { max-width: 1160px; padding: 0 32px 96px; }
           .div-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-          .div-standings { display: block; position: sticky; top: 88px; }
+          .div-standings { display: block; position: sticky; top: 88px; margin-bottom: 0; }
         }
       `}</style>
       <div className="div-wrap">
@@ -85,7 +81,6 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
               divisionId={divisionId}
               divisionName={divisionName}
               matches={matches}
-              onShowTable={() => setTableOpen(true)}
             />
           )}
 
@@ -107,14 +102,6 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           </div>
         </div>
       </div>
-
-      <StandingsSheet
-        open={tableOpen}
-        onClose={() => setTableOpen(false)}
-        standings={standings}
-        tierColor={tierColor}
-        divisionName={divisionName}
-      />
     </main>
   )
 }
