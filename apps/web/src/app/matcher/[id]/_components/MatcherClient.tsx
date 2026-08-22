@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR } from '@/lib/division-standings'
 import type { BitsMatchDetail, BitsMatchPlayerResult } from '@/lib/types'
@@ -35,6 +37,13 @@ function serieTotals(results: BitsMatchPlayerResult[], isHome: boolean, serieCou
 }
 
 export default function MatcherClient({ match, results }: Props) {
+  const router = useRouter()
+  // Go back to wherever you came from (division, team schedule, feed…) rather
+  // than a fixed destination; fall back to Schema on a cold/deep-link open.
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back()
+    else router.push('/schema')
+  }
   const tier        = divisionTier(match.division_name ?? '')
   const tierColor    = TIER_COLOR[tier] ?? COLOR.gold
   const homeWon      = match.home_result != null && match.away_result != null && match.home_result > match.away_result
@@ -50,11 +59,14 @@ export default function MatcherClient({ match, results }: Props) {
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: `${SPACE[6]}px 0 80px` }}>
 
-        {/* Back */}
+        {/* Back — returns to the list you came from */}
         <div style={{ padding: `0 ${SPACE[4]}px`, marginBottom: SPACE[4] }}>
-          <Link href="/?tab=matcher" style={{ fontSize: TYPE.caption, color: COLOR.ink3, textDecoration: 'none' }}>
-            ← Matcher
-          </Link>
+          <button onClick={goBack} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 2, background: 'none', border: 'none',
+            cursor: 'pointer', padding: 0, fontSize: TYPE.caption, color: COLOR.ink2,
+          }}>
+            <ChevronLeft size={15} /> Tillbaka
+          </button>
         </div>
 
         {/* Header card */}
@@ -87,13 +99,18 @@ export default function MatcherClient({ match, results }: Props) {
           {/* Score hero */}
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: 17, fontWeight: homeWon ? 800 : 500,
-                color: homeWon ? COLOR.ink : COLOR.ink3,
-                lineHeight: 1.2,
-              }}>
-                {match.home_team_name}
-              </div>
+              {match.home_bits_team_id ? (
+                <Link href={`/lag/${match.home_bits_team_id}`} style={{
+                  display: 'block', fontSize: 17, fontWeight: homeWon ? 800 : 600,
+                  color: homeWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2, textDecoration: 'none',
+                }}>
+                  {match.home_team_name}
+                </Link>
+              ) : (
+                <div style={{ fontSize: 17, fontWeight: homeWon ? 800 : 600, color: homeWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2 }}>
+                  {match.home_team_name}
+                </div>
+              )}
             </div>
 
             <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 100 }}>
@@ -124,13 +141,18 @@ export default function MatcherClient({ match, results }: Props) {
             </div>
 
             <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-              <div style={{
-                fontSize: 17, fontWeight: awayWon ? 800 : 500,
-                color: awayWon ? COLOR.ink : COLOR.ink3,
-                lineHeight: 1.2,
-              }}>
-                {match.away_team_name}
-              </div>
+              {match.away_bits_team_id ? (
+                <Link href={`/lag/${match.away_bits_team_id}`} style={{
+                  display: 'block', fontSize: 17, fontWeight: awayWon ? 800 : 600,
+                  color: awayWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2, textDecoration: 'none',
+                }}>
+                  {match.away_team_name}
+                </Link>
+              ) : (
+                <div style={{ fontSize: 17, fontWeight: awayWon ? 800 : 600, color: awayWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2 }}>
+                  {match.away_team_name}
+                </div>
+              )}
             </div>
           </div>
 
