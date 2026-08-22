@@ -17,7 +17,11 @@ const STATUS = 'avslutad' as 'avslutad' | 'pagaende' | 'kommande'
 
 export function SmSlutspelClient() {
   const { C } = useColors()
-  const [tab, setTab] = useState<Tab>('herrar')
+  // Deep-link the bracket: Elitserien Damer → ?gender=damer opens on Damer.
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('gender') === 'damer') return 'damer'
+    return 'herrar'
+  })
   const { herrar, damer } = useMemo(() => buildBrackets(), [])
 
   const activeBracket   = tab === 'herrar' ? herrar : damer

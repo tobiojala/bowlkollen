@@ -84,7 +84,7 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           {/* Elitserien's season ends in the SM-slutspel — it belongs here, not
               in Competitions. Shown on both Elitserien Herrar and Damer. */}
           {tier === 'Elitserien' && (
-            <Link href="/sm-slutspel" style={{
+            <Link href={`/sm-slutspel?gender=${divisionName.toLowerCase().includes('dam') ? 'damer' : 'herrar'}`} style={{
               display: 'flex', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4],
               padding: `${SPACE[3]}px ${SPACE[4]}px`, background: `${COLOR.gold}18`, borderRadius: 16, textDecoration: 'none',
             }}>
