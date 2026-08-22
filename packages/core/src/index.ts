@@ -6,3 +6,4 @@ export * from './tokens';
 export * from './eligibility';
 export * from './team-stats';
 export * from './competitions';
+export * from './tiers';

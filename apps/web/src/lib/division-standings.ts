@@ -2,7 +2,10 @@
 
 import { hexToHsl, hslToHex, hashStr } from './color'
 import type { TableRow, FormResult } from './types'
-import { computeStandings, type MatchRow, type TeamStanding } from '@bowlkollen/core'
+import { computeStandings, divisionTier, TIER_ORDER, TIER_RANK, type MatchRow, type TeamStanding, type Tier } from '@bowlkollen/core'
+// Tier taxonomy now lives in @bowlkollen/core (shared with native). Re-exported
+// here so existing `@/lib/division-standings` imports keep working.
+export { divisionTier, TIER_ORDER, TIER_RANK, type Tier }
 
 // computeStandings + these types now live in @bowlkollen/core (shared with the
 // mobile app). Re-exported here so existing web imports keep working unchanged.
@@ -54,33 +57,7 @@ export function buildTeamNarrativeInput(teamId: number, matches: MatchRow[], sta
   }
 }
 
-// ── Tier detection ────────────────────────────────────────────────────────────
-
-const TIER_ORDER = [
-  'Elitserien',
-  'Allsvenskan',
-  'Division 1',
-  'Division 2',
-  'Division 3',
-  'Division 4',
-  'Division 5',
-  'Övrigt',
-]
-
-export function divisionTier(name: string): string {
-  // Case-insensitive: the men's leagues are one word ("Sydallsvenskan",
-  // "Nordallsvenskan", "Mellanallsvenskan") with a lowercase 'a', while the
-  // women's are spaced ("Norra Allsvenskan"). All belong to the same tier.
-  const n = name.toLowerCase()
-  if (n.includes('elitserien'))  return 'Elitserien'
-  if (n.includes('allsvensk'))   return 'Allsvenskan'
-  // Anchored at the start — regional district leagues like "Värmlands P4
-  // Div 4" also contain "Div 4" as a substring but aren't the national tier.
-  for (let i = 5; i >= 1; i--) {
-    if (name.startsWith(`Division ${i}`) || name.startsWith(`Div ${i}`)) return `Division ${i}`
-  }
-  return 'Övrigt'
-}
+// ── Tier grouping (taxonomy is imported from core) ────────────────────────────
 
 export function groupDivisionsByTier<T extends { name: string }>(divs: T[]): Map<string, T[]> {
   const groups = new Map<string, T[]>(TIER_ORDER.map(t => [t, []]))
@@ -94,19 +71,6 @@ export function groupDivisionsByTier<T extends { name: string }>(divs: T[]): Map
     if (v.length === 0) groups.delete(k)
   }
   return groups
-}
-
-// Higher = show first in feed. Elitserien always tops the card stack.
-export const TIER_RANK: Record<string, number> = {
-  'Elitserien':        6,
-  'Allsvenskan':       5,
-  'Mellanallsvenskan': 4,
-  'Division 1':        3,
-  'Division 2':        2,
-  'Division 3':        1,
-  'Division 4':        1,
-  'Division 5':        1,
-  'Övrigt':            0,
 }
 
 // Scoped tier list for the Atlas mosaic — the active, watched divisions only.

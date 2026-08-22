@@ -1,38 +1,17 @@
 import { COLOR } from '@/theme';
+import { TIER_ORDER, divisionTier, type Tier } from '@bowlkollen/core';
 
-// League pyramid, top to bottom. Used to sort + group the division browser so it
-// reads as a hierarchy, not an alphabetical dump. Mirrors the web divisionTier.
-export const TIER_ORDER = [
-  'Elitserien',
-  'Allsvenskan',
-  'Division 1',
-  'Division 2',
-  'Division 3',
-  'Division 4',
-  'Division 5',
-  'Övrigt',
-] as const;
+// League pyramid taxonomy now lives in @bowlkollen/core (shared with web) so the
+// two apps can't drift on which division is which tier. Re-exported for existing
+// `@/lib/tiers` imports; the native grouping shape + accent colours stay here.
+export { TIER_ORDER, divisionTier };
+export type { Tier };
 
-export type Tier = (typeof TIER_ORDER)[number];
-
-export function divisionTier(name: string): Tier {
-  const n = (name || '').toLowerCase();
-  if (n.includes('elitserien')) return 'Elitserien';
-  // Mellan/Nord/Syd-allsvenskan + "Norra Allsvenskan" all belong to Allsvenskan.
-  if (n.includes('allsvensk')) return 'Allsvenskan';
-  for (let i = 5; i >= 1; i--) {
-    if (name.startsWith(`Division ${i}`) || name.startsWith(`Div ${i}`)) {
-      return `Division ${i}` as Tier;
-    }
-  }
-  return 'Övrigt';
-}
-
-// Categorical accent per tier (gold pinnacle → green → olive down the pyramid) —
-// life + hierarchy without blue and without a rainbow. Lower tiers use ink.
+// Categorical accent per tier (gold pinnacle → down the pyramid). Native-only;
+// the flat Schema uses only the Elitserien gold, but other surfaces may use these.
 export const TIER_ACCENT: Record<Tier, string> = {
   Elitserien: COLOR.gold,
-  Allsvenskan: '#5dcaa5',
+  Allsvenskan: COLOR.green,
   'Division 1': '#7cc79b',
   'Division 2': '#9cbe86',
   'Division 3': '#b3ac74',
