@@ -59,7 +59,7 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, matches, 
             <ChevronLeft size={15} /> {teamFilterName ? divisionName : 'Alla divisioner'}
           </Link>
 
-          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: tierColor, marginBottom: SPACE[1] }}>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[1] }}>
             {teamFilterName ? `${tier.toUpperCase()} · ${divisionName}` : tier.toUpperCase()}
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', color: COLOR.ink, margin: 0 }}>
