@@ -12,13 +12,9 @@ export type Tavling = {
   banner?: string
 }
 
+// SM-slutspel lives on the Elitserien division pages (it's the league's own
+// climax), not here in Competitions.
 export const TAVLINGAR: Tavling[] = [
-  {
-    id: 'sm-slutspel-2026', name: 'SM-slutspel 2026',
-    subtitle: 'Semifinaler och final i Elitserien Herrar och Damer',
-    date: '15–17 maj 2026', venue: 'Lucky Bowl, Helsingborg',
-    status: 'avslutad', href: '/sm-slutspel', buttonLabel: 'Se bracket',
-  },
   {
     id: 'gp-final-2026', name: 'Challenger Grand Prix — Final',
     subtitle: 'Tourfinal i Stockholm — 6 deltävlingar bakom sig',

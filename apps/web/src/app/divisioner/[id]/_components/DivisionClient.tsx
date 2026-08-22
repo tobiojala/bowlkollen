@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR, type TeamStanding, type MatchRow } from '@/lib/division-standings'
 import { DivisionActions } from './DivisionActions'
 import { DivisionMatches } from './DivisionMatches'
 import { DivisionStandings } from './DivisionStandings'
+import { DivisionSlutspel } from './DivisionSlutspel'
 import { SeasonPills } from './SeasonPills'
 
 type Props = {
@@ -80,23 +81,20 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
           )}
 
           <SeasonPills divisionId={divisionId} seasons={seasons} selected={seasonYear} teamId={teamFilterId} />
-
-          {/* Elitserien's season ends in the SM-slutspel — it belongs here, not
-              in Competitions. Shown on both Elitserien Herrar and Damer. */}
-          {tier === 'Elitserien' && (
-            <Link href={`/sm-slutspel?gender=${divisionName.toLowerCase().includes('dam') ? 'damer' : 'herrar'}`} style={{
-              display: 'flex', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4],
-              padding: `${SPACE[3]}px ${SPACE[4]}px`, background: `${COLOR.gold}18`, borderRadius: 16, textDecoration: 'none',
-            }}>
-              <Trophy size={20} color={COLOR.gold} strokeWidth={2} />
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: COLOR.ink }}>SM-slutspel</span>
-                <span style={{ display: 'block', fontSize: 13, color: COLOR.ink3, marginTop: 2 }}>Seriens avslut — semifinaler och final</span>
-              </span>
-              <ChevronRight size={16} color={COLOR.ink3} />
-            </Link>
-          )}
         </div>
+
+        {/* Elitserien's season ends in the SM-slutspel — so it lives here (not in
+            Competitions), scoped to this gender + driven by the season pill:
+            a past season shows the champion + bracket, the current one the prognosis. */}
+        {tier === 'Elitserien' && !teamFilterName && (
+          <div style={{ padding: '0 20px' }}>
+            <DivisionSlutspel
+              gender={divisionName.toLowerCase().includes('dam') ? 'damer' : 'herrar'}
+              seasonYear={seasonYear}
+              standings={standings}
+            />
+          </div>
+        )}
 
         <div className="div-grid">
           {/* Desktop: standings table sits beside the schedule (mobile uses the sheet) */}
