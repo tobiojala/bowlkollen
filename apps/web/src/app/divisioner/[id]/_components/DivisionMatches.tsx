@@ -15,11 +15,9 @@ function dateTag(iso: string): string {
   const d = new Date(iso.slice(0, 10) + 'T12:00:00')
   return `${DAY_SE[d.getDay()]} ${d.getDate()} ${MON_SE[d.getMonth()]}`
 }
-function initialsOf(name: string) { return shortName(name).split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
-
-// One team's line: a tonal avatar, the name (a doorway), and its banpoäng.
-// Ink-first — winner in ink, loser in ink2 (still WCAG-AA legible, per BRAND
-// "names/scores are all ink"). No ink3/ink4 on meaningful text, no borders.
+// One team's line: the name (a doorway) and its banpoäng. Ink-first — winner in
+// ink, loser in ink2 (WCAG-AA), per BRAND "names/scores are all ink". No avatars
+// in list rows (kept clean), no ink3/ink4 on meaningful text, no borders.
 function TeamLine({ name, bitsId, score, win, finished, teamHref }: {
   name: string; bitsId: number | null; score: number | null; win: boolean; finished: boolean; teamHref: (id: number) => string
 }) {
@@ -27,12 +25,6 @@ function TeamLine({ name, bitsId, score, win, finished, teamHref }: {
   const emph = !finished || win // upcoming: both full ink; finished: winner full, loser ink2
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-      <span style={{
-        width: 34, height: 34, borderRadius: '50%', flexShrink: 0, background: COLOR.surface2,
-        color: COLOR.ink2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 12, fontWeight: 800, letterSpacing: '0.02em',
-      }}>{initialsOf(name)}</span>
-
       <span
         onClick={bitsId != null ? (e => { e.preventDefault(); e.stopPropagation(); router.push(teamHref(bitsId)) }) : undefined}
         style={{

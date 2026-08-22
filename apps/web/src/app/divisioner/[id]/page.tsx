@@ -8,7 +8,7 @@ import { DivisionClient } from './_components/DivisionClient'
 export const revalidate = 300
 
 export default async function DivisionPage(
-  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ team?: string }> },
+  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ team?: string; season?: string }> },
 ) {
   const { id } = await params
   const sp = await searchParams
@@ -17,24 +17,28 @@ export default async function DivisionPage(
   if (isNaN(divisionId)) notFound()
 
   const supabase = createPublicSupabase()
-  const seasonYear = Number(SEASON.CURRENT.slice(0, 4))
+  const currentYear = Number(SEASON.CURRENT.slice(0, 4))
 
-  const [{ data: division }, { data: rawMatches }] = await Promise.all([
-    supabase
-      .from('bits_divisions')
-      .select('bits_division_id, name')
-      .eq('bits_division_id', divisionId)
-      .eq('season_id', seasonYear)
-      .single(),
-    supabase
-      .from('bits_matches')
-      .select('*')
-      .eq('bits_division_id', divisionId)
-      .eq('season_id', seasonYear)
-      .order('match_date', { ascending: true }),
+  // Division IDs are stable across seasons (bits_matches.season_id distinguishes
+  // them) — so name is resolved season-agnostic, and the seasons list drives the
+  // picker. The selected season comes from ?season= (default: current, else newest).
+  const [{ data: division }, { data: seasonRows }] = await Promise.all([
+    supabase.from('bits_divisions').select('name')
+      .eq('bits_division_id', divisionId).order('season_id', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('bits_matches').select('season_id').eq('bits_division_id', divisionId),
   ])
-
   if (!division) notFound()
+
+  const seasons = [...new Set(((seasonRows ?? []) as { season_id: number }[]).map(r => r.season_id))].sort((a, b) => b - a)
+  const wanted = sp?.season ? Number(sp.season) : null
+  const seasonYear = wanted && seasons.includes(wanted) ? wanted
+    : seasons.includes(currentYear) ? currentYear
+    : seasons[0] ?? currentYear
+
+  const { data: rawMatches } = await supabase
+    .from('bits_matches').select('*')
+    .eq('bits_division_id', divisionId).eq('season_id', seasonYear)
+    .order('match_date', { ascending: true })
 
   const allMatches = (rawMatches ?? []).map(m => toMatchRow(m as unknown as DbMatchRow))
   // Standings always reflect the whole division, even in a team lens.
@@ -57,6 +61,7 @@ export default async function DivisionPage(
       divisionId={divisionId}
       divisionName={division.name}
       seasonYear={seasonYear}
+      seasons={seasons}
       matches={matches}
       standings={standings}
       teamFilterName={teamFilterName}

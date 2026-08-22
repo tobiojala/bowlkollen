@@ -9,18 +9,20 @@ import { DivisionActions } from './DivisionActions'
 import { DivisionMatches } from './DivisionMatches'
 import { DivisionStandings } from './DivisionStandings'
 import { StandingsSheet } from './StandingsSheet'
+import { SeasonPills } from './SeasonPills'
 
 type Props = {
   divisionId:     number
   divisionName:   string
   seasonYear:     number
+  seasons:        number[]
   matches:        MatchRow[]
   standings:      TeamStanding[]
   teamFilterName: string | null
   teamFilterId:   number | null
 }
 
-export function DivisionClient({ divisionId, divisionName, seasonYear, matches, standings, teamFilterName, teamFilterId }: Props) {
+export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, matches, standings, teamFilterName, teamFilterId }: Props) {
   const [tableOpen, setTableOpen] = useState(false)
 
   // In the lens, tapping the focused team drills into its team page; tapping an
@@ -86,6 +88,8 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, matches, 
               onShowTable={() => setTableOpen(true)}
             />
           )}
+
+          <SeasonPills divisionId={divisionId} seasons={seasons} selected={seasonYear} teamId={teamFilterId} />
         </div>
 
         <div className="div-grid">
