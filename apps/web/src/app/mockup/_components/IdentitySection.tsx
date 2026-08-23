@@ -60,12 +60,9 @@ export default function IdentitySection({
   const heroRowRef = useRef<HTMLDivElement>(null)
 
   const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
-  // Hero snitt = official BITS licence_average; fall back to our computed seasonAvg.
-  const heroSnitt   = licenceAverage ?? seasonAvg
-  const heroFormDiff = recentAvg - heroSnitt
 
-  // Trend lines mirror native ProfileTrend: snitt = smooth running BITS average,
-  // BK = rolling rating recomputed each match, ranking = raw per-match points.
+  // Trend lines mirror native ProfileTrend: snitt = our running league-series
+  // average, BK = rolling rating recomputed each match, ranking = raw per-match points.
   const snittPoints = cumulativeAvgPoints(matches)
   const bkPoints    = rollingRatingPoints(matches)
   const rankingPoints: TrendPoint[] = (rankingPts ?? []).map((v, i) => ({
@@ -81,10 +78,14 @@ export default function IdentitySection({
 
   const heroCards: HeroCard[] = [
     {
-      key: 'snitt', label: 'BITS-snitt', value: heroSnitt, delta: heroFormDiff, deltaSuffix: 'form',
-      caption: bkRating !== null
-        ? `Topp ${bkTopPct}% i ligan · BK Rating ${bkRating}`
-        : `Topp ${bkTopPct}% i ligan`,
+      // The curve is OUR running league-series average, so the card headline is
+      // our seriesnitt (matches the curve tail). BITS' official snitt is a broader,
+      // scalar figure — surfaced in the caption, never conflated with this curve.
+      key: 'snitt', label: 'Seriesnitt', value: seasonAvg, delta: recentAvg - seasonAvg, deltaSuffix: 'form',
+      caption: [
+        licenceAverage != null ? `BITS-snitt ${licenceAverage}` : null,
+        `Topp ${bkTopPct}% i ligan`,
+      ].filter(Boolean).join(' · '),
       color: '#f5c200', points: snittPoints, baseline: seasonAvg, proj: projSeasonAvg,
       footerLeft: `${matches.length} matcher`,
       footerRight: lastSeasonAvg ? `Förra säsongen ${lastSeasonAvg}` : undefined,

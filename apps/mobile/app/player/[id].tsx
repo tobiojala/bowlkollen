@@ -147,7 +147,8 @@ export default function PlayerPage() {
                 onPress: () => setShareMoment({
                   kind: 'milestone',
                   who: player.name,
-                  title: 'Säsongssnitt',
+                  // BITS' official snitt is THE snitt; fall back to our league seriesnitt.
+                  title: player.licence_average != null ? 'Snitt' : 'Seriesnitt',
                   value: String(player.licence_average ?? stats.seasonAvg ?? '–'),
                   sub: `${stats.matchesPlayed} matcher${topPct != null ? ` · topp ${topPct}%` : ''}`,
                 }),

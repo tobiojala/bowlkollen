@@ -20,22 +20,30 @@ export function ProfileHero({
 }) {
   const snittTrend = cumulativeAvgPoints(history);
   const ratingTrend = rollingRatingPoints(history);
-  const heroSnitt = licenceAverage ?? stats.seasonAvg ?? 0;
+  // The curve is OUR running league-series average — never BITS' official snitt
+  // (which is a broader, scalar number). Keep the curve honestly labeled as
+  // "Seriesnitt" and surface the official BITS snitt separately as the caption,
+  // so the two are never mistaken for the same figure.
+  const seriesAvg = stats.seasonAvg ?? 0;
+  const snittCaption = [
+    licenceAverage != null ? `BITS-snitt ${licenceAverage}` : null,
+    topPct != null ? `topp ${topPct}% i ligan` : null,
+  ].filter(Boolean).join(' · ') || undefined;
 
   return (
     <HeroDeck
       cards={[
         {
           key: 'snitt',
-          label: 'Säsongssnitt',
+          label: 'Seriesnitt',
           element: (
             <ProfileTrend
               points={snittTrend}
-              label={licenceAverage != null ? 'BITS-SNITT' : 'MATCHSNITT'}
-              restValue={heroSnitt}
+              label="SERIESNITT"
+              restValue={seriesAvg}
               delta={stats.formDiff}
               deltaSuffix="form"
-              caption={topPct != null ? `Topp ${topPct}% i ligan` : undefined}
+              caption={snittCaption}
               accent={COLOR.gold}
               baseline={stats.seasonAvg}
               baselineLabel="matchsnitt"
