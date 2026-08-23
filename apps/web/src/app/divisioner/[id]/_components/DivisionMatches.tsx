@@ -7,6 +7,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { shortName } from '@/lib/utils'
 import { groupByRound, roundDateLabel } from '@/lib/rounds'
+import { matchKickoff } from '@bowlkollen/core'
 import type { MatchRow } from '@/lib/division-standings'
 
 const DAY_SE = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör']
@@ -53,7 +54,8 @@ function Fixture({ m, teamHref }: { m: MatchRow; teamHref: (bitsId: number) => s
   const done = !!(m.is_finished && m.home_result != null && m.away_result != null)
   const hw = done && m.home_result! > m.away_result!
   const aw = done && m.away_result! > m.home_result!
-  const meta = [dateTag(m.match_date), !done ? m.hall_name : null].filter(Boolean).join('  ·  ')
+  const time = !done ? matchKickoff(m.match_datetime) : null
+  const meta = [dateTag(m.match_date), time, !done ? m.hall_name : null].filter(Boolean).join('  ·  ')
 
   return (
     <Link href={`/matcher/${m.bits_match_id}`} style={{

@@ -15,6 +15,7 @@ export function toMatchRow(m: DbMatchRow): MatchRow {
     away_result:       m.away_result,
     is_finished:       m.is_finished,
     match_date:        m.match_date,
+    match_datetime:    m.match_datetime,
     round_id:          m.round_id,
     hall_name:         m.hall_name,
   }

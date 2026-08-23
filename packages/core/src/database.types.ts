@@ -298,6 +298,7 @@ export type Database = {
           home_team_name: string
           is_finished: boolean | null
           match_date: string
+          match_datetime: string | null
           match_scheme_id: string | null
           oil_pattern: string | null
           round_id: number | null
@@ -323,6 +324,7 @@ export type Database = {
           home_team_name: string
           is_finished?: boolean | null
           match_date: string
+          match_datetime?: string | null
           match_scheme_id?: string | null
           oil_pattern?: string | null
           round_id?: number | null
@@ -348,6 +350,7 @@ export type Database = {
           home_team_name?: string
           is_finished?: boolean | null
           match_date?: string
+          match_datetime?: string | null
           match_scheme_id?: string | null
           oil_pattern?: string | null
           round_id?: number | null

@@ -2,6 +2,15 @@
 // app's division-standings.ts (which now re-exports from here) so both platforms
 // compute a league table identically. No DB access; fully testable.
 
+/** Wall-clock kickoff "HH:mm" from a naive match_datetime string
+ * ("YYYY-MM-DDTHH:mm:ss"), or null when the source carried only a date
+ * (midnight) or nothing. Shared by web + native so times read identically. */
+export function matchKickoff(datetime: string | null | undefined): string | null {
+  if (!datetime || datetime.length < 16) return null;
+  const hhmm = datetime.slice(11, 16);
+  return hhmm && hhmm !== '00:00' ? hhmm : null;
+}
+
 export type MatchRow = {
   bits_match_id: number;
   home_bits_team_id: number;
@@ -12,6 +21,7 @@ export type MatchRow = {
   away_result: number | null;
   is_finished: boolean | null;
   match_date: string;
+  match_datetime?: string | null;
   round_id: number | null;
   hall_name: string | null;
 };

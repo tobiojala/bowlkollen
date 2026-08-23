@@ -2,8 +2,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-server'
 import {
+  syncBitsClubs,
+  syncBitsDivisions,
   syncBitsMatchesForSeason,
   syncBitsPlayers,
+  syncBitsTeamsForAllClubs,
   syncPendingDelmatches,
   syncPendingExactResults,
   syncPendingMatchScores,
@@ -25,9 +28,16 @@ async function runSync() {
   // silently stop updating the live season — so pin to the July boundary.
   const now = new Date()
   const season = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1
-  // Refresh the national player list once a day (heavy full paginate) — keeps search
-  // rosters current, including players whose lower-division team was dropped.
-  const withPlayers = now.getUTCHours() < 3
+  // Once a day (heavy jobs): the national player list AND the season's clubs +
+  // teams. Refreshing clubs/teams daily is what makes SEASON ROLLOVER automatic —
+  // when a new season's divisions appear in BITS they get seeded here, so team
+  // pages + rosters populate without a manual admin sync.
+  const daily = now.getUTCHours() < 3
+
+  // Divisions first, EVERY run: syncBitsMatchesForSeason reads its division list
+  // from the DB, so a brand-new season would otherwise find zero divisions and
+  // silently sync nothing. One cheap API call + upsert guarantees they exist.
+  const divisionsResult = await syncBitsDivisions(season)
 
   const tasks: Promise<unknown>[] = [
     syncBitsMatchesForSeason(season),
@@ -35,23 +45,28 @@ async function runSync() {
     syncPendingExactResults(150),
     syncPendingDelmatches(150),
   ]
-  if (withPlayers) tasks.push(syncBitsPlayers())
+  if (daily) {
+    tasks.push(syncBitsPlayers())
+    tasks.push(syncBitsClubs(season))
+    tasks.push(syncBitsTeamsForAllClubs(season))
+  }
 
   const settled = await Promise.allSettled(tasks)
-  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult] = settled
+  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult] = settled
   const val = (r?: PromiseSettledResult<unknown>) =>
     r?.status === 'fulfilled' ? r.value : { ok: false, error: String(r?.reason) }
 
   const summary = {
     ts: now.toISOString(),
     season,
+    divisions: divisionsResult,
     matches: val(matchesResult),
     scores: val(scoresResult),
     exact: val(exactResult),
     delmatch: val(delmatchResult),
-    ...(withPlayers ? { players: val(playersResult) } : {}),
+    ...(daily ? { players: val(playersResult), clubs: val(clubsResult), teams: val(teamsResult) } : {}),
   }
-  const ok = settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
+  const ok = divisionsResult.ok && settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
 
   // Record the run so /api/health/sync can tell whether the sync is alive (best-effort).
   try {

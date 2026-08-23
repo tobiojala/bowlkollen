@@ -95,7 +95,7 @@ async function bitsGet<T>(path: string, params: Record<string, string | number> 
 
 type BitsDivision = { divisionId: number; divisionName: string }
 type BitsMatch = {
-  matchId: number; matchDate: string; matchRoundId: number
+  matchId: number; matchDate: string; matchDateTime: string; matchRoundId: number
   matchHomeTeamId: number; matchHomeTeamName: string
   matchAwayTeamId: number; matchAwayTeamName: string
   matchHomeTeamScore: number; matchAwayTeamScore: number
@@ -129,6 +129,7 @@ async function syncMatchesForDivision(divisionId: number, seasonId: number): Pro
     bits_division_id:   m.matchDivisionId,
     division_name:      m.matchDivisionName,
     match_date:         m.matchDate.slice(0, 10),
+    match_datetime:     m.matchDateTime || null,
     home_bits_team_id:  m.matchHomeTeamId,
     away_bits_team_id:  m.matchAwayTeamId,
     home_team_name:     m.matchHomeTeamName,

@@ -160,6 +160,7 @@ export async function syncBitsMatchesForDivision(
       bits_division_id:   m.matchDivisionId,
       division_name:      m.matchDivisionName,
       match_date:         m.matchDate.slice(0, 10),
+      match_datetime:     m.matchDateTime || null, // real wall-clock kickoff (naive Swedish local)
       home_bits_team_id:  m.matchHomeTeamId,
       away_bits_team_id:  m.matchAwayTeamId,
       home_team_name:     m.matchHomeTeamName,
@@ -179,9 +180,7 @@ export async function syncBitsMatchesForDivision(
 
     const BATCH = 100
     for (let i = 0; i < rows.length; i += BATCH) {
-      const { error } = await db
-        .from('bits_matches')
-        .upsert(rows.slice(i, i + BATCH), { onConflict: 'bits_match_id' })
+      const { error } = await db.from('bits_matches').upsert(rows.slice(i, i + BATCH), { onConflict: 'bits_match_id' })
       if (error) throw new Error(error.message)
     }
     result.synced = rows.length
