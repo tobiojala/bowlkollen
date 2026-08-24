@@ -44,10 +44,15 @@ async function get<T>(path: string, params: Record<string, string | number>): Pr
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`)
   return res.json() as Promise<T>
 }
-async function post<T>(path: string, body: unknown): Promise<T> {
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+async function post<T>(path: string, body: unknown, attempt = 0): Promise<T> {
   const cookie = await session()
   const res = await fetch(`${BITS_API}/${path}?APIKey=${BITS_KEY}`, { method: 'POST', headers: { ...H, Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-  if (!res.ok) throw new Error(`POST ${path} → ${res.status}`)
+  if (!res.ok) {
+    // BITS 500s intermittently on some old result sets — retry a few times, then give up.
+    if (res.status >= 500 && attempt < 3) { await sleep(500 * (attempt + 1)); return post(path, body, attempt + 1) }
+    throw new Error(`POST ${path} → ${res.status}`)
+  }
   return res.json() as Promise<T>
 }
 
@@ -78,33 +83,41 @@ async function backfillSeason(seasonId: number) {
   }
 
   let done = 0, rowsTotal = 0
+  let failed = 0
   for (const c of uniqComps) {
-    let rows: Record<string, unknown>[] = []
-    for (let rn = 1; rn <= 40; rn++) {
-      const env = await post<{ data?: ResultRow[] } | ResultRow[]>('competition/GetCompetitionResult', { resultId: c.id, resultRowNbr: rn })
-      const classRows = Array.isArray(env) ? env : (env.data ?? [])
-      if (!classRows.length) break
-      for (const r of classRows) {
-        const { p, g } = totals(r)
-        rows.push({
-          bits_competition_id: c.id, result_row_nbr: r.resultRowNbr, result_sort_order: r.resultSortOrder,
-          lic_nbr: r.resultLicNbr?.trim() || null, player_name: r.licenseName ?? null, club_name: r.clubName ?? null,
-          place: r.resultPlace ?? null, rank_points: r.rankPoints ?? null, strength_points: r.resultRankPoint ?? null,
-          hcp: r.resultHcp ?? null, total_pins: p, total_games: g, class_rounds: r.classRounds ?? null,
-          class_hcp: r.classHcp ?? null, class_desperado: r.classDesperado ?? null, synced_at: new Date().toISOString(),
-        })
+    try {
+      let rows: Record<string, unknown>[] = []
+      for (let rn = 1; rn <= 40; rn++) {
+        const env = await post<{ data?: ResultRow[] } | ResultRow[]>('competition/GetCompetitionResult', { resultId: c.id, resultRowNbr: rn })
+        const classRows = Array.isArray(env) ? env : (env.data ?? [])
+        if (!classRows.length) break
+        for (const r of classRows) {
+          const { p, g } = totals(r)
+          rows.push({
+            bits_competition_id: c.id, result_row_nbr: r.resultRowNbr, result_sort_order: r.resultSortOrder,
+            lic_nbr: r.resultLicNbr?.trim() || null, player_name: r.licenseName ?? null, club_name: r.clubName ?? null,
+            place: r.resultPlace ?? null, rank_points: r.rankPoints ?? null, strength_points: r.resultRankPoint ?? null,
+            hcp: r.resultHcp ?? null, total_pins: p, total_games: g, class_rounds: r.classRounds ?? null,
+            class_hcp: r.classHcp ?? null, class_desperado: r.classDesperado ?? null, synced_at: new Date().toISOString(),
+          })
+        }
       }
+      rows = dedupe(rows, r => `${r.result_row_nbr}-${r.result_sort_order}`)
+      for (let i = 0; i < rows.length; i += 200) {
+        const { error } = await db.from('bits_competition_results').upsert(rows.slice(i, i + 200), { onConflict: 'bits_competition_id,result_row_nbr,result_sort_order' })
+        if (error) throw new Error(error.message)
+      }
+      await db.from('bits_competitions').update({ results_synced: true }).eq('bits_competition_id', c.id)
+      rowsTotal += rows.length; done++
+      if (done % 25 === 0) console.log(`  ${done}/${comps.length} comps, ${rowsTotal} result rows`)
+    } catch (e) {
+      // Some old competitions BITS just can't serve (persistent 500). Skip so the
+      // rest of the season completes; results_synced stays false → retried later.
+      failed++
+      console.warn(`  ! skipped comp ${c.id} "${c.name.slice(0, 40)}": ${e instanceof Error ? e.message : e}`)
     }
-    rows = dedupe(rows, r => `${r.result_row_nbr}-${r.result_sort_order}`)
-    for (let i = 0; i < rows.length; i += 200) {
-      const { error } = await db.from('bits_competition_results').upsert(rows.slice(i, i + 200), { onConflict: 'bits_competition_id,result_row_nbr,result_sort_order' })
-      if (error) throw new Error(error.message)
-    }
-    await db.from('bits_competitions').update({ results_synced: true }).eq('bits_competition_id', c.id)
-    rowsTotal += rows.length; done++
-    if (done % 25 === 0) console.log(`  ${done}/${comps.length} comps, ${rowsTotal} result rows`)
   }
-  console.log(`  season ${seasonId} done: ${done} comps, ${rowsTotal} result rows`)
+  console.log(`  season ${seasonId} done: ${done} comps, ${rowsTotal} result rows${failed ? `, ${failed} skipped` : ''}`)
 }
 
 async function main() {
