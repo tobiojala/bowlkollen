@@ -2169,6 +2169,18 @@ export type Database = {
           user_email: string
         }[]
       }
+      get_player_competition_results: {
+        Args: { p_public_id: string }
+        Returns: {
+          bits_competition_id: number
+          competition_name: string
+          start_date: string | null
+          place: number | null
+          total_pins: number
+          total_games: number
+          rank_points: number | null
+        }[]
+      }
       get_player_identity: {
         Args: { p_public_id: string }
         Returns: {
