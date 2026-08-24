@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Star } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -197,6 +198,16 @@ export default function TavlingarPage() {
           <span style={{ fontWeight: 800, color: C.accent }}>{kommande}</span> kommande
         </span>
       </div>
+
+      {/* Official BITS result archive (ingested competitions + player standings) */}
+      <Link href="/tavlingar/resultat" style={{ display: 'flex', alignItems: 'center', gap: 12,
+        margin: '0 16px 12px', padding: '12px 14px', background: C.card, borderRadius: 14, textDecoration: 'none' }}>
+        <span style={{ flex: 1 }}>
+          <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: C.text }}>Tävlingsresultat</span>
+          <span style={{ display: 'block', fontSize: 13, color: C.textMuted, marginTop: 2 }}>Officiella resultat &amp; placeringar från BITS</span>
+        </span>
+        <span style={{ color: C.textMuted, fontSize: 18 }}>›</span>
+      </Link>
 
       {/* Sticky filter row */}
       <div style={{ position: 'sticky', top: 64, background: C.bg, zIndex: 30,
