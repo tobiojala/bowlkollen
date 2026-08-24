@@ -2,7 +2,7 @@
 -- lic_nbr — same privacy contract as get_player_identity / get_player_match_history).
 -- Joins bits_players → bits_competition_results → bits_competitions server-side.
 -- Public federation data; granted to anon + authenticated.
-CREATE OR REPLACE FUNCTION public.get_player_competition_results(p_public_id text)
+CREATE OR REPLACE FUNCTION public.get_player_competition_results(p_public_id uuid)
 RETURNS TABLE (
   bits_competition_id integer,
   competition_name    text,
@@ -25,4 +25,4 @@ AS $$
   ORDER BY c.start_date DESC NULLS LAST, c.bits_competition_id DESC;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_player_competition_results(text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_player_competition_results(uuid) TO anon, authenticated;
