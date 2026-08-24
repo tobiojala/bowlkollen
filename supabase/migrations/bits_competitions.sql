@@ -29,7 +29,7 @@ CREATE INDEX IF NOT EXISTS bits_competitions_pending_idx ON public.bits_competit
 CREATE TABLE IF NOT EXISTS public.bits_competition_results (
   bits_competition_id integer NOT NULL REFERENCES public.bits_competitions(bits_competition_id) ON DELETE CASCADE,
   result_row_nbr      integer NOT NULL,      -- class index within the competition
-  result_sort_order   integer NOT NULL,      -- unique row order within the class
+  result_sort_order   bigint  NOT NULL,      -- unique row order within the class (BITS uses 10-digit keys)
   lic_nbr             text,                  -- → bits_players.lic_nbr (null for team rows)
   player_name         text,
   club_name           text,
