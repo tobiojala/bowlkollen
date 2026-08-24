@@ -51,9 +51,9 @@ export default function BkRatingSheet({ bkTopPct, onClose }: BkRatingSheetProps)
           <span className="text-[13px] font-bold" style={{ color: INK }}>mot fältet</span>
         </div>
         <p className="text-[13px] mt-1.5" style={{ color: INK2, lineHeight: 1.55 }}>
-          Varje match jämförs Sara med <span style={{ color: INK, fontWeight: 600 }}>alla som bowlade samma
-          banor, samma olja, samma kväll</span>. Hon slår förhållandena med 12 pinnar i snitt —
-          det är grunden i betyget, inte råa poäng.
+          Varje match jämförs spelaren med <span style={{ color: INK, fontWeight: 600 }}>alla som bowlade samma
+          banor, samma olja, samma kväll</span> — och slår förhållandena med 12 pinnar i snitt.
+          Det är grunden i betyget, inte råa poäng.
         </p>
       </div>
 

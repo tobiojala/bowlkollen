@@ -41,6 +41,9 @@ interface IdentitySectionProps {
   rankingPts?: number[]
   /** When the viewer owns this profile, hide the follow button. */
   isOwner?: boolean
+  /** The live route renders its own real FollowButton — set false to drop this
+   * placeholder one (avoids two follow buttons). Defaults true for the mockup. */
+  showFollow?: boolean
   onOpenCurve: (metric?: HeroMetric) => void
   onOpenChallenges: () => void
   onOpenBkRating: () => void
@@ -52,7 +55,7 @@ interface IdentitySectionProps {
 
 export default function IdentitySection({
   data, identity, bkTopPct, licenceAverage, bkRating, level, achievements = [],
-  bkProgress, rankingPts, isOwner = false,
+  bkProgress, rankingPts, isOwner = false, showFollow = true,
   onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
@@ -129,7 +132,7 @@ export default function IdentitySection({
           <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>
-        {!isOwner && (
+        {!isOwner && showFollow && (
           <button onClick={() => setFollowing(f => !f)}
             style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
               background: following ? '#1c2127' : INK,

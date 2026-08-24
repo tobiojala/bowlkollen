@@ -69,7 +69,7 @@ export function narrativeParagraph(s: {
     sentences.push(`Med ${s.hitRate}% träffrate och ${s.games200Plus} av ${s.totalGames} spel över 200 är grundstabiliteten hög.`)
 
   // Sentence 3 — rhythm + character
-  sentences.push(`Som ${s.rhythmLabel.toLowerCase()} tar hon regelbundet ett kliv mot slutet — ${s.consistency.toLowerCase()} prestationer gör henne svår att räkna bort.`)
+  sentences.push(`Som ${s.rhythmLabel.toLowerCase()} kommer klivet ofta mot slutet — ${s.consistency.toLowerCase()} prestationer är svåra att räkna bort.`)
 
   // Sentence 4 — season highlight
   sentences.push(`Säsongens höjdpunkt är en serie på ${s.bestSeries} — ett bevis på att toppresultaten finns när det verkligen gäller.`)

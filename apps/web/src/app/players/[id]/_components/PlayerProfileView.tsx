@@ -181,6 +181,7 @@ export default function PlayerProfileView({
             bkRating={null}                /* launch state: "kommer snart" */
             achievements={achievements}
             isOwner={isOwner}
+            showFollow={false}             /* the route renders the real FollowButton above */
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => {}}
             onOpenBkRating={() => setExpanded('bkrating')}
