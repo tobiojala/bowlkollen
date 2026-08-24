@@ -280,6 +280,119 @@ export type Database = {
           },
         ]
       }
+      bits_competitions: {
+        Row: {
+          bits_competition_id: number
+          season_id: number
+          name: string
+          hall: string | null
+          hall_city: string | null
+          hall_id: number | null
+          club: string | null
+          start_date: string | null
+          end_date: string | null
+          final_date: string | null
+          status: number | null
+          results_synced: boolean
+          synced_at: string
+        }
+        Insert: {
+          bits_competition_id: number
+          season_id: number
+          name: string
+          hall?: string | null
+          hall_city?: string | null
+          hall_id?: number | null
+          club?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          final_date?: string | null
+          status?: number | null
+          results_synced?: boolean
+          synced_at?: string
+        }
+        Update: {
+          bits_competition_id?: number
+          season_id?: number
+          name?: string
+          hall?: string | null
+          hall_city?: string | null
+          hall_id?: number | null
+          club?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          final_date?: string | null
+          status?: number | null
+          results_synced?: boolean
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      bits_competition_results: {
+        Row: {
+          bits_competition_id: number
+          result_row_nbr: number
+          result_sort_order: number
+          lic_nbr: string | null
+          player_name: string | null
+          club_name: string | null
+          place: number | null
+          rank_points: number | null
+          strength_points: number | null
+          hcp: number | null
+          total_pins: number
+          total_games: number
+          class_rounds: number | null
+          class_hcp: number | null
+          class_desperado: boolean | null
+          synced_at: string
+        }
+        Insert: {
+          bits_competition_id: number
+          result_row_nbr: number
+          result_sort_order: number
+          lic_nbr?: string | null
+          player_name?: string | null
+          club_name?: string | null
+          place?: number | null
+          rank_points?: number | null
+          strength_points?: number | null
+          hcp?: number | null
+          total_pins?: number
+          total_games?: number
+          class_rounds?: number | null
+          class_hcp?: number | null
+          class_desperado?: boolean | null
+          synced_at?: string
+        }
+        Update: {
+          bits_competition_id?: number
+          result_row_nbr?: number
+          result_sort_order?: number
+          lic_nbr?: string | null
+          player_name?: string | null
+          club_name?: string | null
+          place?: number | null
+          rank_points?: number | null
+          strength_points?: number | null
+          hcp?: number | null
+          total_pins?: number
+          total_games?: number
+          class_rounds?: number | null
+          class_hcp?: number | null
+          class_desperado?: boolean | null
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_competition_results_bits_competition_id_fkey"
+            columns: ["bits_competition_id"]
+            isOneToOne: false
+            referencedRelation: "bits_competitions"
+            referencedColumns: ["bits_competition_id"]
+          },
+        ]
+      }
       bits_matches: {
         Row: {
           away_bits_team_id: number

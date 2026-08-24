@@ -1,11 +1,11 @@
 import 'server-only'
 
 const BITS_SITE = 'https://bits.swebowl.se'
-const BITS_API  = 'https://api.swebowl.se/api/v1'
-const BITS_KEY  = '62fcl8gPUMXSQGW1t2Y8mc2zeTk97vbd'
+export const BITS_API  = 'https://api.swebowl.se/api/v1'
+export const BITS_KEY  = '62fcl8gPUMXSQGW1t2Y8mc2zeTk97vbd'
 const UA        = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-const BASE_HEADERS = {
+export const BASE_HEADERS = {
   Origin:            BITS_SITE,
   Referer:           `${BITS_SITE}/seriespel`,
   'X-Requested-With': 'XMLHttpRequest',
@@ -176,7 +176,7 @@ function jarToString(jar: Record<string, string>): string {
   return Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ')
 }
 
-async function getSession(): Promise<string> {
+export async function getSession(): Promise<string> {
   if (_session && Date.now() < _session.expiresAt) return _session.cookie
 
   const jar: Record<string, string> = {}

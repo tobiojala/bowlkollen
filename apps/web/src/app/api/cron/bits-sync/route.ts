@@ -11,6 +11,7 @@ import {
   syncPendingExactResults,
   syncPendingMatchScores,
 } from '@/lib/bits-sync'
+import { syncBitsCompetitions, syncPendingCompetitionResults } from '@/lib/bits-competitions-sync'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // seconds — bump on Vercel Pro if the daily player sync needs longer
@@ -49,10 +50,14 @@ async function runSync() {
     tasks.push(syncBitsPlayers())
     tasks.push(syncBitsClubs(season))
     tasks.push(syncBitsTeamsForAllClubs(season))
+    // Competitions (tävlingar): refresh the season's catalog, then work through a
+    // batch of not-yet-fetched competitions' per-player results.
+    tasks.push(syncBitsCompetitions(season))
+    tasks.push(syncPendingCompetitionResults(20))
   }
 
   const settled = await Promise.allSettled(tasks)
-  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult] = settled
+  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult, compResult, compResultsResult] = settled
   const val = (r?: PromiseSettledResult<unknown>) =>
     r?.status === 'fulfilled' ? r.value : { ok: false, error: String(r?.reason) }
 
@@ -64,7 +69,10 @@ async function runSync() {
     scores: val(scoresResult),
     exact: val(exactResult),
     delmatch: val(delmatchResult),
-    ...(daily ? { players: val(playersResult), clubs: val(clubsResult), teams: val(teamsResult) } : {}),
+    ...(daily ? {
+      players: val(playersResult), clubs: val(clubsResult), teams: val(teamsResult),
+      competitions: val(compResult), competitionResults: val(compResultsResult),
+    } : {}),
   }
   const ok = divisionsResult.ok && settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
 

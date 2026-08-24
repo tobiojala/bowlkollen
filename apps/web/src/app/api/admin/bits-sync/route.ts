@@ -17,6 +17,11 @@ import {
   syncBitsPlayerAgreements,
   resolveBitsPlayerLicNbrsByAgreement,
 } from '@/lib/bits-sync'
+import {
+  syncBitsCompetitions,
+  syncBitsCompetitionResults,
+  syncPendingCompetitionResults,
+} from '@/lib/bits-competitions-sync'
 
 async function requireAdmin() {
   const supabase = await createServerSupabase()
@@ -31,13 +36,14 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json() as {
-    action:      string
-    seasonId?:   number
-    divisionId?: number
-    matchId?:    number
-    limit?:      number
+    action:         string
+    seasonId?:      number
+    divisionId?:    number
+    matchId?:       number
+    competitionId?: number
+    limit?:         number
   }
-  const { action, seasonId = 2025, divisionId, matchId, limit = 50 } = body
+  const { action, seasonId = 2025, divisionId, matchId, competitionId, limit = 50 } = body
 
   try {
     switch (action) {
@@ -91,6 +97,17 @@ export async function POST(req: Request) {
 
       case 'resolve_players_by_agreement':
         return NextResponse.json(await resolveBitsPlayerLicNbrsByAgreement())
+
+      case 'competitions':
+        return NextResponse.json(await syncBitsCompetitions(seasonId))
+
+      case 'competition_results': {
+        if (!competitionId) return NextResponse.json({ error: 'competitionId required' }, { status: 400 })
+        return NextResponse.json(await syncBitsCompetitionResults(competitionId))
+      }
+
+      case 'competition_results_pending':
+        return NextResponse.json(await syncPendingCompetitionResults(limit))
 
       default:
         return NextResponse.json({ error: `unknown action: ${action}` }, { status: 400 })
