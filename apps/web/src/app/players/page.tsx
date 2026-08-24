@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { playerSearchTokens } from '@bowlkollen/core'
 import { useColors } from '@/components/ThemeProvider'
 import { ChevronRight, Search, Flame } from 'lucide-react'
 import { prefetchPlayer } from '@/lib/prefetch'
@@ -39,10 +40,11 @@ export default function PlayersPage() {
     if (query.trim().length < QUERY.SEARCH_MIN_CHARS) { setResults([]); setSearching(false); return }
     setSearching(true)
     const t = setTimeout(async () => {
-      const { data } = await createClient()
+      let pq = createClient()
         .from('bits_players')
         .select('public_id,first_name,sur_name,club_name,licence_average')
-        .or(`first_name.ilike.%${query.trim()}%,sur_name.ilike.%${query.trim()}%`)
+      for (const w of playerSearchTokens(query)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
+      const { data } = await pq
         .order('licence_average', { ascending: false, nullsFirst: false })
         .limit(30)
       setResults((data ?? []).map(p => ({

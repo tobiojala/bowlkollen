@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { playerSearchTokens } from '@bowlkollen/core';
 
 import { useAuth } from '@/lib/auth';
 import { useMyTeams } from '@/lib/me';
@@ -408,11 +409,9 @@ export function useRosterSearch(query: string) {
     queryKey: ['roster-search', q],
     enabled: q.length >= 2,
     queryFn: async (): Promise<PlayerHit[]> => {
-      const { data } = await supabase
-        .from('bits_players')
-        .select('public_id, first_name, sur_name, club_name')
-        .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
-        .limit(20);
+      let pq = supabase.from('bits_players').select('public_id, first_name, sur_name, club_name');
+      for (const w of playerSearchTokens(q)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`);
+      const { data } = await pq.limit(20);
       return (data ?? []).map((p) => ({
         publicId: p.public_id as string,
         name: `${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim() || 'Spelare',

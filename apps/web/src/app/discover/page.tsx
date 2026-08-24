@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Search, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
+import { playerSearchTokens } from '@bowlkollen/core'
 import { STALE } from '@/lib/constants'
 import { COLOR } from '@/lib/brand'
 import FollowButton from '@/components/FollowButton'
@@ -63,9 +64,13 @@ function useSearch(q: string) {
     queryFn: async (): Promise<{ players: PlayerHit[]; teams: TeamHit[] }> => {
       const supabase = createClient()
       const term     = `%${q.trim()}%`
+      // Full-name search: AND each token across first/sur name (see playerSearchTokens).
+      let playerQuery = supabase.from('bits_players').select('public_id,first_name,sur_name,club_name')
+      for (const w of playerSearchTokens(q)) {
+        playerQuery = playerQuery.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
+      }
       const [pr, tr] = await Promise.all([
-        supabase.from('bits_players').select('public_id,first_name,sur_name,club_name')
-          .or(`first_name.ilike.${term},sur_name.ilike.${term}`).limit(8),
+        playerQuery.limit(8),
         supabase.from('bits_teams').select('bits_team_id,bits_club_id,name,club_name')
           .or(`name.ilike.${term},club_name.ilike.${term}`).limit(6),
       ])

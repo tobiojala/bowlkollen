@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { playerSearchTokens } from '@bowlkollen/core';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -24,11 +25,9 @@ function useSearch(query: string) {
     queryKey: ['claim-search', q],
     enabled: q.length >= SEARCH_MIN,
     queryFn: async (): Promise<Player[]> => {
-      const { data } = await supabase
-        .from('bits_players')
-        .select('public_id, first_name, sur_name, club_name')
-        .or(`first_name.ilike.%${q}%,sur_name.ilike.%${q}%`)
-        .limit(25);
+      let pq = supabase.from('bits_players').select('public_id, first_name, sur_name, club_name');
+      for (const w of playerSearchTokens(q)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`);
+      const { data } = await pq.limit(25);
       return data ?? [];
     },
   });

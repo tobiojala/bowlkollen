@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { playerSearchTokens } from '@bowlkollen/core';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -29,7 +30,7 @@ function useSearch(query: string) {
     queryFn: async () => {
       // Match each word against first OR surname (ANDed across words) so a full
       // "Förnamn Efternamn" resolves — the old single-%q% check matched neither field.
-      const words = q.split(/\s+/).map((w) => w.replace(/[%,()]/g, '')).filter(Boolean);
+      const words = playerSearchTokens(q);
       let playersQ = supabase.from('bits_players').select('public_id, first_name, sur_name, club_name');
       let teamsQ = supabase.from('bits_teams').select('bits_team_id, name, club_name');
       for (const w of words) {

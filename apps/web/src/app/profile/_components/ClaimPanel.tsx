@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { playerSearchTokens } from '@bowlkollen/core'
 import { QUERY } from '@/lib/constants'
 
 const INK  = '#f4f5f7'
@@ -28,9 +29,9 @@ export default function ClaimPanel({ onClaimed }: { onClaimed: () => void }) {
     setQ(value)
     setPicked(null)
     if (value.trim().length < QUERY.SEARCH_MIN_CHARS) { setHits([]); return }
-    const { data } = await createClient()
-      .from('bits_players').select('public_id, first_name, sur_name, club_name')
-      .or(`first_name.ilike.%${value.trim()}%,sur_name.ilike.%${value.trim()}%`).limit(8)
+    let pq = createClient().from('bits_players').select('public_id, first_name, sur_name, club_name')
+    for (const w of playerSearchTokens(value)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
+    const { data } = await pq.limit(8)
     setHits((data ?? []).map((p) => ({
       id: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim(), club: p.club_name ?? '',
     })))

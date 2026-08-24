@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { playerSearchTokens } from '@bowlkollen/core'
 import PlayerCard from '@/components/PlayerCard'
 import PlayerProfileView from './PlayerProfileView'
 import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
@@ -45,10 +46,9 @@ export default function PlayerProfileClient({ id }: { id: string }) {
   const searchPlayers = async (q: string) => {
     setCompareQuery(q)
     if (q.trim().length < QUERY.SEARCH_MIN_CHARS) { setCompareResults([]); return }
-    const { data } = await createClient()
-      .from('bits_players').select('public_id,first_name,sur_name')
-      .or(`first_name.ilike.%${q.trim()}%,sur_name.ilike.%${q.trim()}%`)
-      .neq('public_id', id).limit(6)
+    let pq = createClient().from('bits_players').select('public_id,first_name,sur_name')
+    for (const w of playerSearchTokens(q)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
+    const { data } = await pq.neq('public_id', id).limit(6)
     setCompareResults((data ?? []).map(p => ({ id: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim() })))
   }
 
