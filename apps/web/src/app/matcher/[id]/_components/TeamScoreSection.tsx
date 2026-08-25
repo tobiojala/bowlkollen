@@ -30,13 +30,14 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
 
   return (
     <div style={{ marginBottom: SPACE[6] }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
-        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink2 }}>{teamName}</span>
-        <span style={{ fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: isWinner ? COLOR.ink : COLOR.ink2 }}>{total}</span>
-      </div>
-
       <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
-        {/* Header row — inside the card */}
+        {/* Team title bar — inside the card */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: `${SPACE[3]}px ${SPACE[4]}px`, borderBottom: `1px solid ${COLOR.hairline}` }}>
+          <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink2 }}>{teamName}</span>
+          <span style={{ fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: isWinner ? COLOR.ink : COLOR.ink2 }}>{total}</span>
+        </div>
+
+        {/* Column header — inside the card */}
         <div style={{ ...grid, borderBottom: `1px solid ${COLOR.hairline}` }}>
           <span />
           {Array.from({ length: serieCount }, (_, i) => <span key={i} style={colLabel}>S{i + 1}</span>)}
