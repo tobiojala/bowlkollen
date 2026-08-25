@@ -7,7 +7,8 @@ import { ChevronLeft } from 'lucide-react'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR } from '@/lib/division-standings'
 import type { BitsMatchDetail, BitsMatchPlayerResult } from '@/lib/types'
-import { TeamScoreSection, type PlayerLine } from './TeamScoreSection'
+import { type PlayerLine } from './TeamScoreSection'
+import { MatchResults } from './MatchResults'
 import { DelmatchBoard } from './DelmatchBoard'
 import { RivalryCallout } from './RivalryCallout'
 import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
@@ -68,7 +69,16 @@ export default function MatcherClient({ match, results }: Props) {
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: `${SPACE[6]}px 0 80px` }}>
+      <style>{`
+        .match-canvas { max-width: 600px; margin: 0 auto; padding: 24px 0 80px; }
+        .match-grid { display: block; }
+        @media (min-width: 1024px) {
+          .match-canvas { max-width: 1160px; padding: 24px 32px 96px; }
+          .match-grid { display: grid; grid-template-columns: 380px 1fr; gap: 40px; align-items: start; }
+          .match-side { position: sticky; top: 24px; align-self: start; }
+        }
+      `}</style>
+      <div className="match-canvas">
 
         {/* Back — returns to the list you came from */}
         <div style={{ padding: `0 ${SPACE[4]}px`, marginBottom: SPACE[4] }}>
@@ -79,6 +89,10 @@ export default function MatcherClient({ match, results }: Props) {
             <ChevronLeft size={15} /> Tillbaka
           </button>
         </div>
+
+        <div className="match-grid">
+          {/* Side: the match identity — score hero + hetaste bordet (sticky on desktop) */}
+          <div className="match-side">
 
         {/* Header card */}
         <div style={{
@@ -181,6 +195,11 @@ export default function MatcherClient({ match, results }: Props) {
           </div>
         )}
 
+          </div>{/* /match-side */}
+
+          {/* Main: the detail — bordsvy + full spelresultat */}
+          <div className="match-main">
+
         {/* Bordsvy — the real 2v2 head-to-heads, not BITS' dense table */}
         {hasDelmatch && delmatch && (
           <div ref={bordRef} style={{ padding: `${SPACE[6]}px ${SPACE[4]}px 0` }}>
@@ -191,80 +210,13 @@ export default function MatcherClient({ match, results }: Props) {
           </div>
         )}
 
-        {/* Player scores — grouped by team first, so every player's full
-            per-serie line is readable, instead of dumping all of one team's
-            board-mates on one side of a duel-style row. */}
+        {/* Player scores — grouped by team, per-serie comparison + full lines */}
         {hasResults && (
-          <div style={{ padding: `0 ${SPACE[4]}px` }}>
-            <div style={{
-              fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em',
-              color: COLOR.ink3, marginBottom: SPACE[4],
-            }}>
-              SPELRESULTAT
-            </div>
-
-            {/* Per-serie team comparison */}
-            <div style={{
-              display: 'flex', gap: SPACE[2], padding: `${SPACE[2]}px 0`, marginBottom: SPACE[6],
-              borderBottom: `1px solid ${COLOR.hairline}`,
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }} />
-              <div style={{ display: 'flex', gap: SPACE[2] }}>
-                {Array.from({ length: serieCount }, (_, i) => (
-                  <span key={i} style={{ width: 28, textAlign: 'center', fontSize: 9, fontWeight: 700, color: COLOR.ink4 }}>
-                    S{i + 1}
-                  </span>
-                ))}
-              </div>
-              <span style={{ width: 34 }} />
-            </div>
-            {([
-              { name: match.home_team_name, series: homeSeries, won: homeWon },
-              { name: match.away_team_name, series: awaySeries, won: awayWon },
-            ] as const).map(team => (
-              <div key={team.name} style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], padding: '4px 0' }}>
-                <div style={{
-                  flex: 1, minWidth: 0, fontSize: TYPE.caption, fontWeight: team.won ? 700 : 500,
-                  color: team.won ? COLOR.ink : COLOR.ink3,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {team.name}
-                </div>
-                <div style={{ display: 'flex', gap: SPACE[2] }}>
-                  {team.series.map((v, i) => (
-                    <span key={i} style={{
-                      width: 28, textAlign: 'center', fontSize: TYPE.caption, fontVariantNumeric: 'tabular-nums', color: COLOR.ink2,
-                    }}>
-                      {v}
-                    </span>
-                  ))}
-                </div>
-                <span style={{
-                  width: 34, textAlign: 'right', fontSize: TYPE.caption, fontWeight: 700, fontFamily: FONT.display,
-                  fontVariantNumeric: 'tabular-nums', color: team.won ? COLOR.green : COLOR.ink3,
-                }}>
-                  {team.series.reduce((a, b) => a + b, 0)}
-                </span>
-              </div>
-            ))}
-
-            <div style={{ marginTop: SPACE[6] }}>
-              <TeamScoreSection
-                teamName={match.home_team_name}
-                players={homePlayers}
-                serieCount={serieCount}
-                total={homeSeries.reduce((a, b) => a + b, 0)}
-                isWinner={homeWon}
-              />
-              <TeamScoreSection
-                teamName={match.away_team_name}
-                players={awayPlayers}
-                serieCount={serieCount}
-                total={awaySeries.reduce((a, b) => a + b, 0)}
-                isWinner={awayWon}
-              />
-            </div>
-          </div>
+          <MatchResults
+            homeTeamName={match.home_team_name} awayTeamName={match.away_team_name}
+            serieCount={serieCount} homeSeries={homeSeries} awaySeries={awaySeries}
+            homePlayers={homePlayers} awayPlayers={awayPlayers} homeWon={homeWon} awayWon={awayWon}
+          />
         )}
 
         {/* No scores yet */}
@@ -290,7 +242,10 @@ export default function MatcherClient({ match, results }: Props) {
             </Link>
           </div>
         )}
-      </div>
+
+          </div>{/* /match-main */}
+        </div>{/* /match-grid */}
+      </div>{/* /match-canvas */}
     </main>
   )
 }

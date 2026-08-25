@@ -14,6 +14,7 @@ import IdentitySection, { type Achievement } from '@/app/mockup/_components/Iden
 import AnalysisSection from '@/app/mockup/_components/AnalysisSection'
 import FeedSection     from '@/app/mockup/_components/FeedSection'
 import { CompetitionHistory } from './CompetitionHistory'
+import { PlayerDelmatchCard } from './PlayerDelmatchCard'
 
 import CurveSheet    from '@/app/mockup/_components/sheets/CurveSheet'
 import WhatIfSheet   from '@/app/mockup/_components/sheets/WhatIfSheet'
@@ -228,6 +229,8 @@ export default function PlayerProfileView({
               onOpenMatch={openMatch}
             />
           </Reveal>
+
+          <PlayerDelmatchCard playerId={playerId} />
 
           <CompetitionHistory playerId={playerId} />
           </div>
