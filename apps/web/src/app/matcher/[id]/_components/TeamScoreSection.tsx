@@ -22,11 +22,11 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
         display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
         marginBottom: SPACE[3],
       }}>
-        <span style={{ fontSize: TYPE.caption, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink3 }}>
+        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink3 }}>
           {teamName}
         </span>
         <span style={{
-          fontSize: 15, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
+          fontSize: 20, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
           color: isWinner ? COLOR.ink : COLOR.ink3,
         }}>
           {total}
@@ -34,30 +34,29 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
       </div>
 
       {/* Column header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], padding: `0 ${SPACE[3]}px`, marginBottom: SPACE[1] }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `0 ${SPACE[3]}px`, marginBottom: SPACE[1] }}>
         <div style={{ flex: 1, minWidth: 0 }} />
         <div style={{ display: 'flex', gap: SPACE[2] }}>
           {Array.from({ length: serieCount }, (_, i) => (
-            <span key={i} style={{ width: 28, textAlign: 'center', fontSize: 9, fontWeight: 700, color: COLOR.ink4 }}>
+            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>
               S{i + 1}
             </span>
           ))}
         </div>
-        <span style={{ width: 34, textAlign: 'right', fontSize: 9, fontWeight: 700, color: COLOR.ink4 }}>TOT</span>
+        <span style={{ width: 40, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>TOT</span>
       </div>
 
       <div style={{
         background: COLOR.surface, borderRadius: RADIUS.md,
-        border: `1px solid ${COLOR.hairline}`,
-        padding: `${SPACE[2]}px ${SPACE[3]}px`,
+        padding: `${SPACE[2]}px ${SPACE[4]}px`,
       }}>
         {players.map((p, i) => (
           <div key={p.name} style={{
-            display: 'flex', alignItems: 'center', gap: SPACE[2], padding: '5px 0',
+            display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[3]}px 0`,
             borderTop: i === 0 ? 'none' : `1px solid ${COLOR.hairline}`,
           }}>
             <div style={{
-              flex: 1, minWidth: 0, fontSize: TYPE.caption,
+              flex: 1, minWidth: 0, fontSize: TYPE.body,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {p.publicId ? (
@@ -73,7 +72,7 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
                 const g = p.games[gi] ?? null
                 return (
                   <span key={gi} style={{
-                    width: 28, textAlign: 'center', fontSize: TYPE.caption, fontVariantNumeric: 'tabular-nums',
+                    width: 36, textAlign: 'center', fontSize: 15, fontVariantNumeric: 'tabular-nums',
                     color: g != null && g >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
                   }}>
                     {g ?? '–'}
@@ -82,7 +81,7 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
               })}
             </div>
             <span style={{
-              width: 34, textAlign: 'right', fontSize: TYPE.caption, fontWeight: 700,
+              width: 40, textAlign: 'right', fontSize: TYPE.body, fontWeight: 700,
               fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: COLOR.ink,
             }}>
               {p.total}

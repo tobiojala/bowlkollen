@@ -24,7 +24,7 @@ function SerieBlock({ serie }: { serie: DelmatchSerie }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
-        <span style={{ color: COLOR.ink2, fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.12em' }}>SERIE {serie.serie}</span>
+        <span style={{ color: COLOR.ink2, fontSize: TYPE.caption, fontWeight: 800, letterSpacing: '0.1em' }}>SERIE {serie.serie}</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontVariantNumeric: 'tabular-nums' }}>
           <span style={{ fontSize: TYPE.caption, fontWeight: 600, color: serie.pinfallWinner === 'home' ? COLOR.ink2 : COLOR.ink3 }}>{serie.homePinfall}</span>
           <span style={{ fontSize: TYPE.caption, color: COLOR.ink4 }}>–</span>
@@ -41,17 +41,17 @@ function BordRow({ d }: { d: Delmatch }) {
   const homeWon = d.winner === 'home', awayWon = d.winner === 'away'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
-      <span style={{ width: 48, flexShrink: 0, fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
+      <span style={{ width: 44, flexShrink: 0, fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.04em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: SPACE[4] }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: SPACE[3] }}>
         {d.home.map((p, i) => <ScorePlayer key={i} p={p} win={homeWon} />)}
-        {homeWon && <Check size={18} color={COLOR.green} style={{ alignSelf: 'center', flexShrink: 0 }} />}
+        {homeWon && <Check size={18} color={COLOR.green} style={{ flexShrink: 0 }} />}
       </div>
 
       <span style={{ width: 1, alignSelf: 'stretch', background: COLOR.hairline, flexShrink: 0 }} />
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: SPACE[4] }}>
-        {awayWon && <Check size={18} color={COLOR.green} style={{ alignSelf: 'center', flexShrink: 0 }} />}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: SPACE[3] }}>
+        {awayWon && <Check size={18} color={COLOR.green} style={{ flexShrink: 0 }} />}
         {d.away.map((p, i) => <ScorePlayer key={i} p={p} win={awayWon} />)}
       </div>
     </div>
@@ -62,7 +62,7 @@ function BordRow({ d }: { d: Delmatch }) {
 function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
   return (
     <div style={{ textAlign: 'center', minWidth: 0 }}>
-      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 26, fontWeight: win ? 800 : 700, lineHeight: 1, color: win ? COLOR.ink : COLOR.ink2 }}>
+      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: win ? 800 : 700, lineHeight: 1, color: win ? COLOR.ink : COLOR.ink2 }}>
         {p.score}
       </div>
       <PlayerName p={p} />
@@ -72,9 +72,9 @@ function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
 
 function PlayerName({ p }: { p: DelmatchPlayer }) {
   const style: React.CSSProperties = {
-    display: 'block', fontSize: 13, fontWeight: 600, marginTop: 4, textDecoration: 'none',
+    display: 'block', fontSize: 15, fontWeight: 600, marginTop: 5, textDecoration: 'none',
     color: p.publicId ? COLOR.ink2 : COLOR.ink3,
-    maxWidth: 104, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   }
   return p.publicId
     ? <Link href={`/players/${p.publicId}`} style={style}>{p.name}</Link>

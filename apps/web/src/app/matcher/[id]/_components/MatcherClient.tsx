@@ -90,7 +90,7 @@ export default function MatcherClient({ match, results }: Props) {
         }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
         @media (min-width: 1024px) {
-          .match-body--split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
+          .match-body--split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
         }
         /* One orchestrated page-load reveal, staggered; disabled for reduced-motion. */
         @media (prefers-reduced-motion: no-preference) {
@@ -189,7 +189,7 @@ export default function MatcherClient({ match, results }: Props) {
           <div className={`match-body rise${hasDelmatch && hasResults ? ' match-body--split' : ''}`} style={{ marginTop: SPACE[8], animationDelay: '210ms' }}>
             {hasDelmatch && delmatch && (
               <div ref={bordRef}>
-                <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>
+                <div style={{ fontSize: TYPE.caption, fontWeight: 800, letterSpacing: '0.1em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>
                 <DelmatchBoard summary={delmatch} />
               </div>
             )}
