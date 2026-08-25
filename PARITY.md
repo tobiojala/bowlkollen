@@ -63,6 +63,9 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
 | Match page | ✅ `/matcher/[id]` | ✅ `/matcher/[id]` | Both. Scorecard/serie sheet — _verify native has it_. |
+| Match bordsvy (2v2 delmatch) | ✅ `matcher/[id]/_components/DelmatchBoard` | ✅ `components/DelmatchBoard` | Both (2026-08-25). Shared `computeDelmatcher` in `@bowlkollen/core`. |
+| Match "hetaste bordet" (rivalry) | ✅ `matcher/[id]/_components/RivalryCallout` | ✅ `components/RivalryCallout` | Both (2026-08-25). Same `get_match_rivalry` RPC. |
+| Player delmatch/career record | ❌ | ✅ `computePlayerDelmatchRecord` | **Native ahead** — profile delmatch section not yet on web (logic is in core, ready to reuse). |
 | Schema (season) | ✅ `/schema` | ✅ `(tabs)/schema` | Both. |
 | Schema Atlas / map | ✅ `/schema/atlas`, `/atlas/karta` | ❌ | **Web ahead** — no native atlas/map. |
 | Division browse + detail | ✅ `/schema` (+ `/divisioner/[id]`) | ✅ schema tab (+ `/division/[id]`) | **Parity** — native's schema tab already browses all divisions (`useDivisions` → `bits_divisions`, grouped by tier, searchable). Web's `/divisioner` redirects to `/schema`. (Matrix corrected 2026-08-19.) |
