@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
@@ -7,6 +8,9 @@ import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR } from '@/lib/division-standings'
 import type { BitsMatchDetail, BitsMatchPlayerResult } from '@/lib/types'
 import { TeamScoreSection, type PlayerLine } from './TeamScoreSection'
+import { DelmatchBoard } from './DelmatchBoard'
+import { RivalryCallout } from './RivalryCallout'
+import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
 
 type Props = {
   match:   BitsMatchDetail
@@ -38,6 +42,13 @@ function serieTotals(results: BitsMatchPlayerResult[], isHome: boolean, serieCou
 
 export default function MatcherClient({ match, results }: Props) {
   const router = useRouter()
+  const bordRef = useRef<HTMLDivElement>(null)
+  // Bordsvy + "hetaste bordet" — parity with native. Rivalry only makes sense
+  // once we have per-bord data, so it's gated on the delmatch fetch.
+  const { data: delmatch }  = useMatchDelmatch(match.bits_match_id)
+  const hasDelmatch          = !!delmatch?.hasData
+  const { data: rivalry }    = useMatchRivalry(match.bits_match_id, hasDelmatch)
+  const openBord = () => bordRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   // Go back to wherever you came from (division, team schedule, feed…) rather
   // than a fixed destination; fall back to Schema on a cold/deep-link open.
   const goBack = () => {
@@ -162,6 +173,23 @@ export default function MatcherClient({ match, results }: Props) {
             </div>
           )}
         </div>
+
+        {/* Hetaste bordet — the marquee career rivalry from this match */}
+        {rivalry && (
+          <div style={{ padding: `0 ${SPACE[4]}px` }}>
+            <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />
+          </div>
+        )}
+
+        {/* Bordsvy — the real 2v2 head-to-heads, not BITS' dense table */}
+        {hasDelmatch && delmatch && (
+          <div ref={bordRef} style={{ padding: `${SPACE[6]}px ${SPACE[4]}px 0` }}>
+            <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>
+              BORDSVY
+            </div>
+            <DelmatchBoard summary={delmatch} />
+          </div>
+        )}
 
         {/* Player scores — grouped by team first, so every player's full
             per-serie line is readable, instead of dumping all of one team's
