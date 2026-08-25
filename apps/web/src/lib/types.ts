@@ -103,8 +103,7 @@ export type BitsPlayerScore = {
 }
 
 // Exact per-player match result from BITS' own authoritative source
-// (matchResult/GetMatchResults) — full name + license number with zero
-// ambiguity, no name-guessing involved.
+// (matchResult/GetMatchResults) — full name + licence, zero ambiguity.
 export type BitsMatchPlayerResult = {
   id:            number
   bits_match_id: number
@@ -114,6 +113,7 @@ export type BitsMatchPlayerResult = {
   series:        number[]
   total_result:  number
   public_id?:    string | null  // bits_players.public_id, joined in for profile links
+  season_avg?:   number | null  // player's season serie-average, for snitt-deltas (Pro)
 }
 
 export type BitsTopScore = {

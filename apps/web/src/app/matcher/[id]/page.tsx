@@ -34,7 +34,20 @@ export default async function MatcherPage({ params }: { params: Promise<{ id: st
     const { data: players } = await db.from('bits_players').select('lic_nbr,public_id').in('lic_nbr', licNbrs)
     for (const p of players ?? []) publicIdByLic.set(p.lic_nbr, p.public_id)
   }
-  const resultsWithPublicId = (results ?? []).map(r => ({ ...r, public_id: publicIdByLic.get(r.lic_nbr) ?? null }))
+
+  // Season serie-average per player → powers snitt-deltas / höjdpunkter (Pro).
+  // Keyed by public_id; gracefully empty until the migration is applied.
+  const publicIds = [...new Set([...publicIdByLic.values()])]
+  const avgByPublicId = new Map<string, number>()
+  if (publicIds.length > 0) {
+    const { data: avgs } = await db.rpc('get_players_season_avg', { p_public_ids: publicIds, p_season_id: match.season_id })
+    for (const a of (avgs ?? []) as { public_id: string; avg_serie: number }[]) avgByPublicId.set(a.public_id, a.avg_serie)
+  }
+
+  const resultsWithPublicId = (results ?? []).map(r => {
+    const publicId = publicIdByLic.get(r.lic_nbr) ?? null
+    return { ...r, public_id: publicId, season_avg: publicId ? avgByPublicId.get(publicId) ?? null : null }
+  })
 
   return (
     <MatcherClient

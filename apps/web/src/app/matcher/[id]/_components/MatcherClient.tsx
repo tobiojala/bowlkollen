@@ -13,6 +13,7 @@ import { DelmatchBoard } from './DelmatchBoard'
 import { RivalryCallout } from './RivalryCallout'
 import { MatchBest } from './MatchBest'
 import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
+import { usePro } from '@/lib/pro'
 
 type Props = {
   match:   BitsMatchDetail
@@ -28,7 +29,7 @@ function dateStr(iso: string) {
 function teamLines(results: BitsMatchPlayerResult[], isHome: boolean): PlayerLine[] {
   return results
     .filter(r => r.is_home_team === isHome)
-    .map(r => ({ name: r.player_name, games: r.series, total: r.total_result, publicId: r.public_id ?? null }))
+    .map(r => ({ name: r.player_name, games: r.series, total: r.total_result, publicId: r.public_id ?? null, seasonAvg: r.season_avg ?? null }))
     .sort((a, b) => b.total - a.total)
 }
 
@@ -45,9 +46,11 @@ function serieTotals(results: BitsMatchPlayerResult[], isHome: boolean, serieCou
 export default function MatcherClient({ match, results }: Props) {
   const router = useRouter()
   const bordRef = useRef<HTMLDivElement>(null)
+  const pro = usePro()
   // Bordsvy + "hetaste bordet" — parity with native. Rivalry only makes sense
   // once we have per-bord data, so it's gated on the delmatch fetch.
-  const { data: delmatch }  = useMatchDelmatch(match.bits_match_id)
+  const { data: bord }       = useMatchDelmatch(match.bits_match_id, match.season_id)
+  const delmatch             = bord?.summary
   const hasDelmatch          = !!delmatch?.hasData
   const { data: rivalry }    = useMatchRivalry(match.bits_match_id, hasDelmatch)
   const openBord = () => bordRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -190,7 +193,7 @@ export default function MatcherClient({ match, results }: Props) {
             {hasDelmatch && delmatch && (
               <div ref={bordRef}>
                 <div style={{ fontSize: TYPE.caption, fontWeight: 800, letterSpacing: '0.1em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>
-                <DelmatchBoard summary={delmatch} />
+                <DelmatchBoard summary={delmatch} avg={bord?.avgByPublicId} showDeltas={pro} />
               </div>
             )}
             {hasResults && (

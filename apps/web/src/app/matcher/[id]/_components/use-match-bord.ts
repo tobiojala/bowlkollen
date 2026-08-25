@@ -16,19 +16,21 @@ type DelmatchDbRow = {
   is_home_team: boolean; player_name: string; lic_nbr: string | null; score: number
 }
 
-/** Reconstruct the match's bord head-to-heads, with licences resolved to
- * public_ids so bord names can open player profiles. */
-export function useMatchDelmatch(matchId: number) {
+export type MatchDelmatch = { summary: DelmatchSummary; avgByPublicId: Record<string, number> }
+
+/** Reconstruct the match's bord head-to-heads (licences resolved to full names +
+ * public_ids), plus each board player's season serie-average for snitt-deltas. */
+export function useMatchDelmatch(matchId: number, seasonId: number) {
   return useQuery({
-    queryKey: ['match-delmatch', matchId],
+    queryKey: ['match-delmatch', matchId, seasonId],
     staleTime: STALE.LONG,
-    queryFn: async (): Promise<DelmatchSummary> => {
+    queryFn: async (): Promise<MatchDelmatch> => {
       const db = createClient() as unknown as SupabaseClient
       const { data } = await db.from('bits_match_delmatch')
         .select('serie, table_no, player_order, is_home_team, player_name, lic_nbr, score')
         .eq('bits_match_id', matchId)
       const rows = (data ?? []) as DelmatchDbRow[]
-      if (!rows.length) return computeDelmatcher([])
+      if (!rows.length) return { summary: computeDelmatcher([]), avgByPublicId: {} }
 
       const lics = [...new Set(rows.map(r => r.lic_nbr).filter(Boolean) as string[])]
       const links: Record<string, { publicId: string; name: string }> = {}
@@ -47,7 +49,15 @@ export function useMatchDelmatch(matchId: number) {
           publicId: link?.publicId ?? null, score: r.score,
         }
       })
-      return computeDelmatcher(slots)
+
+      // Season serie-averages for the board players → snitt-deltas (empty until migration).
+      const publicIds = [...new Set(Object.values(links).map(l => l.publicId))]
+      const avgByPublicId: Record<string, number> = {}
+      if (publicIds.length) {
+        const { data: avgs } = await db.rpc('get_players_season_avg', { p_public_ids: publicIds, p_season_id: seasonId })
+        for (const a of (avgs ?? []) as { public_id: string; avg_serie: number }[]) avgByPublicId[a.public_id] = a.avg_serie
+      }
+      return { summary: computeDelmatcher(slots), avgByPublicId }
     },
   })
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { SCORE } from '@/lib/constants'
 
-export type PlayerLine = { name: string; games: number[]; total: number; publicId: string | null }
+export type PlayerLine = { name: string; games: number[]; total: number; publicId: string | null; seasonAvg?: number | null }
 
 type Props = {
   teamName:   string
@@ -10,12 +10,13 @@ type Props = {
   serieCount: number
   total:      number
   isWinner:   boolean
+  showDeltas?: boolean   // Pro: show each serie's delta vs the player's season snitt
 }
 
 // One team's full roster, sorted by total — the exact data BITS' own
 // authoritative match-results endpoint returns, so every player's full
 // per-serie line and identity is unambiguous (no "Bord N" grouping needed).
-export function TeamScoreSection({ teamName, players, serieCount, total, isWinner }: Props) {
+export function TeamScoreSection({ teamName, players, serieCount, total, isWinner, showDeltas }: Props) {
   return (
     <div style={{ marginBottom: SPACE[6] }}>
       <div style={{
@@ -70,12 +71,20 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
             <div style={{ display: 'flex', gap: SPACE[2] }}>
               {Array.from({ length: serieCount }, (_, gi) => {
                 const g = p.games[gi] ?? null
+                const delta = showDeltas && g != null && p.seasonAvg ? g - p.seasonAvg : null
                 return (
-                  <span key={gi} style={{
-                    width: 36, textAlign: 'center', fontSize: 15, fontVariantNumeric: 'tabular-nums',
-                    color: g != null && g >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
-                  }}>
-                    {g ?? '–'}
+                  <span key={gi} style={{ width: 36, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span style={{
+                      fontSize: 15, fontVariantNumeric: 'tabular-nums',
+                      color: g != null && g >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
+                    }}>
+                      {g ?? '–'}
+                    </span>
+                    {delta != null && (
+                      <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: delta >= 0 ? COLOR.green : COLOR.ink4 }}>
+                        {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
+                      </span>
+                    )}
                   </span>
                 )
               })}

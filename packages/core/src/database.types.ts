@@ -2169,6 +2169,14 @@ export type Database = {
           user_email: string
         }[]
       }
+      get_players_season_avg: {
+        Args: { p_public_ids: string[]; p_season_id: number }
+        Returns: {
+          public_id: string
+          avg_serie: number
+          games: number
+        }[]
+      }
       get_player_competition_results: {
         Args: { p_public_id: string }
         Returns: {
