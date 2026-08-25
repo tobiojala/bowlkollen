@@ -11,6 +11,7 @@ import { type PlayerLine } from './TeamScoreSection'
 import { MatchResults } from './MatchResults'
 import { DelmatchBoard } from './DelmatchBoard'
 import { RivalryCallout } from './RivalryCallout'
+import { MatchBest } from './MatchBest'
 import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
 
 type Props = {
@@ -66,6 +67,8 @@ export default function MatcherClient({ match, results }: Props) {
   const awayPlayers  = hasResults ? teamLines(results, false) : []
   const homeSeries   = hasResults ? serieTotals(results, true, serieCount)  : []
   const awaySeries   = hasResults ? serieTotals(results, false, serieCount) : []
+  const topTotal     = hasResults ? Math.max(...results.map(r => r.total_result)) : 0
+  const topPlayer    = topTotal > 0 ? results.find(r => r.total_result === topTotal) ?? null : null
 
   const teamNameStyle = (won: boolean): React.CSSProperties => ({
     fontSize: 22, fontWeight: won ? 800 : 600, color: won ? COLOR.ink : COLOR.ink2, lineHeight: 1.15,
@@ -77,6 +80,14 @@ export default function MatcherClient({ match, results }: Props) {
       <style>{`
         .match-canvas { max-width: 1320px; margin: 0 auto; padding: 24px 20px 96px; }
         @media (min-width: 768px) { .match-canvas { padding: 32px 40px 96px; } }
+        .match-head { display: flex; flex-direction: column; gap: 32px; }
+        .head-hero { max-width: 900px; }
+        .head-rivalry { max-width: 620px; }
+        @media (min-width: 1024px) {
+          .match-head--rivalry { display: grid; grid-template-columns: 400px 1fr; gap: 48px; align-items: center; }
+          .match-head--rivalry .head-rivalry { grid-column: 1; grid-row: 1; max-width: none; }
+          .match-head--rivalry .head-hero { grid-column: 2; grid-row: 1; max-width: none; }
+        }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
         @media (min-width: 1024px) {
           .match-body--split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
@@ -92,8 +103,11 @@ export default function MatcherClient({ match, results }: Props) {
           <ChevronLeft size={15} /> Tillbaka
         </button>
 
-        {/* ── Match hero — open, borderless, powerful (focal width) ── */}
-        <div style={{ maxWidth: 900 }}>
+        {/* Header — hetaste bordet (left) beside the match hero (right) on desktop */}
+        <div className={`match-head${rivalry ? ' match-head--rivalry' : ''}`}>
+
+        {/* ── Match hero — open, borderless, powerful ── */}
+        <div className="head-hero">
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[3] }}>
           <span style={{
             fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em',
@@ -144,10 +158,24 @@ export default function MatcherClient({ match, results }: Props) {
         )}
         </div>{/* /hero focal width */}
 
-        {/* Hetaste bordet — a highlight card; kept to a focal width, not stretched */}
+        {/* Hetaste bordet — in the header, left of the hero on desktop */}
         {rivalry && (
-          <div style={{ maxWidth: 620 }}>
+          <div className="head-rivalry">
             <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />
+          </div>
+        )}
+
+        </div>{/* /match-head */}
+
+        {/* Matchens bästa — the top individual total, under the header */}
+        {topPlayer && (
+          <div style={{ maxWidth: 620, marginTop: SPACE[6] }}>
+            <MatchBest
+              name={topPlayer.player_name}
+              teamName={topPlayer.is_home_team ? match.home_team_name : match.away_team_name}
+              total={topTotal}
+              publicId={topPlayer.public_id ?? null}
+            />
           </div>
         )}
 
