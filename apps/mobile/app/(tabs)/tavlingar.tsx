@@ -1,4 +1,6 @@
 import { TAVLINGAR, type Tavling } from '@bowlkollen/core';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Linking, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +20,7 @@ function openHref(href: string) {
 
 export default function Tavlingar() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { onScroll } = useNavScroll();
   const list = useMemo(() => [...TAVLINGAR].sort((a, b) => ORDER[a.status] - ORDER[b.status]), []);
   const live = TAVLINGAR.filter((t) => t.status === 'pagaende').length;
@@ -35,6 +38,13 @@ export default function Tavlingar() {
           <View style={styles.header}>
             <Text style={styles.h1}>Tävlingar</Text>
             <Text style={styles.sub}>{live > 0 ? `${live} pågår just nu` : 'Tävlingar i Sverige'}</Text>
+            <PressableScale style={styles.resultsEntry} onPress={() => router.push('/tavlingar/resultat')}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.resultsTitle}>Tävlingsresultat</Text>
+                <Text style={styles.resultsSub}>Officiella resultat & placeringar från BITS</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
+            </PressableScale>
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -79,6 +89,9 @@ const styles = StyleSheet.create({
   header: { paddingBottom: SPACE[2] },
   h1: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5 },
   sub: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.medium, marginTop: 4 },
+  resultsEntry: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], backgroundColor: COLOR.surface, borderRadius: RADIUS.lg, padding: SPACE[4], marginTop: SPACE[4] },
+  resultsTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
+  resultsSub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 2 },
 
   card: { backgroundColor: COLOR.surface, borderRadius: RADIUS.xl, borderWidth: StyleSheet.hairlineWidth, borderColor: COLOR.hairline, padding: SPACE[4] },
   cardLive: { borderColor: 'rgba(48,212,126,0.35)' },

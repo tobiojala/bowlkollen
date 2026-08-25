@@ -35,6 +35,7 @@ import { WhatIf } from '@/components/WhatIf';
 import { Duell } from '@/components/Duell';
 import { ProfileChallenges } from '@/components/ProfileChallenges';
 import { PlayerDelmatchCard } from '@/components/PlayerDelmatchCard';
+import { CompetitionHistory } from '@/components/CompetitionHistory';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ProfilePulse } from '@/components/ProfilePulse';
 import { PlayerAnalysis } from '@/components/PlayerAnalysis';
@@ -185,14 +186,12 @@ export default function PlayerPage() {
                 losses: delmatchRecord.record.losses,
                 winRate: delmatchRecord.record.winRate,
                 played: delmatchRecord.record.played,
-                highlight: delmatchRecord.milestones.perfectGames > 0
-                  ? `${delmatchRecord.milestones.perfectGames}× 300 vid bordet`
-                  : delmatchRecord.milestones.bestGame > 0
-                    ? `Högsta spel ${delmatchRecord.milestones.bestGame}`
-                    : undefined,
+                highlight: delmatchRecord.milestones.perfectGames > 0 ? `${delmatchRecord.milestones.perfectGames}× 300 vid bordet`
+                  : delmatchRecord.milestones.bestGame > 0 ? `Högsta spel ${delmatchRecord.milestones.bestGame}` : undefined,
               })}
             />
           )}
+          <CompetitionHistory playerId={id} />
 
           {history.length > 0 && (
             <View style={styles.section}>

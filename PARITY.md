@@ -70,6 +70,8 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Schema Atlas / map | ✅ `/schema/atlas`, `/atlas/karta` | ❌ | **Web ahead** — no native atlas/map. |
 | Division browse + detail | ✅ `/schema` (+ `/divisioner/[id]`) | ✅ schema tab (+ `/division/[id]`) | **Parity** — native's schema tab already browses all divisions (`useDivisions` → `bits_divisions`, grouped by tier, searchable). Web's `/divisioner` redirects to `/schema`. (Matrix corrected 2026-08-19.) |
 | Tävlingar (bowlres center comps) | ✅ `/tavlingar` | ✅ `(tabs)/tavlingar` | **Parity (2026-08-19)** — curated list moved to `@bowlkollen/core` (`competitions.ts`); both render it. 5th shared tab. |
+| Competition results (ingested) | ✅ `/tavlingar/resultat` + `/[id]` | ✅ `tavlingar/resultat` + `[id]` | **Parity (2026-08-26)** — real BITS competition archive: browse by season + per-class standings. Native mirrors web (`lib/competitions.ts`, `bits_competitions`/`bits_competition_results`). |
+| Player competition history | ✅ profile Tävlingar section | ✅ profile `CompetitionHistory` | **Parity (2026-08-26)** — same `get_player_competition_results` RPC (public_id→lic_nbr). |
 | Tipsligan (predictions) | ✅ `/prediktion`, `/puls` | ❌ | **Web-only.** |
 | SM-slutspel | ✅ `/sm-slutspel` | ❌ | **Web-only.** |
 | Eligibility (spelklarhet) | ✅ (in laguttagning) | ✅ (in laguttagning) | **Parity (2026-08-19).** Shared engine in `@bowlkollen/core` (`eligibility.ts`, SvBF §D306, 13 tests). Web: `lib/eligibility.ts` (same `get_lineup_eligibility` RPC) + per-slot mark + `EligibilityBanner`. Native: CandidateRow/LineupSeating. Needs `lineup_eligibility.sql` RPC live (degrades safely if absent). |
