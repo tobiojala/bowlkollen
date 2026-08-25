@@ -78,6 +78,9 @@ export default function MatcherClient({ match, results }: Props) {
         .match-canvas { max-width: 1320px; margin: 0 auto; padding: 24px 20px 96px; }
         @media (min-width: 768px) { .match-canvas { padding: 32px 40px 96px; } }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
+        @media (min-width: 1024px) {
+          .match-body--split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
+        }
       `}</style>
       <div className="match-canvas">
 
@@ -150,7 +153,7 @@ export default function MatcherClient({ match, results }: Props) {
 
         {/* Detail — bordsvy + full spelresultat, side by side on desktop */}
         {(hasDelmatch || hasResults) && (
-          <div className="match-body" style={{ marginTop: SPACE[8] }}>
+          <div className={`match-body${hasDelmatch && hasResults ? ' match-body--split' : ''}`} style={{ marginTop: SPACE[8] }}>
             {hasDelmatch && delmatch && (
               <div ref={bordRef}>
                 <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>

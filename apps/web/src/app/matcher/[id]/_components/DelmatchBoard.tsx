@@ -14,7 +14,7 @@ export function DelmatchBoard({ summary }: { summary: DelmatchSummary }) {
     return <div style={{ color: COLOR.ink3, textAlign: 'center', padding: `${SPACE[8]}px 0`, fontSize: TYPE.caption }}>Bordsdata saknas för den här matchen.</div>
   }
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
       {summary.series.map(s => <SerieBlock key={s.serie} serie={s} />)}
     </div>
   )
