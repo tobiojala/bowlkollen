@@ -28,7 +28,7 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
           {teamName}
         </span>
         <span style={{
-          fontSize: 20, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
+          fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
           color: isWinner ? COLOR.ink : COLOR.ink3,
         }}>
           {total}
@@ -45,7 +45,7 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
             </span>
           ))}
         </div>
-        <span style={{ width: 40, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>TOT</span>
+        <span style={{ width: 44, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>TOT</span>
       </div>
 
       <div style={{
@@ -90,8 +90,8 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
               })}
             </div>
             <span style={{
-              width: 40, textAlign: 'right', fontSize: TYPE.body, fontWeight: 700,
-              fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: COLOR.ink,
+              width: 44, textAlign: 'right', fontSize: 20, fontWeight: 800,
+              fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', color: COLOR.ink,
             }}>
               {p.total}
             </span>
