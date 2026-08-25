@@ -26,7 +26,7 @@ export function MatchResults({
         <div style={{ flex: 1, minWidth: 0 }} />
         <div style={{ display: 'flex', gap: SPACE[2] }}>
           {Array.from({ length: serieCount }, (_, i) => (
-            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>S{i + 1}</span>
+            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3 }}>S{i + 1}</span>
           ))}
         </div>
         <span style={{ width: 40 }} />
@@ -36,7 +36,7 @@ export function MatchResults({
         { name: awayTeamName, series: awaySeries, won: awayWon },
       ] as const).map(team => (
         <div key={team.name} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[2]}px 0` }}>
-          <div style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: team.won ? 700 : 500, color: team.won ? COLOR.ink : COLOR.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: team.won ? 700 : 500, color: team.won ? COLOR.ink : COLOR.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {team.name}
           </div>
           <div style={{ display: 'flex', gap: SPACE[2] }}>
@@ -44,7 +44,7 @@ export function MatchResults({
               <span key={i} style={{ width: 36, textAlign: 'center', fontSize: 15, fontVariantNumeric: 'tabular-nums', color: COLOR.ink2 }}>{v}</span>
             ))}
           </div>
-          <span style={{ width: 40, textAlign: 'right', fontSize: TYPE.body, fontWeight: 700, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: team.won ? COLOR.ink : COLOR.ink3 }}>
+          <span style={{ width: 40, textAlign: 'right', fontSize: TYPE.body, fontWeight: 700, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: team.won ? COLOR.ink : COLOR.ink2 }}>
             {team.series.reduce((a, b) => a + b, 0)}
           </span>
         </div>

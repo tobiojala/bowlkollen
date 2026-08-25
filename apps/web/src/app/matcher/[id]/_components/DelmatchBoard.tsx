@@ -30,9 +30,9 @@ function SerieBlock({ serie, pair, avg, showDeltas }: { serie: DelmatchSerie; pa
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
         <span style={{ color: COLOR.ink2, fontSize: TYPE.caption, fontWeight: 800, letterSpacing: '0.1em' }}>SERIE {serie.serie}</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontVariantNumeric: 'tabular-nums' }}>
-          <span style={{ fontSize: TYPE.caption, fontWeight: 600, color: serie.pinfallWinner === 'home' ? COLOR.ink2 : COLOR.ink3 }}>{serie.homePinfall}</span>
+          <span style={{ fontSize: TYPE.caption, fontWeight: serie.pinfallWinner === 'home' ? 700 : 600, color: COLOR.ink2 }}>{serie.homePinfall}</span>
           <span style={{ fontSize: TYPE.caption, color: COLOR.ink4 }}>–</span>
-          <span style={{ fontSize: TYPE.caption, fontWeight: 600, color: serie.pinfallWinner === 'away' ? COLOR.ink2 : COLOR.ink3 }}>{serie.awayPinfall}</span>
+          <span style={{ fontSize: TYPE.caption, fontWeight: serie.pinfallWinner === 'away' ? 700 : 600, color: COLOR.ink2 }}>{serie.awayPinfall}</span>
           <Flame size={13} color={COLOR.ink3} style={{ marginLeft: 3 }} aria-label="Serievinst-bonus" />
         </span>
       </div>
@@ -52,7 +52,7 @@ function BordRow({ d, pair, avg, showDeltas }: { d: Delmatch; pair: boolean; avg
   const avgOf = (p?: DelmatchPlayer) => (showDeltas && p?.publicId ? avg?.[p.publicId] : undefined)
   return (
     <div style={{ padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
-      <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.04em', color: COLOR.ink4, marginBottom: SPACE[2] }}>BORD {d.tableNo}</div>
+      <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.04em', color: COLOR.ink3, marginBottom: SPACE[2] }}>BORD {d.tableNo}</div>
       <div style={GRID}>
         {Array.from({ length: rows }, (_, i) => (
           <Fragment key={i}>
@@ -92,7 +92,7 @@ function Score({ p, win, align, avg }: { p?: DelmatchPlayer; win: boolean; align
         {p?.score ?? ''}
       </span>
       {delta != null && (
-        <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2, color: delta >= 0 ? COLOR.green : COLOR.ink4 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2, color: delta >= 0 ? COLOR.green : COLOR.ink3 }}>
           {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
         </span>
       )}
@@ -103,7 +103,7 @@ function Score({ p, win, align, avg }: { p?: DelmatchPlayer; win: boolean; align
 function Total({ total, win, align }: { total: number | null; win: boolean; align: 'left' | 'right' }) {
   if (total == null) return <span />
   return (
-    <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 800, textAlign: align, color: win ? COLOR.ink : COLOR.ink4, paddingTop: 4, display: 'block' }}>
+    <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 800, textAlign: align, color: win ? COLOR.ink : COLOR.ink3, paddingTop: 4, display: 'block' }}>
       {total}
     </span>
   )

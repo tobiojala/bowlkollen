@@ -89,9 +89,9 @@ export function UpcomingPanel({ match }: { match: BitsMatchDetail }) {
             <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3 }}>PROGNOS · UTIFRÅN FORM</div>
             <div style={{ fontSize: TYPE.body, color: COLOR.ink, marginTop: SPACE[2] }}>
               <b style={{ fontWeight: 800 }}>{favName}</b> favorit
-              {edge > 0 && <span style={{ color: COLOR.ink3 }}> · +{edge} banpoäng/match i snittform</span>}
+              {edge > 0 && <span style={{ color: COLOR.ink2 }}> · +{edge} banpoäng/match i snittform</span>}
             </div>
-            <div style={{ fontSize: TYPE.caption, color: COLOR.ink4, marginTop: SPACE[1] }}>Riktning utifrån senaste matcherna — inte officiell.</div>
+            <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: SPACE[1] }}>Riktning utifrån senaste matcherna — inte officiell.</div>
           </div>
         )}
       </ProGate>
@@ -102,7 +102,7 @@ export function UpcomingPanel({ match }: { match: BitsMatchDetail }) {
 function Fact({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div style={{ background: COLOR.surface, borderRadius: RADIUS.md, padding: `${SPACE[3]}px ${SPACE[4]}px`, flex: '1 1 150px' }}>
-      <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k}</div>
+      <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k}</div>
       <div style={{ fontSize: TYPE.body, fontWeight: 700, marginTop: SPACE[2], color: COLOR.ink }}>{v}</div>
     </div>
   )

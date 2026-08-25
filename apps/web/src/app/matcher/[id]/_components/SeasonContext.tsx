@@ -35,7 +35,7 @@ export function SeasonContext({ match, tier, part }: { match: BitsMatchDetail; t
     </span>
   )
   return (
-    <div style={{ fontSize: 14, color: COLOR.ink3 }}>
+    <div style={{ fontSize: 14, color: COLOR.ink2 }}>
       {match.bits_division_id
         ? <Link href={`/divisioner/${match.bits_division_id}`} style={{ color: 'inherit', textDecoration: 'none', borderBottom: `1px solid ${COLOR.hairline}` }}>{inner}</Link>
         : inner}

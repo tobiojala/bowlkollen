@@ -134,8 +134,8 @@ export default function MatcherClient({ match, results }: Props) {
           }}>
             {match.division_name ?? tier}
           </span>
-          {match.round_id && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Omgång {match.round_id}</span>}
-          <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, textTransform: 'capitalize' }}>· {dateStr(match.match_date)}</span>
+          {match.round_id && <span style={{ fontSize: TYPE.caption, color: COLOR.ink2 }}>Omgång {match.round_id}</span>}
+          <span style={{ fontSize: TYPE.caption, color: COLOR.ink2, textTransform: 'capitalize' }}>· {dateStr(match.match_date)}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[4] }}>
@@ -152,9 +152,9 @@ export default function MatcherClient({ match, results }: Props) {
                   <span style={{ fontSize: 24, color: COLOR.ink4 }}>–</span>
                   <span style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.ink : COLOR.ink2 }}>{match.away_result}</span>
                 </div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink4, marginTop: SPACE[1] }}>BANPOÄNG</div>
+                <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink3, marginTop: SPACE[1] }}>BANPOÄNG</div>
                 {match.home_score != null && match.away_score != null && (
-                  <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: SPACE[1], fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, marginTop: SPACE[1], fontVariantNumeric: 'tabular-nums' }}>
                     {match.home_score} – {match.away_score} pins
                   </div>
                 )}
@@ -177,7 +177,7 @@ export default function MatcherClient({ match, results }: Props) {
             upcoming matches carry these in the kommande-panel instead) */}
         {match.is_finished && (
           <>
-            <div style={{ textAlign: 'center', marginTop: SPACE[6], paddingTop: SPACE[6], borderTop: `1px solid ${COLOR.hairline}`, fontSize: TYPE.caption, color: COLOR.ink3 }}>
+            <div style={{ textAlign: 'center', marginTop: SPACE[6], paddingTop: SPACE[6], borderTop: `1px solid ${COLOR.hairline}`, fontSize: TYPE.caption, color: COLOR.ink2 }}>
               {[match.hall_name, match.hall_city].filter(Boolean).join(', ')}
               {match.oil_pattern && <>{(match.hall_name || match.hall_city) ? '  ·  ' : ''}Oljeprofil: {match.oil_pattern}</>}
             </div>

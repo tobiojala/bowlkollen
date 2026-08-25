@@ -24,12 +24,12 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
         display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
         marginBottom: SPACE[3],
       }}>
-        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink3 }}>
+        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink2 }}>
           {teamName}
         </span>
         <span style={{
           fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
-          color: isWinner ? COLOR.ink : COLOR.ink3,
+          color: isWinner ? COLOR.ink : COLOR.ink2,
         }}>
           {total}
         </span>
@@ -40,12 +40,12 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
         <div style={{ flex: 1, minWidth: 0 }} />
         <div style={{ display: 'flex', gap: SPACE[2] }}>
           {Array.from({ length: serieCount }, (_, i) => (
-            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>
+            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3 }}>
               S{i + 1}
             </span>
           ))}
         </div>
-        <span style={{ width: 44, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink4 }}>TOT</span>
+        <span style={{ width: 44, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3 }}>TOT</span>
       </div>
 
       <div style={{
@@ -76,12 +76,12 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
                   <span key={gi} style={{ width: 36, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
                     <span style={{
                       fontSize: 15, fontVariantNumeric: 'tabular-nums',
-                      color: !played ? COLOR.ink4 : raw >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
+                      color: !played ? COLOR.ink3 : raw >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
                     }}>
                       {played ? raw : '–'}
                     </span>
                     {delta != null && (
-                      <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: delta >= 0 ? COLOR.green : COLOR.ink4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: delta >= 0 ? COLOR.green : COLOR.ink3 }}>
                         {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
                       </span>
                     )}

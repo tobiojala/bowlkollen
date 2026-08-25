@@ -33,11 +33,11 @@ export function RivalryCallout({ rivalry, onOpenBord }: { rivalry: MatchRivalry;
           <PlayerSide name={a.name} publicId={a.publicId} />
           <div style={{ minWidth: 96, textAlign: 'center', padding: `0 ${SPACE[2]}px` }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>
-              <span style={{ fontSize: 30, fontWeight: 800, color: aLeads ? COLOR.ink : COLOR.ink3 }}>{a.wins}</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: aLeads ? COLOR.ink : COLOR.ink2 }}>{a.wins}</span>
               <span style={{ fontSize: 20, color: COLOR.ink4, margin: `0 ${SPACE[2]}px` }}>–</span>
-              <span style={{ fontSize: 30, fontWeight: 800, color: bLeads ? COLOR.ink : COLOR.ink3 }}>{b.wins}</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: bLeads ? COLOR.ink : COLOR.ink2 }}>{b.wins}</span>
             </div>
-            <div style={{ color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: 600, marginTop: 2 }}>{meetings} möten</div>
+            <div style={{ color: COLOR.ink2, fontSize: TYPE.caption, fontWeight: 600, marginTop: 2 }}>{meetings} möten</div>
           </div>
           <PlayerSide name={b.name} publicId={b.publicId} />
         </div>
@@ -50,8 +50,8 @@ export function RivalryCallout({ rivalry, onOpenBord }: { rivalry: MatchRivalry;
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACE[4], paddingTop: SPACE[3], borderTop: `1px solid ${COLOR.hairline}` }}>
           <span style={{ flex: 1, minWidth: 0, color: COLOR.ink2, fontSize: TYPE.caption, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tonightText}</span>
           {onOpenBord && (
-            <button onClick={onOpenBord} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: 700 }}>
-              Bordvyn <ChevronRight size={15} color={COLOR.ink3} />
+            <button onClick={onOpenBord} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: COLOR.ink2, fontSize: TYPE.caption, fontWeight: 700 }}>
+              Bordvyn <ChevronRight size={15} color={COLOR.ink2} />
             </button>
           )}
         </div>

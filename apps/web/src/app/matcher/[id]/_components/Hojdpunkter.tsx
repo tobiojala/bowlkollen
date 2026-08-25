@@ -51,9 +51,9 @@ export function Hojdpunkter({ results, delmatch }: { results: BitsMatchPlayerRes
     <div style={{ display: 'flex', gap: SPACE[3], flexWrap: 'wrap', alignContent: 'center', height: '100%' }}>
       {peaks.map(p => (
         <div key={p.k} style={{ flex: '1 1 150px', background: COLOR.surface, borderRadius: RADIUS.md, padding: `${SPACE[3]}px ${SPACE[4]}px` }}>
-          <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4 }}>{p.k}</div>
+          <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink3 }}>{p.k}</div>
           <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: 800, marginTop: 4, color: p.gold ? COLOR.gold : COLOR.ink }}>{p.v}</div>
-          <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.s}</div>
+          <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.s}</div>
         </div>
       ))}
     </div>
