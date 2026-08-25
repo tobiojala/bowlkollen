@@ -18,6 +18,24 @@ type DelmatchDbRow = {
 
 export type MatchDelmatch = { summary: DelmatchSummary; avgByPublicId: Record<string, number> }
 
+// Serie-accurate per-player scores from the board data — the authoritative serie
+// mapping. bits_match_player_results.series is game-ordered (a substitute who
+// bowled only serie 4 has [156] at index 0), so the compact array can't be
+// column-aligned; the delmatch knows each game's real serie. Keyed by public_id
+// (fallback: name). Used to fix the spelresultat serie split for subbed teams.
+export function serieScoresByPlayer(summary: DelmatchSummary): Record<string, number[]> {
+  const map: Record<string, number[]> = {}
+  const n = summary.series.length
+  summary.series.forEach((s, si) => {
+    for (const d of s.tables) for (const p of [...d.home, ...d.away]) {
+      const key = p.publicId ?? p.name
+      if (!map[key]) map[key] = new Array(n).fill(0)
+      map[key][si] = p.score
+    }
+  })
+  return map
+}
+
 /** Reconstruct the match's bord head-to-heads (licences resolved to full names +
  * public_ids), plus each board player's season serie-average for snitt-deltas. */
 export function useMatchDelmatch(matchId: number, seasonId: number) {

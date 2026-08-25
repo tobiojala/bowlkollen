@@ -16,7 +16,7 @@ import { Hojdpunkter } from './Hojdpunkter'
 import { SeasonContext } from './SeasonContext'
 import { UpcomingPanel } from './UpcomingPanel'
 import { ProGate } from '@/components/ProGate'
-import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
+import { useMatchDelmatch, useMatchRivalry, serieScoresByPlayer } from './use-match-bord'
 import { usePro } from '@/lib/pro'
 
 type Props = {
@@ -69,11 +69,16 @@ export default function MatcherClient({ match, results }: Props) {
   const homeWon      = match.home_result != null && match.away_result != null && match.home_result > match.away_result
   const awayWon      = match.home_result != null && match.away_result != null && match.away_result > match.home_result
   const hasResults   = results.length > 0
-  const serieCount   = hasResults ? Math.max(...results.map(r => r.series.length)) : 0
-  const homePlayers  = hasResults ? teamLines(results, true)  : []
-  const awayPlayers  = hasResults ? teamLines(results, false) : []
-  const homeSeries   = hasResults ? serieTotals(results, true, serieCount)  : []
-  const awaySeries   = hasResults ? serieTotals(results, false, serieCount) : []
+  // Serie-accurate scores come from the board data when present (see
+  // serieScoresByPlayer) — it fixes the per-serie split for teams with a subbed
+  // player, whose game-ordered `series` array can't be column-aligned.
+  const serieMap     = hasDelmatch && delmatch ? serieScoresByPlayer(delmatch) : null
+  const withSerie    = (lines: PlayerLine[]) => serieMap ? lines.map(l => ({ ...l, games: serieMap[l.publicId ?? l.name] ?? l.games })) : lines
+  const serieCount   = hasDelmatch && delmatch ? delmatch.series.length : (hasResults ? Math.max(...results.map(r => r.series.length)) : 0)
+  const homePlayers  = hasResults ? withSerie(teamLines(results, true))  : []
+  const awayPlayers  = hasResults ? withSerie(teamLines(results, false)) : []
+  const homeSeries   = hasDelmatch && delmatch ? delmatch.series.map(s => s.homePinfall) : (hasResults ? serieTotals(results, true, serieCount)  : [])
+  const awaySeries   = hasDelmatch && delmatch ? delmatch.series.map(s => s.awayPinfall) : (hasResults ? serieTotals(results, false, serieCount) : [])
   const topTotal     = hasResults ? Math.max(...results.map(r => r.total_result)) : 0
   const topPlayer    = topTotal > 0 ? results.find(r => r.total_result === topTotal) ?? null : null
 
