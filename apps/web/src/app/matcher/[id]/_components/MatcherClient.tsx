@@ -83,7 +83,7 @@ export default function MatcherClient({ match, results }: Props) {
   const topPlayer    = topTotal > 0 ? results.find(r => r.total_result === topTotal) ?? null : null
 
   const teamNameStyle = (won: boolean): React.CSSProperties => ({
-    fontSize: 22, fontWeight: won ? 800 : 600, color: won ? COLOR.ink : COLOR.ink2, lineHeight: 1.15,
+    fontSize: 28, fontWeight: won ? 800 : 600, color: won ? COLOR.ink : COLOR.ink2, lineHeight: 1.15,
     letterSpacing: '-0.01em', textDecoration: 'none', display: 'block',
   })
 
@@ -101,7 +101,7 @@ export default function MatcherClient({ match, results }: Props) {
           .match-head--rivalry .head-rivalry { grid-column: 2; grid-row: 1; max-width: none; }
         }
         .hl { display: flex; flex-direction: column; gap: 16px; }
-        @media (min-width: 1024px) { .hl { display: grid; grid-template-columns: 340px 1fr; align-items: stretch; } }
+        @media (min-width: 1024px) { .hl { display: grid; grid-template-columns: 380px 1fr; align-items: stretch; } }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
         @media (min-width: 1024px) {
           .match-body--split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
@@ -134,13 +134,11 @@ export default function MatcherClient({ match, results }: Props) {
           }}>
             {match.division_name ?? tier}
           </span>
-          {match.round_id && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Omg {match.round_id}</span>}
-          <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, textTransform: 'capitalize' }}>
-            · {dateStr(match.match_date)}{match.hall_name ? ` · ${match.hall_name}` : ''}{match.hall_city ? `, ${match.hall_city}` : ''}
-          </span>
+          {match.round_id && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Omgång {match.round_id}</span>}
+          <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, textTransform: 'capitalize' }}>· {dateStr(match.match_date)}</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[4], paddingBottom: SPACE[6], borderBottom: `1px solid ${COLOR.hairline}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[4] }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {match.home_bits_team_id
               ? <Link href={`/lag/${match.home_bits_team_id}`} style={teamNameStyle(homeWon)}>{match.home_team_name}</Link>
@@ -150,9 +148,9 @@ export default function MatcherClient({ match, results }: Props) {
             {match.is_finished && match.home_result != null && match.away_result != null ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: SPACE[3], fontVariantNumeric: 'tabular-nums', fontFamily: FONT.display }}>
-                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.ink : COLOR.ink2 }}>{match.home_result}</span>
-                  <span style={{ fontSize: 26, color: COLOR.ink4 }}>–</span>
-                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.ink : COLOR.ink2 }}>{match.away_result}</span>
+                  <span style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.ink : COLOR.ink2 }}>{match.home_result}</span>
+                  <span style={{ fontSize: 24, color: COLOR.ink4 }}>–</span>
+                  <span style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.ink : COLOR.ink2 }}>{match.away_result}</span>
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink4, marginTop: SPACE[1] }}>BANPOÄNG</div>
                 {match.home_score != null && match.away_score != null && (
@@ -172,11 +170,21 @@ export default function MatcherClient({ match, results }: Props) {
           </div>
         </div>
 
-        {/* Season context — standings + head-to-head (free) */}
-        {match.is_finished && <SeasonContext match={match} tier={tier} />}
+        {/* Head-to-head — the matchup hook, up with the score (free) */}
+        {match.is_finished && <SeasonContext match={match} tier={tier} part="h2h" />}
 
-        {match.oil_pattern && (
-          <div style={{ marginTop: SPACE[3], fontSize: TYPE.micro, color: COLOR.ink3 }}>Oljesystem: {match.oil_pattern}</div>
+        {/* Venue + oil + standings, centered under the score (finished matches;
+            upcoming matches carry these in the kommande-panel instead) */}
+        {match.is_finished && (
+          <>
+            <div style={{ textAlign: 'center', marginTop: SPACE[6], paddingTop: SPACE[6], borderTop: `1px solid ${COLOR.hairline}`, fontSize: TYPE.caption, color: COLOR.ink3 }}>
+              {[match.hall_name, match.hall_city].filter(Boolean).join(', ')}
+              {match.oil_pattern && <>{(match.hall_name || match.hall_city) ? '  ·  ' : ''}Oljeprofil: {match.oil_pattern}</>}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: SPACE[2] }}>
+              <SeasonContext match={match} tier={tier} part="standings" />
+            </div>
+          </>
         )}
         </div>{/* /hero focal width */}
 

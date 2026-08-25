@@ -14,11 +14,10 @@ export function MatchBest({ name, teamName, total, publicId }: {
       <Trophy size={20} color={COLOR.gold} strokeWidth={2} style={{ flexShrink: 0 }} />
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.12em', color: COLOR.gold }}>MATCHENS BÄSTA</span>
-        <span style={{ display: 'block', fontSize: 16, fontWeight: 700, color: COLOR.ink, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {name} <span style={{ color: COLOR.ink3, fontWeight: 500 }}>· {teamName}</span>
-        </span>
+        <span style={{ display: 'block', fontSize: 17, fontWeight: 700, color: COLOR.ink, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+        <span style={{ display: 'block', fontSize: TYPE.caption, color: COLOR.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{teamName}</span>
       </span>
-      <span style={{ flexShrink: 0, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 30, fontWeight: 900, color: COLOR.gold }}>{total}</span>
+      <span style={{ flexShrink: 0, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 32, fontWeight: 900, color: COLOR.gold }}>{total}</span>
     </>
   )
   const style: React.CSSProperties = {

@@ -20,7 +20,7 @@ function computeHighlights(results: BitsMatchPlayerResult[], delmatch?: Delmatch
     r.series.forEach((g, i) => {
       if (g <= 0) return
       totalSeries++
-      if (g >= SCORE.ELITE) over200++
+      if (g >= SCORE.GOOD) over200++
       if (g > hi.score) hi = { score: g, name: r.player_name, idx: i }
       if (r.season_avg) { const d = g - r.season_avg; if (d > skrall.delta) skrall = { delta: d, name: r.player_name, score: g } }
     })
