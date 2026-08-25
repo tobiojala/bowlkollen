@@ -67,185 +67,117 @@ export default function MatcherClient({ match, results }: Props) {
   const homeSeries   = hasResults ? serieTotals(results, true, serieCount)  : []
   const awaySeries   = hasResults ? serieTotals(results, false, serieCount) : []
 
+  const teamNameStyle = (won: boolean): React.CSSProperties => ({
+    fontSize: 22, fontWeight: won ? 800 : 600, color: won ? COLOR.ink : COLOR.ink2, lineHeight: 1.15,
+    letterSpacing: '-0.01em', textDecoration: 'none', display: 'block',
+  })
+
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
       <style>{`
-        .match-canvas { max-width: 600px; margin: 0 auto; padding: 24px 0 80px; }
-        .match-grid { display: block; }
+        .match-canvas { max-width: 1040px; margin: 0 auto; padding: 24px 20px 96px; }
+        .match-body { display: flex; flex-direction: column; gap: 40px; }
         @media (min-width: 1024px) {
-          .match-canvas { max-width: 1160px; padding: 24px 32px 96px; }
-          .match-grid { display: grid; grid-template-columns: 380px 1fr; gap: 40px; align-items: start; }
-          .match-side { position: sticky; top: 24px; align-self: start; }
+          .match-body { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
         }
       `}</style>
       <div className="match-canvas">
 
         {/* Back — returns to the list you came from */}
-        <div style={{ padding: `0 ${SPACE[4]}px`, marginBottom: SPACE[4] }}>
-          <button onClick={goBack} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 2, background: 'none', border: 'none',
-            cursor: 'pointer', padding: 0, fontSize: TYPE.caption, color: COLOR.ink2,
+        <button onClick={goBack} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 2, background: 'none', border: 'none',
+          cursor: 'pointer', padding: 0, fontSize: TYPE.caption, color: COLOR.ink2, marginBottom: SPACE[6],
+        }}>
+          <ChevronLeft size={15} /> Tillbaka
+        </button>
+
+        {/* ── Match hero — open, borderless, powerful ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[3] }}>
+          <span style={{
+            fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em',
+            color: tierColor, background: `${tierColor}18`, borderRadius: RADIUS.sm, padding: '3px 8px',
           }}>
-            <ChevronLeft size={15} /> Tillbaka
-          </button>
+            {match.division_name ?? tier}
+          </span>
+          {match.round_id && <span style={{ fontSize: TYPE.micro, color: COLOR.ink3 }}>Omg {match.round_id}</span>}
+          <span style={{ fontSize: TYPE.micro, color: COLOR.ink3, textTransform: 'capitalize' }}>
+            · {dateStr(match.match_date)}{match.hall_name ? ` · ${match.hall_name}` : ''}{match.hall_city ? `, ${match.hall_city}` : ''}
+          </span>
         </div>
 
-        <div className="match-grid">
-          {/* Side: the match identity — score hero + hetaste bordet (sticky on desktop) */}
-          <div className="match-side">
-
-        {/* Header card */}
-        <div style={{
-          margin: `0 ${SPACE[4]}px`,
-          background: COLOR.surface, borderRadius: RADIUS.lg,
-          padding: `${SPACE[6]}px ${SPACE[4]}px`,
-          marginBottom: SPACE[4],
-        }}>
-          {/* Division + date */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[4] }}>
-            <span style={{
-              fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em',
-              color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}44`,
-              borderRadius: RADIUS.sm, padding: '3px 8px',
-            }}>
-              {match.division_name ?? tier}
-            </span>
-            {match.round_id && (
-              <span style={{ fontSize: TYPE.micro, color: COLOR.ink3 }}>Omg {match.round_id}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[4], paddingBottom: SPACE[6], borderBottom: `1px solid ${COLOR.hairline}` }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {match.home_bits_team_id
+              ? <Link href={`/lag/${match.home_bits_team_id}`} style={teamNameStyle(homeWon)}>{match.home_team_name}</Link>
+              : <div style={teamNameStyle(homeWon)}>{match.home_team_name}</div>}
+          </div>
+          <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 132 }}>
+            {match.is_finished && match.home_result != null && match.away_result != null ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: SPACE[3], fontVariantNumeric: 'tabular-nums', fontFamily: FONT.display }}>
+                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.green : COLOR.ink3 }}>{match.home_result}</span>
+                  <span style={{ fontSize: 26, color: COLOR.ink4 }}>–</span>
+                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.green : COLOR.ink3 }}>{match.away_result}</span>
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink4, marginTop: SPACE[1] }}>BANPOÄNG</div>
+                {match.home_score != null && match.away_score != null && (
+                  <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: SPACE[1], fontVariantNumeric: 'tabular-nums' }}>
+                    {match.home_score} – {match.away_score} pins
+                  </div>
+                )}
+              </>
+            ) : (
+              <span style={{ fontSize: 24, fontWeight: 300, color: COLOR.ink4, letterSpacing: 4 }}>vs</span>
             )}
           </div>
-
-          <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginBottom: SPACE[6], textTransform: 'capitalize' }}>
-            {dateStr(match.match_date)}
-            {match.hall_name && ` · ${match.hall_name}`}
-            {match.hall_city && `, ${match.hall_city}`}
+          <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+            {match.away_bits_team_id
+              ? <Link href={`/lag/${match.away_bits_team_id}`} style={teamNameStyle(awayWon)}>{match.away_team_name}</Link>
+              : <div style={teamNameStyle(awayWon)}>{match.away_team_name}</div>}
           </div>
-
-          {/* Score hero */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {match.home_bits_team_id ? (
-                <Link href={`/lag/${match.home_bits_team_id}`} style={{
-                  display: 'block', fontSize: 17, fontWeight: homeWon ? 800 : 600,
-                  color: homeWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2, textDecoration: 'none',
-                }}>
-                  {match.home_team_name}
-                </Link>
-              ) : (
-                <div style={{ fontSize: 17, fontWeight: homeWon ? 800 : 600, color: homeWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2 }}>
-                  {match.home_team_name}
-                </div>
-              )}
-            </div>
-
-            <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 100 }}>
-              {match.is_finished && match.home_result != null && match.away_result != null ? (
-                <>
-                  <div style={{
-                    display: 'flex', alignItems: 'baseline', justifyContent: 'center',
-                    gap: SPACE[2], fontVariantNumeric: 'tabular-nums',
-                    fontFamily: FONT.display,
-                  }}>
-                    <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.green : COLOR.ink2 }}>
-                      {match.home_result}
-                    </span>
-                    <span style={{ fontSize: 20, color: COLOR.ink4 }}>–</span>
-                    <span style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.green : COLOR.ink2 }}>
-                      {match.away_result}
-                    </span>
-                  </div>
-                  {match.home_score != null && match.away_score != null && (
-                    <div style={{ fontSize: TYPE.micro, color: COLOR.ink3, marginTop: SPACE[1], fontVariantNumeric: 'tabular-nums' }}>
-                      {match.home_score} – {match.away_score} pins
-                    </div>
-                  )}
-                </>
-              ) : (
-                <span style={{ fontSize: 24, fontWeight: 300, color: COLOR.ink4, letterSpacing: 4 }}>vs</span>
-              )}
-            </div>
-
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-              {match.away_bits_team_id ? (
-                <Link href={`/lag/${match.away_bits_team_id}`} style={{
-                  display: 'block', fontSize: 17, fontWeight: awayWon ? 800 : 600,
-                  color: awayWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2, textDecoration: 'none',
-                }}>
-                  {match.away_team_name}
-                </Link>
-              ) : (
-                <div style={{ fontSize: 17, fontWeight: awayWon ? 800 : 600, color: awayWon ? COLOR.ink : COLOR.ink2, lineHeight: 1.2 }}>
-                  {match.away_team_name}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {match.oil_pattern && (
-            <div style={{ marginTop: SPACE[4], fontSize: TYPE.micro, color: COLOR.ink3, textAlign: 'center' }}>
-              Oljesystem: {match.oil_pattern}
-            </div>
-          )}
         </div>
 
-        {/* Hetaste bordet — the marquee career rivalry from this match */}
-        {rivalry && (
-          <div style={{ padding: `0 ${SPACE[4]}px` }}>
-            <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />
+        {match.oil_pattern && (
+          <div style={{ marginTop: SPACE[3], fontSize: TYPE.micro, color: COLOR.ink3 }}>Oljesystem: {match.oil_pattern}</div>
+        )}
+
+        {/* Hetaste bordet — a highlight card, full width under the hero */}
+        {rivalry && <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />}
+
+        {/* Detail — bordsvy + full spelresultat, side by side on desktop */}
+        {(hasDelmatch || hasResults) && (
+          <div className="match-body" style={{ marginTop: SPACE[8] }}>
+            {hasDelmatch && delmatch && (
+              <div ref={bordRef}>
+                <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>
+                <DelmatchBoard summary={delmatch} />
+              </div>
+            )}
+            {hasResults && (
+              <MatchResults
+                homeTeamName={match.home_team_name} awayTeamName={match.away_team_name}
+                serieCount={serieCount} homeSeries={homeSeries} awaySeries={awaySeries}
+                homePlayers={homePlayers} awayPlayers={awayPlayers} homeWon={homeWon} awayWon={awayWon}
+              />
+            )}
           </div>
         )}
 
-          </div>{/* /match-side */}
-
-          {/* Main: the detail — bordsvy + full spelresultat */}
-          <div className="match-main">
-
-        {/* Bordsvy — the real 2v2 head-to-heads, not BITS' dense table */}
-        {hasDelmatch && delmatch && (
-          <div ref={bordRef} style={{ padding: `${SPACE[6]}px ${SPACE[4]}px 0` }}>
-            <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>
-              BORDSVY
-            </div>
-            <DelmatchBoard summary={delmatch} />
-          </div>
-        )}
-
-        {/* Player scores — grouped by team, per-serie comparison + full lines */}
-        {hasResults && (
-          <MatchResults
-            homeTeamName={match.home_team_name} awayTeamName={match.away_team_name}
-            serieCount={serieCount} homeSeries={homeSeries} awaySeries={awaySeries}
-            homePlayers={homePlayers} awayPlayers={awayPlayers} homeWon={homeWon} awayWon={awayWon}
-          />
-        )}
-
-        {/* No scores yet */}
         {!hasResults && match.is_finished && (
-          <div style={{ padding: `${SPACE[8]}px ${SPACE[4]}px`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>
-            Spelarresultat synkas inom kort
-          </div>
+          <div style={{ padding: `${SPACE[8]}px 0`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>Spelarresultat synkas inom kort</div>
         )}
-
         {!match.is_finished && (
-          <div style={{ padding: `${SPACE[8]}px ${SPACE[4]}px`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>
-            Matchen är inte spelad än
-          </div>
+          <div style={{ padding: `${SPACE[8]}px 0`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>Matchen är inte spelad än</div>
         )}
 
-        {/* Division link */}
         {match.bits_division_id && (
-          <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px 0`, textAlign: 'center' }}>
-            <Link href={`/divisioner/${match.bits_division_id}`} style={{
-              fontSize: TYPE.caption, color: COLOR.ink3, textDecoration: 'none',
-            }}>
+          <div style={{ padding: `${SPACE[8]}px 0 0`, textAlign: 'center' }}>
+            <Link href={`/divisioner/${match.bits_division_id}`} style={{ fontSize: TYPE.caption, color: COLOR.ink3, textDecoration: 'none' }}>
               Visa hela divisionen →
             </Link>
           </div>
         )}
-
-          </div>{/* /match-main */}
-        </div>{/* /match-grid */}
-      </div>{/* /match-canvas */}
+      </div>
     </main>
   )
 }

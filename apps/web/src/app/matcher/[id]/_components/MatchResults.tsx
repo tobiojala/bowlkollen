@@ -14,7 +14,7 @@ export function MatchResults({
   homeWon: boolean; awayWon: boolean
 }) {
   return (
-    <div style={{ padding: `0 ${SPACE[4]}px` }}>
+    <div>
       <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>
         SPELRESULTAT
       </div>
