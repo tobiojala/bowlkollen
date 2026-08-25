@@ -1,25 +1,46 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import Link from 'next/link'
 import { Check, Flame } from 'lucide-react'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
+import { useMediaQuery } from '@/lib/use-media-query'
 import type { Delmatch, DelmatchPlayer, DelmatchSerie, DelmatchSummary } from '@bowlkollen/core'
 
 // The 2v2 (or 1v1) bord head-to-head, reconstructed from BITS. Aligned like a
 // results table: names outer (first-class, full names), scores in fixed columns
 // that line up down the whole page, one calm winner check + bold pair total.
 // Pro: a snitt-delta under each score (over/under the player's season average).
+// Mobile: one serie at a time behind pills, so spelresultat isn't a long scroll
+// away. (Serie, not bord — the pairings rotate each round, so bords aren't stable.)
 type Avg = Record<string, number>
 
 export function DelmatchBoard({ summary, avg, showDeltas }: { summary: DelmatchSummary; avg?: Avg; showDeltas?: boolean }) {
+  const isMobile = useMediaQuery('(max-width: 1023px)')
+  const [sel, setSel] = useState(0)
   if (!summary.hasData) {
     return <div style={{ color: COLOR.ink3, textAlign: 'center', padding: `${SPACE[8]}px 0`, fontSize: TYPE.caption }}>Bordsdata saknas för den här matchen.</div>
   }
   const pair = summary.konstellationSize > 1
+  const series = summary.series
+  const active = Math.min(sel, series.length - 1)
+  const shown = isMobile ? [series[active]] : series
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
-      {summary.series.map(s => <SerieBlock key={s.serie} serie={s} pair={pair} avg={avg} showDeltas={showDeltas} />)}
+    <div>
+      {isMobile && series.length > 1 && (
+        <div style={{ display: 'flex', gap: SPACE[2], marginBottom: SPACE[4], flexWrap: 'wrap' }}>
+          {series.map((s, i) => (
+            <button key={s.serie} onClick={() => setSel(i)} style={{
+              padding: '6px 15px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              fontSize: TYPE.caption, fontWeight: 700,
+              background: i === active ? COLOR.gold : COLOR.surface, color: i === active ? COLOR.bg : COLOR.ink2,
+            }}>Serie {s.serie}</button>
+          ))}
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
+        {shown.map(s => <SerieBlock key={s.serie} serie={s} pair={pair} avg={avg} showDeltas={showDeltas} />)}
+      </div>
     </div>
   )
 }
