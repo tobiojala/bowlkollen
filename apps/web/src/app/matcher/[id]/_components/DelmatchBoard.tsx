@@ -1,26 +1,28 @@
 'use client'
 
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { Check, Flame } from 'lucide-react'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import type { Delmatch, DelmatchPlayer, DelmatchSerie, DelmatchSummary } from '@bowlkollen/core'
 
-// The 2v2 (or 1v1) bord head-to-head, reconstructed from BITS. Series wrap in a
-// grid so it breathes on wide screens; each bord is a roomy row — big individual
-// scores, small names — with the winning konstellation carried by green + a check
-// (never colour alone). The banpoäng tally is the match hero's score, not repeated.
+// The 2v2 (or 1v1) bord head-to-head, reconstructed from BITS. Aligned like a
+// results table: names outer (first-class, full names), scores in fixed columns
+// that line up down the whole page, one calm winner check + bold pair total.
+// Series wrap in a grid so it breathes on wide screens.
 export function DelmatchBoard({ summary }: { summary: DelmatchSummary }) {
   if (!summary.hasData) {
     return <div style={{ color: COLOR.ink3, textAlign: 'center', padding: `${SPACE[8]}px 0`, fontSize: TYPE.caption }}>Bordsdata saknas för den här matchen.</div>
   }
+  const pair = summary.konstellationSize > 1
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
-      {summary.series.map(s => <SerieBlock key={s.serie} serie={s} />)}
+      {summary.series.map(s => <SerieBlock key={s.serie} serie={s} pair={pair} />)}
     </div>
   )
 }
 
-function SerieBlock({ serie }: { serie: DelmatchSerie }) {
+function SerieBlock({ serie, pair }: { serie: DelmatchSerie; pair: boolean }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
@@ -32,51 +34,67 @@ function SerieBlock({ serie }: { serie: DelmatchSerie }) {
           <Flame size={13} color={COLOR.ink3} style={{ marginLeft: 3 }} aria-label="Serievinst-bonus" />
         </span>
       </div>
-      {serie.tables.map(d => <BordRow key={d.tableNo} d={d} />)}
+      {serie.tables.map(d => <BordRow key={d.tableNo} d={d} pair={pair} />)}
     </div>
   )
 }
 
-function BordRow({ d }: { d: Delmatch }) {
+// Fixed grid so every score column lines up vertically across all bords.
+const GRID: React.CSSProperties = {
+  display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 52px 22px 52px minmax(0,1fr)',
+  columnGap: SPACE[2], rowGap: 6, alignItems: 'center',
+}
+
+function BordRow({ d, pair }: { d: Delmatch; pair: boolean }) {
   const homeWon = d.winner === 'home', awayWon = d.winner === 'away'
+  const rows = Math.max(d.home.length, d.away.length)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
-      <span style={{ width: 44, flexShrink: 0, fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.04em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
+    <div style={{ padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
+      <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.04em', color: COLOR.ink4, marginBottom: SPACE[2] }}>BORD {d.tableNo}</div>
+      <div style={GRID}>
+        {Array.from({ length: rows }, (_, i) => (
+          <Fragment key={i}>
+            <Name p={d.home[i]} align="right" />
+            <Score p={d.home[i]} win={homeWon} align="right" />
+            <span />
+            <Score p={d.away[i]} win={awayWon} align="left" />
+            <Name p={d.away[i]} align="left" />
+          </Fragment>
+        ))}
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: SPACE[3] }}>
-        {d.home.map((p, i) => <ScorePlayer key={i} p={p} win={homeWon} />)}
-        {homeWon && <Check size={18} color={COLOR.green} style={{ flexShrink: 0 }} />}
-      </div>
-
-      <span style={{ width: 1, alignSelf: 'stretch', background: COLOR.hairline, flexShrink: 0 }} />
-
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: SPACE[3] }}>
-        {awayWon && <Check size={18} color={COLOR.green} style={{ flexShrink: 0 }} />}
-        {d.away.map((p, i) => <ScorePlayer key={i} p={p} win={awayWon} />)}
+        {/* Result row: winner check on the outer edge + (for 2v2) the pair totals */}
+        <span style={{ textAlign: 'right' }}>{homeWon && <Check size={17} color={COLOR.green} style={{ display: 'inline' }} aria-label="Vinnare" />}</span>
+        <Total total={pair ? d.homeTotal : null} win={homeWon} align="right" />
+        <span />
+        <Total total={pair ? d.awayTotal : null} win={awayWon} align="left" />
+        <span style={{ textAlign: 'left' }}>{awayWon && <Check size={17} color={COLOR.green} style={{ display: 'inline' }} aria-label="Vinnare" />}</span>
       </div>
     </div>
   )
 }
 
-// One player: a big score with a small name under it.
-function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
-  return (
-    <div style={{ textAlign: 'center', minWidth: 0 }}>
-      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: win ? 800 : 700, lineHeight: 1, color: win ? COLOR.ink : COLOR.ink2 }}>
-        {p.score}
-      </div>
-      <PlayerName p={p} />
-    </div>
-  )
-}
-
-function PlayerName({ p }: { p: DelmatchPlayer }) {
+function Name({ p, align }: { p?: DelmatchPlayer; align: 'left' | 'right' }) {
+  if (!p) return <span />
   const style: React.CSSProperties = {
-    display: 'block', fontSize: 15, fontWeight: 600, marginTop: 5, textDecoration: 'none',
-    color: p.publicId ? COLOR.ink2 : COLOR.ink3,
-    maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    fontSize: 16, fontWeight: 500, textAlign: align, textDecoration: 'none',
+    color: p.publicId ? COLOR.ink : COLOR.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   }
-  return p.publicId
-    ? <Link href={`/players/${p.publicId}`} style={style}>{p.name}</Link>
-    : <span style={style}>{p.name}</span>
+  return p.publicId ? <Link href={`/players/${p.publicId}`} style={style}>{p.name}</Link> : <span style={style}>{p.name}</span>
+}
+
+function Score({ p, win, align }: { p?: DelmatchPlayer; win: boolean; align: 'left' | 'right' }) {
+  return (
+    <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 20, fontWeight: win ? 800 : 700, textAlign: align, color: win ? COLOR.ink : COLOR.ink2 }}>
+      {p?.score ?? ''}
+    </span>
+  )
+}
+
+function Total({ total, win, align }: { total: number | null; win: boolean; align: 'left' | 'right' }) {
+  if (total == null) return <span />
+  return (
+    <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 800, textAlign: align, color: win ? COLOR.ink : COLOR.ink4, paddingTop: 4 }}>
+      {total}
+    </span>
+  )
 }

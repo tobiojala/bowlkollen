@@ -31,16 +31,22 @@ export function useMatchDelmatch(matchId: number) {
       if (!rows.length) return computeDelmatcher([])
 
       const lics = [...new Set(rows.map(r => r.lic_nbr).filter(Boolean) as string[])]
-      const links: Record<string, string> = {}
+      const links: Record<string, { publicId: string; name: string }> = {}
       if (lics.length) {
-        const { data: players } = await db.from('bits_players').select('lic_nbr, public_id').in('lic_nbr', lics)
-        for (const p of (players ?? []) as { lic_nbr: string; public_id: string }[]) links[p.lic_nbr] = p.public_id
+        const { data: players } = await db.from('bits_players').select('lic_nbr, public_id, first_name, sur_name').in('lic_nbr', lics)
+        for (const p of (players ?? []) as { lic_nbr: string; public_id: string; first_name: string; sur_name: string }[]) {
+          links[p.lic_nbr] = { publicId: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim() }
+        }
       }
-      const slots: DelmatchSlot[] = rows.map(r => ({
-        serie: r.serie, tableNo: r.table_no, order: r.player_order,
-        isHomeTeam: r.is_home_team, playerName: r.player_name,
-        publicId: r.lic_nbr ? links[r.lic_nbr] ?? null : null, score: r.score,
-      }))
+      const slots: DelmatchSlot[] = rows.map(r => {
+        const link = r.lic_nbr ? links[r.lic_nbr] : undefined
+        return {
+          serie: r.serie, tableNo: r.table_no, order: r.player_order,
+          isHomeTeam: r.is_home_team,
+          playerName: link?.name || r.player_name, // full name where resolved, else BITS short form
+          publicId: link?.publicId ?? null, score: r.score,
+        }
+      })
       return computeDelmatcher(slots)
     },
   })
