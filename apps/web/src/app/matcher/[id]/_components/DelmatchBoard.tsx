@@ -2,29 +2,28 @@
 
 import Link from 'next/link'
 import { Check, Flame } from 'lucide-react'
-import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import type { Delmatch, DelmatchPlayer, DelmatchSerie, DelmatchSummary } from '@bowlkollen/core'
 
-// The 2v2 (or 1v1) bord head-to-head, reconstructed from BITS. Per serie, each
-// physical bord shows both konstellationer with EACH player's own score, then the
-// combined pair total that decides the delmatch (the banpoäng basis). Winner
-// carried by weight + a check, never colour alone (senior-legible). The overall
-// banpoäng tally is intentionally NOT repeated here — it's the match hero's score.
+// The 2v2 (or 1v1) bord head-to-head, reconstructed from BITS. Series wrap in a
+// grid so it breathes on wide screens; each bord is a roomy row — big individual
+// scores, small names — with the winning konstellation carried by green + a check
+// (never colour alone). The banpoäng tally is the match hero's score, not repeated.
 export function DelmatchBoard({ summary }: { summary: DelmatchSummary }) {
   if (!summary.hasData) {
     return <div style={{ color: COLOR.ink3, textAlign: 'center', padding: `${SPACE[8]}px 0`, fontSize: TYPE.caption }}>Bordsdata saknas för den här matchen.</div>
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[6] }}>
-      {summary.series.map(s => <SerieBlock key={s.serie} serie={s} pair={summary.konstellationSize > 1} />)}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: `${SPACE[8]}px ${SPACE[12]}px` }}>
+      {summary.series.map(s => <SerieBlock key={s.serie} serie={s} />)}
     </div>
   )
 }
 
-function SerieBlock({ serie, pair }: { serie: DelmatchSerie; pair: boolean }) {
+function SerieBlock({ serie }: { serie: DelmatchSerie }) {
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[3] }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
         <span style={{ color: COLOR.ink2, fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.12em' }}>SERIE {serie.serie}</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontVariantNumeric: 'tabular-nums' }}>
           <span style={{ fontSize: TYPE.caption, fontWeight: 600, color: serie.pinfallWinner === 'home' ? COLOR.ink2 : COLOR.ink3 }}>{serie.homePinfall}</span>
@@ -33,57 +32,49 @@ function SerieBlock({ serie, pair }: { serie: DelmatchSerie; pair: boolean }) {
           <Flame size={13} color={COLOR.ink3} style={{ marginLeft: 3 }} aria-label="Serievinst-bonus" />
         </span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3] }}>
-        {serie.tables.map(d => <BordCard key={d.tableNo} d={d} pair={pair} />)}
-      </div>
+      {serie.tables.map(d => <BordRow key={d.tableNo} d={d} />)}
     </div>
   )
 }
 
-function BordCard({ d, pair }: { d: Delmatch; pair: boolean }) {
+function BordRow({ d }: { d: Delmatch }) {
   const homeWon = d.winner === 'home', awayWon = d.winner === 'away'
-  const rows = Math.max(d.home.length, d.away.length)
   return (
-    <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, padding: `${SPACE[3]}px ${SPACE[4]}px` }}>
-      <div style={{ fontSize: TYPE.label, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[2], textAlign: 'center' }}>BORD {d.tableNo}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
+      <span style={{ width: 46, flexShrink: 0, fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto 1fr', columnGap: SPACE[3], rowGap: 6, alignItems: 'center' }}>
-        {Array.from({ length: rows }, (_, i) => (
-          <PlayerPair key={i} home={d.home[i]} away={d.away[i]} />
-        ))}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: SPACE[4] }}>
+        {d.home.map((p, i) => <ScorePlayer key={i} p={p} win={homeWon} />)}
+        {homeWon && <Check size={18} color={COLOR.green} style={{ alignSelf: 'center', flexShrink: 0 }} />}
       </div>
 
-      {/* Combined pair total — the delmatch decider */}
-      {pair && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: SPACE[2], marginTop: SPACE[2], paddingTop: SPACE[2], borderTop: `1px solid ${COLOR.hairline}`, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>
-          {homeWon && <Check size={15} color={COLOR.green} />}
-          <span style={{ fontSize: 18, fontWeight: 800, color: homeWon ? COLOR.green : COLOR.ink3 }}>{d.homeTotal}</span>
-          <span style={{ fontSize: 13, color: COLOR.ink4 }}>–</span>
-          <span style={{ fontSize: 18, fontWeight: 800, color: awayWon ? COLOR.green : COLOR.ink3 }}>{d.awayTotal}</span>
-          {awayWon && <Check size={15} color={COLOR.green} />}
-        </div>
-      )}
+      <span style={{ width: 1, alignSelf: 'stretch', background: COLOR.hairline, flexShrink: 0 }} />
+
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: SPACE[4] }}>
+        {awayWon && <Check size={18} color={COLOR.green} style={{ alignSelf: 'center', flexShrink: 0 }} />}
+        {d.away.map((p, i) => <ScorePlayer key={i} p={p} win={awayWon} />)}
+      </div>
     </div>
   )
 }
 
-// One player-vs-player line inside a bord: [home name] [home score] · [away score] [away name].
-function PlayerPair({ home, away }: { home?: DelmatchPlayer; away?: DelmatchPlayer }) {
+// One player: a big score with a small name under it.
+function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
   return (
-    <>
-      <PlayerName p={home} align="right" />
-      <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 16, fontWeight: 700, color: COLOR.ink, minWidth: 36, textAlign: 'right' }}>{home?.score ?? ''}</span>
-      <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 16, fontWeight: 700, color: COLOR.ink, minWidth: 36, textAlign: 'left' }}>{away?.score ?? ''}</span>
-      <PlayerName p={away} align="left" />
-    </>
+    <div style={{ textAlign: 'center', minWidth: 0 }}>
+      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 26, fontWeight: 800, lineHeight: 1, color: win ? COLOR.green : COLOR.ink }}>
+        {p.score}
+      </div>
+      <PlayerName p={p} />
+    </div>
   )
 }
 
-function PlayerName({ p, align }: { p?: DelmatchPlayer; align: 'left' | 'right' }) {
-  if (!p) return <span />
+function PlayerName({ p }: { p: DelmatchPlayer }) {
   const style: React.CSSProperties = {
-    fontSize: TYPE.caption, fontWeight: 600, textAlign: align, textDecoration: 'none',
-    color: p.publicId ? COLOR.ink : COLOR.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    display: 'block', fontSize: 11, fontWeight: 600, marginTop: 4, textDecoration: 'none',
+    color: p.publicId ? COLOR.ink2 : COLOR.ink3,
+    maxWidth: 92, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   }
   return p.publicId
     ? <Link href={`/players/${p.publicId}`} style={style}>{p.name}</Link>

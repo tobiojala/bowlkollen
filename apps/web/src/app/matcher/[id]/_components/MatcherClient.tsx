@@ -75,11 +75,9 @@ export default function MatcherClient({ match, results }: Props) {
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
       <style>{`
-        .match-canvas { max-width: 1040px; margin: 0 auto; padding: 24px 20px 96px; }
-        .match-body { display: flex; flex-direction: column; gap: 40px; }
-        @media (min-width: 1024px) {
-          .match-body { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
-        }
+        .match-canvas { max-width: 1320px; margin: 0 auto; padding: 24px 20px 96px; }
+        @media (min-width: 768px) { .match-canvas { padding: 32px 40px 96px; } }
+        .match-body { display: flex; flex-direction: column; gap: 48px; }
       `}</style>
       <div className="match-canvas">
 
@@ -91,7 +89,8 @@ export default function MatcherClient({ match, results }: Props) {
           <ChevronLeft size={15} /> Tillbaka
         </button>
 
-        {/* ── Match hero — open, borderless, powerful ── */}
+        {/* ── Match hero — open, borderless, powerful (focal width) ── */}
+        <div style={{ maxWidth: 900 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[3] }}>
           <span style={{
             fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em',
@@ -140,9 +139,14 @@ export default function MatcherClient({ match, results }: Props) {
         {match.oil_pattern && (
           <div style={{ marginTop: SPACE[3], fontSize: TYPE.micro, color: COLOR.ink3 }}>Oljesystem: {match.oil_pattern}</div>
         )}
+        </div>{/* /hero focal width */}
 
-        {/* Hetaste bordet — a highlight card, full width under the hero */}
-        {rivalry && <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />}
+        {/* Hetaste bordet — a highlight card; kept to a focal width, not stretched */}
+        {rivalry && (
+          <div style={{ maxWidth: 620 }}>
+            <RivalryCallout rivalry={rivalry} onOpenBord={hasDelmatch ? openBord : undefined} />
+          </div>
+        )}
 
         {/* Detail — bordsvy + full spelresultat, side by side on desktop */}
         {(hasDelmatch || hasResults) && (
