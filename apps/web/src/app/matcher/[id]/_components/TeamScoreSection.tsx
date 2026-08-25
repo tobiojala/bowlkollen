@@ -69,15 +69,16 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
             </div>
             <div style={{ display: 'flex', gap: SPACE[2] }}>
               {Array.from({ length: serieCount }, (_, gi) => {
-                const g = p.games[gi] ?? null
-                const delta = showDeltas && g != null && p.seasonAvg ? g - p.seasonAvg : null
+                const raw = p.games[gi] ?? 0
+                const played = raw > 0            // 0 / missing = didn't bowl that serie (sub)
+                const delta = showDeltas && played && p.seasonAvg ? raw - p.seasonAvg : null
                 return (
                   <span key={gi} style={{ width: 36, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
                     <span style={{
                       fontSize: 15, fontVariantNumeric: 'tabular-nums',
-                      color: g != null && g >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
+                      color: !played ? COLOR.ink4 : raw >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
                     }}>
-                      {g ?? '–'}
+                      {played ? raw : '–'}
                     </span>
                     {delta != null && (
                       <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: delta >= 0 ? COLOR.green : COLOR.ink4 }}>
