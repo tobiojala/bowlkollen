@@ -92,6 +92,11 @@ export default function MatcherClient({ match, results }: Props) {
         @media (min-width: 1024px) {
           .match-body--split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 56px; align-items: start; }
         }
+        /* One orchestrated page-load reveal, staggered; disabled for reduced-motion. */
+        @media (prefers-reduced-motion: no-preference) {
+          @keyframes match-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+          .rise { opacity: 0; animation: match-rise 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        }
       `}</style>
       <div className="match-canvas">
 
@@ -104,7 +109,7 @@ export default function MatcherClient({ match, results }: Props) {
         </button>
 
         {/* Header — hetaste bordet (left) beside the match hero (right) on desktop */}
-        <div className={`match-head${rivalry ? ' match-head--rivalry' : ''}`}>
+        <div className={`match-head rise${rivalry ? ' match-head--rivalry' : ''}`} style={{ animationDelay: '40ms' }}>
 
         {/* ── Match hero — open, borderless, powerful ── */}
         <div className="head-hero">
@@ -115,8 +120,8 @@ export default function MatcherClient({ match, results }: Props) {
           }}>
             {match.division_name ?? tier}
           </span>
-          {match.round_id && <span style={{ fontSize: TYPE.micro, color: COLOR.ink3 }}>Omg {match.round_id}</span>}
-          <span style={{ fontSize: TYPE.micro, color: COLOR.ink3, textTransform: 'capitalize' }}>
+          {match.round_id && <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>Omg {match.round_id}</span>}
+          <span style={{ fontSize: TYPE.caption, color: COLOR.ink3, textTransform: 'capitalize' }}>
             · {dateStr(match.match_date)}{match.hall_name ? ` · ${match.hall_name}` : ''}{match.hall_city ? `, ${match.hall_city}` : ''}
           </span>
         </div>
@@ -169,7 +174,7 @@ export default function MatcherClient({ match, results }: Props) {
 
         {/* Matchens bästa — the top individual total, under the header */}
         {topPlayer && (
-          <div style={{ maxWidth: 620, marginTop: SPACE[6] }}>
+          <div className="rise" style={{ maxWidth: 620, marginTop: SPACE[6], animationDelay: '130ms' }}>
             <MatchBest
               name={topPlayer.player_name}
               teamName={topPlayer.is_home_team ? match.home_team_name : match.away_team_name}
@@ -181,7 +186,7 @@ export default function MatcherClient({ match, results }: Props) {
 
         {/* Detail — bordsvy + full spelresultat, side by side on desktop */}
         {(hasDelmatch || hasResults) && (
-          <div className={`match-body${hasDelmatch && hasResults ? ' match-body--split' : ''}`} style={{ marginTop: SPACE[8] }}>
+          <div className={`match-body rise${hasDelmatch && hasResults ? ' match-body--split' : ''}`} style={{ marginTop: SPACE[8], animationDelay: '210ms' }}>
             {hasDelmatch && delmatch && (
               <div ref={bordRef}>
                 <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[4] }}>BORDSVY</div>

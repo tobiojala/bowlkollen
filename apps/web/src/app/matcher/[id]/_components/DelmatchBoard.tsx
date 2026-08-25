@@ -41,7 +41,7 @@ function BordRow({ d }: { d: Delmatch }) {
   const homeWon = d.winner === 'home', awayWon = d.winner === 'away'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[4]}px 0`, borderTop: `1px solid ${COLOR.hairline}` }}>
-      <span style={{ width: 46, flexShrink: 0, fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
+      <span style={{ width: 48, flexShrink: 0, fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.06em', color: COLOR.ink4 }}>BORD {d.tableNo}</span>
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: SPACE[4] }}>
         {d.home.map((p, i) => <ScorePlayer key={i} p={p} win={homeWon} />)}
@@ -72,9 +72,9 @@ function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
 
 function PlayerName({ p }: { p: DelmatchPlayer }) {
   const style: React.CSSProperties = {
-    display: 'block', fontSize: 11, fontWeight: 600, marginTop: 4, textDecoration: 'none',
+    display: 'block', fontSize: 13, fontWeight: 600, marginTop: 4, textDecoration: 'none',
     color: p.publicId ? COLOR.ink2 : COLOR.ink3,
-    maxWidth: 92, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    maxWidth: 104, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   }
   return p.publicId
     ? <Link href={`/players/${p.publicId}`} style={style}>{p.name}</Link>
