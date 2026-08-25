@@ -50,8 +50,9 @@ export default function WebNav() {
           border-bottom: 1px solid rgba(244,245,247,0.07); }
         .wn-inner { max-width: 1160px; margin: 0 auto; height: 64px;
           display: flex; align-items: center; gap: 24px; padding: 0 24px; }
-        .wn-mark { flex-shrink: 0; display: flex; align-items: center; text-decoration: none; }
-        .wn-mark img { height: 30px; width: auto; }
+        .wn-mark { flex-shrink: 0; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .wn-mark .wn-logomark { height: 34px; width: auto; }
+        .wn-mark .wn-logotype { height: 40px; width: auto; }
         .wn-links { display: flex; align-items: center; gap: 2px; flex: 1; }
         .wn-link { display: flex; align-items: center; height: 64px; padding: 0 14px;
           font-size: 15px; font-weight: 600; text-decoration: none; position: relative;
@@ -86,7 +87,8 @@ export default function WebNav() {
       <header className="wn">
         <div className="wn-inner">
           <Link href="/" className="wn-mark" aria-label="Bowlkollen — hem">
-            <Image src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority />
+            <Image className="wn-logomark" src="/bklogo.png" alt="" width={48} height={48} priority />
+            <Image className="wn-logotype" src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority />
           </Link>
 
           <nav className="wn-links">
