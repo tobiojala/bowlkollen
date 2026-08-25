@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { useSession } from '@/lib/queries'
@@ -49,9 +50,8 @@ export default function WebNav() {
           border-bottom: 1px solid rgba(244,245,247,0.07); }
         .wn-inner { max-width: 1160px; margin: 0 auto; height: 64px;
           display: flex; align-items: center; gap: 24px; padding: 0 24px; }
-        .wn-mark { flex-shrink: 0; text-decoration: none; color: #f4f5f7;
-          font-family: var(--font-display,'Barlow Condensed'),system-ui;
-          font-size: 22px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+        .wn-mark { flex-shrink: 0; display: flex; align-items: center; text-decoration: none; }
+        .wn-mark img { height: 30px; width: auto; }
         .wn-links { display: flex; align-items: center; gap: 2px; flex: 1; }
         .wn-link { display: flex; align-items: center; height: 64px; padding: 0 14px;
           font-size: 15px; font-weight: 600; text-decoration: none; position: relative;
@@ -85,7 +85,9 @@ export default function WebNav() {
 
       <header className="wn">
         <div className="wn-inner">
-          <Link href="/" className="wn-mark">Bowlkollen</Link>
+          <Link href="/" className="wn-mark" aria-label="Bowlkollen — hem">
+            <Image src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority />
+          </Link>
 
           <nav className="wn-links">
             {LINKS.map((l) => (

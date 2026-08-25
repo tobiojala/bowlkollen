@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession } from '@/lib/queries'
 import WebNav from '@/components/WebNav'
 
@@ -32,19 +33,8 @@ export default function PublicHeader() {
         padding: '18px 24px',
       }}
     >
-      <Link
-        href="/"
-        style={{
-          fontFamily: "var(--font-display, 'Barlow Condensed'), system-ui",
-          fontSize: 22,
-          fontWeight: 700,
-          letterSpacing: '0.02em',
-          textTransform: 'uppercase',
-          color: '#f4f5f7',
-          textDecoration: 'none',
-        }}
-      >
-        Bowlkollen
+      <Link href="/" aria-label="Bowlkollen — hem" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <Image src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority style={{ height: 30, width: 'auto' }} />
       </Link>
       <Link
         href="/login"
