@@ -33,9 +33,9 @@ export default function PublicHeader() {
         padding: '18px 24px',
       }}
     >
-      <Link href="/" aria-label="Bowlkollen — hem" style={{ display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none' }}>
+      <Link href="/" aria-label="Bowlkollen — hem" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
         <Image src="/bklogo.png" alt="" width={56} height={56} priority style={{ height: 56, width: 'auto' }} />
-        <Image src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority style={{ height: 46, width: 'auto' }} />
+        <Image src="/bowlkollen-logotype.png" alt="Bowlkollen" width={150} height={50} priority style={{ height: 46, width: 'auto', marginLeft: -5 }} />
       </Link>
       <Link
         href="/login"
