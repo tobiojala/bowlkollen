@@ -14,85 +14,65 @@ type Props = {
   showDeltas?: boolean   // Pro: show each serie's delta vs the player's season snitt
 }
 
-// One team's full roster, sorted by total — the exact data BITS' own
-// authoritative match-results endpoint returns, so every player's full
-// per-serie line and identity is unambiguous (no "Bord N" grouping needed).
+// One team's full roster in a single contained card: the S1–S4/TOT header lives
+// inside, columns are divided by hairlines, and each serie cell has room for the
+// score + its snitt-delta. Names first-class, tabular figures aligned.
 export function TeamScoreSection({ teamName, players, serieCount, total, isWinner, showDeltas }: Props) {
+  const grid: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: `minmax(0,1fr) repeat(${serieCount}, 60px) 64px`,
+    alignItems: 'stretch',
+  }
+  const colLabel: React.CSSProperties = {
+    borderLeft: `1px solid ${COLOR.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3, padding: `${SPACE[3]}px 0`,
+  }
+
   return (
     <div style={{ marginBottom: SPACE[6] }}>
-      <div style={{
-        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-        marginBottom: SPACE[3],
-      }}>
-        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink2 }}>
-          {teamName}
-        </span>
-        <span style={{
-          fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
-          color: isWinner ? COLOR.ink : COLOR.ink2,
-        }}>
-          {total}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACE[2] }}>
+        <span style={{ fontSize: TYPE.body, fontWeight: 800, color: isWinner ? COLOR.ink : COLOR.ink2 }}>{teamName}</span>
+        <span style={{ fontSize: 24, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: isWinner ? COLOR.ink : COLOR.ink2 }}>{total}</span>
       </div>
 
-      {/* Column header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `0 ${SPACE[3]}px`, marginBottom: SPACE[1] }}>
-        <div style={{ flex: 1, minWidth: 0 }} />
-        <div style={{ display: 'flex', gap: SPACE[2] }}>
-          {Array.from({ length: serieCount }, (_, i) => (
-            <span key={i} style={{ width: 36, textAlign: 'center', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3 }}>
-              S{i + 1}
-            </span>
-          ))}
+      <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
+        {/* Header row — inside the card */}
+        <div style={{ ...grid, borderBottom: `1px solid ${COLOR.hairline}` }}>
+          <span />
+          {Array.from({ length: serieCount }, (_, i) => <span key={i} style={colLabel}>S{i + 1}</span>)}
+          <span style={{ ...colLabel, paddingRight: SPACE[3] }}>TOT</span>
         </div>
-        <span style={{ width: 44, textAlign: 'right', fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3 }}>TOT</span>
-      </div>
 
-      <div style={{
-        background: COLOR.surface, borderRadius: RADIUS.md,
-        padding: `${SPACE[2]}px ${SPACE[4]}px`,
-      }}>
-        {players.map((p, i) => (
-          <div key={p.name} style={{
-            display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[3]}px 0`,
-            borderTop: i === 0 ? 'none' : `1px solid ${COLOR.hairline}`,
-          }}>
-            <div style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
-              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {p.publicId ? (
-                  <Link href={`/players/${p.publicId}`} style={{ color: COLOR.ink, textDecoration: 'none' }}>{p.name}</Link>
-                ) : (
-                  <span style={{ color: COLOR.ink }}>{p.name}</span>
-                )}
+        {players.map((p, ri) => (
+          <div key={p.name} style={{ ...grid, borderTop: ri === 0 ? 'none' : `1px solid ${COLOR.hairline}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], minWidth: 0, padding: `${SPACE[3]}px 0 ${SPACE[3]}px ${SPACE[4]}px` }}>
+              <span style={{ minWidth: 0, fontSize: TYPE.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {p.publicId
+                  ? <Link href={`/players/${p.publicId}`} style={{ color: COLOR.ink, textDecoration: 'none' }}>{p.name}</Link>
+                  : <span style={{ color: COLOR.ink }}>{p.name}</span>}
               </span>
               {p.publicId && <FollowButton entityType="player" entityId={p.publicId} variant="icon" size="sm" />}
             </div>
-            <div style={{ display: 'flex', gap: SPACE[2] }}>
-              {Array.from({ length: serieCount }, (_, gi) => {
-                const raw = p.games[gi] ?? 0
-                const played = raw > 0            // 0 / missing = didn't bowl that serie (sub)
-                const delta = showDeltas && played && p.seasonAvg ? raw - p.seasonAvg : null
-                return (
-                  <span key={gi} style={{ width: 36, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{
-                      fontSize: 15, fontVariantNumeric: 'tabular-nums',
-                      color: !played ? COLOR.ink3 : raw >= SCORE.ELITE ? COLOR.gold : COLOR.ink2,
-                    }}>
-                      {played ? raw : '–'}
-                    </span>
-                    {delta != null && (
-                      <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: delta >= 0 ? COLOR.green : COLOR.ink3 }}>
-                        {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
-                      </span>
-                    )}
+
+            {Array.from({ length: serieCount }, (_, gi) => {
+              const raw = p.games[gi] ?? 0
+              const played = raw > 0
+              const delta = showDeltas && played && p.seasonAvg ? raw - p.seasonAvg : null
+              return (
+                <span key={gi} style={{ borderLeft: `1px solid ${COLOR.hairline}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `${SPACE[3]}px 0` }}>
+                  <span style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 16, fontWeight: 700, color: !played ? COLOR.ink3 : raw >= SCORE.ELITE ? COLOR.gold : COLOR.ink2 }}>
+                    {played ? raw : '–'}
                   </span>
-                )
-              })}
-            </div>
-            <span style={{
-              width: 44, textAlign: 'right', fontSize: 20, fontWeight: 800,
-              fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', color: COLOR.ink,
-            }}>
+                  {delta != null && (
+                    <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2, color: delta >= 0 ? COLOR.green : COLOR.ink3 }}>
+                      {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
+                    </span>
+                  )}
+                </span>
+              )
+            })}
+
+            <span style={{ borderLeft: `1px solid ${COLOR.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: SPACE[3], fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 20, fontWeight: 800, color: COLOR.ink }}>
               {p.total}
             </span>
           </div>
