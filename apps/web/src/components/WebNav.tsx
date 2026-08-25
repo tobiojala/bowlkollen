@@ -52,7 +52,7 @@ export default function WebNav() {
           display: flex; align-items: center; gap: 24px; padding: 0 24px; }
         .wn-mark { flex-shrink: 0; display: flex; align-items: center; text-decoration: none; }
         .wn-mark .wn-logomark { height: 56px; width: auto; }
-        .wn-mark .wn-logotype { height: 46px; width: auto; margin-left: -5px; }
+        .wn-mark .wn-logotype { height: 46px; width: auto; margin-left: -22px; }
         .wn-links { display: flex; align-items: center; gap: 2px; flex: 1; }
         .wn-link { display: flex; align-items: center; height: 64px; padding: 0 14px;
           font-size: 15px; font-weight: 600; text-decoration: none; position: relative;
