@@ -84,9 +84,9 @@ export default function MatcherClient({ match, results }: Props) {
         .head-hero { max-width: 900px; }
         .head-rivalry { max-width: 620px; }
         @media (min-width: 1024px) {
-          .match-head--rivalry { display: grid; grid-template-columns: 400px 1fr; gap: 48px; align-items: center; }
-          .match-head--rivalry .head-rivalry { grid-column: 1; grid-row: 1; max-width: none; }
-          .match-head--rivalry .head-hero { grid-column: 2; grid-row: 1; max-width: none; }
+          .match-head--rivalry { display: grid; grid-template-columns: 1fr 400px; gap: 48px; align-items: center; }
+          .match-head--rivalry .head-hero { grid-column: 1; grid-row: 1; max-width: none; }
+          .match-head--rivalry .head-rivalry { grid-column: 2; grid-row: 1; max-width: none; }
         }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
         @media (min-width: 1024px) {
@@ -136,9 +136,9 @@ export default function MatcherClient({ match, results }: Props) {
             {match.is_finished && match.home_result != null && match.away_result != null ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: SPACE[3], fontVariantNumeric: 'tabular-nums', fontFamily: FONT.display }}>
-                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.green : COLOR.ink3 }}>{match.home_result}</span>
+                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: homeWon ? COLOR.ink : COLOR.ink2 }}>{match.home_result}</span>
                   <span style={{ fontSize: 26, color: COLOR.ink4 }}>–</span>
-                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.green : COLOR.ink3 }}>{match.away_result}</span>
+                  <span style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, color: awayWon ? COLOR.ink : COLOR.ink2 }}>{match.away_result}</span>
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink4, marginTop: SPACE[1] }}>BANPOÄNG</div>
                 {match.home_score != null && match.away_score != null && (

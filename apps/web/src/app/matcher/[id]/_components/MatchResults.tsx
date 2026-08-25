@@ -42,7 +42,7 @@ export function MatchResults({
               <span key={i} style={{ width: 28, textAlign: 'center', fontSize: TYPE.caption, fontVariantNumeric: 'tabular-nums', color: COLOR.ink2 }}>{v}</span>
             ))}
           </div>
-          <span style={{ width: 34, textAlign: 'right', fontSize: TYPE.caption, fontWeight: 700, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: team.won ? COLOR.green : COLOR.ink3 }}>
+          <span style={{ width: 34, textAlign: 'right', fontSize: TYPE.caption, fontWeight: 700, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: team.won ? COLOR.ink : COLOR.ink3 }}>
             {team.series.reduce((a, b) => a + b, 0)}
           </span>
         </div>

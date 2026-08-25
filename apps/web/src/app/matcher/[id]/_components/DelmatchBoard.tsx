@@ -62,7 +62,7 @@ function BordRow({ d }: { d: Delmatch }) {
 function ScorePlayer({ p, win }: { p: DelmatchPlayer; win: boolean }) {
   return (
     <div style={{ textAlign: 'center', minWidth: 0 }}>
-      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 26, fontWeight: 800, lineHeight: 1, color: win ? COLOR.green : COLOR.ink }}>
+      <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 26, fontWeight: win ? 800 : 700, lineHeight: 1, color: win ? COLOR.ink : COLOR.ink2 }}>
         {p.score}
       </div>
       <PlayerName p={p} />

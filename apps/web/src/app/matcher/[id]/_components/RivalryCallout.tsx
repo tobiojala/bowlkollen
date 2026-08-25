@@ -33,9 +33,9 @@ export function RivalryCallout({ rivalry, onOpenBord }: { rivalry: MatchRivalry;
           <PlayerSide name={a.name} publicId={a.publicId} />
           <div style={{ minWidth: 96, textAlign: 'center', padding: `0 ${SPACE[2]}px` }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>
-              <span style={{ fontSize: 30, fontWeight: 800, color: aLeads ? COLOR.green : COLOR.ink3 }}>{a.wins}</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: aLeads ? COLOR.ink : COLOR.ink3 }}>{a.wins}</span>
               <span style={{ fontSize: 20, color: COLOR.ink4, margin: `0 ${SPACE[2]}px` }}>–</span>
-              <span style={{ fontSize: 30, fontWeight: 800, color: bLeads ? COLOR.green : COLOR.ink3 }}>{b.wins}</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: bLeads ? COLOR.ink : COLOR.ink3 }}>{b.wins}</span>
             </div>
             <div style={{ color: COLOR.ink3, fontSize: TYPE.caption, fontWeight: 600, marginTop: 2 }}>{meetings} möten</div>
           </div>
@@ -43,8 +43,8 @@ export function RivalryCallout({ rivalry, onOpenBord }: { rivalry: MatchRivalry;
         </div>
 
         <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', marginTop: SPACE[4], background: COLOR.surface2 }}>
-          <div style={{ width: `${aShare}%`, background: aLeads ? COLOR.green : COLOR.ink4 }} />
-          <div style={{ width: `${100 - aShare}%`, background: bLeads ? COLOR.green : COLOR.ink4 }} />
+          <div style={{ width: `${aShare}%`, background: aLeads ? COLOR.ink2 : COLOR.ink4 }} />
+          <div style={{ width: `${100 - aShare}%`, background: bLeads ? COLOR.ink2 : COLOR.ink4 }} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACE[4], paddingTop: SPACE[3], borderTop: `1px solid ${COLOR.hairline}` }}>

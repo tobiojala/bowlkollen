@@ -27,7 +27,7 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
         </span>
         <span style={{
           fontSize: 15, fontWeight: 800, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums',
-          color: isWinner ? COLOR.green : COLOR.ink3,
+          color: isWinner ? COLOR.ink : COLOR.ink3,
         }}>
           {total}
         </span>
