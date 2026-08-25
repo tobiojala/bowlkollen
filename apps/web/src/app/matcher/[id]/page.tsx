@@ -14,7 +14,7 @@ export default async function MatcherPage({ params }: { params: Promise<{ id: st
 
   const [{ data: match }, { data: results }] = await Promise.all([
     db.from('bits_matches')
-      .select('bits_match_id,match_date,division_name,bits_division_id,season_id,home_team_name,away_team_name,home_bits_team_id,away_bits_team_id,home_result,away_result,home_score,away_score,is_finished,hall_name,hall_city,oil_pattern,round_id,scores_synced')
+      .select('bits_match_id,match_date,match_datetime,division_name,bits_division_id,season_id,home_team_name,away_team_name,home_bits_team_id,away_bits_team_id,home_result,away_result,home_score,away_score,is_finished,hall_name,hall_city,oil_pattern,round_id,scores_synced')
       .eq('bits_match_id', matchId)
       .single(),
     db.from('bits_match_player_results')

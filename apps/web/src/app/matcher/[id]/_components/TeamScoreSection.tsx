@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import FollowButton from '@/components/FollowButton'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { SCORE } from '@/lib/constants'
 
@@ -56,17 +57,15 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
             display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[3]}px 0`,
             borderTop: i === 0 ? 'none' : `1px solid ${COLOR.hairline}`,
           }}>
-            <div style={{
-              flex: 1, minWidth: 0, fontSize: TYPE.body,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {p.publicId ? (
-                <Link href={`/players/${p.publicId}`} style={{ color: COLOR.ink, textDecoration: 'none' }}>
-                  {p.name}
-                </Link>
-              ) : (
-                <span style={{ color: COLOR.ink }}>{p.name}</span>
-              )}
+            <div style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
+              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {p.publicId ? (
+                  <Link href={`/players/${p.publicId}`} style={{ color: COLOR.ink, textDecoration: 'none' }}>{p.name}</Link>
+                ) : (
+                  <span style={{ color: COLOR.ink }}>{p.name}</span>
+                )}
+              </span>
+              {p.publicId && <FollowButton entityType="player" entityId={p.publicId} variant="icon" size="sm" />}
             </div>
             <div style={{ display: 'flex', gap: SPACE[2] }}>
               {Array.from({ length: serieCount }, (_, gi) => {

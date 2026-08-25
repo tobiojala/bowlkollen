@@ -1,5 +1,4 @@
-// ── Core domain types ─────────────────────────────────────────────────────────
-// Single source of truth. All pages and components import from here.
+// ── Core domain types — single source of truth; all pages/components import here ─
 
 export type MatchStatus = 'live' | 'completed' | 'upcoming'
 
@@ -83,7 +82,8 @@ export type BitsMatchFeed = {
 }
 
 export type BitsMatchDetail = BitsMatchFeed & {
-  season_id:    number
+  season_id:      number
+  match_datetime: string | null   // real kickoff wall-clock (naive Swedish local)
   home_score:   number | null   // total pins
   away_score:   number | null
   oil_pattern:  string | null

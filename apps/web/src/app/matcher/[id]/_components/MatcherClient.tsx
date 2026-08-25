@@ -12,6 +12,10 @@ import { MatchResults } from './MatchResults'
 import { DelmatchBoard } from './DelmatchBoard'
 import { RivalryCallout } from './RivalryCallout'
 import { MatchBest } from './MatchBest'
+import { Hojdpunkter } from './Hojdpunkter'
+import { SeasonContext } from './SeasonContext'
+import { UpcomingPanel } from './UpcomingPanel'
+import { ProGate } from '@/components/ProGate'
 import { useMatchDelmatch, useMatchRivalry } from './use-match-bord'
 import { usePro } from '@/lib/pro'
 
@@ -91,6 +95,8 @@ export default function MatcherClient({ match, results }: Props) {
           .match-head--rivalry .head-hero { grid-column: 1; grid-row: 1; max-width: none; }
           .match-head--rivalry .head-rivalry { grid-column: 2; grid-row: 1; max-width: none; }
         }
+        .hl { display: flex; flex-direction: column; gap: 16px; }
+        @media (min-width: 1024px) { .hl { display: grid; grid-template-columns: 340px 1fr; align-items: stretch; } }
         .match-body { display: flex; flex-direction: column; gap: 48px; }
         @media (min-width: 1024px) {
           .match-body--split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
@@ -161,6 +167,9 @@ export default function MatcherClient({ match, results }: Props) {
           </div>
         </div>
 
+        {/* Season context — standings + head-to-head (free) */}
+        {match.is_finished && <SeasonContext match={match} tier={tier} />}
+
         {match.oil_pattern && (
           <div style={{ marginTop: SPACE[3], fontSize: TYPE.micro, color: COLOR.ink3 }}>Oljesystem: {match.oil_pattern}</div>
         )}
@@ -175,15 +184,20 @@ export default function MatcherClient({ match, results }: Props) {
 
         </div>{/* /match-head */}
 
-        {/* Matchens bästa — the top individual total, under the header */}
-        {topPlayer && (
-          <div className="rise" style={{ maxWidth: 620, marginTop: SPACE[6], animationDelay: '130ms' }}>
-            <MatchBest
-              name={topPlayer.player_name}
-              teamName={topPlayer.is_home_team ? match.home_team_name : match.away_team_name}
-              total={topTotal}
-              publicId={topPlayer.public_id ?? null}
-            />
+        {/* Matchens bästa (free) + Höjdpunkter (Pro), under the header */}
+        {hasResults && (
+          <div className="hl rise" style={{ marginTop: SPACE[6], animationDelay: '130ms' }}>
+            {topPlayer && (
+              <MatchBest
+                name={topPlayer.player_name}
+                teamName={topPlayer.is_home_team ? match.home_team_name : match.away_team_name}
+                total={topTotal}
+                publicId={topPlayer.public_id ?? null}
+              />
+            )}
+            <ProGate>
+              <Hojdpunkter results={results} delmatch={delmatch} />
+            </ProGate>
           </div>
         )}
 
@@ -210,7 +224,7 @@ export default function MatcherClient({ match, results }: Props) {
           <div style={{ padding: `${SPACE[8]}px 0`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>Spelarresultat synkas inom kort</div>
         )}
         {!match.is_finished && (
-          <div style={{ padding: `${SPACE[8]}px 0`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>Matchen är inte spelad än</div>
+          <div style={{ maxWidth: 900 }}><UpcomingPanel match={match} /></div>
         )}
 
         {match.bits_division_id && (
