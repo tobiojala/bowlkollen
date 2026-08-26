@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { COLOR, RADIUS, SPACE, TYPE, FONT } from '@/lib/brand'
+import { COLOR, SPACE, TYPE, FONT } from '@/lib/brand'
 import { teamColor, teamInitials } from '@/lib/utils'
 import { useNextMatch } from '@/lib/diary'
 import { usePlayerScouting } from '@/lib/scouting'
@@ -43,10 +43,9 @@ export function RivalCallout() {
   const av = teamColor(rival.name, true)
 
   return (
-    <div style={{ padding: `${SPACE[2]}px ${SPACE[4]}px 0` }}>
-      <Link href={`/prep/${next.matchId}`}
-        style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textDecoration: 'none',
-          background: COLOR.surface, borderRadius: RADIUS.lg, borderLeft: `2px solid ${COLOR.gold}`, padding: SPACE[4] }}>
+    <Link href={`/prep/${next.matchId}`}
+      style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textDecoration: 'none',
+        borderBottom: `1px solid ${COLOR.hairline}`, padding: `${SPACE[6]}px ${SPACE[3]}px` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.gold, letterSpacing: '0.1em' }}>RIVALITET</span>
           <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink3 }}>{relativeMatchDate(next.date)}</span>
@@ -68,7 +67,6 @@ export function RivalCallout() {
             </div>
           </div>
         </div>
-      </Link>
-    </div>
+    </Link>
   )
 }
