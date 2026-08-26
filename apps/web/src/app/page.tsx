@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-  useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
+  useFollows, useHomeMatches, useHomeFeed,
   useMyTeamId, useBitsMatchFeed, useBitsTopScores,
 } from '@/lib/queries'
+import { useFollowedPlayerResults } from '@/lib/feed-players'
 import StoryRail from './home/_components/StoryRail'
 import { buildStoryEntities, useStoryViews, entityKey, type FeedFilter } from '@/lib/story-rail'
 import { LiveTopWidget } from './home/_components/LiveTopWidget'
@@ -21,7 +22,7 @@ import { greetingFor, homeNote } from '@bowlkollen/core'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { getLiveCompetitions } from '@/lib/competitions'
-import type { Match, FeedPlayerResult, BitsMatchFeed } from '@/lib/types'
+import type { Match, BitsMatchFeed } from '@/lib/types'
 
 export default function Home() {
   const [filter, setFilter] = useState<FeedFilter>({ kind: 'view', view: 'allt' })
@@ -41,12 +42,10 @@ export default function Home() {
   const playerIds = follows.filter(f => f.entity_type === 'player').map(f => f.entity_id)
   const teamIds   = follows.filter(f => f.entity_type === 'team').map(f => f.entity_id)
 
-  const { data: feedItems = [], isLoading: feedLoading }   = usePersonalizedFeed(playerIds, teamIds)
+  const { data: playerResults = [], isLoading: feedLoading } = useFollowedPlayerResults(playerIds)
   const { data: feedEvents = [], isLoading: eventsLoading } = useHomeFeed(teamIds)
   const { data: topScores = [] } = useBitsTopScores()
   const { data: feedStandings = [] } = useFeedStandings()
-
-  const playerResults = feedItems.filter((f): f is FeedPlayerResult => f.kind === 'player_result')
 
   const allRecent = (matchData?.recentLive ?? []) as unknown as Match[]
   const live      = allRecent.filter(m => m.status === 'live')
