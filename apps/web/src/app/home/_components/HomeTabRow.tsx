@@ -1,25 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { List, User, Users, Calendar, Target } from 'lucide-react'
+import { LayoutGrid, User, Users, Calendar, Target } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { COLOR } from '@/lib/brand'
 
 export type FeedFilterType = 'allt' | 'spelare' | 'lag' | 'matcher' | 'prediktion'
 
 const FILTER_CHIPS: { id: FeedFilterType; label: string; Icon: LucideIcon }[] = [
-  { id: 'allt',       label: 'Allt',       Icon: List     },
-  { id: 'spelare',    label: 'Spelare',    Icon: User     },
-  { id: 'lag',        label: 'Lag',        Icon: Users    },
-  { id: 'matcher',    label: 'Matcher',    Icon: Calendar },
-  { id: 'prediktion', label: 'Prediktion', Icon: Target   },
+  { id: 'allt',       label: 'Allt',       Icon: LayoutGrid },
+  { id: 'spelare',    label: 'Spelare',    Icon: User       },
+  { id: 'lag',        label: 'Lag',        Icon: Users      },
+  { id: 'matcher',    label: 'Matcher',    Icon: Calendar   },
+  { id: 'prediktion', label: 'Prediktion', Icon: Target     },
 ]
 
-// Instagram-style story circles as the feed's category rail — the same ring
-// language as the native StoryChips: a lit gold ring on the active category
-// (others sit on a muted ink ring), a glossy sheen over an inner surface disc,
+// Instagram-style story circles as the feed's category rail — 1:1 with the
+// native StoryChips: 76px circle, lit gold ring on the active category (others
+// on a muted ink ring), a glossy sheen over an inner surface disc, 30px icon,
 // label below. Horizontal-scroll rail so the set can grow past the fold.
-const SIZE = 64
+const SIZE = 76
 const RING = 3
 
 interface HomeTabRowProps {
@@ -71,7 +71,7 @@ export default function HomeTabRow({ active, onChange }: HomeTabRowProps) {
                 background: COLOR.surface, border: `2px solid ${COLOR.bg}`, boxSizing: 'border-box',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon size={26} color={isActive ? COLOR.gold : COLOR.ink2} strokeWidth={isActive ? 2.2 : 1.7} />
+                <Icon size={30} color={isActive ? COLOR.gold : COLOR.ink2} strokeWidth={isActive ? 2.2 : 1.7} />
               </div>
             </div>
             <span style={{
