@@ -85,8 +85,10 @@ export default function Home() {
         .home-wrap { max-width: 600px; margin: 0 auto; }
         .home-grid { display: block; }
         .home-side { display: none; }
+        .home-greet { align-items: center; text-align: center; }
         @media (min-width: 1024px) {
           .home-wrap { max-width: 1160px; padding: 0 32px; }
+          .home-greet { align-items: flex-start; text-align: left; }
           .home-grid { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 40px; align-items: start; }
           .home-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 88px; }
         }
@@ -95,7 +97,7 @@ export default function Home() {
 
         {/* Greeting — native language: date kicker, personalized greeting, and a
             match-aware note (tappable → prep when a fixture is close). */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '16px 24px 4px' }}>
+        <div className="home-greet" style={{ display: 'flex', flexDirection: 'column', padding: '16px 24px 4px' }}>
           <div style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: SPACE[1] }}>
             {dateStr}
           </div>
