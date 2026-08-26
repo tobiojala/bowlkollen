@@ -6,8 +6,8 @@ import {
   useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
   useMyTeamId, useBitsMatchFeed, useBitsTopScores,
 } from '@/lib/queries'
-import { Calendar, Layers, Users, Trophy, Target, ChevronRight } from 'lucide-react'
 import HomeTabRow, { type FeedFilterType } from './home/_components/HomeTabRow'
+import { LiveTopWidget } from './home/_components/LiveTopWidget'
 import { LiveAlertBanner } from './home/_components/LiveAlertBanner'
 import { MatcherTab } from './home/_components/MatcherTab'
 import { FeedSection } from './home/_components/FeedSection'
@@ -191,39 +191,14 @@ export default function Home() {
 
         </div>{/* home-main */}
 
-        {/* Desktop sidebar — your next match + quick access to the worlds */}
+        {/* Desktop sidebar — your next match + the league pulse (live / top series) */}
         <aside className="home-side">
           <NextMatchCard />
-          <QuickAccess />
+          <LiveTopWidget live={live} topScores={topScores} />
         </aside>
         </div>{/* home-grid */}
 
       </div>
     </main>
-  )
-}
-
-const QUICK = [
-  { label: 'Schema',    href: '/schema',     icon: Calendar },
-  { label: 'Serier',    href: '/divisioner', icon: Layers },
-  { label: 'Spelare',   href: '/discover',   icon: Users },
-  { label: 'Tävlingar', href: '/tavlingar',  icon: Trophy },
-  { label: 'Tipsligan', href: '/prediktion', icon: Target },
-] as const
-
-function QuickAccess() {
-  return (
-    <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
-      <div style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.12em', padding: '14px 16px 8px' }}>UTFORSKA</div>
-      {QUICK.map(({ label, href, icon: Icon }) => (
-        <Link key={href} href={href}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', textDecoration: 'none',
-            color: COLOR.ink, borderTop: `1px solid ${COLOR.hairline}` }}>
-          <Icon size={20} color={COLOR.ink2} />
-          <span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{label}</span>
-          <ChevronRight size={18} color={COLOR.ink4} />
-        </Link>
-      ))}
-    </div>
   )
 }
