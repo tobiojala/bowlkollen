@@ -8,6 +8,7 @@ import {
 } from '@/lib/queries'
 import HomeTabRow, { type FeedFilterType } from './home/_components/HomeTabRow'
 import { LiveTopWidget } from './home/_components/LiveTopWidget'
+import { RivalCallout } from './home/_components/RivalCallout'
 import { LiveAlertBanner } from './home/_components/LiveAlertBanner'
 import { MatcherTab } from './home/_components/MatcherTab'
 import { FeedSection } from './home/_components/FeedSection'
@@ -125,6 +126,9 @@ export default function Home() {
 
         {/* Live ticker — sits tight under the filter row */}
         <LiveAlertBanner matches={live} competitions={liveCompetitions} />
+
+        {/* Pre-match rivalry — your next fixture's biggest history (claimed players only) */}
+        <RivalCallout />
 
         {/* Matcher tab */}
         {filter === 'matcher' && (

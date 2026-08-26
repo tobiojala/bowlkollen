@@ -15,7 +15,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 
 export type NextMatch = {
   matchId: number; date: string; hall: string | null; division: string | null
-  myTeamId: number; myTeamName: string; opponentName: string; isHome: boolean
+  myTeamId: number; myTeamName: string; opponentId: number; opponentName: string; isHome: boolean
 }
 
 /** First name of the signed-in user's verified player claim (for the home
@@ -80,6 +80,7 @@ export function useNextMatch() {
         division: (m.division_name as string | null) ?? null,
         myTeamId: (isHome ? m.home_bits_team_id : m.away_bits_team_id) as number,
         myTeamName: (isHome ? m.home_team_name : m.away_team_name) as string,
+        opponentId: (isHome ? m.away_bits_team_id : m.home_bits_team_id) as number,
         opponentName: (isHome ? m.away_team_name : m.home_team_name) as string,
         isHome,
       }
