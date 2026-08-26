@@ -60,10 +60,11 @@ export default function HomeTabRow({ active, onChange }: HomeTabRowProps) {
               background: isActive ? COLOR.gold : COLOR.ink4,
               transition: 'background 0.16s ease',
             }}>
-              {/* Glossy sheen */}
+              {/* Matte sheen — a faint top highlight, not wet gloss. Keep these
+                  numbers identical to native StoryChips' sheen (parity). */}
               <div style={{
                 position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none',
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 62%)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0) 65%)',
               }} />
               {/* Inner disc */}
               <div style={{

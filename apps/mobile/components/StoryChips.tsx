@@ -34,9 +34,11 @@ export function StoryChips({
         return (
           <PressableScale key={s.key} style={styles.item} onPress={() => onSelect(s.key)} accessibilityLabel={s.label}>
             <View style={[styles.ring, { backgroundColor: on ? COLOR.gold : COLOR.ink4 }]}>
+              {/* Matte sheen — a faint top highlight, not wet gloss. Keep these
+                  numbers identical to web's HomeTabRow sheen (parity). */}
               <LinearGradient
-                colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0)']}
-                locations={[0, 0.4, 0.62]}
+                colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
+                locations={[0, 0.45, 0.65]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.sheen}
