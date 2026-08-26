@@ -65,6 +65,14 @@ export default function StoryRail({ filter, entities, isUnseen, onSelect }: {
       boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</div>
   )
 
+  // Instagram order: unseen (lit) circles first, seen ones sink to the back, so
+  // scrolling back up never lands on a dim circle. entities arrive recency-sorted
+  // and Array.sort is stable, so recency order holds within each group.
+  const ordered = [...entities].sort((a, b) => {
+    const ua = isUnseen(a.key, a.latestTs), ub = isUnseen(b.key, b.latestTs)
+    return ua === ub ? 0 : ua ? -1 : 1
+  })
+
   return (
     <div className="home-story-rail" style={{ display: 'flex', gap: 16, alignItems: 'flex-start', padding: '10px 16px 14px', overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.home-story-rail::-webkit-scrollbar { display: none }`}</style>
@@ -78,9 +86,9 @@ export default function StoryRail({ filter, entities, isUnseen, onSelect }: {
         )
       })}
 
-      {entities.length > 0 && <div style={{ alignSelf: 'stretch', width: 1, background: COLOR.hairline, margin: '2px 0', flexShrink: 0 }} />}
+      {ordered.length > 0 && <div style={{ alignSelf: 'stretch', width: 1, background: COLOR.hairline, margin: '2px 0', flexShrink: 0 }} />}
 
-      {entities.map((e) => {
+      {ordered.map((e) => {
         const active = filter.kind === 'entity' && filter.entityType === e.entityType && filter.id === e.id
         const unseen = isUnseen(e.key, e.latestTs)
         const c = teamColor(e.name, true)
