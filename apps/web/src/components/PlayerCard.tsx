@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import { X, Download, Film, Camera, Music2, Users, AtSign } from 'lucide-react'
+import { COLOR } from '@/lib/brand'
 
 const RemotionPlayer = dynamic(() => import('./RemotionPlayerEmbed'), { ssr: false })
 
@@ -143,22 +145,7 @@ function CardFront({ name, teamName, avatarUrl, avg, bestSeries, over200, tier, 
   const angle = Math.round(mx * 120 + 30)
 
   const holoStyle = {
-    background: `
-      radial-gradient(ellipse 75% 90% at ${Math.round(mx * 100)}% ${Math.round(my * 100)}%,
-        rgba(${hc[0]}, ${(0.22 * intensity).toFixed(3)}),
-        rgba(${hc[2]}, ${(0.17 * intensity).toFixed(3)}) 25%,
-        rgba(${hc[4]}, ${(0.15 * intensity).toFixed(3)}) 50%,
-        rgba(${hc[6]}, ${(0.12 * intensity).toFixed(3)}) 70%,
-        transparent 85%
-      ),
-      repeating-linear-gradient(
-        ${angle}deg,
-        rgba(${hc[0]}, 0.045) 0%, rgba(${hc[1]}, 0.045) 7%,
-        rgba(${hc[2]}, 0.045) 14%, rgba(${hc[3]}, 0.045) 21%,
-        rgba(${hc[4]}, 0.045) 28%, rgba(${hc[5]}, 0.045) 35%,
-        rgba(${hc[6]}, 0.045) 42%, rgba(${hc[0]}, 0.045) 49%
-      )
-    `,
+    background: `radial-gradient(ellipse 75% 90% at ${Math.round(mx * 100)}% ${Math.round(my * 100)}%, rgba(${hc[0]}, ${(0.22 * intensity).toFixed(3)}), rgba(${hc[2]}, ${(0.17 * intensity).toFixed(3)}) 25%, rgba(${hc[4]}, ${(0.15 * intensity).toFixed(3)}) 50%, rgba(${hc[6]}, ${(0.12 * intensity).toFixed(3)}) 70%, transparent 85%), repeating-linear-gradient(${angle}deg, rgba(${hc[0]}, 0.045) 0%, rgba(${hc[1]}, 0.045) 7%, rgba(${hc[2]}, 0.045) 14%, rgba(${hc[3]}, 0.045) 21%, rgba(${hc[4]}, 0.045) 28%, rgba(${hc[5]}, 0.045) 35%, rgba(${hc[6]}, 0.045) 42%, rgba(${hc[0]}, 0.045) 49%)`,
   }
 
   return (
@@ -233,11 +220,7 @@ function CardFront({ name, teamName, avatarUrl, avg, bestSeries, over200, tier, 
       {tier.particles && (
         <>
           {([
-            { left: '14%', bottom: '42%', delay: '0s', size: 4 },
-            { left: '78%', bottom: '56%', delay: '0.7s', size: 3 },
-            { left: '52%', bottom: '50%', delay: '1.3s', size: 3.5 },
-            { left: '24%', bottom: '62%', delay: '0.4s', size: 2.5 },
-            { left: '68%', bottom: '44%', delay: '1.8s', size: 3 },
+            { left: '14%', bottom: '42%', delay: '0s', size: 4 }, { left: '78%', bottom: '56%', delay: '0.7s', size: 3 }, { left: '52%', bottom: '50%', delay: '1.3s', size: 3.5 }, { left: '24%', bottom: '62%', delay: '0.4s', size: 2.5 }, { left: '68%', bottom: '44%', delay: '1.8s', size: 3 },
           ] as Array<{ left: string; bottom: string; delay: string; size: number }>).map((p, i) => (
             <div key={i} style={{
               position: 'absolute', left: p.left, bottom: p.bottom,
@@ -270,9 +253,7 @@ function CardFront({ name, teamName, avatarUrl, avg, bestSeries, over200, tier, 
 
         <div style={{ display: 'flex', gap: 4, marginBottom: 9 }}>
           {[
-            { v: avg > 0 ? avg : '—', l: 'SNITT' },
-            { v: bestSeries || '—', l: 'BÄSTA' },
-            { v: over200, l: '200+' },
+            { v: avg > 0 ? avg : '—', l: 'SNITT' }, { v: bestSeries || '—', l: 'BÄSTA' }, { v: over200, l: '200+' },
           ].map(s => (
             <div key={s.l} style={{
               flex: 1, textAlign: 'center',
@@ -336,11 +317,7 @@ function CardBack({ name, teamName, tier, avg, bestSeries, over200, matches, div
         <div style={{ background: tier.bg, border: `0.5px solid ${tier.borderColor}55`, borderRadius: 10, padding: '7px 9px' }}>
           <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1.5, color: tier.accent, marginBottom: 5 }}>SÄSONGSSTATISTIK 2025/26</div>
           {([
-            ['Snittpoäng', avg > 0 ? avg : '—'],
-            ['Bästa serie', bestSeries || '—'],
-            ['200+ spel', over200],
-            ['Matcher', matches],
-            ['Division', division],
+            ['Snittpoäng', avg > 0 ? avg : '—'], ['Bästa serie', bestSeries || '—'], ['200+ spel', over200], ['Matcher', matches], ['Division', division],
           ] as [string, string | number][]).map(([l, v]) => (
             <div key={l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2.5px 0', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>{l}</span>
@@ -365,9 +342,7 @@ function CardBack({ name, teamName, tier, avg, bestSeries, over200, matches, div
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '7px 9px' }}>
           <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1.5, color: 'rgba(255,255,255,0.30)', marginBottom: 5 }}>SPELARPROFIL</div>
           {([
-            ['Hand', hand === 'right' ? 'Höger' : hand === 'left' ? 'Vänster' : '—'],
-            ['Stil', bStyle || '—'],
-            ['Klot', ballBrand || '—'],
+            ['Hand', hand === 'right' ? 'Höger' : hand === 'left' ? 'Vänster' : '—'], ['Stil', bStyle || '—'], ['Klot', ballBrand || '—'],
           ] as [string, string][]).map(([l, v]) => (
             <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '2.5px 0', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>{l}</span>
@@ -410,7 +385,21 @@ export default function PlayerCard({
   const rating = calcRating(avg, bestSeries, over200, avg > 0)
   const tier   = getTier(rating)
   const st     = starDisplay(rating)
-  const muted  = '#6b7a99'
+  const muted  = COLOR.ink3
+
+  // iOS-26 glass side-sheet chrome (matches native GlassSheet: translucent
+  // surface + backdrop blur + a light rim highlight). One gold accent, no blue.
+  const GLASS = 'rgba(18,21,27,0.72)'
+  const RIM   = 'rgba(255,255,255,0.10)'
+
+  const SHARE_ITEMS = [
+    { platform: 'video',     label: 'Animerat kort (1080×1080)', Icon: Film,      hint: 'Förhandsgranska & exportera' },
+    { platform: 'instagram', label: 'Instagram',                 Icon: Camera,    hint: 'Laddar ner PNG för Stories/Post' },
+    { platform: 'tiktok',    label: 'TikTok',                    Icon: Music2,    hint: 'Laddar ner PNG för TikTok' },
+    { platform: 'facebook',  label: 'Facebook',                  Icon: Users,     hint: 'Öppnar Facebook' },
+    { platform: 'x',         label: 'X / Twitter',               Icon: AtSign,    hint: 'Öppnar X' },
+    { platform: 'download',  label: 'Ladda ner PNG',             Icon: Download,  hint: 'Framsida som PNG' },
+  ] as const
 
   // Periodic shimmer
   useEffect(() => {
@@ -444,7 +433,7 @@ export default function PlayerCard({
   const ty = isFlipping ? 0 : tilt.y
   const cardTransition = isFlipping ? 'transform 720ms cubic-bezier(0.4,0.2,0.2,1)' : 'transform 80ms linear'
 
-  const shareText = encodeURIComponent(`Kolla mitt Bowlkollen spelarkort! Snitt ${avg}, BK Rating ${rating} – ${tier.label} tier 🎳 bowlkollen.se`)
+  const shareText = encodeURIComponent(`Kolla mitt Bowlkollen spelarkort! Snitt ${avg}, BK Rating ${rating} – ${tier.label} tier · bowlkollen.se`)
 
   const getCardCanvas = async (side: 'front' | 'back') => {
     const html2canvas = (await import('html2canvas')).default
@@ -490,15 +479,29 @@ export default function PlayerCard({
   const sharedProps = { name, teamName, tier, avg, bestSeries, over200, matches, division, hand, style: bStyle, ballBrand, achievements, rating }
 
   return (
-    <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 360, background: isDark ? '#0d1520' : '#f0f4f8', zIndex: 100, display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 40px rgba(0,0,0,0.4)', overflowY: 'auto' }}>
+    <div style={{
+      position: 'fixed', top: 0, left: 0, bottom: 0, width: '100%', maxWidth: 380,
+      background: GLASS,
+      backdropFilter: 'blur(30px) saturate(140%)', WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+      borderRight: `1px solid ${RIM}`,
+      borderRadius: '0 24px 24px 0',
+      zIndex: 100, display: 'flex', flexDirection: 'column',
+      boxShadow: `4px 0 60px rgba(0,0,0,0.55), inset 0 1px 0 ${RIM}`,
+      overflowY: 'auto',
+      animation: 'sheetInLeft 300ms cubic-bezier(0.2,0.8,0.2,1)',
+    }}>
+      <style>{`@keyframes sheetInLeft { from { transform: translateX(-16px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }`}</style>
 
       {/* Header */}
-      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), flexShrink: 0 }}>
+      <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${COLOR.hairline}`, flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: muted, letterSpacing: 1.5 }}>SPELARKORT</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#fff' : '#0d1f35', marginTop: 2 }}>{name}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: muted, letterSpacing: 1.5 }}>SPELARKORT</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: COLOR.ink, marginTop: 3 }}>{name}</div>
         </div>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: muted, fontSize: 24, cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>×</button>
+        <button onClick={onClose} aria-label="Stäng"
+          style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: COLOR.ink2, cursor: 'pointer', borderRadius: 12 }}>
+          <X size={24} />
+        </button>
       </div>
 
       {/* Card display */}
@@ -533,21 +536,21 @@ export default function PlayerCard({
           </div>
         </div>
         </div>{/* end drop-shadow wrapper */}
-        <div style={{ fontSize: 11, color: muted }}>
+        <div style={{ fontSize: 13, color: muted }}>
           {flipped ? 'Klicka för att se framsidan' : 'Klicka för att vända kortet'}
         </div>
       </div>
 
       {/* Tier info */}
-      <div style={{ margin: '0 20px 16px', padding: '12px 14px', background: tier.bg, border: `1px solid ${tier.borderColor}44`, borderRadius: 12 }}>
+      <div style={{ margin: '0 20px 16px', padding: '13px 15px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${COLOR.hairline}`, borderRadius: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: tier.accent }}>{tier.label} tier</div>
-            <div style={{ fontSize: 11, color: muted, marginTop: 2 }}>BK Rating {rating} / 99</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: tier.accent }}>{tier.label} tier</div>
+            <div style={{ fontSize: 13, color: muted, marginTop: 3 }}>BK Rating {rating} / 99</div>
           </div>
           <div style={{ fontSize: 20, letterSpacing: 2 }}>
-            <span style={{ color: '#f5c200' }}>{'★'.repeat(st.filled)}</span>
-            <span style={{ color: isDark ? '#2a3858' : '#d0d8e8' }}>{'★'.repeat(st.empty)}</span>
+            <span style={{ color: COLOR.gold }}>{'★'.repeat(st.filled)}</span>
+            <span style={{ color: COLOR.ink4 }}>{'★'.repeat(st.empty)}</span>
           </div>
         </div>
       </div>
@@ -556,28 +559,23 @@ export default function PlayerCard({
       {isOwner && (
         <div style={{ padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={() => setShareOpen(s => !s)}
-            style={{ width: '100%', padding: '13px', background: tier.bg, border: `1px solid ${tier.borderColor}66`, borderRadius: 12, fontSize: 13, fontWeight: 700, color: tier.accent, cursor: 'pointer' }}>
+            style={{ width: '100%', padding: '14px', background: COLOR.gold, border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, color: '#151005', cursor: 'pointer' }}>
             Dela kortet
           </button>
           {shareOpen && (
-            <div style={{ background: isDark ? '#172030' : '#fff', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 14, overflow: 'hidden' }}>
-              {[
-                { platform: 'video',     label: 'Animerat kort (1080×1080)', emoji: '🎬', hint: 'Förhandsgranska & exportera' },
-                { platform: 'instagram', label: 'Instagram', emoji: '📸', hint: 'Laddar ner PNG för Stories/Post' },
-                { platform: 'tiktok',    label: 'TikTok',    emoji: '🎵', hint: 'Laddar ner PNG för TikTok' },
-                { platform: 'facebook',  label: 'Facebook',  emoji: '👥', hint: 'Öppnar Facebook' },
-                { platform: 'x',         label: 'X / Twitter', emoji: '𝕏', hint: 'Öppnar X' },
-                { platform: 'download',  label: 'Ladda ner PNG', emoji: '⬇', hint: 'Framsida som PNG' },
-              ].map((s, i) => (
+            <div style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${COLOR.hairline}`, borderRadius: 16, overflow: 'hidden' }}>
+              {SHARE_ITEMS.map((s, i) => (
                 <button key={s.platform} onClick={() => shareToSocial(s.platform)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', background: 'transparent', border: 'none', borderBottom: i < 4 ? '1px solid ' + (isDark ? '#2a3858' : '#e8f0f8') : 'none', cursor: 'pointer', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)')}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: i < SHARE_ITEMS.length - 1 ? `1px solid ${COLOR.hairline}` : 'none', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{s.emoji}</span>
+                  <span style={{ width: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLOR.ink2 }}>
+                    <s.Icon size={22} />
+                  </span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? '#fff' : '#0d1f35' }}>{s.label}</div>
-                    <div style={{ fontSize: 11, color: muted }}>{s.hint}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: COLOR.ink }}>{s.label}</div>
+                    <div style={{ fontSize: 13, color: muted }}>{s.hint}</div>
                   </div>
                 </button>
               ))}
@@ -605,15 +603,16 @@ export default function PlayerCard({
           )}
 
           <button onClick={downloadCard} disabled={downloading}
-            style={{ width: '100%', padding: '13px', background: 'transparent', border: '1px solid ' + (isDark ? '#2a3858' : '#d0d8e8'), borderRadius: 12, fontSize: 13, fontWeight: 600, color: muted, cursor: 'pointer', opacity: downloading ? 0.7 : 1 }}>
-            {downloading ? 'Laddar ner...' : '⬇ Ladda ner framsida + baksida'}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', background: 'transparent', border: `1px solid ${COLOR.hairline}`, borderRadius: 14, fontSize: 15, fontWeight: 600, color: COLOR.ink2, cursor: 'pointer', opacity: downloading ? 0.7 : 1 }}>
+            {!downloading && <Download size={20} />}
+            {downloading ? 'Laddar ner...' : 'Ladda ner framsida + baksida'}
           </button>
         </div>
       )}
 
       {!isOwner && (
         <div style={{ padding: '0 20px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: muted }}>
+          <div style={{ fontSize: 13, color: muted }}>
             Är det du? Claima profilen för att ladda ner och dela ditt kort.
           </div>
         </div>

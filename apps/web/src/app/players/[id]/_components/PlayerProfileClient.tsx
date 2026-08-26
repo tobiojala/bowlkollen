@@ -118,8 +118,9 @@ export default function PlayerProfileClient({ id }: { id: string }) {
           for real BITS-sourced players (would need a new editable-extras
           table keyed by public_id once claiming is built out further). */}
       {cardOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'stretch', justifyContent: 'flex-start' }}
           onClick={() => setCardOpen(false)}>
           <div onClick={e => e.stopPropagation()}>
             <PlayerCard
