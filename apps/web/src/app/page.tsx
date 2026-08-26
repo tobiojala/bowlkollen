@@ -92,7 +92,7 @@ export default function Home() {
         <div className="home-grid">
         <div className="home-main">
 
-        {/* Filter squircles */}
+        {/* Filter story circles — native StoryChips language */}
         <HomeTabRow active={filter} onChange={setFilter} />
 
         {/* Live ticker — sits tight under the filter row */}

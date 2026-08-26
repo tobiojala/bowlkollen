@@ -15,6 +15,12 @@ const FILTER_CHIPS: { id: FeedFilterType; label: string; Icon: LucideIcon }[] = 
   { id: 'prediktion', label: 'Prediktion', Icon: Target   },
 ]
 
+// Instagram-style story circles as the feed's category rail — the same ring
+// language as the native StoryChips: a lit gold ring on the active category
+// (others sit on a muted ink ring), a glossy sheen over an inner surface disc,
+// label below. Horizontal-scroll rail so the set can grow past the fold.
+const SIZE = 64
+const RING = 3
 
 interface HomeTabRowProps {
   active: FeedFilterType
@@ -23,54 +29,62 @@ interface HomeTabRowProps {
 
 export default function HomeTabRow({ active, onChange }: HomeTabRowProps) {
   return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-around',
-          padding: '10px 16px 14px',
-        }}
-      >
-        {FILTER_CHIPS.map(({ id, label, Icon }) => {
-          const isActive = active === id
-          return (
-            <motion.button
-              key={id}
-              whileTap={{ scale: 0.88 }}
-              onClick={() => onChange(id)}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                background: 'none', border: 'none', cursor: 'pointer',
-                padding: 0,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
+    <div
+      style={{
+        display: 'flex', gap: 16, alignItems: 'flex-start',
+        padding: '10px 16px 14px', overflowX: 'auto',
+        scrollbarWidth: 'none', msOverflowStyle: 'none',
+      }}
+      className="home-story-rail"
+    >
+      <style>{`.home-story-rail::-webkit-scrollbar { display: none }`}</style>
+      {FILTER_CHIPS.map(({ id, label, Icon }) => {
+        const isActive = active === id
+        return (
+          <motion.button
+            key={id}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onChange(id)}
+            aria-label={label}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
+              width: SIZE, flexShrink: 0,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {/* Ring */}
+            <div style={{
+              position: 'relative', width: SIZE, height: SIZE, borderRadius: '50%',
+              padding: RING, boxSizing: 'border-box',
+              background: isActive ? COLOR.gold : COLOR.ink4,
+              transition: 'background 0.16s ease',
+            }}>
+              {/* Glossy sheen */}
               <div style={{
-                width: 48, height: 48, borderRadius: 12,
-                background: isActive ? 'rgba(245,194,0,0.10)' : COLOR.surface,
-                border: isActive ? `2px solid ${COLOR.gold}` : `2px solid transparent`,
+                position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 62%)',
+              }} />
+              {/* Inner disc */}
+              <div style={{
+                width: '100%', height: '100%', borderRadius: '50%',
+                background: COLOR.surface, border: `2px solid ${COLOR.bg}`, boxSizing: 'border-box',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'border-color 0.16s ease, background 0.16s ease',
               }}>
-                <Icon
-                  size={22}
-                  color={isActive ? COLOR.gold : COLOR.ink2}
-                  strokeWidth={isActive ? 2.2 : 1.7}
-                />
+                <Icon size={26} color={isActive ? COLOR.gold : COLOR.ink2} strokeWidth={isActive ? 2.2 : 1.7} />
               </div>
-              <span style={{
-                fontSize: 11, fontWeight: isActive ? 700 : 500,
-                color: isActive ? COLOR.gold : COLOR.ink2,
-                letterSpacing: 0.2, transition: 'color 0.16s ease',
-              }}>
-                {label}
-              </span>
-            </motion.button>
-          )
-        })}
-
-      </div>
-    </>
+            </div>
+            <span style={{
+              fontSize: 12, fontWeight: isActive ? 700 : 600,
+              color: isActive ? COLOR.ink : COLOR.ink3,
+              letterSpacing: 0.2, transition: 'color 0.16s ease',
+              whiteSpace: 'nowrap',
+            }}>
+              {label}
+            </span>
+          </motion.button>
+        )
+      })}
+    </div>
   )
 }
