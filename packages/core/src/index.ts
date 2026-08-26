@@ -9,3 +9,4 @@ export * from './competitions';
 export * from './tiers';
 export * from './search';
 export * from './delmatch';
+export * from './home-tip';

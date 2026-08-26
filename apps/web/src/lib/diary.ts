@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import { useSession } from '@/lib/queries'
+import { STALE } from '@/lib/constants'
 
 // player_notes / bits_matches user-scoped reads. player_notes isn't in the
 // generated types (run supabase/migrations/player_notes.sql) — reach it untyped.
@@ -15,6 +16,30 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 export type NextMatch = {
   matchId: number; date: string; hall: string | null; division: string | null
   myTeamId: number; myTeamName: string; opponentName: string; isHome: boolean
+}
+
+/** First name of the signed-in user's verified player claim (for the home
+ * greeting), or null when they haven't claimed a player. Mirrors native's
+ * `useMyClaim().name` → first name. */
+export function useMyFirstName() {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  return useQuery({
+    queryKey: ['my-first-name', uid],
+    enabled: !!uid,
+    staleTime: STALE.LONG,
+    queryFn: async (): Promise<string | null> => {
+      const supabase = createClient()
+      const { data: claim } = await supabase
+        .from('player_claims').select('player_id').eq('user_id', uid!).eq('status', 'verified').maybeSingle()
+      const pid = (claim as { player_id: string } | null)?.player_id
+      if (!pid) return null
+      const { data: p } = await supabase
+        .from('bits_players').select('name').eq('public_id', pid).maybeSingle()
+      const full = (p as { name: string } | null)?.name
+      return full ? full.split(' ')[0] : null
+    },
+  })
 }
 
 /** Soonest upcoming fixture across the user's teams (verified claims), falling

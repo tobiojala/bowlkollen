@@ -13,6 +13,8 @@ import { MatcherTab } from './home/_components/MatcherTab'
 import { FeedSection } from './home/_components/FeedSection'
 import { OnboardingCard } from './home/_components/OnboardingCard'
 import NextMatchCard from './profile/_components/NextMatchCard'
+import { useMyFirstName, useNextMatch } from '@/lib/diary'
+import { greetingFor, homeNote } from '@bowlkollen/core'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { getLiveCompetitions } from '@/lib/competitions'
@@ -62,8 +64,20 @@ export default function Home() {
   const feedIsLoading    = eventsLoading || feedLoading
   const effectiveMyTeamId = feedEvents.length > 0 ? (myTeamId ?? null) : null
 
-  const hour     = new Date().getHours()
-  const greeting = hour < 5 ? 'God natt' : hour < 10 ? 'God morgon' : hour < 17 ? 'God dag' : 'God kväll'
+  // Native greeting: date kicker, personalized greeting, and a match-aware note.
+  const { data: firstName } = useMyFirstName()
+  const { data: nextMatch } = useNextMatch()
+  const greetingText = greetingFor(new Date().getHours(), firstName ?? null)
+  const dateStr = new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' })
+  const daysToMatch = nextMatch
+    ? Math.round((new Date(nextMatch.date).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
+    : null
+  const note = homeNote({
+    daysToMatch,
+    opponent: nextMatch?.opponentName ?? null,
+    matchId: nextMatch?.matchId ?? null,
+    daySeed: Math.floor(Date.now() / 86_400_000),
+  })
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, paddingBottom: 100 }}>
@@ -79,14 +93,24 @@ export default function Home() {
       `}</style>
       <div className="home-wrap">
 
-        {/* Greeting — scrolls away naturally with the rest of the page */}
-        <div style={{ padding: '12px 20px 4px' }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: COLOR.ink, letterSpacing: '-0.02em', lineHeight: 1 }}>
-            {greeting}
+        {/* Greeting — native language: date kicker, personalized greeting, and a
+            match-aware note (tappable → prep when a fixture is close). */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '16px 24px 4px' }}>
+          <div style={{ fontSize: TYPE.label, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: SPACE[1] }}>
+            {dateStr}
           </div>
-          <div style={{ fontSize: TYPE.label, color: COLOR.ink3, marginTop: SPACE[2] }}>
-            {new Date().toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'long' })}
+          <div style={{ fontSize: 28, fontWeight: 800, color: COLOR.ink, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            {greetingText}
           </div>
+          {note.matchId != null ? (
+            <Link href={`/prep/${note.matchId}`} style={{ fontSize: TYPE.body, color: COLOR.ink, marginTop: SPACE[2], lineHeight: 1.4, textDecoration: 'none' }}>
+              {note.text}
+            </Link>
+          ) : (
+            <div style={{ fontSize: TYPE.body, color: COLOR.ink3, marginTop: SPACE[2], lineHeight: 1.4 }}>
+              {note.text}
+            </div>
+          )}
         </div>
 
         <div className="home-grid">
