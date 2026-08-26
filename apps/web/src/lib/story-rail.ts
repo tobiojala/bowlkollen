@@ -32,12 +32,18 @@ export function buildStoryEntities(
   feedEvents: TeamEvent[],
   teamIds: string[],
 ): StoryEntity[] {
+  const today = new Date().toISOString().slice(0, 10)
   const map = new Map<string, StoryEntity>()
+  // latestTs tracks the newest PAST activity — the "news". Upcoming fixtures
+  // still create a circle (so you can tap in), but a future date never lights
+  // the ring, otherwise it'd read unseen forever.
   const add = (entityType: 'player' | 'team', id: string | number | null | undefined, name: string, ts: string) => {
     if (id == null || id === '' || !name || !ts) return
     const key = entityKey(entityType, id)
+    const past = ts.slice(0, 10) <= today ? ts : ''
     const cur = map.get(key)
-    if (!cur || ts > cur.latestTs) map.set(key, { key, entityType, id: String(id), name, latestTs: ts })
+    if (!cur) map.set(key, { key, entityType, id: String(id), name, latestTs: past })
+    else if (past && past > cur.latestTs) cur.latestTs = past
   }
 
   for (const p of playerResults) add('player', p.playerId, p.playerName, p.date)
@@ -76,9 +82,11 @@ export function useStoryViews() {
     })
   }, [])
 
-  // Unseen when there's no record, or the entity's latest activity day is after
-  // the day you last opened them (date-granular so same-day reads stay quiet).
+  // Unseen when the entity has past activity newer than the day you last opened
+  // them (date-granular so same-day reads stay quiet). No past activity (only
+  // upcoming) → never lit.
   const isUnseen = useCallback((key: string, latestTs: string) => {
+    if (!latestTs) return false
     const seen = views[key]
     return !seen || latestTs.slice(0, 10) > seen.slice(0, 10)
   }, [views])

@@ -84,12 +84,20 @@ function buildFeed(
   teamIds: string[],
   playerIds: string[],
 ): FeedEntry[] {
-  // Team lane: followed team events → followed matches → cold-start (Elit→Div3).
-  const lagSource = followedMatches.length > 0 ? followedMatches : bitsRecent
-  const lagEntries: FeedEntry[] =
-    feedEvents.length > 0
-      ? feedEvents.map(e => ({ kind: 'event',      data: e, date: e.event_date }))
-      : lagSource.map(m => ({ kind: 'bits_match', data: m, date: m.match_date }))
+  // Team lane: show BOTH story events and matches for followed teams — a team
+  // circle should surface its results, not just a lone segersvit. Drop a match
+  // already told by a match_result event (no dupes). Cold-start to bitsRecent
+  // only when the user follows nothing at all.
+  const eventMatchIds = new Set(feedEvents.map(e => e.match_id).filter(Boolean).map(String))
+  const matchSource = followedMatches.length > 0 ? followedMatches
+    : feedEvents.length > 0 ? []
+    : bitsRecent
+  const lagEntries: FeedEntry[] = [
+    ...feedEvents.map(e => ({ kind: 'event' as const, data: e, date: e.event_date })),
+    ...matchSource
+      .filter(m => !eventMatchIds.has(String(m.bits_match_id)))
+      .map(m => ({ kind: 'bits_match' as const, data: m, date: m.match_date })),
+  ]
 
   // Player lane: followed player results → cold-start top series.
   const spelareEntries: FeedEntry[] =
