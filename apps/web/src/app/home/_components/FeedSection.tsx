@@ -11,9 +11,11 @@ import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core'
 import { HOME_PROMOS, type Promo } from '@/lib/home-promos'
-import type { FeedFilterType } from './HomeTabRow'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
 import type { FeedStanding } from '@/lib/feed-standings'
+
+// When a story circle is tapped the feed narrows to that one entity.
+export type EntityFilter = { entityType: 'player' | 'team'; id: string } | null
 
 // ── Merged feed types ─────────────────────────────────────────────────────────
 
@@ -74,7 +76,6 @@ function scoreEntry(entry: FeedEntry, teamIds: string[], playerIds: string[]): n
 // ── Feed builder ──────────────────────────────────────────────────────────────
 
 function buildFeed(
-  filter: FeedFilterType,
   feedEvents: TeamEvent[],
   playerResults: FeedPlayerResult[],
   followedMatches: BitsMatchFeed[],
@@ -83,35 +84,38 @@ function buildFeed(
   teamIds: string[],
   playerIds: string[],
 ): FeedEntry[] {
-  // Lag tab = strictly personal. Allt tab gets bitsRecent as cold-start fallback;
-  // Lag tab does not — empty → OnboardingCard shows instead of duplicating Matcher.
-  const lagSource = followedMatches.length > 0 ? followedMatches
-    : filter === 'allt' ? bitsRecent
-    : []
-
+  // Team lane: followed team events → followed matches → cold-start (Elit→Div3).
+  const lagSource = followedMatches.length > 0 ? followedMatches : bitsRecent
   const lagEntries: FeedEntry[] =
     feedEvents.length > 0
       ? feedEvents.map(e => ({ kind: 'event',      data: e, date: e.event_date }))
       : lagSource.map(m => ({ kind: 'bits_match', data: m, date: m.match_date }))
 
-  // Spelare tab = strictly personal. topScores is cold-start fallback for Allt only.
+  // Player lane: followed player results → cold-start top series.
   const spelareEntries: FeedEntry[] =
     playerResults.length > 0
       ? playerResults.map(p => ({ kind: 'player',    data: p, date: p.date }))
-      : filter === 'allt'
-        ? topScores.map(s => ({ kind: 'bits_score', data: s, date: s.date }))
-        : []
+      : topScores.map(s => ({ kind: 'bits_score', data: s, date: s.date }))
 
-  const entries: FeedEntry[] = [
-    ...(filter === 'allt' || filter === 'lag'     ? lagEntries     : []),
-    ...(filter === 'allt' || filter === 'spelare' ? spelareEntries : []),
-  ]
+  const entries: FeedEntry[] = [...lagEntries, ...spelareEntries]
 
   // Pre-compute each score once, then sort descending
   return entries
     .map(e => ({ e, score: scoreEntry(e, teamIds, playerIds) }))
     .sort((a, b) => b.score - a.score)
     .map(({ e }) => e)
+}
+
+// Narrow the stream to a single tapped entity (a story circle).
+function matchesEntity(e: FeedEntry, ent: { entityType: 'player' | 'team'; id: string }): boolean {
+  if (ent.entityType === 'player') {
+    if (e.kind === 'player') return e.data.playerId === ent.id
+    if (e.kind === 'bits_score') return e.data.publicId === ent.id
+    return false
+  }
+  if (e.kind === 'bits_match') return String(e.data.home_bits_team_id) === ent.id || String(e.data.away_bits_team_id) === ent.id
+  if (e.kind === 'event') return String(e.data.bits_team_id ?? e.data.team_id) === ent.id
+  return false
 }
 
 // Standings snapshots sit near the top (at-a-glance content), spaced out — same
@@ -160,10 +164,10 @@ function FeedSkeleton() {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function FeedSection({
-  filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores,
+  entity, feedEvents, playerResults, followedMatches, bitsRecent, topScores,
   feedStandings, myTeamId, isLoading, teamIds, playerIds,
 }: {
-  filter: FeedFilterType
+  entity: EntityFilter
   feedEvents: TeamEvent[]
   playerResults: FeedPlayerResult[]
   followedMatches: BitsMatchFeed[]
@@ -175,11 +179,12 @@ export function FeedSection({
   teamIds: string[]
   playerIds: string[]
 }) {
-  const ranked = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
-  // Standings + house promo mix into the full stream only (like native).
-  const feed = filter === 'allt'
-    ? injectPromos(injectStandings(ranked, feedStandings), HOME_PROMOS)
-    : ranked
+  const ranked = buildFeed(feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
+  // Full stream gets the standings + house-promo mix-ins; a single-entity view
+  // (a tapped story circle) stays clean — just that entity's posts.
+  const feed = entity
+    ? ranked.filter(e => matchesEntity(e, entity))
+    : injectPromos(injectStandings(ranked, feedStandings), HOME_PROMOS)
   const postKeys = feed.flatMap(e =>
     e.kind === 'bits_match' ? [`m${(e.data as BitsMatchFeed).bits_match_id}`]
     : e.kind === 'bits_score' ? [`s${(e.data as BitsTopScore).matchId}-${(e.data as BitsTopScore).playerName}`]

@@ -2,28 +2,11 @@
 
 import Link from 'next/link'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
-import type { FeedFilterType } from './HomeTabRow'
 
-const configs: Record<string, { heading: string; body: string; cta: string }> = {
-  lag: {
-    heading: 'Följ ditt lag',
-    body: 'Se matcher och berättelser direkt i flödet — anpassat för dig.',
-    cta: 'Hitta ditt lag →',
-  },
-  spelare: {
-    heading: 'Följ dina spelare',
-    body: 'Se resultat och milstolpar från de spelare du bryr dig om.',
-    cta: 'Utforska spelare →',
-  },
-  allt: {
-    heading: 'Följ lag och spelare',
-    body: 'Se matcher, resultat och berättelser direkt i flödet — anpassat för dig.',
-    cta: 'Välj ditt lag →',
-  },
-}
-
-export function OnboardingCard({ filter = 'allt' }: { filter?: FeedFilterType }) {
-  const { heading, body, cta } = configs[filter] ?? configs.allt
+export function OnboardingCard() {
+  const heading = 'Följ lag och spelare'
+  const body = 'Se matcher, resultat och berättelser direkt i flödet — anpassat för dig.'
+  const cta = 'Välj ditt lag →'
 
   return (
     <div style={{ padding: `${SPACE[4]}px ${SPACE[4]}px ${SPACE[8]}px` }}>

@@ -6,7 +6,8 @@ import {
   useFollows, useHomeMatches, usePersonalizedFeed, useHomeFeed,
   useMyTeamId, useBitsMatchFeed, useBitsTopScores,
 } from '@/lib/queries'
-import HomeTabRow, { type FeedFilterType } from './home/_components/HomeTabRow'
+import StoryRail from './home/_components/StoryRail'
+import { buildStoryEntities, useStoryViews, entityKey, type FeedFilter } from '@/lib/story-rail'
 import { LiveTopWidget } from './home/_components/LiveTopWidget'
 import { RivalCallout } from './home/_components/RivalCallout'
 import { LiveAlertBanner } from './home/_components/LiveAlertBanner'
@@ -23,7 +24,14 @@ import { getLiveCompetitions } from '@/lib/competitions'
 import type { Match, FeedPlayerResult, BitsMatchFeed } from '@/lib/types'
 
 export default function Home() {
-  const [filter, setFilter] = useState<FeedFilterType>('allt')
+  const [filter, setFilter] = useState<FeedFilter>({ kind: 'view', view: 'allt' })
+  const { isUnseen, markViewed } = useStoryViews()
+
+  // Tapping a story circle filters the feed to that entity and marks it seen.
+  const selectFilter = (f: FeedFilter) => {
+    setFilter(f)
+    if (f.kind === 'entity') markViewed(entityKey(f.entityType, f.id))
+  }
 
   const { data: follows = [] }   = useFollows()
   const { data: matchData }      = useHomeMatches()
@@ -63,7 +71,10 @@ export default function Home() {
 
   const liveCompetitions = getLiveCompetitions()
   const hasNoFollows     = follows.length === 0
-  const showFeed         = filter === 'allt' || filter === 'spelare' || filter === 'lag'
+  const isView = (v: string) => filter.kind === 'view' && filter.view === v
+  const showFeed         = isView('allt') || filter.kind === 'entity'
+  const entityFilter     = filter.kind === 'entity' ? { entityType: filter.entityType, id: filter.id } : null
+  const storyEntities    = buildStoryEntities(playerResults, followedMatches, feedEvents, teamIds)
   const feedIsLoading    = eventsLoading || feedLoading
   const effectiveMyTeamId = feedEvents.length > 0 ? (myTeamId ?? null) : null
 
@@ -121,8 +132,8 @@ export default function Home() {
         <div className="home-grid">
         <div className="home-main">
 
-        {/* Filter story circles — native StoryChips language */}
-        <HomeTabRow active={filter} onChange={setFilter} />
+        {/* Story rail — view chips + a lit/quiet circle per followed player/team */}
+        <StoryRail filter={filter} entities={storyEntities} isUnseen={isUnseen} onSelect={selectFilter} />
 
         {/* Live ticker — sits tight under the filter row */}
         <LiveAlertBanner matches={live} competitions={liveCompetitions} />
@@ -131,7 +142,7 @@ export default function Home() {
         <RivalCallout />
 
         {/* Matcher tab */}
-        {filter === 'matcher' && (
+        {isView('matcher') && (
           <MatcherTab
             live={live}
             bitsRecent={bitsRecent}
@@ -141,7 +152,7 @@ export default function Home() {
         )}
 
         {/* Prediktion tab */}
-        {filter === 'prediktion' && (
+        {isView('prediktion') && (
           <div style={{ padding: `${SPACE[6]}px ${SPACE[4]}px` }}>
             <div style={{
               background: COLOR.surface, border: `1px solid ${COLOR.hairline}`,
@@ -167,10 +178,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Feed (Allt / Spelare / Lag) */}
+        {/* Feed — full stream (Allt) or narrowed to a tapped story circle */}
         {showFeed && (
           <FeedSection
-            filter={filter}
+            entity={entityFilter}
             feedEvents={feedEvents}
             playerResults={playerResults}
             followedMatches={followedMatches}
@@ -185,7 +196,7 @@ export default function Home() {
         )}
 
         {/* Onboarding — shown when not following anyone */}
-        {showFeed && !feedIsLoading && hasNoFollows && <OnboardingCard filter={filter} />}
+        {showFeed && !feedIsLoading && hasNoFollows && <OnboardingCard />}
 
         {/* Discovery nudge when following — smaller */}
         {showFeed && !feedIsLoading && !hasNoFollows && (
