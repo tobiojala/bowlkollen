@@ -88,7 +88,7 @@ export function FeedCard({ event, myTeamId }: { event: TeamEvent; myTeamId?: str
     <div style={{ borderBottom: `1px solid ${COLOR.hairline}` }}>
       <Link href={linkFor(event)} style={{ textDecoration: 'none', display: 'block' }}>
         <div
-          style={{ padding: `${SPACE[6]}px ${SPACE[4]}px ${SPACE[3]}px`, transition: `opacity ${MOTION.fast}s ease` }}
+          style={{ padding: `${SPACE[6]}px ${SPACE[3]}px ${SPACE[3]}px`, transition: `opacity ${MOTION.fast}s ease` }}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85' }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
         >
@@ -123,7 +123,7 @@ export function FeedCard({ event, myTeamId }: { event: TeamEvent; myTeamId?: str
       />
 
       {event.body && (
-        <div style={{ padding: `0 ${SPACE[4]}px ${SPACE[6]}px`, fontSize: TYPE.body, color: COLOR.ink, lineHeight: 1.6 }}>
+        <div style={{ padding: `0 ${SPACE[3]}px ${SPACE[6]}px`, fontSize: TYPE.body, color: COLOR.ink, lineHeight: 1.6 }}>
           {event.body}
         </div>
       )}

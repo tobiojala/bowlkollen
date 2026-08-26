@@ -116,7 +116,7 @@ export function FeedActions({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: `${SPACE[3]}px ${SPACE[4]}px ${SPACE[3]}px`,
+      padding: `${SPACE[3]}px ${SPACE[3]}px ${SPACE[3]}px`,
     }}>
 
       {/* Left: reactions */}
