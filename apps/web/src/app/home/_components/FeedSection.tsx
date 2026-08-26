@@ -6,9 +6,11 @@ import { PlayerResultCard } from './PlayerResultCard'
 import { FeedMatchCard } from './FeedMatchCard'
 import { TopScoreCard } from './TopScoreCard'
 import { StandingsCard } from './StandingsCard'
+import { PromoCard } from './PromoCard'
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core'
+import { HOME_PROMOS, type Promo } from '@/lib/home-promos'
 import type { FeedFilterType } from './HomeTabRow'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
 import type { FeedStanding } from '@/lib/feed-standings'
@@ -21,6 +23,7 @@ type FeedEntry =
   | { kind: 'bits_match'; data: BitsMatchFeed;    date: string }
   | { kind: 'bits_score'; data: BitsTopScore;     date: string }
   | { kind: 'standings';  data: FeedStanding;     date: string }
+  | { kind: 'promo';      data: Promo;            date: string }
 
 // ── Algorithmic ranking ───────────────────────────────────────────────────────
 // Score = recency base (shared @bowlkollen/core) + affinity boosts.
@@ -123,6 +126,22 @@ function injectStandings(items: FeedEntry[], standings: FeedStanding[]): FeedEnt
   return out
 }
 
+// Promos drop in spaced out (every 6), never at the very top — like native's
+// injectPromos, just a lower frequency (a single house card, not a run of ads).
+function injectPromos(items: FeedEntry[], promos: Promo[], every = 6): FeedEntry[] {
+  if (promos.length === 0 || items.length < 3) return items
+  const out: FeedEntry[] = []
+  let p = 0
+  items.forEach((item, i) => {
+    out.push(item)
+    if (i > 0 && (i + 1) % every === 0 && p < promos.length) {
+      out.push({ kind: 'promo', data: promos[p], date: '' })
+      p += 1
+    }
+  })
+  return out
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function FeedSkeleton() {
@@ -157,8 +176,10 @@ export function FeedSection({
   playerIds: string[]
 }) {
   const ranked = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
-  // Standings snapshots mix into the full stream only (like native).
-  const feed = filter === 'allt' ? injectStandings(ranked, feedStandings) : ranked
+  // Standings + house promo mix into the full stream only (like native).
+  const feed = filter === 'allt'
+    ? injectPromos(injectStandings(ranked, feedStandings), HOME_PROMOS)
+    : ranked
   const postKeys = feed.flatMap(e =>
     e.kind === 'bits_match' ? [`m${(e.data as BitsMatchFeed).bits_match_id}`]
     : e.kind === 'bits_score' ? [`s${(e.data as BitsTopScore).matchId}-${(e.data as BitsTopScore).playerName}`]
@@ -175,6 +196,8 @@ export function FeedSection({
       {feed.map((entry, i) => {
         if (entry.kind === 'standings')
           return <StandingsCard key={`std-${entry.data.divisionId}`} standing={entry.data} />
+        if (entry.kind === 'promo')
+          return <PromoCard key={`promo-${entry.data.id}`} promo={entry.data} />
         if (entry.kind === 'event')
           return <FeedCard key={entry.data.id} event={entry.data} myTeamId={myTeamId} />
         if (entry.kind === 'player') {
