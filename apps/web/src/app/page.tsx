@@ -14,6 +14,7 @@ import { FeedSection } from './home/_components/FeedSection'
 import { OnboardingCard } from './home/_components/OnboardingCard'
 import NextMatchCard from './profile/_components/NextMatchCard'
 import { useMyFirstName, useNextMatch } from '@/lib/diary'
+import { useFeedStandings } from '@/lib/feed-standings'
 import { greetingFor, homeNote } from '@bowlkollen/core'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
@@ -34,6 +35,7 @@ export default function Home() {
   const { data: feedItems = [], isLoading: feedLoading }   = usePersonalizedFeed(playerIds, teamIds)
   const { data: feedEvents = [], isLoading: eventsLoading } = useHomeFeed(teamIds)
   const { data: topScores = [] } = useBitsTopScores()
+  const { data: feedStandings = [] } = useFeedStandings()
 
   const playerResults = feedItems.filter((f): f is FeedPlayerResult => f.kind === 'player_result')
 
@@ -170,6 +172,7 @@ export default function Home() {
             followedMatches={followedMatches}
             bitsRecent={bitsRecent}
             topScores={topScores}
+            feedStandings={feedStandings}
             myTeamId={effectiveMyTeamId}
             isLoading={feedIsLoading}
             teamIds={teamIds}

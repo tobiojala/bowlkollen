@@ -5,11 +5,13 @@ import { FeedCard } from './FeedCard'
 import { PlayerResultCard } from './PlayerResultCard'
 import { FeedMatchCard } from './FeedMatchCard'
 import { TopScoreCard } from './TopScoreCard'
+import { StandingsCard } from './StandingsCard'
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
 import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core'
 import type { FeedFilterType } from './HomeTabRow'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
+import type { FeedStanding } from '@/lib/feed-standings'
 
 // ── Merged feed types ─────────────────────────────────────────────────────────
 
@@ -18,6 +20,7 @@ type FeedEntry =
   | { kind: 'player';     data: FeedPlayerResult; date: string }
   | { kind: 'bits_match'; data: BitsMatchFeed;    date: string }
   | { kind: 'bits_score'; data: BitsTopScore;     date: string }
+  | { kind: 'standings';  data: FeedStanding;     date: string }
 
 // ── Algorithmic ranking ───────────────────────────────────────────────────────
 // Score = recency base (shared @bowlkollen/core) + affinity boosts.
@@ -108,6 +111,18 @@ function buildFeed(
     .map(({ e }) => e)
 }
 
+// Standings snapshots sit near the top (at-a-glance content), spaced out — same
+// placement as native's injectStandings (positions 2, 6, 10 …).
+function injectStandings(items: FeedEntry[], standings: FeedStanding[]): FeedEntry[] {
+  if (standings.length === 0) return items
+  const out = [...items]
+  standings.forEach((s, i) => {
+    const pos = Math.min(out.length, 2 + i * 4)
+    out.splice(pos, 0, { kind: 'standings', data: s, date: '' })
+  })
+  return out
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function FeedSkeleton() {
@@ -127,7 +142,7 @@ function FeedSkeleton() {
 
 export function FeedSection({
   filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores,
-  myTeamId, isLoading, teamIds, playerIds,
+  feedStandings, myTeamId, isLoading, teamIds, playerIds,
 }: {
   filter: FeedFilterType
   feedEvents: TeamEvent[]
@@ -135,12 +150,15 @@ export function FeedSection({
   followedMatches: BitsMatchFeed[]
   bitsRecent: BitsMatchFeed[]
   topScores: BitsTopScore[]
+  feedStandings: FeedStanding[]
   myTeamId: string | null
   isLoading: boolean
   teamIds: string[]
   playerIds: string[]
 }) {
-  const feed = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
+  const ranked = buildFeed(filter, feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds)
+  // Standings snapshots mix into the full stream only (like native).
+  const feed = filter === 'allt' ? injectStandings(ranked, feedStandings) : ranked
   const postKeys = feed.flatMap(e =>
     e.kind === 'bits_match' ? [`m${(e.data as BitsMatchFeed).bits_match_id}`]
     : e.kind === 'bits_score' ? [`s${(e.data as BitsTopScore).matchId}-${(e.data as BitsTopScore).playerName}`]
@@ -155,6 +173,8 @@ export function FeedSection({
   return (
     <div>
       {feed.map((entry, i) => {
+        if (entry.kind === 'standings')
+          return <StandingsCard key={`std-${entry.data.divisionId}`} standing={entry.data} />
         if (entry.kind === 'event')
           return <FeedCard key={entry.data.id} event={entry.data} myTeamId={myTeamId} />
         if (entry.kind === 'player') {
