@@ -7,6 +7,7 @@ import { FeedMatchCard } from './FeedMatchCard'
 import { TopScoreCard } from './TopScoreCard'
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
+import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core'
 import type { FeedFilterType } from './HomeTabRow'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
 
@@ -19,40 +20,22 @@ type FeedEntry =
   | { kind: 'bits_score'; data: BitsTopScore;     date: string }
 
 // ── Algorithmic ranking ───────────────────────────────────────────────────────
-// Score = recency base (100 → 0 over 14 days) + affinity boosts
-// Higher = surfaces earlier in the feed.
-
-const EVENT_BOOST: Partial<Record<string, number>> = {
-  promotion_clinched: 50,
-  personal_best:      35,
-  win_streak:         25,
-  unbeaten_run:       20,
-  comeback_win:       20,
-  revenge_win:        20,
-  giant_killer:       20,
-  rivalry_match:      15,
-  division_climbed:   15,
-  player_milestone:   12,
-  form_rising:        10,
-  match_result:        5,
-  match_preview:       5,
-  lineup_announced:    3,
-  captain_post:        2,
-}
+// Score = recency base (shared @bowlkollen/core) + affinity boosts.
+// Higher = surfaces earlier in the feed. The recency curve, the per-type event
+// boost, and the standout-serie boost are shared verbatim with native via core;
+// tier + followed weighting stay here (web mixes cold-start with followed data).
 
 function tierBoost(division: string | null | undefined): number {
   return (TIER_RANK[divisionTier(division ?? '')] ?? 0) * 3
 }
 
 function scoreEntry(entry: FeedEntry, teamIds: string[], playerIds: string[]): number {
-  // Clamp future dates to 0 so upcoming matches score the same as today
-  const daysAgo = Math.max(0, (Date.now() - new Date(entry.date).getTime()) / 86_400_000)
-  const recency = Math.max(0, 100 - daysAgo * 7)
+  const recency = recencyScore(entry.date)
   let boost = 0
 
   if (entry.kind === 'event') {
     boost += 80 // story events come only from followed teams
-    boost += EVENT_BOOST[entry.data.event_type] ?? 5
+    boost += eventBoost(entry.data.event_type)
     const div = (entry.data.payload as Record<string, unknown>).division
     boost += tierBoost(typeof div === 'string' ? div : null)
   }
@@ -71,17 +54,12 @@ function scoreEntry(entry: FeedEntry, teamIds: string[], playerIds: string[]): n
     const p = entry.data
     if (playerIds.includes(p.playerId)) boost += 80
     boost += tierBoost(p.division)
-    if (p.total >= 300)      boost += 40
-    else if (p.total >= 270) boost += 20
-    else if (p.total >= 250) boost += 10
+    boost += serieBoost(p.total)
   }
 
   if (entry.kind === 'bits_score') {
-    const s = entry.data
-    boost += tierBoost(s.division)
-    if (s.total >= 300)      boost += 40
-    else if (s.total >= 270) boost += 20
-    else if (s.total >= 250) boost += 10
+    boost += tierBoost(entry.data.division)
+    boost += serieBoost(entry.data.total)
   }
 
   return recency + boost

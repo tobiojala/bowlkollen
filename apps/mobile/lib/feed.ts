@@ -1,3 +1,5 @@
+import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core';
+
 import type { FeedStanding } from '@/lib/feed-standings';
 import type { Promo } from '@/lib/promos';
 import type { TeamEvent } from '@/lib/story-events';
@@ -27,26 +29,15 @@ export type FeedItem =
 
 export type FeedCategory = 'Allt' | 'Matcher' | 'Serier';
 
-// Feed ranking — ported from web (apps/web FeedSection.scoreEntry): recency base
-// (100 → 0 over ~14 days, future clamped so upcoming reads as "now") plus affinity
-// boosts. The native stream is already followed-scoped, so there's no separate
-// "followed" boost — everything here is already someone the user follows.
-const EVENT_BOOST: Partial<Record<string, number>> = {
-  promotion_clinched: 50, personal_best: 35, win_streak: 25, unbeaten_run: 20,
-  comeback_win: 20, revenge_win: 20, giant_killer: 20, rivalry_match: 15,
-  division_climbed: 15, player_milestone: 12, form_rising: 10, match_result: 5,
-  match_preview: 5, lineup_announced: 3, captain_post: 2,
-};
-
+// Feed ranking — recency base + affinity boosts, all shared verbatim with web
+// via @bowlkollen/core (recencyScore / eventBoost / serieBoost). The native
+// stream is already followed-scoped, so there's no separate "followed" boost —
+// everything here is already someone the user follows.
 function rankScore(item: FeedItem): number {
-  const daysAgo = Math.max(0, (Date.now() - new Date(item.ts).getTime()) / 86_400_000);
-  let score = Math.max(0, 100 - daysAgo * 7);
-  if (item.kind === 'event') score += 80 + (EVENT_BOOST[item.event.event_type] ?? 5);
+  let score = recencyScore(item.ts);
+  if (item.kind === 'event') score += 80 + eventBoost(item.event.event_type);
   if (item.kind === 'match' && item.match.is_finished) score += 8;
-  if (item.kind === 'serie') {
-    const t = item.score.total;
-    score += t >= 300 ? 40 : t >= 270 ? 20 : t >= 250 ? 10 : 0;
-  }
+  if (item.kind === 'serie') score += serieBoost(item.score.total);
   return score;
 }
 
