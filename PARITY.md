@@ -52,8 +52,11 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
-| Home feed | ✅ `/` (ranking engine) | ✅ `(tabs)/index` | **Parity (2026-08-18):** native `buildFeed` now uses `rankScore` ported from web's `scoreEntry` (recency + event/serie boosts); upcoming still leads. |
-| Feed cards (social posts + react) | ✅ (`feed_reactions`) | ✅ (`feed-reactions.ts`) | Both like/save/share. |
+| Home feed | ✅ `/` (ranking engine) | ✅ `(tabs)/index` | **Ranking + mixer shared in core** (`feed-rank`: recency/event/serie boosts + `diversifyByKind`, 2026-08-27). Both interleave kinds so the stream reads mixed. Web also has real followed-player results (`feed-players.ts`, BITS); native still uses `get_user_season_matches` + league top-scores. |
+| **Home story rail (entity circles)** | ✅ `StoryRail` (2026-08-27) | ❌ | **Web-only.** Web: view chips (Allt/Matcher/Prediktion) + a lit/seen circle per followed player & team (IG order, tap→filter, per-device seen in localStorage). Native still has the 3 category chips only (`StoryChips`: Allt/Matcher/Serier). **Port blocked on new native data hooks** — `get_user_season_matches`→`FeedMatch` carries no team/player IDs, so entity circles need followed-player-results + followed-team sources like web's. |
+| Feed cards (social posts + react) | ✅ (`feed_reactions`) | ✅ (`feed-reactions.ts`) | Both like/save/share. Card set at parity (match/top-serie/story/**standings**/**rival**/**promo**) — standings/rival/promo originated native; web caught up 2026-08-25/27. |
+| Home promo slot | ✅ house card → `/annonsera` (2026-08-27) | 🟡 fake `SAMPLE_PROMOS` | **Web = honest "advertise here" house card** (no fake sponsors) + advertiser page. Native still injects placeholder sponsors — bring the house card over + delete the samples. |
+| Avatars (identity) | ✅ `IdentityAvatar` (2026-08-27, photo-ready `imageUrl`) | ✅ `IdentityAvatar` | **Parity** — web ported native's ring+sheen avatar; both take `imageUrl`. Profile-photo upload (bucket + claim field + moderation) not built on either yet. |
 | **Auto-Story Engine** | ✅ (BITS, fixed 2026-08-18) | ✅ read+render (2026-08-18) | **Parity on consumption.** Generation stays server-side on the web brain (cron/route writes `team_events`); native reads by `bits_team_id` (`lib/story-events.ts`) and renders `StoryCard`. The "Remember" pillar is now on both. |
 | Follow (players/teams) | ✅ `/following` | ✅ `/following` (`follows.ts`) | Both (IG-style counts). |
 | Discover / Hitta | ✅ `/discover` | ✅ `(tabs)/discover` | Both. |
