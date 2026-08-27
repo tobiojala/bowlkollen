@@ -50,6 +50,41 @@ export function useMatchContext(divisionId: number | null, seasonId: number, hom
   });
 }
 
+export type Outcome = 'V' | 'F' | 'O';
+export type TeamForm = { results: Outcome[]; avgFor: number; avgAgainst: number; played: number };
+
+// Both teams' recent form (last finished matches) for the upcoming-match panel.
+// Mirrors web's useUpcoming.
+export function useUpcoming(homeId: number | null, awayId: number | null) {
+  return useQuery<{ home: TeamForm; away: TeamForm }>({
+    queryKey: ['match-upcoming', homeId, awayId],
+    enabled: !!homeId && !!awayId,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const form = async (teamId: number): Promise<TeamForm> => {
+        const { data } = await supabase.from('bits_matches')
+          .select('home_bits_team_id, away_bits_team_id, home_result, away_result, match_date')
+          .or(`home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${teamId}`)
+          .eq('is_finished', true).order('match_date', { ascending: false }).limit(8);
+        const rows = ((data ?? []) as { home_bits_team_id: number; away_bits_team_id: number; home_result: number | null; away_result: number | null }[])
+          .filter((r) => r.home_result != null && r.away_result != null);
+        const results: Outcome[] = []; let f = 0, a = 0;
+        for (const r of rows) {
+          const isHome = r.home_bits_team_id === teamId;
+          const my = (isHome ? r.home_result : r.away_result) as number;
+          const opp = (isHome ? r.away_result : r.home_result) as number;
+          f += my; a += opp;
+          results.push(my > opp ? 'V' : my < opp ? 'F' : 'O');
+        }
+        const n = rows.length;
+        return { results: results.slice(0, 5), avgFor: n ? Math.round(f / n) : 0, avgAgainst: n ? Math.round(a / n) : 0, played: n };
+      };
+      const [home, away] = await Promise.all([form(homeId!), form(awayId!)]);
+      return { home, away };
+    },
+  });
+}
+
 // Per-player season serie-average (public_id → avg_serie), for the Pro snitt
 // deltas on the match's spelresultat. Same RPC as web.
 export function useMatchAvgs(publicIds: string[], seasonId: number) {
