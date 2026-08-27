@@ -20,7 +20,9 @@ import { MatchScorecard } from '@/components/MatchScorecard';
 import { DelmatchBoard } from '@/components/DelmatchBoard';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { RivalryCallout } from '@/components/RivalryCallout';
+import { SeasonContext } from '@/components/SeasonContext';
 import { ScrollBlur } from '@/components/ScrollBlur';
+import { divisionTier } from '@/lib/tiers';
 import { Segmented } from '@/components/Segmented';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { computeDelmatcher, type DelmatchSlot, type DelmatchSummary } from '@/lib/delmatch';
@@ -31,18 +33,12 @@ import { supabase } from '@/lib/supabase';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 type Match = {
-  home_team_name: string;
-  away_team_name: string;
-  home_score: number | null; // pinfall
-  away_score: number | null;
-  home_result: number | null; // match points
-  away_result: number | null;
-  home_bits_team_id: number | null;
-  away_bits_team_id: number | null;
-  division_name: string | null;
-  is_finished: boolean | null;
-  match_date: string;
-  hall_name: string | null;
+  home_team_name: string; away_team_name: string;
+  home_score: number | null; away_score: number | null;   // pinfall
+  home_result: number | null; away_result: number | null; // match points
+  home_bits_team_id: number | null; away_bits_team_id: number | null;
+  bits_division_id: number | null; season_id: number;
+  division_name: string | null; is_finished: boolean | null; match_date: string; hall_name: string | null;
 };
 
 function useMatch(matchId: number) {
@@ -52,7 +48,7 @@ function useMatch(matchId: number) {
       const { data } = await supabase
         .from('bits_matches')
         .select(
-          'home_team_name, away_team_name, home_score, away_score, home_result, away_result, home_bits_team_id, away_bits_team_id, division_name, is_finished, match_date, hall_name',
+          'home_team_name, away_team_name, home_score, away_score, home_result, away_result, home_bits_team_id, away_bits_team_id, bits_division_id, season_id, division_name, is_finished, match_date, hall_name',
         )
         .eq('bits_match_id', matchId)
         .maybeSingle();
@@ -214,6 +210,8 @@ export default function MatchPage() {
           <Text style={styles.meta}>
             {[formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
           </Text>
+
+          {finished && <SeasonContext divisionId={match.bits_division_id} seasonId={match.season_id} homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} homeName={match.home_team_name} awayName={match.away_team_name} tier={divisionTier(match.division_name ?? '')} />}
 
           {topPlayer && topTotal > 0 && (
             <PressableScale
