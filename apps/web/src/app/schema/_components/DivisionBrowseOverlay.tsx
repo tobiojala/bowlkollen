@@ -34,7 +34,7 @@ export function DivisionBrowseOverlay({ divisions, loading, onSelect, onClose }:
           <div style={{ fontSize: 13, color: COLOR.ink3, padding: '20px 0' }}>Laddar divisioner…</div>
         )}
 
-        {[...groups.entries()].map(([tier, tierDivs]) => {
+        {groups.map(({ tier, items: tierDivs }) => {
           const tc = TIER_COLOR[tier] ?? COLOR.ink3
           return (
             <section key={tier} style={{ marginBottom: 28 }}>

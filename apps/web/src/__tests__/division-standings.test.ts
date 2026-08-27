@@ -117,16 +117,25 @@ describe('divisionTier', () => {
 })
 
 describe('groupDivisionsByTier', () => {
-  it('groups correctly and omits empty tiers', () => {
-    const divs = [
+  const tier = (groups: { tier: string; items: { name: string }[] }[], t: string) => groups.find(g => g.tier === t)?.items
+
+  it('groups by tier order and omits empty tiers', () => {
+    const groups = groupDivisionsByTier([
       { bits_division_id: 1, name: 'Elitserien Herrar' },
       { bits_division_id: 2, name: 'Division 1 Herrar Norra' },
       { bits_division_id: 3, name: 'Division 1 Herrar Söder' },
-    ]
-    const groups = groupDivisionsByTier(divs)
-    expect(groups.get('Elitserien')).toHaveLength(1)
-    expect(groups.get('Division 1')).toHaveLength(2)
-    expect(groups.has('Allsvenskan')).toBe(false)
+    ])
+    expect(tier(groups, 'Elitserien')).toHaveLength(1)
+    expect(tier(groups, 'Division 1')).toHaveLength(2)
+    expect(groups.some(g => g.tier === 'Allsvenskan')).toBe(false)
+    expect(groups.map(g => g.tier)).toEqual(['Elitserien', 'Division 1']) // tier order preserved
+  })
+
+  it('sorts within a tier by Swedish locale (Ö after V)', () => {
+    const groups = groupDivisionsByTier([
+      { name: 'Division 2 Östra' }, { name: 'Division 2 Västra' }, { name: 'Division 2 Norra' },
+    ])
+    expect(tier(groups, 'Division 2')!.map(d => d.name)).toEqual(['Division 2 Norra', 'Division 2 Västra', 'Division 2 Östra'])
   })
 })
 

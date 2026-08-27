@@ -1,10 +1,10 @@
 import { COLOR } from '@/theme';
-import { TIER_ORDER, divisionTier, type Tier } from '@bowlkollen/core';
+import { TIER_ORDER, divisionTier, groupDivisionsByTier, type Tier } from '@bowlkollen/core';
 
-// League pyramid taxonomy now lives in @bowlkollen/core (shared with web) so the
-// two apps can't drift on which division is which tier. Re-exported for existing
-// `@/lib/tiers` imports; the native grouping shape + accent colours stay here.
-export { TIER_ORDER, divisionTier };
+// League pyramid taxonomy + grouping now live in @bowlkollen/core (shared with
+// web) so the two apps can't drift. Re-exported for existing `@/lib/tiers`
+// imports (`groupByTier` kept as an alias); accent colours stay native-only.
+export { TIER_ORDER, divisionTier, groupDivisionsByTier, groupDivisionsByTier as groupByTier };
 export type { Tier };
 
 // Categorical accent per tier (gold pinnacle → down the pyramid). Native-only;
@@ -20,15 +20,3 @@ export const TIER_ACCENT: Record<Tier, string> = {
   Övrigt: COLOR.ink4,
 };
 
-export function groupByTier<T extends { name: string }>(
-  items: T[],
-): { tier: Tier; items: T[] }[] {
-  const buckets = new Map<Tier, T[]>(TIER_ORDER.map((t) => [t, []]));
-  for (const it of items) {
-    (buckets.get(divisionTier(it.name)) ?? buckets.get('Övrigt')!).push(it);
-  }
-  return TIER_ORDER.map((tier) => ({
-    tier,
-    items: (buckets.get(tier) ?? []).sort((a, b) => a.name.localeCompare(b.name, 'sv')),
-  })).filter((s) => s.items.length > 0);
-}

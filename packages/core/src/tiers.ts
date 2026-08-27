@@ -31,6 +31,18 @@ export function divisionTier(name: string): Tier {
   return 'Övrigt';
 }
 
+// Group divisions into the tier pyramid, ordered by TIER_ORDER, and sorted
+// WITHIN each tier by name in Swedish locale (so Å/Ä/Ö land correctly at the
+// end). Shared by web + native so the schema division list arranges identically
+// and can't drift. Empty tiers are dropped.
+export function groupDivisionsByTier<T extends { name: string }>(items: T[]): { tier: Tier; items: T[] }[] {
+  const buckets = new Map<Tier, T[]>(TIER_ORDER.map((t) => [t, []]));
+  for (const it of items) (buckets.get(divisionTier(it.name)) ?? buckets.get('Övrigt')!).push(it);
+  return TIER_ORDER
+    .map((tier) => ({ tier, items: (buckets.get(tier) ?? []).sort((a, b) => a.name.localeCompare(b.name, 'sv')) }))
+    .filter((g) => g.items.length > 0);
+}
+
 // Higher = show first (feed ranking, card stacks). Elitserien always tops.
 export const TIER_RANK: Record<string, number> = {
   Elitserien: 6,

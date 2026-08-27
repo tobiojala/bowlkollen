@@ -145,7 +145,7 @@ export function SchemaIndex() {
         )}
 
         {/* Browse — flat tier-grouped catalog */}
-        {!isLoading && browse && [...browse.entries()].map(([tier, tierDivs]) => (
+        {!isLoading && browse && browse.map(({ tier, items: tierDivs }) => (
           <div key={tier}>
             <TierLabel text={tier} gold={tier === 'Elitserien'} />
             {tierDivs.map(div => (

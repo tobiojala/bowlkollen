@@ -2,10 +2,11 @@
 
 import { hexToHsl, hslToHex, hashStr } from './color'
 import type { TableRow, FormResult } from './types'
-import { computeStandings, divisionTier, TIER_ORDER, TIER_RANK, type MatchRow, type TeamStanding, type Tier } from '@bowlkollen/core'
-// Tier taxonomy now lives in @bowlkollen/core (shared with native). Re-exported
-// here so existing `@/lib/division-standings` imports keep working.
-export { divisionTier, TIER_ORDER, TIER_RANK, type Tier }
+import { computeStandings, divisionTier, groupDivisionsByTier, TIER_ORDER, TIER_RANK, type MatchRow, type TeamStanding, type Tier } from '@bowlkollen/core'
+// Tier taxonomy + grouping now live in @bowlkollen/core (shared with native), so
+// the schema division list arranges identically on both. Re-exported here so
+// existing `@/lib/division-standings` imports keep working.
+export { divisionTier, groupDivisionsByTier, TIER_ORDER, TIER_RANK, type Tier }
 
 // computeStandings + these types now live in @bowlkollen/core (shared with the
 // mobile app). Re-exported here so existing web imports keep working unchanged.
@@ -59,19 +60,6 @@ export function buildTeamNarrativeInput(teamId: number, matches: MatchRow[], sta
 
 // ── Tier grouping (taxonomy is imported from core) ────────────────────────────
 
-export function groupDivisionsByTier<T extends { name: string }>(divs: T[]): Map<string, T[]> {
-  const groups = new Map<string, T[]>(TIER_ORDER.map(t => [t, []]))
-  for (const d of divs) {
-    const tier = divisionTier(d.name)
-    const bucket = groups.get(tier) ?? groups.get('Övrigt')!
-    bucket.push(d)
-  }
-  // Remove empty tiers to keep render clean
-  for (const [k, v] of groups) {
-    if (v.length === 0) groups.delete(k)
-  }
-  return groups
-}
 
 // Scoped tier list for the Atlas mosaic — the active, watched divisions only.
 // Division 4/5 and Övrigt (62 regional leagues) are excluded deliberately.

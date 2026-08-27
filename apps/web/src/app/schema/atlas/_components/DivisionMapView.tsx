@@ -73,8 +73,8 @@ function shortName(name: string): string {
  * The currently-focused division gets a gold label + outline: "you are here." */
 export function DivisionMapView({ divisions, datesByDivision, seasonMonths, activeDivisionId, onSelect }: Props) {
   const groups = useMemo(() => {
-    const all = groupDivisionsByTier(divisions)
-    return new Map(MOSAIC_TIERS.filter(t => all.has(t)).map(t => [t, all.get(t)!] as const))
+    const byTier = new Map(groupDivisionsByTier(divisions).map(g => [g.tier as string, g.items] as const))
+    return new Map(MOSAIC_TIERS.filter(t => byTier.has(t)).map(t => [t, byTier.get(t)!] as const))
   }, [divisions])
 
   return (

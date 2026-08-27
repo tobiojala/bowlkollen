@@ -32,7 +32,7 @@ export default function AtlasPage() {
   const [flyToPinNonce, setFlyToPinNonce] = useState(0)
   const carouselRef = useRef<AtlasCarouselHandle>(null)
 
-  const orderedDivisions = useMemo(() => [...groupDivisionsByTier(divisions).values()].flat(), [divisions])
+  const orderedDivisions = useMemo(() => groupDivisionsByTier(divisions).flatMap(g => g.items), [divisions])
 
   const datesByDivision = useMemo(() => {
     const m = new Map<number, string[]>()
