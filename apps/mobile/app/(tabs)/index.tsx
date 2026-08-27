@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/PressableScale';
 import { ListSkeleton } from '@/components/Skeleton';
-import { StoryChips, type Story } from '@/components/StoryChips';
+import { type Story } from '@/components/StoryChips';
+import { StoryRail } from '@/components/StoryRail';
 import { MatchCard } from '@/components/feed/MatchCard';
 import { RivalCard } from '@/components/feed/RivalCard';
 import { PromoCard } from '@/components/feed/PromoCard';
@@ -15,6 +16,8 @@ import { StoryCard } from '@/components/feed/StoryCard';
 import { TopSerieCard } from '@/components/feed/TopSerieCard';
 import { useNextMatch } from '@/lib/diary';
 import { buildFeed, filterFeed, injectPromos, injectStandings, type FeedCategory, type FeedItem, type FeedMatch } from '@/lib/feed';
+import { useMyFollows, useFollowedPlayerResults, useFollowedMatches } from '@/lib/feed-follows';
+import { buildStoryEntities, entityFeed, useStoryViews } from '@/lib/story-rail';
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions';
 import { useFeedStandings } from '@/lib/feed-standings';
 import { storyEventHref, useHomeStoryEvents } from '@/lib/story-events';
@@ -32,6 +35,11 @@ const STORIES: Story[] = [
   { key: 'Serier', label: 'Serier', icon: 'flame' },
 ];
 
+// The rail's selection: a view chip, or a tapped follow (its story).
+type Selection =
+  | { kind: 'category'; category: FeedCategory }
+  | { kind: 'entity'; entityType: 'player' | 'team'; id: string; name: string; key: string };
+
 function useMyMatches() {
   return useQuery({
     queryKey: ['my-matches'],
@@ -48,11 +56,19 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { onScroll } = useNavScroll();
-  const [category, setCategory] = useState<FeedCategory>('Allt');
+  const [selection, setSelection] = useState<Selection>({ kind: 'category', category: 'Allt' });
   const { data: matches = [], isLoading } = useMyMatches();
   const { data: topScores = [] } = useTopScores();
   const { data: standings = [] } = useFeedStandings();
   const { data: storyEvents = [] } = useHomeStoryEvents();
+
+  // Story-rail data: follows (names/ids) + their ID-carrying results/matches.
+  const { data: follows } = useMyFollows();
+  const playerIds = follows?.players.map((p) => p.id) ?? [];
+  const teamIds = follows?.teams.map((t) => t.id) ?? [];
+  const { data: playerResults = [] } = useFollowedPlayerResults(playerIds);
+  const { data: teamMatches = [] } = useFollowedMatches(teamIds);
+  const { isUnseen, markViewed } = useStoryViews();
 
   const { data: claim } = useMyClaim();
   const { data: nextMatch } = useNextMatch();
@@ -69,11 +85,18 @@ export default function Home() {
     daySeed: Math.floor(Date.now() / 86_400_000),
   });
 
+  const entities = useMemo(
+    () => buildStoryEntities(follows ?? { teams: [], players: [] }, playerResults, teamMatches, storyEvents),
+    [follows, playerResults, teamMatches, storyEvents],
+  );
+
   const feed = useMemo(() => {
-    const base = filterFeed(buildFeed(matches, topScores, storyEvents), category);
-    // Standings + sponsored posts only mix into the full stream, not filtered views.
-    return category === 'Allt' ? injectPromos(injectStandings(base, standings), SAMPLE_PROMOS) : base;
-  }, [matches, topScores, storyEvents, standings, category]);
+    // A tapped story circle → just that entity's posts.
+    if (selection.kind === 'entity') return entityFeed(selection, playerResults, teamMatches, storyEvents);
+    const base = filterFeed(buildFeed(matches, topScores, storyEvents), selection.category);
+    // Standings + house promo only mix into the full stream, not filtered views.
+    return selection.category === 'Allt' ? injectPromos(injectStandings(base, standings), SAMPLE_PROMOS) : base;
+  }, [selection, matches, topScores, storyEvents, standings, playerResults, teamMatches]);
 
   // Likes/saves for every likeable post in the feed, in one batched query.
   const reactionKeys = useMemo(() => feed.filter((i) => i.kind !== 'promo').map((i) => i.key), [feed]);
@@ -143,7 +166,15 @@ export default function Home() {
           <Text style={[styles.note, !!note.matchId && styles.noteMatch]}>{note.text}</Text>
         </PressableScale>
       </View>
-      <StoryChips stories={STORIES} selected={category} onSelect={(k) => setCategory(k as FeedCategory)} />
+      <StoryRail
+        categories={STORIES}
+        entities={entities}
+        activeCategory={selection.kind === 'category' ? selection.category : null}
+        activeEntityKey={selection.kind === 'entity' ? selection.key : null}
+        isUnseen={isUnseen}
+        onCategory={(key) => setSelection({ kind: 'category', category: key as FeedCategory })}
+        onEntity={(e) => { setSelection({ kind: 'entity', entityType: e.entityType, id: e.id, name: e.name, key: e.key }); markViewed(e.key); }}
+      />
       <View style={styles.prep}>
         <RivalCard />
       </View>
