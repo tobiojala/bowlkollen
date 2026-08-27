@@ -286,7 +286,7 @@ export default function MatchPage() {
               </View>
             )}
             {cardView === 'bord' && delmatch ? (
-              <DelmatchBoard summary={delmatch} onOpenPlayer={(pid) => { setCardOpen(false); router.push(`/player/${pid}`); }} />
+              <DelmatchBoard summary={delmatch} avg={avgByPublicId} showDeltas={pro} onOpenPlayer={(pid) => { setCardOpen(false); router.push(`/player/${pid}`); }} />
             ) : (
               <MatchScorecard
                 homeTeam={match.home_team_name}
