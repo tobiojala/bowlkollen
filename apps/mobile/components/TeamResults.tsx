@@ -20,11 +20,15 @@ export function TeamResults({
   pins,
   rows,
   topTotal,
+  avgByPublicId,
+  showDeltas,
 }: {
   teamName: string;
   pins: number | null;
   rows: ResultRow[];
   topTotal: number;
+  avgByPublicId?: Record<string, number>;
+  showDeltas?: boolean;   // Pro: each serie's delta vs the player's season snitt
 }) {
   const router = useRouter();
   if (rows.length === 0) return null;
@@ -51,9 +55,20 @@ export function TeamResults({
             </View>
             {r.series?.length > 0 && (
               <View style={styles.seriesRow}>
-                {r.series.map((g, gi) => (
-                  <Text key={gi} style={styles.seriesNum}>{g}</Text>
-                ))}
+                {r.series.map((g, gi) => {
+                  const avg = r.public_id ? avgByPublicId?.[r.public_id] : undefined;
+                  const delta = showDeltas && g > 0 && avg ? Math.round(g - avg) : null;
+                  return (
+                    <View key={gi} style={styles.serieCol}>
+                      <Text style={styles.seriesNum}>{g}</Text>
+                      {delta != null && (
+                        <Text style={[styles.delta, delta >= 0 ? styles.deltaUp : styles.deltaFlat]}>
+                          {delta >= 0 ? '+' : '−'}{Math.abs(delta)}
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             )}
           </PressableScale>
@@ -75,6 +90,10 @@ const styles = StyleSheet.create({
   bestIcon: { marginRight: -2 },
   total: { color: COLOR.ink, fontSize: TYPE.body + 4, fontFamily: FONT.score, fontVariant: ['tabular-nums'] },
   totalBest: { color: COLOR.gold },
-  seriesRow: { flexDirection: 'row', gap: SPACE[3], marginLeft: 28 },
+  seriesRow: { flexDirection: 'row', gap: SPACE[3], marginLeft: 28, alignItems: 'flex-start' },
+  serieCol: { alignItems: 'center', gap: 2 },
   seriesNum: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular, fontVariant: ['tabular-nums'] },
+  delta: { fontSize: 11, fontFamily: FONT.bold, fontVariant: ['tabular-nums'] },
+  deltaUp: { color: COLOR.green },
+  deltaFlat: { color: COLOR.ink3 },
 });

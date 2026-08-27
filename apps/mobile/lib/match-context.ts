@@ -49,3 +49,20 @@ export function useMatchContext(divisionId: number | null, seasonId: number, hom
     },
   });
 }
+
+// Per-player season serie-average (public_id → avg_serie), for the Pro snitt
+// deltas on the match's spelresultat. Same RPC as web.
+export function useMatchAvgs(publicIds: string[], seasonId: number) {
+  const ids = [...publicIds].sort();
+  return useQuery<Record<string, number>>({
+    queryKey: ['match-avgs', seasonId, ids.join(',')],
+    enabled: ids.length > 0 && seasonId > 0,
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc('get_players_season_avg', { p_public_ids: ids, p_season_id: seasonId });
+      const map: Record<string, number> = {};
+      for (const a of (data ?? []) as { public_id: string; avg_serie: number }[]) map[a.public_id] = a.avg_serie;
+      return map;
+    },
+  });
+}

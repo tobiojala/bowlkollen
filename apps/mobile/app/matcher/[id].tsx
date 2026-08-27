@@ -23,6 +23,8 @@ import { RivalryCallout } from '@/components/RivalryCallout';
 import { SeasonContext } from '@/components/SeasonContext';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { divisionTier } from '@/lib/tiers';
+import { useMatchAvgs } from '@/lib/match-context';
+import { usePro } from '@/lib/pro';
 import { Segmented } from '@/components/Segmented';
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { computeDelmatcher, type DelmatchSlot, type DelmatchSummary } from '@/lib/delmatch';
@@ -143,14 +145,14 @@ export default function MatchPage() {
   const hasDelmatch = !!delmatch?.hasData;
   const { data: rivalry } = useMatchRivalry(matchId, hasDelmatch);
 
-  const home = results.filter((r) => r.is_home_team);
-  const away = results.filter((r) => !r.is_home_team);
+  const home = results.filter((r) => r.is_home_team), away = results.filter((r) => !r.is_home_team);
+  const pro = usePro();
+  const { data: avgByPublicId = {} } = useMatchAvgs(results.map((r) => r.public_id).filter(Boolean) as string[], match?.season_id ?? 0);
   const topTotal = results.length ? Math.max(...results.map((r) => r.total_result)) : 0;
   const topPlayer = results.find((r) => r.total_result === topTotal) ?? null;
 
   const finished = !!match?.is_finished && match.home_result != null && match.away_result != null;
-  const homeWon = finished && (match!.home_result ?? 0) > (match!.away_result ?? 0);
-  const awayWon = finished && (match!.away_result ?? 0) > (match!.home_result ?? 0);
+  const homeWon = finished && (match!.home_result ?? 0) > (match!.away_result ?? 0), awayWon = finished && (match!.away_result ?? 0) > (match!.home_result ?? 0);
   const hasPins = finished && match!.home_score != null && match!.away_score != null;
   const hasSeries = results.some((r) => (r.series?.length ?? 0) > 0);
 
@@ -244,8 +246,8 @@ export default function MatchPage() {
             />
           )}
 
-          <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} topTotal={topTotal} />
-          <TeamResults teamName={match.away_team_name} pins={match.away_score} rows={away} topTotal={topTotal} />
+          <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} topTotal={topTotal} avgByPublicId={avgByPublicId} showDeltas={pro} />
+          <TeamResults teamName={match.away_team_name} pins={match.away_score} rows={away} topTotal={topTotal} avgByPublicId={avgByPublicId} showDeltas={pro} />
         </ScrollView>
       )}
 
