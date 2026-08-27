@@ -1,5 +1,23 @@
 import { describe, it, expect } from 'vitest'
-import { recencyScore, eventBoost, serieBoost, EVENT_BOOST } from '@bowlkollen/core'
+import { recencyScore, eventBoost, serieBoost, EVENT_BOOST, diversifyByKind } from '@bowlkollen/core'
+
+describe('diversifyByKind', () => {
+  it('avoids consecutive same-kind while another kind waits, keeping rough rank', () => {
+    const ranked = [
+      { kind: 'event', id: 1 }, { kind: 'event', id: 2 }, { kind: 'event', id: 3 },
+      { kind: 'match', id: 4 }, { kind: 'serie', id: 5 },
+    ]
+    const out = diversifyByKind(ranked)
+    // no two neighbours share a kind until one kind is exhausted
+    for (let i = 1; i < 3; i++) expect(out[i].kind).not.toBe(out[i - 1].kind)
+    expect(out).toHaveLength(5)
+    expect(out[0]).toEqual({ kind: 'event', id: 1 }) // best-ranked head still leads
+  })
+  it('is a no-op for a single kind', () => {
+    const ranked = [{ kind: 'match', id: 1 }, { kind: 'match', id: 2 }]
+    expect(diversifyByKind(ranked)).toEqual(ranked)
+  })
+})
 
 const NOW = new Date('2026-08-26T12:00:00Z').getTime()
 

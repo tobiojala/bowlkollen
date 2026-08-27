@@ -9,7 +9,7 @@ import { StandingsCard } from './StandingsCard'
 import { PromoCard } from './PromoCard'
 import { useFeedReactions, useReactionActions } from '@/lib/feed-reactions'
 import { divisionTier, TIER_RANK } from '@/lib/division-standings'
-import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core'
+import { recencyScore, eventBoost, serieBoost, diversifyByKind } from '@bowlkollen/core'
 import { HOME_PROMOS, type Promo } from '@/lib/home-promos'
 import type { TeamEvent, FeedPlayerResult, BitsMatchFeed, BitsTopScore } from '@/lib/types'
 import type { FeedStanding } from '@/lib/feed-standings'
@@ -114,31 +114,6 @@ function buildFeed(
     .map(({ e }) => e)
 }
 
-// Spread card kinds so the stream reads mixed, not sorted into type buckets
-// (all the +80 story events clustering at the top). Keeps rough relevance —
-// always pulls the best-ranked head available — but won't repeat the previous
-// kind while another kind still has cards waiting.
-function diversify(ranked: FeedEntry[]): FeedEntry[] {
-  const buckets = new Map<string, FeedEntry[]>()
-  ranked.forEach((e) => { const b = buckets.get(e.kind); if (b) b.push(e); else buckets.set(e.kind, [e]) })
-  const rankOf = new Map(ranked.map((e, i) => [e, i]))
-  const out: FeedEntry[] = []
-  let last = ''
-  while (out.length < ranked.length) {
-    let pick: FeedEntry | null = null
-    let pickKind = ''
-    for (const [kind, arr] of buckets) {
-      if (arr.length === 0 || kind === last) continue
-      if (!pick || rankOf.get(arr[0])! < rankOf.get(pick)!) { pick = arr[0]; pickKind = kind }
-    }
-    if (!pick) for (const [kind, arr] of buckets) { if (arr.length) { pick = arr[0]; pickKind = kind; break } }
-    buckets.get(pickKind)!.shift()
-    out.push(pick!)
-    last = pickKind
-  }
-  return out
-}
-
 // Narrow the stream to a single tapped entity (a story circle).
 function matchesEntity(e: FeedEntry, ent: { entityType: 'player' | 'team'; id: string }): boolean {
   if (ent.entityType === 'player') {
@@ -212,7 +187,7 @@ export function FeedSection({
   teamIds: string[]
   playerIds: string[]
 }) {
-  const ranked = diversify(buildFeed(feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds))
+  const ranked = diversifyByKind(buildFeed(feedEvents, playerResults, followedMatches, bitsRecent, topScores, teamIds, playerIds))
   // Full stream gets the standings + house-promo mix-ins; a single-entity view
   // (a tapped story circle) stays clean — just that entity's posts.
   const feed = entity

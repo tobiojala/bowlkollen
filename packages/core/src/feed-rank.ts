@@ -44,3 +44,29 @@ export function eventBoost(eventType: string): number {
 export function serieBoost(total: number): number {
   return total >= 300 ? 40 : total >= 270 ? 20 : total >= 250 ? 10 : 0;
 }
+
+// Spread card kinds so the stream reads mixed, not sorted into type buckets
+// (all the +80 story events clustering at the top when data is old and recency
+// flattens). Keeps rough relevance — always pulls the best-ranked head still
+// available — but won't repeat the previous kind while another kind waits.
+// Generic so web (FeedEntry) and native (FeedItem) share the exact same mixer.
+export function diversifyByKind<T extends { kind: string }>(ranked: T[]): T[] {
+  const buckets = new Map<string, T[]>();
+  ranked.forEach((e) => { const b = buckets.get(e.kind); if (b) b.push(e); else buckets.set(e.kind, [e]); });
+  const rankOf = new Map<T, number>(ranked.map((e, i) => [e, i]));
+  const out: T[] = [];
+  let last = '';
+  while (out.length < ranked.length) {
+    let pick: T | null = null;
+    let pickKind = '';
+    for (const [kind, arr] of buckets) {
+      if (arr.length === 0 || kind === last) continue;
+      if (!pick || rankOf.get(arr[0])! < rankOf.get(pick)!) { pick = arr[0]; pickKind = kind; }
+    }
+    if (!pick) for (const [kind, arr] of buckets) { if (arr.length) { pick = arr[0]; pickKind = kind; break; } }
+    buckets.get(pickKind)!.shift();
+    out.push(pick as T);
+    last = pickKind;
+  }
+  return out;
+}

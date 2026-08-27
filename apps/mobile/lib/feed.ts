@@ -1,4 +1,4 @@
-import { recencyScore, eventBoost, serieBoost } from '@bowlkollen/core';
+import { recencyScore, eventBoost, serieBoost, diversifyByKind } from '@bowlkollen/core';
 
 import type { FeedStanding } from '@/lib/feed-standings';
 import type { Promo } from '@/lib/promos';
@@ -64,7 +64,9 @@ export function buildFeed(matches: FeedMatch[], topScores: TopScore[], events: T
 
   const story: FeedItem[] = events.map((e) => ({ kind: 'event', key: `e${e.id}`, ts: e.event_date, event: e }));
 
-  const rest = [...results, ...series, ...story].sort((a, b) => rankScore(b) - rankScore(a));
+  // Rank the non-upcoming items, then interleave kinds so the stream reads mixed
+  // instead of clustering all story events at the top (shared mixer with web).
+  const rest = diversifyByKind([...results, ...series, ...story].sort((a, b) => rankScore(b) - rankScore(a)));
   return [...upcoming, ...rest];
 }
 
