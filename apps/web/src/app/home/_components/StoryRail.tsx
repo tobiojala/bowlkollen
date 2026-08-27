@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { COLOR } from '@/lib/brand'
-import { shortName, teamColor, teamInitials } from '@/lib/utils'
+import { shortName, teamInitials } from '@/lib/utils'
+import { avatarColors } from '@/components/IdentityAvatar'
 import type { FeedFilter, FeedView, StoryEntity } from '@/lib/story-rail'
 
 const SIZE = 76
@@ -91,7 +92,7 @@ export default function StoryRail({ filter, entities, isUnseen, onSelect }: {
       {ordered.map((e) => {
         const active = filter.kind === 'entity' && filter.entityType === e.entityType && filter.id === e.id
         const unseen = isUnseen(e.key, e.latestTs)
-        const c = teamColor(e.name, true)
+        const c = avatarColors(e.name)
         return (
           <Chip key={e.key} active={active} ringGold={unseen} label={shortName(e.name)}
             onClick={() => onSelect({ kind: 'entity', entityType: e.entityType, id: e.id, name: e.name })}>

@@ -5,18 +5,12 @@ import { Flame } from 'lucide-react'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { SCORE } from '@/lib/constants'
 import FollowButton from '@/components/FollowButton'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { PostActions } from './PostActions'
 import { SerieBars } from './SerieBars'
 import type { FeedPlayerResult } from '@/lib/types'
 import type { ReactionState } from '@/lib/feed-reactions'
 
-const AV = 44
-
-function avatarOf(name: string) {
-  const hue = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-  const initials = name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
-  return { hue, initials }
-}
 function fmtDate(iso: string) {
   const d = new Date(iso.slice(0, 10) + 'T12:00:00')
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -30,7 +24,6 @@ export function PlayerResultCard({ item, reaction, onLike, onSave }: {
   onSave: (key: string, saved: boolean) => void
 }) {
   const gold = item.total >= SCORE.SERIES_HIGH
-  const av = avatarOf(item.playerName)
   const postKey = `p${item.playerId}-${item.matchId}`
 
   return (
@@ -44,9 +37,7 @@ export function PlayerResultCard({ item, reaction, onLike, onSave }: {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
         <Link href={`/players/${item.playerId}`} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], flex: 1, minWidth: 0, textDecoration: 'none' }}>
-          <div style={{ width: AV, height: AV, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `hsl(${av.hue},45%,20%)`, border: `1.5px solid hsl(${av.hue},50%,42%)` }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: `hsl(${av.hue},55%,68%)`, letterSpacing: -0.5 }}>{av.initials}</span>
-          </div>
+          <IdentityAvatar name={item.playerName} size={44} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.playerName}</div>
             {item.opponent && <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 1 }}>mot {item.opponent}</div>}

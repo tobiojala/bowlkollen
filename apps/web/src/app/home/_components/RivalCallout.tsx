@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { COLOR, SPACE, TYPE, FONT } from '@/lib/brand'
-import { teamColor, teamInitials } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { useNextMatch } from '@/lib/diary'
 import { usePlayerScouting } from '@/lib/scouting'
 
@@ -40,7 +40,6 @@ export function RivalCallout() {
   const trail = rival.myWins < rival.myLosses
   const standing = lead ? 'Du leder' : trail ? 'Du ligger under' : 'Helt jämnt'
   const recColor = lead ? COLOR.green : trail ? COLOR.red : COLOR.ink2
-  const av = teamColor(rival.name, true)
 
   return (
     <Link href={`/prep/${next.matchId}`}
@@ -51,10 +50,7 @@ export function RivalCallout() {
           <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink3 }}>{relativeMatchDate(next.date)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: av.bg, border: `1.5px solid ${av.border}`, color: av.text, fontSize: 13, fontWeight: 800 }}>
-            {teamInitials(rival.name)}
-          </div>
+          <IdentityAvatar name={rival.name} size={40} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Du möter {rival.name}

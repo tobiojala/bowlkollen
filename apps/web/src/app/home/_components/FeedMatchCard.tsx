@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { PostActions } from './PostActions'
 import type { ReactionState } from '@/lib/feed-reactions'
 
@@ -12,25 +13,15 @@ export type MatchLike = {
   division: string | null; hall: string | null; finished: boolean
 }
 
-function avatarOf(name: string) {
-  const hue = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-  const initials = name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
-  return { hue, initials }
-}
-
 function fmtDate(iso: string) {
   const d = new Date(iso.slice(0, 10) + 'T12:00:00')
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 function TeamLine({ name, score, won, finished }: { name: string; score: number | null; won: boolean; finished: boolean }) {
-  const av = avatarOf(name)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-      <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `hsl(${av.hue},45%,20%)`, border: `1.5px solid hsl(${av.hue},50%,42%)` }}>
-        <span style={{ fontSize: 14, fontWeight: 800, color: `hsl(${av.hue},55%,68%)`, letterSpacing: -0.5 }}>{av.initials}</span>
-      </div>
+      <IdentityAvatar name={name} size={40} />
       <span style={{ flex: 1, minWidth: 0, fontSize: 22, letterSpacing: -0.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         fontWeight: won ? 800 : 600, color: won ? COLOR.ink : finished ? COLOR.ink3 : COLOR.ink2 }}>
         {name}

@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { ArrowUp } from 'lucide-react'
 import { COLOR, SPACE, TYPE, FONT } from '@/lib/brand'
-import { shortName, teamColor, teamInitials, shortDiv } from '@/lib/utils'
+import { shortName, shortDiv } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import type { FeedStanding } from '@/lib/feed-standings'
 
 // A team's achievement told with the standings as context: what they did up top,
@@ -11,7 +12,6 @@ import type { FeedStanding } from '@/lib/feed-standings'
 // same content, drawn in web's cardless hairline-list language. Opens the
 // division; each ladder row opens the team.
 export function StandingsCard({ standing }: { standing: FeedStanding }) {
-  const av = teamColor(standing.teamName, true)
   const chip = standing.delta > 0
 
   return (
@@ -24,10 +24,7 @@ export function StandingsCard({ standing }: { standing: FeedStanding }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: av.bg, border: `1.5px solid ${av.border}`, color: av.text, fontSize: 13, fontWeight: 800 }}>
-            {teamInitials(standing.teamName)}
-          </div>
+          <IdentityAvatar name={standing.teamName} size={40} />
           <div style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {standing.teamName}
           </div>
