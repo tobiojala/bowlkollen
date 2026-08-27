@@ -10,12 +10,9 @@ import { ChevronRight, Search, Flame } from 'lucide-react'
 import { prefetchPlayer } from '@/lib/prefetch'
 import { useBitsTopScores } from '@/lib/queries'
 import { QUERY } from '@/lib/constants'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 
 type SearchHit = { publicId: string; name: string; clubName: string | null; licenceAverage: number | null }
-
-function initials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-}
 
 export default function PlayersPage() {
   const { C, isDark } = useColors()
@@ -61,16 +58,7 @@ export default function PlayersPage() {
     borderBottom: `1px solid ${C.border}`, textDecoration: 'none',
   }
 
-  const avatar = (name: string) => {
-    const hue  = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-    const tc   = `hsl(${hue},50%,45%)`
-    const tclo = isDark ? `hsl(${hue},40%,15%)` : `hsl(${hue},40%,92%)`
-    return (
-      <div style={{ width: 34, height: 34, borderRadius: '50%', background: tclo, border: `1.5px solid ${tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0 }}>
-        {initials(name)}
-      </div>
-    )
-  }
+  const avatar = (name: string) => <IdentityAvatar name={name} size={38} />
 
   const showingSearch = query.trim().length >= QUERY.SEARCH_MIN_CHARS
 

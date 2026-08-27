@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { useColors } from '@/components/ThemeProvider'
 import { motion } from 'framer-motion'
 import { shortName, teamColor } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 
 type Props = { params: Promise<{ id1: string; id2: string }> }
 
@@ -60,17 +60,8 @@ function computeStats(results: any[]): Stats {
   }
 }
 
-function Avatar({ player, tc, tclo }: { player: Player; tc: string; tclo: string }) {
-  const ini = player.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  return player.avatar_url ? (
-    <Image src={player.avatar_url} alt={player.name} width={68} height={68}
-      style={{ borderRadius: '50%', border: `2.5px solid ${tc}`, objectFit: 'cover' }} />
-  ) : (
-    <div style={{ width: 68, height: 68, borderRadius: '50%', background: tclo, border: `2.5px solid ${tc}`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: tc }}>
-      {ini}
-    </div>
-  )
+function Avatar({ player }: { player: Player }) {
+  return <IdentityAvatar name={player.name} size={68} imageUrl={player.avatar_url} />
 }
 
 export default function ComparePage({ params }: Props) {
@@ -175,7 +166,7 @@ export default function ComparePage({ params }: Props) {
             alignItems: 'center', justifyContent: 'center',
             gap: 10, padding: '40px 40px 20px 20px',
           }}>
-          <Avatar player={p1} tc={col1.border} tclo={col1.bg} />
+          <Avatar player={p1} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 15, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>
               {p1.name.split(' ')[0]}
@@ -211,7 +202,7 @@ export default function ComparePage({ params }: Props) {
             alignItems: 'center', justifyContent: 'center',
             gap: 10, padding: '40px 20px 20px 40px',
           }}>
-          <Avatar player={p2} tc={col2.border} tclo={col2.bg} />
+          <Avatar player={p2} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 15, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>
               {p2.name.split(' ')[0]}

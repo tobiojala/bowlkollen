@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Reveal from '@/components/Reveal'
 import FollowButton from '@/components/FollowButton'
 import PublicHeader from '@/components/PublicHeader'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import ProfileTrend from '@/components/ProfileTrend'
 import { matchTrendPoints } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
@@ -50,7 +51,6 @@ export interface PlayerProfileViewProps {
   /** Official BITS licence average — shown as the primary snitt hero. */
   licenceAverage?: number | null
   firstName: string
-  initials: string
   /** Previous-season per-match averages — DNA overlay + duel ghost line. */
   prevMatchAvgs?: number[]
   achievements?: Achievement[]
@@ -61,7 +61,7 @@ export interface PlayerProfileViewProps {
 }
 
 export default function PlayerProfileView({
-  playerId, data, identity, bkTopPct, licenceAverage, firstName, initials,
+  playerId, data, identity, bkTopPct, licenceAverage, firstName,
   prevMatchAvgs, achievements = [], isOwner = false,
   onEdit, onOpenCard, onOpenH2H,
 }: PlayerProfileViewProps) {
@@ -104,10 +104,7 @@ export default function PlayerProfileView({
         <PublicHeader />
         <div style={{ maxWidth: 600, margin: '0 auto', padding: '32px 20px 120px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-              background: '#1c2127', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 17, fontWeight: 900, color: '#f5c200', letterSpacing: -0.5 }}>{initials}</span>
-            </div>
+            <IdentityAvatar name={identity.name} size={56} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
               <div style={{ fontSize: 13, color: 'rgba(244,245,247,0.64)', marginTop: 3 }}>{identity.teamLabel}</div>

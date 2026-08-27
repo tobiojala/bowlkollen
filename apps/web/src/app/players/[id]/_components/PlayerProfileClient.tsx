@@ -105,7 +105,6 @@ export default function PlayerProfileClient({ id }: { id: string }) {
         bkTopPct={bkTopPct}
         licenceAverage={player.licenceAverage ?? undefined}
         firstName={firstName}
-        initials={initials}
         prevMatchAvgs={prevMatchAvgs.length > 1 ? prevMatchAvgs : undefined}
         achievements={achievements}
         isOwner={isOwner}
