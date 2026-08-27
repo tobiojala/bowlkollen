@@ -12,16 +12,17 @@ import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 // it blends into the feed. The hero is the creative image (real deals) or a
 // tinted placeholder with the headline. A quiet "Sponsrad" tag, like Instagram.
 export const PromoCard = memo(function PromoCard({ promo, onPress }: { promo: Promo; onPress?: () => void }) {
+  const house = promo.kind === 'house';
   return (
     <FeedCard onPress={onPress}>
       <PostHeader
         avatar={
-          <View style={[styles.logo, { backgroundColor: promo.accent }]}>
+          <View style={[styles.logo, { backgroundColor: house ? COLOR.gold : promo.accent }]}>
             <Ionicons name={promo.sponsorIcon} size={24} color={COLOR.bg} />
           </View>
         }
         name={promo.sponsor}
-        subtitle="Sponsrad"
+        subtitle={house ? 'Annonsplats' : 'Sponsrad'}
         right={<Ionicons name="ellipsis-horizontal" size={18} color={COLOR.ink3} />}
       />
 
@@ -30,7 +31,7 @@ export const PromoCard = memo(function PromoCard({ promo, onPress }: { promo: Pr
           <Image source={{ uri: promo.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
           <LinearGradient
-            colors={[promo.accent, 'rgba(11,13,16,0.7)']}
+            colors={house ? [COLOR.surface2, COLOR.bg] : [promo.accent, 'rgba(11,13,16,0.7)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}

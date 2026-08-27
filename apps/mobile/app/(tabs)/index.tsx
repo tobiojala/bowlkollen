@@ -82,7 +82,7 @@ export default function Home() {
 
   const renderItem = useCallback<ListRenderItem<FeedItem>>(
     ({ item }) => {
-      if (item.kind === 'promo') return <PromoCard promo={item.promo} />;
+      if (item.kind === 'promo') return <PromoCard promo={item.promo} onPress={() => router.push('/annonsera')} />;
       if (item.kind === 'standings') {
         return (
           <StandingsCard
