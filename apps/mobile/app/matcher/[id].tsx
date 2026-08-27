@@ -21,6 +21,7 @@ import { DelmatchBoard } from '@/components/DelmatchBoard';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
 import { RivalryCallout } from '@/components/RivalryCallout';
 import { SeasonContext } from '@/components/SeasonContext';
+import { Hojdpunkter } from '@/components/Hojdpunkter';
 import { ScrollBlur } from '@/components/ScrollBlur';
 import { divisionTier } from '@/lib/tiers';
 import { useMatchAvgs } from '@/lib/match-context';
@@ -153,8 +154,7 @@ export default function MatchPage() {
 
   const finished = !!match?.is_finished && match.home_result != null && match.away_result != null;
   const homeWon = finished && (match!.home_result ?? 0) > (match!.away_result ?? 0), awayWon = finished && (match!.away_result ?? 0) > (match!.home_result ?? 0);
-  const hasPins = finished && match!.home_score != null && match!.away_score != null;
-  const hasSeries = results.some((r) => (r.series?.length ?? 0) > 0);
+  const hasPins = finished && match!.home_score != null && match!.away_score != null, hasSeries = results.some((r) => (r.series?.length ?? 0) > 0);
 
   const openTeam = (tid: number | null) => tid != null && router.push(`/lag/${tid}`);
 
@@ -246,6 +246,7 @@ export default function MatchPage() {
             />
           )}
 
+          {pro && <Hojdpunkter results={results} delmatch={delmatch} avgByPublicId={avgByPublicId} />}
           <TeamResults teamName={match.home_team_name} pins={match.home_score} rows={home} topTotal={topTotal} avgByPublicId={avgByPublicId} showDeltas={pro} />
           <TeamResults teamName={match.away_team_name} pins={match.away_score} rows={away} topTotal={topTotal} avgByPublicId={avgByPublicId} showDeltas={pro} />
         </ScrollView>
@@ -336,8 +337,7 @@ function HeroTeam({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLOR.bg },
   pageClip: { flex: 1, overflow: 'hidden', backgroundColor: COLOR.bg },
-  chromeLeft: { position: 'absolute', left: 16 },
-  chromeRight: { position: 'absolute', right: 16 },
+  chromeLeft: { position: 'absolute', left: 16 }, chromeRight: { position: 'absolute', right: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { color: COLOR.ink3, fontSize: TYPE.body },
   scroll: { paddingHorizontal: SPACE[6], paddingBottom: SPACE[12] },
