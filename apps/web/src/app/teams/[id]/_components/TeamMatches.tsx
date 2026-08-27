@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useColors } from '@/components/ThemeProvider'
 import { COLOR } from '@/lib/brand'
-import { teamColor, teamInitials, shortName, shortDiv, primaryDivision } from '@/lib/utils'
+import { shortName, shortDiv, primaryDivision } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { divisionColor } from '@/lib/divisions'
 import TeamTableWidget from '@/components/TeamTableWidget'
 import TopPerformers   from '@/components/TopPerformers'
@@ -68,8 +69,6 @@ export default function TeamMatches({ id, matches }: Props) {
     const labelColor = won ? COLOR.green : lost ? '#e05555' : COLOR.ink3
     const isLive     = m.status === 'live'
     const divC       = divisionColor(m.division)
-    const tc         = teamColor(opp?.name || '', isDark)
-
     return (
       <Link
         href={'/matches/' + m.id}
@@ -81,9 +80,7 @@ export default function TeamMatches({ id, matches }: Props) {
           {isLive ? '●' : label || '—'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 7, background: tc.bg, border: '1.5px solid ' + tc.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: tc.text, flexShrink: 0 }}>
-            {teamInitials(opp?.name || '')}
-          </div>
+          <IdentityAvatar name={opp?.name || ''} size={30} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 1 }}>
@@ -149,15 +146,12 @@ export default function TeamMatches({ id, matches }: Props) {
             ? <div style={{ padding: '40px 24px', textAlign: 'center', color: COLOR.ink3, fontSize: 13 }}>Inga matchade möten registrerade</div>
             : h2hList.map(opp => {
                 const isExp  = expandedOpp === opp.team.id
-                const tc     = teamColor(opp.team.name || '', isDark)
                 const total  = opp.matches.length
                 const winPct = total > 0 ? Math.round((opp.w / total) * 100) : 0
                 return (
                   <div key={opp.team.id} style={{ borderBottom: '1px solid ' + COLOR.hairline }}>
                     <div onClick={() => setExpandedOpp(isExp ? null : opp.team.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: tc.bg, border: '1.5px solid ' + tc.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: tc.text, flexShrink: 0 }}>
-                        {teamInitials(opp.team.name || '')}
-                      </div>
+                      <IdentityAvatar name={opp.team.name || ''} size={38} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp.team.name || '')}</div>
                         <div style={{ display: 'flex', gap: 8, marginTop: 3, alignItems: 'center' }}>
