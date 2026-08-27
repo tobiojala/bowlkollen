@@ -4,7 +4,8 @@ import React from 'react'
 import { TrendingUp } from 'lucide-react'
 import { useColors } from '@/components/ThemeProvider'
 import { COLOR, SPACE, RADIUS, TYPE, FONT } from '@/lib/brand'
-import { teamColor, teamInitials, shortName } from '@/lib/utils'
+import { shortName } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import type { Match, Player, PlayerMomentum } from '@/lib/types'
 
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
 const W = 172
 
 export default function TeamStoryCards({ teamId, completed, upcoming, players, playerMomentum }: Props) {
-  const { isDark } = useColors()
+  useColors()
   const isHome = (m: Match) => m.home_team_id === teamId
 
   const lastMatch = completed[0] ?? null
@@ -44,12 +45,7 @@ export default function TeamStoryCards({ teamId, completed, upcoming, players, p
   )
 
   const OppBadge = ({ name }: { name: string }) => {
-    const tc = teamColor(name, isDark)
-    return (
-      <div style={{ width: 32, height: 32, flexShrink: 0, borderRadius: RADIUS.md, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, background: tc.bg, border: `1.5px solid ${tc.border}`, color: tc.text }}>
-        {teamInitials(name)}
-      </div>
-    )
+    return <IdentityAvatar name={name} size={32} />
   }
 
   return (
@@ -123,12 +119,9 @@ export default function TeamStoryCards({ teamId, completed, upcoming, players, p
           <CardLabel text="I form" />
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[3] }}>
             {(() => {
-              const tc = teamColor(hotPlayer.name, isDark)
               return (
                 <>
-                  <div style={{ width: 32, height: 32, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, background: tc.bg, border: `1.5px solid ${tc.border}`, color: tc.text }}>
-                    {teamInitials(hotPlayer.name).slice(0, 2)}
-                  </div>
+                  <IdentityAvatar name={hotPlayer.name} size={32} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, fontWeight: 700, color: COLOR.ink }}>
                     {hotPlayer.name.split(' ')[0]}
                   </span>

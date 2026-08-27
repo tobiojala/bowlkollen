@@ -4,7 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useColors } from '@/components/ThemeProvider'
-import { teamColor, teamInitials, shortName } from '@/lib/utils'
+import { teamInitials, shortName } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { SEASON } from '@/lib/constants'
 import type { Match } from '@/lib/types'
 
@@ -139,7 +140,6 @@ export default function TeamSeasonArc({ teamId, matches }: Props) {
           const lost     = myScore !== null && oppScore !== null && myScore < oppScore
           const rc       = won ? '#22c55e' : lost ? '#e05555' : '#f59e0b'
           const rl       = won ? 'V' : lost ? 'F' : 'O'
-          const tc       = teamColor(opp?.name ?? '', isDark)
           const dateStr  = new Date(selected.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
 
           return (
@@ -153,12 +153,7 @@ export default function TeamSeasonArc({ teamId, matches }: Props) {
                 className="mx-5 mb-3 flex items-center gap-3 rounded-2xl border p-3 no-underline"
                 style={{ background: C.card, borderColor: C.border }}
               >
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[9px] font-black"
-                  style={{ background: tc.bg, border: '1.5px solid ' + tc.border, color: tc.text }}
-                >
-                  {teamInitials(opp?.name ?? '')}
-                </div>
+                <IdentityAvatar name={opp?.name ?? ''} size={36} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-bold" style={{ color: C.text }}>
                     {shortName(opp?.name ?? '')}

@@ -3,6 +3,7 @@
 import React from 'react'
 import { ChevronRight, Trophy, Calendar, Heart, BarChart2, Bell, FileText, User, Check, HelpCircle, X } from 'lucide-react'
 import { shortName, shortDiv, teamColor, teamInitials } from '@/lib/utils'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 
 function localDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -51,7 +52,6 @@ export function NextMatchWidget({ isDark, C, data }: WProps) {
   )
   const isHome = m.home_team_id === data.myTeam?.id
   const opp = isHome ? m.away : m.home
-  const tc = teamColor(opp?.name || '', isDark)
 
   const today = localDate(new Date())
   const tomorrow = localDate(new Date(Date.now() + 86400000))
@@ -68,9 +68,7 @@ export function NextMatchWidget({ isDark, C, data }: WProps) {
         <div style={{ fontSize: 9, color: C.textMuted }}>{isHome ? 'HEMMA' : 'BORTA'}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: tc.bg, border: `2px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: tc.text, flexShrink: 0 }}>
-          {teamInitials(opp?.name || '')}
-        </div>
+        <IdentityAvatar name={opp?.name || ''} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(opp?.name || '')}</div>
           <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{new Date(mDate + 'T12:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
@@ -369,14 +367,13 @@ export function FavTeamsWidget({ isDark, C, data }: WProps) {
       <div style={{ fontSize: 9, fontWeight: 700, color: '#e05555', letterSpacing: 1.5, marginBottom: 8 }}>FAVORITLAG</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'center' }}>
         {teams.slice(0,3).map((t: any) => {
-          const tc = teamColor(t.name, isDark)
           const m = t.lastResult
           const isHome = m?.home_team_id === t.id
           const myScore = isHome ? m?.home_score : m?.away_score
           const oppScore = isHome ? m?.away_score : m?.home_score
           return (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: tc.bg, border: `1.5px solid ${tc.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 800, color: tc.text, flexShrink: 0 }}>{teamInitials(t.name)}</div>
+              <IdentityAvatar name={t.name} size={26} />
               <div style={{ flex: 1, fontSize: 11, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(t.name)}</div>
               {m && <div style={{ fontSize: 11, fontWeight: 700, color: myScore > oppScore ? '#f5c200' : C.textMuted }}>{myScore}–{oppScore}</div>}
             </div>
