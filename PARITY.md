@@ -65,7 +65,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 
 | Feature | Web | Native | Notes / gap |
 |---|:--:|:--:|---|
-| Match page | ✅ `/matcher/[id]` | ✅ `/matcher/[id]` | Both. Scorecard/serie sheet — _verify native has it_. |
+| Match page | ✅ `/matcher/[id]` | ✅ `/matcher/[id]` | **Full redesign on both (2026-08-27).** Hero, spelresultat, bord sheet, rivalry, Matchens bästa shared; native gained SeasonContext (H2H+standings), Pro snitt-deltas (spelresultat + bord), Höjdpunkter, UpcomingPanel + the `usePro` seam. Web keeps the wide two-column desktop layout (phone n/a). |
 | Match bordsvy (2v2 delmatch) | ✅ `matcher/[id]/_components/DelmatchBoard` | ✅ `components/DelmatchBoard` | Both (2026-08-25). Shared `computeDelmatcher` in `@bowlkollen/core`. |
 | Match "hetaste bordet" (rivalry) | ✅ `matcher/[id]/_components/RivalryCallout` | ✅ `components/RivalryCallout` | Both (2026-08-25). Same `get_match_rivalry` RPC. |
 | Player delmatch/career record | ✅ `players/[id]/_components/PlayerDelmatchCard` | ✅ `components/PlayerDelmatchCard` | Both (2026-08-25). Same `get_player_delmatch` RPC + core `computePlayerDelmatchRecord`. |
