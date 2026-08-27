@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import {
   SectionList,
@@ -11,54 +11,10 @@ import { ListSkeleton } from '@/components/Skeleton';
 import { PressableScale } from '@/components/PressableScale';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useToggleFollow, type FollowEntityType } from '@/lib/follows';
-import { supabase } from '@/lib/supabase';
+import { useToggleFollow } from '@/lib/follows';
+import { useMyFollows, type FollowItem } from '@/lib/feed-follows';
 import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
-type FollowItem = { type: FollowEntityType; id: string; name: string; sub: string | null };
-
-function useMyFollows() {
-  return useQuery({
-    queryKey: ['follows', 'detail'],
-    queryFn: async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return { teams: [] as FollowItem[], players: [] as FollowItem[] };
-
-      const { data: rows } = await supabase
-        .from('follows')
-        .select('entity_type, entity_id')
-        .eq('user_id', session.user.id);
-
-      const teamIds = (rows ?? []).filter((r) => r.entity_type === 'team').map((r) => Number(r.entity_id));
-      const playerIds = (rows ?? []).filter((r) => r.entity_type === 'player').map((r) => r.entity_id);
-
-      const [teamsRes, playersRes] = await Promise.all([
-        teamIds.length
-          ? supabase.from('bits_teams').select('bits_team_id, name, club_name').in('bits_team_id', teamIds)
-          : Promise.resolve({ data: [] }),
-        playerIds.length
-          ? supabase.from('bits_players').select('public_id, first_name, sur_name').in('public_id', playerIds)
-          : Promise.resolve({ data: [] }),
-      ]);
-
-      const teams: FollowItem[] = (teamsRes.data ?? []).map((t) => ({
-        type: 'team',
-        id: String(t.bits_team_id),
-        name: t.name,
-        sub: t.club_name && t.club_name !== t.name ? t.club_name : null,
-      }));
-      const players: FollowItem[] = (playersRes.data ?? []).map((p) => ({
-        type: 'player',
-        id: p.public_id,
-        name: `${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim(),
-        sub: null,
-      }));
-      return { teams, players };
-    },
-  });
-}
 
 export default function Following() {
   const router = useRouter();
