@@ -59,7 +59,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Avatars (identity) | ✅ `IdentityAvatar` (2026-08-27, photo-ready `imageUrl`) | ✅ `IdentityAvatar` | **Parity** — web ported native's ring+sheen avatar; both take `imageUrl`. Profile-photo upload (bucket + claim field + moderation) not built on either yet. |
 | **Auto-Story Engine** | ✅ (BITS, fixed 2026-08-18) | ✅ read+render (2026-08-18) | **Parity on consumption.** Generation stays server-side on the web brain (cron/route writes `team_events`); native reads by `bits_team_id` (`lib/story-events.ts`) and renders `StoryCard`. The "Remember" pillar is now on both. |
 | Follow (players/teams) | ✅ `/following` | ✅ `/following` (`follows.ts`) | Both (IG-style counts). |
-| Discover / Hitta | ✅ `/discover` | ✅ `(tabs)/discover` | Both. |
+| Discover / Hitta | ✅ `/discover` (Explore rebuild 2026-08-28) | 🟡 `(tabs)/discover` (search + sections) | **Web ahead** — web is now IG-Explore: one universal search (players/lag/hallar) + a diversified mixed mosaic (scores/matches/spotlights/house-ad, shared `diversifyByKind`), player tiles on `PlayerAvatar`. Native still the older search + UTFORSKA sections — port the mosaic + centre search. Shops/brands tiles pending those entities. |
 
 ## World 4 — Competitions
 
