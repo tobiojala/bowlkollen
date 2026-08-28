@@ -11,6 +11,7 @@ import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
 import { SEASON } from '@/lib/constants'
 import ClaimPanel from './_components/ClaimPanel'
 import { AvatarUpload } from '@/components/AvatarUpload'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import CaptainSection from './_components/CaptainSection'
 import SelectedCard from './_components/SelectedCard'
 import NextMatchCard from './_components/NextMatchCard'
@@ -101,7 +102,9 @@ export default function ProfilePage() {
 
   const identityInner = (
     <>
-      {avatarUrl ? (
+      {verified ? (
+        <PlayerAvatar publicId={claim!.publicId} name={displayName} size={60} />
+      ) : avatarUrl ? (
         <Image src={avatarUrl} alt={displayName} width={60} height={60} style={{ borderRadius: '50%', flexShrink: 0 }} />
       ) : (
         <div style={{ width: 60, height: 60, borderRadius: '50%', background: SURFACE2, flexShrink: 0,

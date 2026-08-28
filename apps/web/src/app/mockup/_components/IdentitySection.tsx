@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
 import ProfileTrend from '@/components/ProfileTrend'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { ActionRow, ActionButton } from '@/components/ui/primitives'
 import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
@@ -51,12 +52,14 @@ interface IdentitySectionProps {
   onOpenCard?: () => void
   onOpenH2H?: () => void
   onShare?: () => void
+  /** public_id of the profile's player — resolves their approved photo. */
+  avatarPublicId?: string
 }
 
 export default function IdentitySection({
   data, identity, bkTopPct, licenceAverage, bkRating, level, achievements = [],
   bkProgress, rankingPts, isOwner = false, showFollow = true,
-  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare,
+  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare, avatarPublicId,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
@@ -124,10 +127,7 @@ export default function IdentitySection({
 
       {/* Identity header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-          background: '#1c2127', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 17, fontWeight: 900, color: GOLD, letterSpacing: -0.5 }}>{identity.initials}</span>
-        </div>
+        <PlayerAvatar publicId={avatarPublicId} name={identity.name} size={56} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>

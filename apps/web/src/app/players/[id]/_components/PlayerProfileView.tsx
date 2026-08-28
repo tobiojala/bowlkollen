@@ -174,6 +174,7 @@ export default function PlayerProfileView({
           <IdentitySection
             data={data}
             identity={identity}
+            avatarPublicId={playerId}
             bkTopPct={bkTopPct}
             licenceAverage={licenceAverage ?? undefined}
             bkRating={null}                /* launch state: "kommer snart" */
