@@ -68,6 +68,22 @@ function ScoreTile({ s }: { s: BitsTopScore }) {
   )
 }
 
+// A strong recent result, number-forward (gold when big) → the player. Brings
+// the mockup's "nice result / high game" variety from historical data.
+function ResultTile({ p }: { p: RecentPlayer }) {
+  const gold = (p.last_total ?? 0) >= 750
+  return (
+    <Link href={`/players/${p.public_id}`} style={card}>
+      <div style={{ padding: 15 }}>
+        <span style={{ ...kick, color: gold ? COLOR.gold : COLOR.ink3 }}>RESULTAT</span>
+        <div style={{ fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', fontSize: 44, fontWeight: 800, letterSpacing: '-1px', lineHeight: 1, marginTop: 6, color: gold ? COLOR.gold : COLOR.ink }}>{p.last_total}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: COLOR.ink, marginTop: 6 }}>{shortName(p.name)}</div>
+        {!!p.club_name && <div style={sub}>{p.club_name}</div>}
+      </div>
+    </Link>
+  )
+}
+
 function PlayerTile({ p }: { p: RecentPlayer }) {
   const meta = [p.last_total ? `Senaste ${p.last_total}` : null, p.club_name].filter(Boolean).join(' · ')
   return (
@@ -127,11 +143,15 @@ export function ExploreMosaic() {
 
   // Dedupe: a player featured as an elite top-serie won't also show as a spotlight.
   const scoredIds = new Set(scores.slice(0, 8).map((s) => s.publicId).filter(Boolean) as string[])
+  const pool = players.filter((p) => !scoredIds.has(p.public_id))
+  // The strongest recent results become number-forward tiles; the rest spotlights.
+  const withTotal = pool.filter((p) => p.last_total != null).sort((a, b) => (b.last_total ?? 0) - (a.last_total ?? 0))
+  const resultIds = new Set(withTotal.slice(0, 14).map((p) => p.public_id))
 
-  // House ad + a hall sprinkled every ~9 player tiles (reserved ad/centre slots).
   const tiles: Tile[] = [
     ...scores.slice(0, 8).map((s) => ({ kind: 'score', key: `s${s.matchId}-${s.playerName}`, node: <ScoreTile s={s} /> })),
-    ...players.filter((p) => !scoredIds.has(p.public_id)).map((p) => ({ kind: 'player', key: `p${p.public_id}`, node: <PlayerTile p={p} /> })),
+    ...withTotal.slice(0, 14).map((p) => ({ kind: 'result', key: `r${p.public_id}`, node: <ResultTile p={p} /> })),
+    ...pool.filter((p) => !resultIds.has(p.public_id)).map((p) => ({ kind: 'player', key: `p${p.public_id}`, node: <PlayerTile p={p} /> })),
     ...centers.slice(0, 4).map((c) => ({ kind: 'center', key: `c${c.id}`, node: <CenterTile c={c} /> })),
     { kind: 'promo', key: 'house-promo', node: <PromoTile /> },
   ]
