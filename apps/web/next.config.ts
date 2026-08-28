@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: '*.googleusercontent.com' },
       { protocol: 'https', hostname: 'bits.swebowl.se' },
+      // Supabase Storage — player profile photos in the `avatars` bucket.
+      { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
   },
   // Dev only: Next 16 blocks cross-origin requests to dev assets, which breaks

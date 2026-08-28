@@ -10,6 +10,7 @@ import { useSession, usePlayerBitsResults, useFollows } from '@/lib/queries'
 import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
 import { SEASON } from '@/lib/constants'
 import ClaimPanel from './_components/ClaimPanel'
+import { AvatarUpload } from '@/components/AvatarUpload'
 import CaptainSection from './_components/CaptainSection'
 import SelectedCard from './_components/SelectedCard'
 import NextMatchCard from './_components/NextMatchCard'
@@ -206,6 +207,9 @@ export default function ProfilePage() {
             <span style={{ fontSize: 14, color: INK3 }}>Din spelarkoppling väntar på granskning.</span>
           </div>
         )}
+
+        {/* Profile photo — verified players only (RPC also blocks juniors) */}
+        {verified && claim && <AvatarUpload publicId={claim.publicId} name={claim.name} />}
 
         {/* "Du är uttagen" — a captain published a lineup you're in */}
         <SelectedCard />

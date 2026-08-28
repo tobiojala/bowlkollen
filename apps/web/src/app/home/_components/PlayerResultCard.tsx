@@ -5,7 +5,7 @@ import { Flame } from 'lucide-react'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { SCORE } from '@/lib/constants'
 import FollowButton from '@/components/FollowButton'
-import { IdentityAvatar } from '@/components/IdentityAvatar'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PostActions } from './PostActions'
 import { SerieBars } from './SerieBars'
 import type { FeedPlayerResult } from '@/lib/types'
@@ -37,7 +37,7 @@ export function PlayerResultCard({ item, reaction, onLike, onSave }: {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
         <Link href={`/players/${item.playerId}`} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], flex: 1, minWidth: 0, textDecoration: 'none' }}>
-          <IdentityAvatar name={item.playerName} size={44} />
+          <PlayerAvatar publicId={item.playerId} name={item.playerName} size={44} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.playerName}</div>
             {item.opponent && <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 1 }}>mot {item.opponent}</div>}

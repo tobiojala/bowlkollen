@@ -5,7 +5,7 @@ import { useState } from 'react'
 import Reveal from '@/components/Reveal'
 import FollowButton from '@/components/FollowButton'
 import PublicHeader from '@/components/PublicHeader'
-import { IdentityAvatar } from '@/components/IdentityAvatar'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import ProfileTrend from '@/components/ProfileTrend'
 import { matchTrendPoints } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
@@ -104,7 +104,7 @@ export default function PlayerProfileView({
         <PublicHeader />
         <div style={{ maxWidth: 600, margin: '0 auto', padding: '32px 20px 120px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <IdentityAvatar name={identity.name} size={56} />
+            <PlayerAvatar publicId={playerId} name={identity.name} size={56} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
               <div style={{ fontSize: 13, color: 'rgba(244,245,247,0.64)', marginTop: 3 }}>{identity.teamLabel}</div>

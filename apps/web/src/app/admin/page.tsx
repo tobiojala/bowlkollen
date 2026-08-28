@@ -167,12 +167,11 @@ export default function AdminPage() {
               {t.label}
             </button>
           ))}
-          <Link href="/admin/players" style={{ flex: 1, background: 'transparent', border: '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            Spelare
-          </Link>
-          <Link href="/admin/bits" style={{ flex: 1, background: 'transparent', border: '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            BITS
-          </Link>
+          {([['/admin/players', 'Spelare'], ['/admin/bits', 'BITS'], ['/admin/avatars', 'Bilder']] as const).map(([href, label]) => (
+            <Link key={href} href={href} style={{ flex: 1, background: 'transparent', border: '1px solid transparent', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, color: C.textMuted, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {label}
+            </Link>
+          ))}
         </div>
 
         {/* LIVE SCORING TAB */}
