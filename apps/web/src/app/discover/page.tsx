@@ -9,7 +9,8 @@ import { playerSearchTokens } from '@bowlkollen/core'
 import { STALE } from '@/lib/constants'
 import { COLOR } from '@/lib/brand'
 import FollowButton from '@/components/FollowButton'
-import { DiscoverExplore } from './_components/DiscoverExplore'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
+import { ExploreMosaic } from './_components/ExploreMosaic'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -22,15 +23,11 @@ type PlayerHit = {
   lastVenue: string | null
 }
 type TeamHit = { bitsTeamId: number; bitsClubId: number; name: string; clubName: string | null }
+type CenterHit = { id: number; name: string; city: string | null }
 
 const SEARCH_MIN = 2
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
-}
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase()
@@ -38,30 +35,10 @@ function initials(name: string) {
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
-type RawRecentPlayer = {
-  public_id: string; name: string; club_name: string | null
-  last_total: number | null; last_date: string | null; hall_name: string | null
-}
-
-function useRecentPlayers() {
-  return useQuery({
-    queryKey: ['discover', 'recent'],
-    queryFn: async (): Promise<PlayerHit[]> => {
-      const { data, error } = await createClient().rpc('get_discover_recent_players', { p_limit: 40 })
-      if (error) throw error
-      return (data as RawRecentPlayer[] ?? []).map(p => ({
-        id: p.public_id, name: p.name, teamName: p.club_name,
-        lastTotal: p.last_total, lastDate: p.last_date ?? '', lastVenue: p.hall_name,
-      }))
-    },
-    staleTime: STALE.DEFAULT,
-  })
-}
-
 function useSearch(q: string) {
   return useQuery({
     queryKey: ['discover', 'search', q],
-    queryFn: async (): Promise<{ players: PlayerHit[]; teams: TeamHit[] }> => {
+    queryFn: async (): Promise<{ players: PlayerHit[]; teams: TeamHit[]; centers: CenterHit[] }> => {
       const supabase = createClient()
       const term     = `%${q.trim()}%`
       // Full-name search: AND each token across first/sur name (see playerSearchTokens).
@@ -69,10 +46,12 @@ function useSearch(q: string) {
       for (const w of playerSearchTokens(q)) {
         playerQuery = playerQuery.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
       }
-      const [pr, tr] = await Promise.all([
+      const [pr, tr, cr] = await Promise.all([
         playerQuery.limit(8),
         supabase.from('bits_teams').select('bits_team_id,bits_club_id,name,club_name')
           .or(`name.ilike.${term},club_name.ilike.${term}`).limit(6),
+        supabase.from('bowling_centers').select('id,name,city')
+          .or(`name.ilike.${term},city.ilike.${term}`).limit(6),
       ])
       const players: PlayerHit[] = (pr.data ?? []).map(p => ({
         id: p.public_id, name: `${p.first_name} ${p.sur_name}`.trim(),
@@ -83,57 +62,12 @@ function useSearch(q: string) {
         .map(t => ({
           bitsTeamId: t.bits_team_id, bitsClubId: t.bits_club_id, name: t.name, clubName: t.club_name,
         }))
-      return { players, teams }
+      const centers: CenterHit[] = (cr.data ?? []).map(c => ({ id: c.id, name: c.name, city: c.city }))
+      return { players, teams, centers }
     },
     enabled: q.trim().length >= SEARCH_MIN,
     staleTime: STALE.DEFAULT,
   })
-}
-
-// ── Player card (2×2 grid) ────────────────────────────────────────────────────
-
-function PlayerCard({ p }: { p: PlayerHit }) {
-  const venue    = p.lastVenue ?? (p.lastDate ? formatDate(p.lastDate) : null)
-  const activity = [p.lastTotal ? `${p.lastTotal}` : null, venue].filter(Boolean).join(' · ')
-
-  return (
-    <div style={{ background: COLOR.surface, borderRadius: 16, padding: '14px',
-      display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-      {/* Header: avatar left, name + team right */}
-      <Link href={`/players/${p.id}`} style={{ textDecoration: 'none',
-        display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 20, background: COLOR.surface2,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: COLOR.ink3, letterSpacing: -0.5 }}>
-            {initials(p.name)}
-          </span>
-        </div>
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink, lineHeight: 1.25,
-            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-            {p.name}
-          </div>
-          {p.teamName && (
-            <div style={{ fontSize: 11, color: COLOR.ink4, marginTop: 3,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {p.teamName}
-            </div>
-          )}
-        </div>
-      </Link>
-
-      {/* Footer: activity left, follow right */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0, fontSize: 11, color: COLOR.ink3,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {activity}
-        </div>
-        <FollowButton entityType="player" entityId={p.id} size="sm" />
-      </div>
-
-    </div>
-  )
 }
 
 // ── List rows (search results) ────────────────────────────────────────────────
@@ -178,6 +112,19 @@ function TeamRow({ t }: { t: TeamHit }) {
   )
 }
 
+function CenterRow({ c }: { c: CenterHit }) {
+  return (
+    <Link href={`/hallar/${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+      borderBottom: `1px solid ${COLOR.hairline}`, textDecoration: 'none' }}>
+      <IdentityAvatar name={c.name} size={40} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+        {c.city && <div style={{ fontSize: 12, color: COLOR.ink3, marginTop: 2 }}>{c.city}</div>}
+      </div>
+    </Link>
+  )
+}
+
 function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase',
@@ -199,12 +146,11 @@ export default function DiscoverPage() {
     return () => clearTimeout(t)
   }, [query])
 
-  const { data: recent = [], isLoading: recentLoading } = useRecentPlayers()
   const { data: results, isLoading: searchLoading }     = useSearch(debouncedQ)
 
   const isSearching = debouncedQ.trim().length >= SEARCH_MIN
   const noResults   = isSearching && !searchLoading
-    && results?.players.length === 0 && results?.teams.length === 0
+    && results?.players.length === 0 && results?.teams.length === 0 && results?.centers.length === 0
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink }}>
@@ -228,7 +174,7 @@ export default function DiscoverPage() {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Sök spelare eller lag…"
+            placeholder="Sök spelare, lag, hallar…"
             autoComplete="off"
             style={{
               width: '100%', boxSizing: 'border-box',
@@ -271,30 +217,18 @@ export default function DiscoverPage() {
                 {results.teams.map(t => <TeamRow key={t.bitsTeamId} t={t} />)}
               </>
             )}
+            {results?.centers && results.centers.length > 0 && (
+              <>
+                <SectionLabel label="Hallar" />
+                {results.centers.map(c => <CenterRow key={c.id} c={c} />)}
+              </>
+            )}
           </>
         )}
         </div>{/* disc-narrow */}
 
-        {/* Default: browse sections */}
-        {!isSearching && (
-          <>
-            <DiscoverExplore />
-
-            <SectionLabel label="Aktiva spelare" />
-            {recentLoading ? (
-              <div className="disc-cards">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="skeleton"
-                    style={{ height: 148, borderRadius: 16, background: COLOR.surface }} />
-                ))}
-              </div>
-            ) : (
-              <div className="disc-cards">
-                {recent.map(p => <PlayerCard key={p.id} p={p} />)}
-              </div>
-            )}
-          </>
-        )}
+        {/* Default: the Explore mosaic — a mixed, diversified stream */}
+        {!isSearching && <ExploreMosaic />}
 
       </div>
     </main>
