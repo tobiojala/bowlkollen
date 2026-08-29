@@ -18,11 +18,9 @@ type Props = {
 // inside, columns are divided by hairlines, and each serie cell has room for the
 // score + its snitt-delta. Names first-class, tabular figures aligned.
 export function TeamScoreSection({ teamName, players, serieCount, total, isWinner, showDeltas }: Props) {
-  const grid: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: `minmax(0,1fr) repeat(${serieCount}, 60px) 64px`,
-    alignItems: 'stretch',
-  }
+  // Responsive grid: on mobile the fixed score columns shrink so the player name
+  // keeps real width (was collapsing to a single letter at ~360px).
+  const cls = `tss-${serieCount}`
   const colLabel: React.CSSProperties = {
     borderLeft: `1px solid ${COLOR.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: TYPE.micro, fontWeight: 700, color: COLOR.ink3, padding: `${SPACE[3]}px 0`,
@@ -30,6 +28,10 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
 
   return (
     <div style={{ marginBottom: SPACE[6] }}>
+      <style>{`
+        .${cls} { display: grid; grid-template-columns: minmax(0,1fr) repeat(${serieCount}, 56px) 60px; align-items: stretch; }
+        @media (max-width: 560px) { .${cls} { grid-template-columns: minmax(0,1fr) repeat(${serieCount}, 40px) 46px; } }
+      `}</style>
       <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
         {/* Team title bar — inside the card */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: `${SPACE[3]}px ${SPACE[4]}px`, borderBottom: `1px solid ${COLOR.hairline}` }}>
@@ -38,14 +40,14 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
         </div>
 
         {/* Column header — inside the card */}
-        <div style={{ ...grid, borderBottom: `1px solid ${COLOR.hairline}` }}>
+        <div className={cls} style={{ borderBottom: `1px solid ${COLOR.hairline}` }}>
           <span />
           {Array.from({ length: serieCount }, (_, i) => <span key={i} style={colLabel}>S{i + 1}</span>)}
           <span style={{ ...colLabel, paddingRight: SPACE[3] }}>TOT</span>
         </div>
 
         {players.map((p, ri) => (
-          <div key={p.name} style={{ ...grid, borderTop: ri === 0 ? 'none' : `1px solid ${COLOR.hairline}` }}>
+          <div key={p.name} className={cls} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${COLOR.hairline}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], minWidth: 0, padding: `${SPACE[3]}px 0 ${SPACE[3]}px ${SPACE[4]}px` }}>
               <span style={{ minWidth: 0, fontSize: TYPE.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {p.publicId
