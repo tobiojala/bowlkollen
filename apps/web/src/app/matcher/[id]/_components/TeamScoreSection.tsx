@@ -76,9 +76,9 @@ export function TeamScoreSection({ teamName, players, serieCount, total, isWinne
             </div>
             {players.map((p, ri) => (
               <div key={p.name} className={cls} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${COLOR.hairline}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], minWidth: 0, padding: `${SPACE[3]}px 0 ${SPACE[3]}px ${SPACE[4]}px` }}>
-                  <span style={{ minWidth: 0, fontSize: TYPE.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nameEl(p)}</span>
-                  {p.publicId && <FollowButton entityType="player" entityId={p.publicId} variant="icon" size="sm" />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2], minWidth: 0, padding: `${SPACE[3]}px ${SPACE[3]}px ${SPACE[3]}px ${SPACE[4]}px` }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nameEl(p)}</span>
+                  {p.publicId && <div style={{ flexShrink: 0 }}><FollowButton entityType="player" entityId={p.publicId} variant="icon" size="sm" /></div>}
                 </div>
                 {Array.from({ length: serieCount }, (_, gi) => {
                   const raw = p.games[gi] ?? 0, played = raw > 0
