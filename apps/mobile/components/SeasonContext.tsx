@@ -3,13 +3,13 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
 import { useMatchContext } from '@/lib/match-context';
-import { COLOR, FONT, SPACE, TYPE } from '@/theme';
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
 const ord = (n: number) => (n <= 2 ? `${n}:a` : `${n}:e`);
 const short = (n: string) => n.split(' ').slice(0, 3).join(' ');
 
 // H2H + standings context for a finished match — the season meaning behind the
-// scoreline, linking back into the division. Web parity (SeasonContext).
+// scoreline, as small pills that link back into the division. Web parity.
 export function SeasonContext({ divisionId, seasonId, homeTeamId, awayTeamId, homeName, awayName, tier }: {
   divisionId: number | null; seasonId: number;
   homeTeamId: number | null; awayTeamId: number | null;
@@ -28,22 +28,34 @@ export function SeasonContext({ divisionId, seasonId, homeTeamId, awayTeamId, ho
   const hasStandings = !!(homeRank || awayRank);
   if (!h2hText && !hasStandings) return null;
 
-  const body = (
-    <View style={styles.wrap}>
-      {!!h2hText && <Text style={styles.h2h}>{h2hText}</Text>}
-      {hasStandings && (
-        <Text style={styles.standings}>
-          {homeRank ? `${short(homeName)} ${ord(homeRank)}` : ''}{homeRank && awayRank ? ' · ' : ''}{awayRank ? `${short(awayName)} ${ord(awayRank)}` : ''} i {tier}
-        </Text>
+  const standingsText = hasStandings
+    ? `${homeRank ? `${short(homeName)} ${ord(homeRank)}` : ''}${homeRank && awayRank ? ' · ' : ''}${awayRank ? `${short(awayName)} ${ord(awayRank)}` : ''} · ${tier}`
+    : null;
+
+  return (
+    <View style={styles.row}>
+      {!!h2hText && (
+        <View style={styles.pill}>
+          <Text style={styles.pillText} numberOfLines={1}>{h2hText}</Text>
+        </View>
+      )}
+      {!!standingsText && (
+        divisionId ? (
+          <PressableScale style={styles.pill} onPress={() => router.push(`/division/${divisionId}`)}>
+            <Text style={styles.pillText} numberOfLines={1}>{standingsText}</Text>
+          </PressableScale>
+        ) : (
+          <View style={styles.pill}>
+            <Text style={styles.pillText} numberOfLines={1}>{standingsText}</Text>
+          </View>
+        )
       )}
     </View>
   );
-
-  return divisionId ? <PressableScale onPress={() => router.push(`/division/${divisionId}`)}>{body}</PressableScale> : body;
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 3, marginTop: SPACE[3] },
-  h2h: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold, textAlign: 'center' },
-  standings: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[2], justifyContent: 'center', marginTop: SPACE[4] },
+  pill: { maxWidth: '100%', backgroundColor: COLOR.surface, borderRadius: RADIUS.pill, paddingVertical: SPACE[2], paddingHorizontal: SPACE[4] },
+  pillText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
 });

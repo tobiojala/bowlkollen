@@ -83,7 +83,26 @@ export default function MatchPage() {
         )
       ) : (
         <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 56 }]}>
-          {!!match.division_name && <Text style={styles.kicker}>{match.division_name}</Text>}
+          <Text style={styles.kicker}>
+            {[match.division_name, formatMatchDate(match.match_date)].filter(Boolean).join('  ·  ')}
+          </Text>
+
+          {finished && (match.hall_name || match.oil_pattern) && (
+            <View style={styles.venueRow}>
+              {match.hall_name ? (
+                <View style={styles.metaLink}>
+                  <Ionicons name="location-outline" size={15} color={COLOR.ink2} />
+                  <Text style={styles.metaText} numberOfLines={1}>{[match.hall_name, match.hall_city].filter(Boolean).join(', ')}</Text>
+                </View>
+              ) : <View />}
+              {!!match.oil_pattern && (
+                <View style={styles.metaLink}>
+                  <Ionicons name="water-outline" size={15} color={COLOR.ink2} />
+                  <Text style={styles.metaText} numberOfLines={1}>{match.oil_pattern}</Text>
+                </View>
+              )}
+            </View>
+          )}
 
           <View style={styles.hero}>
             <HeroTeam name={match.home_team_name} won={homeWon} finished={finished} onPress={() => openTeam(match.home_bits_team_id)} />
@@ -104,12 +123,9 @@ export default function MatchPage() {
 
           {hasPins && (
             <Text style={styles.pins}>
-              {match.home_score} – {match.away_score} käglor
+              {match.home_score} – {match.away_score} <Text style={styles.pinsUnit}>käglor</Text>
             </Text>
           )}
-          <Text style={styles.meta}>
-            {[formatMatchDate(match.match_date), match.hall_name].filter(Boolean).join('  ·  ')}
-          </Text>
 
           {finished && <SeasonContext divisionId={match.bits_division_id} seasonId={match.season_id} homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} homeName={match.home_team_name} awayName={match.away_team_name} tier={divisionTier(match.division_name ?? '')} />}
           {!finished && <UpcomingPanel homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} matchDatetime={match.match_datetime} matchDate={match.match_date} hallName={match.hall_name} hallCity={match.hall_city} oilPattern={match.oil_pattern} homeName={match.home_team_name} awayName={match.away_team_name} />}
@@ -257,8 +273,11 @@ const styles = StyleSheet.create({
   pointsLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5 },
   heroDate: { color: COLOR.ink, fontSize: TYPE.title, fontFamily: FONT.bold },
 
-  pins: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold, textAlign: 'center', marginTop: SPACE[3], fontVariant: ['tabular-nums'] },
-  meta: { color: COLOR.ink3, fontSize: TYPE.caption, textAlign: 'center', marginTop: SPACE[1] },
+  pins: { color: COLOR.ink, fontSize: 17, fontFamily: FONT.bold, textAlign: 'center', marginTop: SPACE[3], fontVariant: ['tabular-nums'] },
+  pinsUnit: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  venueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3], marginTop: SPACE[4] },
+  metaLink: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
+  metaText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1 },
 
   best: {
     flexDirection: 'row',
