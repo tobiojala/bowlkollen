@@ -6,6 +6,20 @@ import { STALE } from '@/lib/constants'
 import { computeStandings } from '@/lib/division-standings'
 import { toMatchRow, type DbMatchRow } from '@/lib/bits-matches'
 
+// Resolve a match's hall name → bowling_centers.id so the venue can link to its
+// page. bits_matches carries only hall_name (no id), so we match by name.
+export function useCenterId(hallName: string | null) {
+  return useQuery({
+    queryKey: ['center-id', hallName],
+    enabled: !!hallName,
+    staleTime: STALE.LONG,
+    queryFn: async (): Promise<number | null> => {
+      const { data } = await createClient().from('bowling_centers').select('id').ilike('name', hallName!).limit(1).maybeSingle()
+      return (data as { id: number } | null)?.id ?? null
+    },
+  })
+}
+
 export type MatchContext = {
   homeRank: number | null
   awayRank: number | null

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MapPin, Droplets } from 'lucide-react'
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { divisionTier, TIER_COLOR } from '@/lib/division-standings'
 import type { BitsMatchDetail, BitsMatchPlayerResult } from '@/lib/types'
@@ -14,6 +14,7 @@ import { RivalryCallout } from './RivalryCallout'
 import { MatchBest } from './MatchBest'
 import { Hojdpunkter } from './Hojdpunkter'
 import { SeasonContext } from './SeasonContext'
+import { useCenterId } from './use-match-context'
 import { UpcomingPanel } from './UpcomingPanel'
 import { ProGate } from '@/components/ProGate'
 import { useMatchDelmatch, useMatchRivalry, serieScoresByPlayer } from './use-match-bord'
@@ -57,6 +58,7 @@ export default function MatcherClient({ match, results }: Props) {
   const delmatch             = bord?.summary
   const hasDelmatch          = !!delmatch?.hasData
   const { data: rivalry }    = useMatchRivalry(match.bits_match_id, hasDelmatch)
+  const { data: centerId }   = useCenterId(match.hall_name)
   const openBord = () => bordRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   // Go back to wherever you came from (division, team schedule, feed…) rather
   // than a fixed destination; fall back to Schema on a cold/deep-link open.
@@ -86,6 +88,11 @@ export default function MatcherClient({ match, results }: Props) {
     fontSize: 28, fontWeight: won ? 800 : 600, color: won ? COLOR.ink : COLOR.ink2, lineHeight: 1.15,
     letterSpacing: '-0.01em', textDecoration: 'none', display: 'block',
   })
+  const metaLink: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 0,
+    fontSize: TYPE.caption, color: COLOR.ink2, textDecoration: 'none',
+    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+  }
 
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
@@ -138,6 +145,26 @@ export default function MatcherClient({ match, results }: Props) {
           <span style={{ fontSize: TYPE.caption, color: COLOR.ink2, textTransform: 'capitalize' }}>· {dateStr(match.match_date)}</span>
         </div>
 
+        {/* Venue (left) + oil profile (right) — clickable, under the division line */}
+        {(match.hall_name || match.oil_pattern) && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3], flexWrap: 'wrap', marginBottom: SPACE[4] }}>
+            {match.hall_name ? (
+              centerId ? (
+                <Link href={`/hallar/${centerId}`} style={metaLink}>
+                  <MapPin size={14} />{[match.hall_name, match.hall_city].filter(Boolean).join(', ')}
+                </Link>
+              ) : (
+                <span style={metaLink}><MapPin size={14} />{[match.hall_name, match.hall_city].filter(Boolean).join(', ')}</span>
+              )
+            ) : <span />}
+            {match.oil_pattern && (
+              <Link href={`/oljeprofiler?q=${encodeURIComponent(match.oil_pattern)}`} style={metaLink}>
+                <Droplets size={14} />{match.oil_pattern}
+              </Link>
+            )}
+          </div>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[4] }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {match.home_bits_team_id
@@ -154,8 +181,8 @@ export default function MatcherClient({ match, results }: Props) {
                 </div>
                 <div style={{ fontSize: TYPE.micro, fontWeight: 800, letterSpacing: '0.14em', color: COLOR.ink3, marginTop: SPACE[1] }}>BANPOÄNG</div>
                 {match.home_score != null && match.away_score != null && (
-                  <div style={{ fontSize: TYPE.caption, color: COLOR.ink2, marginTop: SPACE[1], fontVariantNumeric: 'tabular-nums' }}>
-                    {match.home_score} – {match.away_score} pins
+                  <div style={{ fontSize: 17, fontWeight: 800, color: COLOR.ink, marginTop: SPACE[2], fontVariantNumeric: 'tabular-nums' }}>
+                    {match.home_score} – {match.away_score} <span style={{ fontSize: 13, fontWeight: 700, color: COLOR.ink3 }}>pins</span>
                   </div>
                 )}
               </>
@@ -170,21 +197,12 @@ export default function MatcherClient({ match, results }: Props) {
           </div>
         </div>
 
-        {/* Head-to-head — the matchup hook, up with the score (free) */}
-        {match.is_finished && <SeasonContext match={match} tier={tier} part="h2h" />}
-
-        {/* Venue + oil + standings, centered under the score (finished matches;
-            upcoming matches carry these in the kommande-panel instead) */}
+        {/* Season context — H2H + standings as pills under the header */}
         {match.is_finished && (
-          <>
-            <div style={{ textAlign: 'center', marginTop: SPACE[6], paddingTop: SPACE[6], borderTop: `1px solid ${COLOR.hairline}`, fontSize: TYPE.caption, color: COLOR.ink2 }}>
-              {[match.hall_name, match.hall_city].filter(Boolean).join(', ')}
-              {match.oil_pattern && <>{(match.hall_name || match.hall_city) ? '  ·  ' : ''}Oljeprofil: {match.oil_pattern}</>}
-            </div>
-            <div style={{ textAlign: 'center', marginTop: SPACE[2] }}>
-              <SeasonContext match={match} tier={tier} part="standings" />
-            </div>
-          </>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[2], justifyContent: 'center', marginTop: SPACE[6] }}>
+            <SeasonContext match={match} tier={tier} part="h2h" />
+            <SeasonContext match={match} tier={tier} part="standings" />
+          </div>
         )}
         </div>{/* /hero focal width */}
 
