@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
@@ -63,7 +63,6 @@ export default function IdentitySection({
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
-  const heroRowRef = useRef<HTMLDivElement>(null)
 
   const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
 
@@ -111,14 +110,6 @@ export default function IdentitySection({
       footerLeft: 'Max 8 poäng per match',
     }] : []),
   ]
-
-  const handleHeroScroll = () => {
-    const el = heroRowRef.current
-    if (!el) return
-    const child = el.firstElementChild as HTMLElement | null
-    const step = (child?.offsetWidth ?? el.clientWidth) + 24
-    setActiveHero(Math.min(heroCards.length - 1, Math.max(0, Math.round(el.scrollLeft / step))))
-  }
 
   const visibleAchievements = achievements.filter(a => a.earned || a.near)
 
@@ -171,14 +162,26 @@ export default function IdentitySection({
         </div>
       )}
 
-      {/* Hero deck: one number per card — swipe for BK Rating and Rankingpoäng */}
+      {/* Hero deck: a pill toggle over one card at a time — tap, don't swipe, so
+          each card's graph keeps its horizontal drag-scrub (parity with native
+          HeroDeck). */}
       <div className="hero-in" style={{ marginTop: 24 }}>
-        <div ref={heroRowRef} onScroll={handleHeroScroll} className="noscroll"
-          style={{ display: 'flex', gap: 24, overflowX: 'auto', scrollSnapType: 'x mandatory',
-            margin: '0 -20px', padding: '0 20px',
-            scrollbarWidth: 'none' } as React.CSSProperties}>
-          {heroCards.map(c => (
-            <div key={c.key} style={{ minWidth: '100%', scrollSnapAlign: 'center' }}>
+        {heroCards.length > 1 && (
+          <div style={{ display: 'flex', gap: 4, width: 'fit-content', margin: '0 auto 16px',
+            background: '#14171c', borderRadius: 999, padding: 4 }}>
+            {heroCards.map((c, i) => (
+              <button key={c.key} onClick={() => setActiveHero(i)} aria-label={c.label}
+                style={{ border: 'none', cursor: 'pointer', minHeight: 40, padding: '0 16px', borderRadius: 999,
+                  background: i === activeHero ? '#1c2127' : 'transparent',
+                  color: i === activeHero ? INK : INK3, fontSize: 13, fontWeight: 600,
+                  transition: 'background 0.15s, color 0.15s' }}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {[heroCards[activeHero]].map(c => (
+            <div key={c.key}>
               {c.ready === false ? (
                 /* "Kommer snart" launch state — no live number until the engine has data */
                 <div onClick={onOpenBkRating} style={{ cursor: 'pointer' }}>
@@ -221,17 +224,6 @@ export default function IdentitySection({
               )}
             </div>
           ))}
-        </div>
-        {/* Deck dots */}
-        {heroCards.length > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
-            {heroCards.map((c, i) => (
-              <div key={c.key} style={{ height: 6, borderRadius: 3, transition: 'all 0.25s ease',
-                width: i === activeHero ? 18 : 6,
-                background: i === activeHero ? 'rgba(244,245,247,0.7)' : 'rgba(244,245,247,0.18)' }} />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Action row */}

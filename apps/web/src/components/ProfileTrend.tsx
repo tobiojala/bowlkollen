@@ -87,16 +87,21 @@ export default function ProfileTrend({
   const [a, b] = tailStart <= active ? [tailStart, active] : [active, tailStart]
   const tailPath = xs.slice(a, b + 1).map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[a + i].toFixed(1)}`).join(' ')
 
-  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  // Scrub to whatever x-coordinate the pointer/finger is at. Shared by mouse
+  // (hover) and touch (drag) so the graph is interactive on mobile too — the
+  // page still scrolls vertically because the svg sets touch-action: pan-y.
+  const scrubToX = (clientX: number) => {
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect || n < 2) return
-    const px = ((e.clientX - rect.left) / rect.width) * W
+    const px = ((clientX - rect.left) / rect.width) * W
     const i = Math.max(0, Math.min(n - 1, Math.round(((px - PAD_L) / dataW) * (n - 1))))
     setDir(i > prev.current ? 1 : i < prev.current ? -1 : dir)
     prev.current = i
     setActive(i)
     setHover(true)
   }
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => scrubToX(e.clientX)
+  const onTouch = (e: React.TouchEvent<SVGSVGElement>) => { const t = e.touches[0]; if (t) scrubToX(t.clientX) }
   const onLeave = () => { setActive(n - 1); prev.current = n - 1; setHover(false) }
 
   const onClick = () => { if (onSelect && hover && n) onSelect(active) }
@@ -127,7 +132,7 @@ export default function ProfileTrend({
       </div>
 
       {/* graph */}
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', cursor: onSelect ? 'pointer' : 'crosshair' }} onMouseMove={onMove} onMouseLeave={onLeave} onClick={onClick}>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', touchAction: 'pan-y', cursor: onSelect ? 'pointer' : 'crosshair' }} onMouseMove={onMove} onMouseLeave={onLeave} onTouchStart={onTouch} onTouchMove={onTouch} onTouchEnd={onLeave} onClick={onClick}>
         {n >= 2 && (
           <>
             <defs>

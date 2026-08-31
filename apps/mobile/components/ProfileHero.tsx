@@ -1,6 +1,7 @@
+import { BkRatingSoon } from '@/components/BkRatingSoon';
 import { HeroDeck } from '@/components/HeroDeck';
 import { ProfileTrend } from '@/components/ProfileTrend';
-import { cumulativeAvgPoints, rollingRatingPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
+import { cumulativeAvgPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
 import { COLOR } from '@/theme';
 
 // The profile's hero deck: Säsongssnitt + BK-rating, each a big number with the
@@ -19,7 +20,6 @@ export function ProfileHero({
   onInfoRating?: () => void;
 }) {
   const snittTrend = cumulativeAvgPoints(history);
-  const ratingTrend = rollingRatingPoints(history);
   // The curve is OUR running league-series average — never BITS' official snitt
   // (which is a broader, scalar number). Keep the curve honestly labeled as
   // "Seriesnitt" and surface the official BITS snitt separately as the caption,
@@ -59,21 +59,9 @@ export function ProfileHero({
         {
           key: 'bk',
           label: 'BK-rating',
-          element: (
-            <ProfileTrend
-              points={ratingTrend}
-              label="BK-RATING"
-              restValue={stats.rating}
-              delta={ratingTrend.length >= 2 ? stats.rating - ratingTrend[0].avg : null}
-              deltaSuffix="i år"
-              caption={`${stats.tier.label}${topPct != null ? ` · Topp ${topPct}%` : ''}`}
-              lineWidth={5}
-              tailLength={9}
-              yPad={0.05}
-              onInfo={onInfoRating}
-              footerLeft="Betyg 0–100 mot fältet"
-            />
-          ),
+          // Launch state — the rating engine isn't live yet, so show "Kommer snart"
+          // rather than an unfinished number (web parity).
+          element: <BkRatingSoon onInfo={onInfoRating} />,
         },
       ]}
     />
