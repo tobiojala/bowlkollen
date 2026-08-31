@@ -1194,7 +1194,7 @@ export function useToggleReaction(eventId: string) {
 
 // ── BITS national match feed ──────────────────────────────────────────────────
 
-const BITS_FEED_COLS = 'bits_match_id,match_date,division_name,bits_division_id,home_team_name,away_team_name,home_bits_team_id,away_bits_team_id,home_result,away_result,is_finished,hall_name,hall_city'
+const BITS_FEED_COLS = 'bits_match_id,match_date,division_name,bits_division_id,home_team_name,away_team_name,home_bits_team_id,away_bits_team_id,home_result,away_result,home_score,away_score,is_finished,hall_name,hall_city'
 
 export function useBitsMatchFeed() {
   // Look back a full season so the feed always has Elitserien–Div 3 history

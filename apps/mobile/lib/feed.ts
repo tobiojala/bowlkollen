@@ -13,6 +13,8 @@ export type FeedMatch = {
   away_team_name: string;
   home_result: number;
   away_result: number;
+  home_score: number | null;
+  away_score: number | null;
   division_name: string;
   is_finished: boolean;
   hall_name: string;

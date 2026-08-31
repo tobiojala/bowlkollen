@@ -60,7 +60,7 @@ export function entityFeed(
   const idNum = Number(entity.id);
   const toMatch = (m: TeamMatch): FeedMatch => ({
     bits_match_id: m.bitsMatchId, match_date: m.date, home_team_name: m.homeName, away_team_name: m.awayName,
-    home_result: m.homeResult ?? 0, away_result: m.awayResult ?? 0, division_name: m.division, is_finished: m.isFinished, hall_name: m.hall ?? '',
+    home_result: m.homeResult ?? 0, away_result: m.awayResult ?? 0, home_score: m.homeScore, away_score: m.awayScore, division_name: m.division, is_finished: m.isFinished, hall_name: m.hall ?? '',
   });
   const matches: FeedItem[] = teamMatches
     .filter((m) => m.homeTeamId === idNum || m.awayTeamId === idNum)

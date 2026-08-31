@@ -76,6 +76,8 @@ export type BitsMatchFeed = {
   away_bits_team_id: number
   home_result:       number | null   // board points won (0-8)
   away_result:       number | null
+  home_score:        number | null   // total pinfall
+  away_score:        number | null
   is_finished:       boolean
   hall_name:         string | null
   hall_city:         string | null
@@ -84,8 +86,6 @@ export type BitsMatchFeed = {
 export type BitsMatchDetail = BitsMatchFeed & {
   season_id:      number
   match_datetime: string | null   // real kickoff wall-clock (naive Swedish local)
-  home_score:   number | null   // total pins
-  away_score:   number | null
   oil_pattern:  string | null
   round_id:     number | null
   scores_synced: boolean

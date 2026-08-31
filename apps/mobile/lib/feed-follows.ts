@@ -96,12 +96,14 @@ export function useFollowedPlayerResults(publicIds: string[]) {
 
 export type TeamMatch = {
   bitsMatchId: number; homeTeamId: number; awayTeamId: number; homeName: string; awayName: string;
-  homeResult: number | null; awayResult: number | null; date: string; division: string; hall: string | null; isFinished: boolean;
+  homeResult: number | null; awayResult: number | null; homeScore: number | null; awayScore: number | null;
+  date: string; division: string; hall: string | null; isFinished: boolean;
 };
 
 type TeamMatchRow = {
   bits_match_id: number; home_bits_team_id: number; away_bits_team_id: number; home_team_name: string; away_team_name: string;
-  home_result: number | null; away_result: number | null; match_date: string; division_name: string | null; hall_name: string | null; is_finished: boolean;
+  home_result: number | null; away_result: number | null; home_score: number | null; away_score: number | null;
+  match_date: string; division_name: string | null; hall_name: string | null; is_finished: boolean;
 };
 
 export function useFollowedMatches(teamIds: string[]) {
@@ -113,13 +115,14 @@ export function useFollowedMatches(teamIds: string[]) {
     queryFn: async (): Promise<TeamMatch[]> => {
       const inList = ids.join(',');
       const { data } = await supabase.from('bits_matches')
-        .select('bits_match_id,home_bits_team_id,away_bits_team_id,home_team_name,away_team_name,home_result,away_result,match_date,division_name,hall_name,is_finished')
+        .select('bits_match_id,home_bits_team_id,away_bits_team_id,home_team_name,away_team_name,home_result,away_result,home_score,away_score,match_date,division_name,hall_name,is_finished')
         .eq('season_id', CURRENT_SEASON)
         .or(`home_bits_team_id.in.(${inList}),away_bits_team_id.in.(${inList})`)
         .order('match_date', { ascending: false }).limit(60);
       return ((data ?? []) as TeamMatchRow[]).map((m) => ({
         bitsMatchId: m.bits_match_id, homeTeamId: m.home_bits_team_id, awayTeamId: m.away_bits_team_id,
         homeName: m.home_team_name, awayName: m.away_team_name, homeResult: m.home_result, awayResult: m.away_result,
+        homeScore: m.home_score, awayScore: m.away_score,
         date: m.match_date, division: m.division_name ?? '', hall: m.hall_name ?? null, isFinished: m.is_finished,
       }));
     },

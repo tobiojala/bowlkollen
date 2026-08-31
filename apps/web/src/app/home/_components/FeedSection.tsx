@@ -223,7 +223,8 @@ export function FeedSection({
           const r = reactions?.get(`m${m.bits_match_id}`) ?? { likes: 0, liked: false, saved: false }
           return <FeedMatchCard key={m.bits_match_id} reaction={r} onLike={toggleLike} onSave={toggleSave}
             match={{ bitsMatchId: m.bits_match_id, date: m.match_date, homeTeam: m.home_team_name, awayTeam: m.away_team_name,
-              homeResult: m.home_result, awayResult: m.away_result, division: m.division_name, hall: m.hall_name, finished: m.is_finished }} />
+              homeResult: m.home_result, awayResult: m.away_result, homeScore: m.home_score, awayScore: m.away_score,
+              division: m.division_name, hall: m.hall_name, finished: m.is_finished }} />
         }
         if (entry.kind === 'bits_score') {
           const s = entry.data
