@@ -17,6 +17,7 @@ import {
 type RawBitsMatch = {
   bits_match_id: number; match_date: string
   home_result: number | null; away_result: number | null
+  home_score: number | null; away_score: number | null
   home_bits_team_id: number | null; away_bits_team_id: number | null
   home_team_name: string; away_team_name: string; division_name: string | null
 }
@@ -28,7 +29,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
 
   const { data: matchesRaw } = await pub
     .from('bits_matches')
-    .select('bits_match_id, match_date, home_result, away_result, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, division_name')
+    .select('bits_match_id, match_date, home_result, away_result, home_score, away_score, home_bits_team_id, away_bits_team_id, home_team_name, away_team_name, division_name')
     .or(`home_bits_team_id.eq.${bitsTeamId},away_bits_team_id.eq.${bitsTeamId}`)
     .eq('is_finished', true)
     .gte('match_date', seasonFloor)
@@ -72,6 +73,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
 
     const payload: MatchResultPayload = {
       opponent_id: '', opponent_name: oppName, my_score: myScore, opp_score: oppScore,
+      my_pins: isHome ? m.home_score : m.away_score, opp_pins: isHome ? m.away_score : m.home_score,
       is_home: isHome, division: m.division_name ?? '', result,
       top_scorer: top ? { player_id: '', name: top.name, high_game: top.high } : null,
     }

@@ -63,7 +63,13 @@ export function KeyStat({ event, accent }: { event: TeamEvent; accent: string })
           <span style={{ color: COLOR.ink }}>
             <CountUp to={p.opp_score} delay={0.2} duration={0.9} />
           </span>
+          <span style={{ fontFamily: FONT.body, fontSize: TYPE.caption, fontWeight: 700, color: COLOR.ink3, marginLeft: 10, letterSpacing: '0.02em' }}>banpoäng</span>
         </div>
+        {p.my_pins != null && p.opp_pins != null && (
+          <span style={{ ...unitStyle, marginTop: SPACE[1], fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: COLOR.ink3 }}>
+            {p.my_pins} – {p.opp_pins} käglor
+          </span>
+        )}
         <span style={unitStyle}>
           {myTeamName ? `${myTeamName} · ${p.opponent_name}` : `mot ${p.opponent_name}`}
         </span>

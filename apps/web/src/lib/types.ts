@@ -312,7 +312,7 @@ export type MatchResultPayload = {
   division: string
   result: 'W' | 'D' | 'L'
   top_scorer: { player_id: string; name: string; high_game: number } | null
-  my_series?: number[]   // team pin totals per serie, used for bar chart
+  my_series?: number[]; my_pins?: number | null; opp_pins?: number | null   // serie bars + total-pinfall context for a banpoäng sweep
 }
 
 export type StreakPayload = {
