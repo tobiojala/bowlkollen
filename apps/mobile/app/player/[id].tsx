@@ -30,6 +30,7 @@ import { ProfileChips } from '@/components/ProfileChips';
 import { ProfileActions } from '@/components/ProfileActions';
 import { PlayerInfoSheet, type PlayerSheetKind } from '@/components/PlayerInfoSheet';
 import { MomentShareSheet } from '@/components/MomentShareSheet';
+import { MatchLogCard } from '@/components/MatchLogCard';
 import { MatchSheet } from '@/components/MatchSheet';
 import { WhatIf } from '@/components/WhatIf';
 import { Duell } from '@/components/Duell';
@@ -78,6 +79,7 @@ export default function PlayerPage() {
   const [sheet, setSheet] = useState<PlayerSheetKind>(null);
   const [shareMoment, setShareMoment] = useState<Moment | null>(null);
   const [matchSheet, setMatchSheet] = useState<PlayerMatch | null>(null);
+  const [showAllMatches, setShowAllMatches] = useState(false);
   const bg = useSharedValue(0);
   useEffect(() => {
     bg.value = sheet != null
@@ -210,26 +212,16 @@ export default function PlayerPage() {
                   </Text>
                 )}
               </View>
-              {historyDesc.map((h, i) => (
-                <PressableScale key={i} style={styles.matchRow} onPress={() => setMatchSheet(h as PlayerMatch)}>
-                  <View style={styles.matchText}>
-                    <Text style={styles.opponent} numberOfLines={1}>
-                      {h.is_home_team ? '' : '@ '}
-                      {h.opponent_name}
-                    </Text>
-                    <Text style={styles.matchMeta} numberOfLines={1}>
-                      {[
-                        formatMatchDate(h.match_date),
-                        h.division_name,
-                        h.series?.length ? h.series.join(' · ') : null,
-                      ]
-                        .filter(Boolean)
-                        .join('  ·  ')}
-                    </Text>
-                  </View>
-                  <Text style={styles.result}>{h.total_result}</Text>
-                </PressableScale>
-              ))}
+              <View style={styles.matchList}>
+                {(showAllMatches ? historyDesc : historyDesc.slice(0, 5)).map((h, i) => (
+                  <MatchLogCard key={i} match={h as PlayerMatch} onPress={() => setMatchSheet(h as PlayerMatch)} />
+                ))}
+                {historyDesc.length > 5 && !showAllMatches && (
+                  <PressableScale style={styles.moreBtn} onPress={() => setShowAllMatches(true)}>
+                    <Text style={styles.moreText}>Visa fler ({historyDesc.length - 5})</Text>
+                  </PressableScale>
+                )}
+              </View>
             </View>
           )}
         </ScrollView>
@@ -285,17 +277,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: SPACE[2],
   },
-  matchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: SPACE[3],
-    paddingVertical: SPACE[3],
-    borderBottomWidth: 1,
-    borderBottomColor: COLOR.hairline,
-  },
-  matchText: { flex: 1, minWidth: 0 },
-  opponent: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
-  matchMeta: { color: COLOR.ink3, fontSize: TYPE.caption, marginTop: 1 },
-  result: { color: COLOR.ink, fontSize: TYPE.body + 2, fontFamily: FONT.bold },
+  matchList: { gap: SPACE[2], marginTop: SPACE[3] },
+  moreBtn: { backgroundColor: COLOR.surface, borderRadius: 12, paddingVertical: SPACE[3], alignItems: 'center', marginTop: SPACE[1] },
+  moreText: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.bold },
 });

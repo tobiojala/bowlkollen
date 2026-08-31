@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Zap, Swords, Heart, Flame } from 'lucide-react'
-import MatchSparkline from '@/components/mockup/MatchSparkline'
+import { Zap, Swords, Flame } from 'lucide-react'
 import { CIcon } from '@/components/mockup/StatCards'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { Pill, SectionHeader } from '@/components/ui/primitives'
 import { COLORS } from '../data'
 import type { ProfileData, ProfileChallenge, ProfileReactions } from '@/lib/profile'
@@ -12,7 +12,6 @@ const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
 const INK2 = 'rgba(244,245,247,0.64)'
 const INK3 = 'rgba(244,245,247,0.40)'
-const INK4 = 'rgba(244,245,247,0.24)'
 
 interface FeedSectionProps {
   data: ProfileData
@@ -28,27 +27,13 @@ interface FeedSectionProps {
 }
 
 export default function FeedSection({
-  data, challenges, reactions, projAvg, projDiff,
+  data, challenges, projAvg, projDiff,
   onOpenChallenges, onOpenWhatIf, onOpenDuell, onOpenMatch,
 }: FeedSectionProps) {
   const { seasonAvg, lastSeasonAvg } = data
   const streakCurrent = data.streakAvg.current
   const [matchFilter, setMatchFilter] = useState<'alla' | 'bästa' | 'hemma' | 'borta'>('alla')
-  const [myReactions, setMyReactions] = useState<Set<string>>(new Set())
-
-  const toggleReaction = (matchIdx: number, type: 'flame' | 'heart', e: React.MouseEvent) => {
-    e.stopPropagation()
-    const key = `${matchIdx}-${type}`
-    setMyReactions(prev => {
-      const s = new Set(prev)
-      if (s.has(key)) s.delete(key); else s.add(key)
-      return s
-    })
-  }
-
-  // Score tone: 250+ is the gold moment, 200+ is solid, rest is quiet
-  const scoreColor  = (g: number) => g >= 250 ? GOLD : g >= 200 ? INK : INK3
-  const scoreWeight = (g: number) => g >= 250 ? 900 : g >= 200 ? 700 : 400
+  const [showAllMatches, setShowAllMatches] = useState(false)
 
   const urgent = challenges
     .filter(c => !c.done && c.progress >= 80)
@@ -165,64 +150,50 @@ export default function FeedSection({
               active={matchFilter === f} onClick={() => setMatchFilter(f)} />
           ))}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
-          {filtered.map(({ m, i, total }, filteredIdx) => {
-            const avg      = Math.round(total / m.games.length)
-            const rxData   = reactions[i]
-            const myFlame  = myReactions.has(`${i}-flame`)
-            const myHeart  = myReactions.has(`${i}-heart`)
-            const isWin    = m.result.startsWith('W')
-            const isLoss   = m.result.startsWith('L')
-            const resultColor = isWin ? GREEN : isLoss ? RED : INK3
-            const teamHue  = m.opp.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) * 137 % 360
-            const initials = m.opp.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+          {(showAllMatches ? filtered : filtered.slice(0, 5)).map(({ m, i, total }, filteredIdx) => {
+            const avg  = Math.round(total / m.games.length)
+            const high = Math.max(...m.games)
+            const lo   = Math.min(...m.games)
+            const span = Math.max(1, high - lo + 40)
             return (
-              <div key={i} className="glass-row feed-in" style={{ borderRadius: 16, overflow: 'hidden', animationDelay: `${filteredIdx * 0.05}s` }}>
-                <div onClick={() => onOpenMatch(i)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: `14px 16px ${rxData ? 4 : 14}px`, cursor: 'pointer' }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                    background: `hsl(${teamHue}, 22%, 16%)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 800, letterSpacing: 0.3,
-                    color: `hsl(${teamHue}, 38%, 66%)`,
-                  }}>
-                    {initials}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: INK }}>{m.opp}</div>
-                    <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap', marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>
-                      {m.games.map((g, gi) => (
-                        <span key={gi} style={{ fontSize: 13, fontWeight: scoreWeight(g), color: scoreColor(g) }}>{g}</span>
-                      ))}
-                      <span style={{ marginLeft: 2 }}><MatchSparkline games={m.games} /></span>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 3, color: resultColor }}>{m.result}</div>
-                    <div className="num" style={{ fontSize: 20, color: avg >= seasonAvg ? INK : INK3 }}>{total}</div>
-                    <div style={{ fontSize: 11, color: INK4, marginTop: 3 }}>{m.date}</div>
-                  </div>
+              <div key={i} onClick={() => onOpenMatch(i)} className="feed-in"
+                style={{ background: '#14171c', borderRadius: 16, padding: '14px 16px', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', gap: 12, animationDelay: `${filteredIdx * 0.05}s` }}>
+                {/* Opponent + home/away · date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                  <IdentityAvatar name={m.opp} size={38} />
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.opp}</div>
+                  <div style={{ fontSize: 13, color: INK3, flexShrink: 0, textAlign: 'right' }}>{m.home ? 'hemma' : 'borta'} · {m.date}</div>
                 </div>
-                {rxData && (
-                  <div style={{ display: 'flex', gap: 8, padding: '4px 16px 12px 68px' }}>
-                    {[
-                      { type: 'flame' as const, Icon: Flame, my: myFlame, count: (rxData?.flame ?? 0) + (myFlame ? 1 : 0), color: '#f5a623' },
-                      { type: 'heart' as const, Icon: Heart, my: myHeart, count: (rxData?.heart ?? 0) + (myHeart ? 1 : 0), color: RED },
-                    ].map(({ type, Icon, my, count, color }) => (
-                      <button key={type} onClick={e => toggleReaction(i, type, e)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6,
-                          padding: '0 16px', minHeight: 40, borderRadius: 999, border: 'none', cursor: 'pointer',
-                          background: my ? `${color}1f` : 'rgba(244,245,247,0.05)' }}>
-                        <Icon size={14} color={my ? color : INK3} fill={my ? color : 'none'} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: my ? color : INK3, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Series as mini bars, best game in gold */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                  {m.games.map((g, gi) => {
+                    const best = g === high
+                    return (
+                      <div key={gi} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: '100%', height: 26 + ((g - lo + 20) / span) * 54, borderRadius: '5px 5px 0 0',
+                          background: best ? `linear-gradient(180deg, ${GOLD}, rgba(245,194,0,0.35))` : '#1c2127' }} />
+                        <span className="num" style={{ fontSize: 14, fontWeight: 700, color: best ? GOLD : INK2 }}>{g}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* Total + snitt/högsta */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid rgba(244,245,247,0.07)', paddingTop: 11 }}>
+                  <span className="num" style={{ fontSize: 23, fontWeight: 800, color: INK }}>{total}</span>
+                  <span style={{ fontSize: 13, color: INK3 }}>⌀ {avg} snitt · högsta <b style={{ color: GOLD, fontWeight: 700 }}>{high}</b></span>
+                </div>
               </div>
             )
           })}
+          {filtered.length > 5 && !showAllMatches && (
+            <button onClick={() => setShowAllMatches(true)}
+              style={{ width: '100%', marginTop: 2, background: '#14171c', border: 'none', borderRadius: 12,
+                color: INK2, fontSize: 14, fontWeight: 700, padding: 13, cursor: 'pointer' }}>
+              Visa fler ({filtered.length - 5})
+            </button>
+          )}
         </div>
       </div>
     </>
