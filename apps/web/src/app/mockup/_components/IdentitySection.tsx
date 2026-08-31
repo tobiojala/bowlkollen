@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown } from 'lucide-react'
+import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-react'
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { ActionRow, ActionButton } from '@/components/ui/primitives'
@@ -120,7 +120,10 @@ export default function IdentitySection({
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <PlayerAvatar publicId={avatarPublicId} name={identity.name} size={56} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15 }}>{identity.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{identity.name}</span>
+            {identity.isClaimed && <BadgeCheck size={19} color={GOLD} fill={GOLD} fillOpacity={0.18} style={{ flexShrink: 0 }} aria-label="Verifierad spelare" />}
+          </div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>
         {!isOwner && showFollow && (
