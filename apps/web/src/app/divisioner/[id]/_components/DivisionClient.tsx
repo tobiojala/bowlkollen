@@ -87,7 +87,7 @@ export function DivisionClient({ divisionId, divisionName, seasonYear, seasons, 
             Competitions), scoped to this gender + driven by the season pill:
             a past season shows the champion + bracket, the current one the prognosis. */}
         {tier === 'Elitserien' && !teamFilterName && (
-          <div style={{ padding: '0 20px' }}>
+          <div style={{ padding: '0 20px', marginBottom: SPACE[6] }}>
             <DivisionSlutspel
               gender={divisionName.toLowerCase().includes('dam') ? 'damer' : 'herrar'}
               seasonYear={seasonYear}
