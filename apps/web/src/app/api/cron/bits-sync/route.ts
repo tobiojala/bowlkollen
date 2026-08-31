@@ -61,6 +61,19 @@ async function runSync() {
   const val = (r?: PromiseSettledResult<unknown>) =>
     r?.status === 'fulfilled' ? r.value : { ok: false, error: String(r?.reason) }
 
+  // Rebuild Discover's (Hitta) recent-players materialized view now that today's
+  // players/matches are in — keeps that page instant. Daily; best-effort so a
+  // missing function (migration not yet applied) never fails the sync.
+  let discover: unknown = { skipped: true }
+  if (daily) {
+    try {
+      const { error } = await (createServiceSupabase() as unknown as SupabaseClient).rpc('refresh_discover_recent_players')
+      discover = error ? { ok: false, error: error.message } : { ok: true }
+    } catch (e) {
+      discover = { ok: false, error: String(e) }
+    }
+  }
+
   const summary = {
     ts: now.toISOString(),
     season,
@@ -72,6 +85,7 @@ async function runSync() {
     ...(daily ? {
       players: val(playersResult), clubs: val(clubsResult), teams: val(teamsResult),
       competitions: val(compResult), competitionResults: val(compResultsResult),
+      discover,
     } : {}),
   }
   const ok = divisionsResult.ok && settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
