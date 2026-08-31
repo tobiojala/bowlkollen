@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Zap, Swords, Flame } from 'lucide-react'
 import { CIcon } from '@/components/mockup/StatCards'
 import { IdentityAvatar } from '@/components/IdentityAvatar'
+import { SerieBars } from '@/components/SerieBars'
+import { serieBarLevel } from '@bowlkollen/core'
 import { Pill, SectionHeader } from '@/components/ui/primitives'
 import { COLORS } from '../data'
 import type { ProfileData, ProfileChallenge, ProfileReactions } from '@/lib/profile'
@@ -154,8 +156,7 @@ export default function FeedSection({
           {(showAllMatches ? filtered : filtered.slice(0, 5)).map(({ m, i, total }, filteredIdx) => {
             const avg  = Math.round(total / m.games.length)
             const high = Math.max(...m.games)
-            const lo   = Math.min(...m.games)
-            const span = Math.max(1, high - lo + 40)
+            const highGold = serieBarLevel(high) === 'gold'
             return (
               <div key={i} onClick={() => onOpenMatch(i)} className="feed-in"
                 style={{ background: '#14171c', borderRadius: 16, padding: '14px 16px', cursor: 'pointer',
@@ -166,23 +167,12 @@ export default function FeedSection({
                   <div style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.opp}</div>
                   <div style={{ fontSize: 13, color: INK3, flexShrink: 0, textAlign: 'right' }}>{m.home ? 'hemma' : 'borta'} · {m.date}</div>
                 </div>
-                {/* Series as mini bars, best game in gold */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
-                  {m.games.map((g, gi) => {
-                    const best = g === high
-                    return (
-                      <div key={gi} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: '100%', height: 26 + ((g - lo + 20) / span) * 54, borderRadius: '5px 5px 0 0',
-                          background: best ? `linear-gradient(180deg, ${GOLD}, rgba(245,194,0,0.35))` : '#1c2127' }} />
-                        <span className="num" style={{ fontSize: 14, fontWeight: 700, color: best ? GOLD : INK2 }}>{g}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+                {/* Series — the shared bar language (gold only on a >=250 game) */}
+                <SerieBars series={m.games} />
                 {/* Total + snitt/högsta */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid rgba(244,245,247,0.07)', paddingTop: 11 }}>
                   <span className="num" style={{ fontSize: 23, fontWeight: 800, color: INK }}>{total}</span>
-                  <span style={{ fontSize: 13, color: INK3 }}>⌀ {avg} snitt · högsta <b style={{ color: GOLD, fontWeight: 700 }}>{high}</b></span>
+                  <span style={{ fontSize: 13, color: INK3 }}>⌀ {avg} snitt · högsta <b style={{ color: highGold ? GOLD : INK, fontWeight: 700 }}>{high}</b></span>
                 </div>
               </div>
             )

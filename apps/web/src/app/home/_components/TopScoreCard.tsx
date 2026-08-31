@@ -7,7 +7,7 @@ import { SCORE } from '@/lib/constants'
 import FollowButton from '@/components/FollowButton'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { PostActions } from './PostActions'
-import { SerieBars } from './SerieBars'
+import { SerieBars } from '@/components/SerieBars'
 import type { BitsTopScore } from '@/lib/types'
 import type { ReactionState } from '@/lib/feed-reactions'
 

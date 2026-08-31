@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { CountUp } from '@/components/CountUp'
 import { FormCurve } from '@/components/FormCurve'
+import { SerieBars } from '@/components/SerieBars'
 import type {
   TeamEvent,
   MatchResultPayload,
@@ -34,26 +35,6 @@ export function KeyStat({ event, accent }: { event: TeamEvent; accent: string })
     const p          = event.payload as MatchResultPayload
     const myTeamName = event.team?.name
 
-    const seriesMin = p.my_series ? Math.min(...p.my_series) - 40 : 0
-    const seriesMax = p.my_series ? Math.max(...p.my_series) + 20 : 1
-    const barH = (v: number) => Math.max(6, ((v - seriesMin) / (seriesMax - seriesMin)) * 52)
-
-    // Rank bars by score: 0 = gold, 1 = dimmed gold, rest = white
-    const rankMap = p.my_series
-      ? new Map(
-          [...p.my_series]
-            .map((s, i) => ({ s, i }))
-            .sort((a, b) => b.s - a.s)
-            .map((r, rank) => [r.i, rank])
-        )
-      : new Map<number, number>()
-    const barColor = (i: number) => {
-      const rank = rankMap.get(i) ?? 99
-      if (rank === 0) return COLOR.gold
-      if (rank === 1) return '#f9e07a'
-      return COLOR.ink
-    }
-
     return (
       <div style={wrap}>
         {/* Animated score */}
@@ -74,44 +55,11 @@ export function KeyStat({ event, accent }: { event: TeamEvent; accent: string })
           {myTeamName ? `${myTeamName} · ${p.opponent_name}` : `mot ${p.opponent_name}`}
         </span>
 
-        {/* Series bars */}
+        {/* Series — the shared bar language (gold only on a >=250 game) */}
         {p.my_series && p.my_series.length > 0 && (
           <div style={{ marginTop: SPACE[6] }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACE[3] }}>
-              <span style={{ fontSize: TYPE.label, fontWeight: 700, letterSpacing: '0.08em', color: COLOR.ink3 }}>
-                SERIER
-              </span>
-              <span style={{ fontSize: TYPE.label, fontWeight: 700, letterSpacing: '0.06em', color: accent }}>
-                BÄSTA {Math.max(...p.my_series)}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-              {p.my_series.map((s, i) => {
-                const bh    = barH(s)
-                const bCol  = barColor(i)
-                const delay = 0.15 + i * 0.08
-                return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: SPACE[2] }}>
-                    <motion.div
-                      style={{ width: 52, height: bh, borderRadius: '4px 4px 0 0', background: bCol, transformOrigin: 'bottom' }}
-                      initial={{ scaleY: 0 }}
-                      whileInView={{ scaleY: 1 }}
-                      viewport={{ once: true, margin: '-60px' }}
-                      transition={{ type: 'spring', stiffness: 90, damping: 12, delay }}
-                    />
-                    <motion.span
-                      style={{ fontSize: TYPE.caption, fontWeight: 700, fontFamily: FONT.display, fontVariantNumeric: 'tabular-nums', color: bCol }}
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true, margin: '-60px' }}
-                      transition={{ duration: 0.25, delay: delay + 0.25 }}
-                    >
-                      {s}
-                    </motion.span>
-                  </div>
-                )
-              })}
-            </div>
+            <div style={{ fontSize: TYPE.label, fontWeight: 700, letterSpacing: '0.08em', color: COLOR.ink3, marginBottom: SPACE[3] }}>SERIER</div>
+            <SerieBars series={p.my_series} />
           </div>
         )}
 
