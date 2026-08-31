@@ -3,7 +3,7 @@
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { FeedCard } from './FeedCard'
 import { PlayerResultCard } from './PlayerResultCard'
-import { FeedMatchCard } from './FeedMatchCard'
+import { FeedMatchCard, toMatchLike } from './FeedMatchCard'
 import { TopScoreCard } from './TopScoreCard'
 import { StandingsCard } from './StandingsCard'
 import { PromoCard } from './PromoCard'
@@ -221,10 +221,7 @@ export function FeedSection({
         if (entry.kind === 'bits_match') {
           const m = entry.data
           const r = reactions?.get(`m${m.bits_match_id}`) ?? { likes: 0, liked: false, saved: false }
-          return <FeedMatchCard key={m.bits_match_id} reaction={r} onLike={toggleLike} onSave={toggleSave}
-            match={{ bitsMatchId: m.bits_match_id, date: m.match_date, homeTeam: m.home_team_name, awayTeam: m.away_team_name,
-              homeResult: m.home_result, awayResult: m.away_result, homeScore: m.home_score, awayScore: m.away_score,
-              division: m.division_name, hall: m.hall_name, finished: m.is_finished }} />
+          return <FeedMatchCard key={m.bits_match_id} reaction={r} onLike={toggleLike} onSave={toggleSave} match={toMatchLike(m)} />
         }
         if (entry.kind === 'bits_score') {
           const s = entry.data

@@ -6,6 +6,7 @@ import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
 import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { PostActions } from './PostActions'
 import type { ReactionState } from '@/lib/feed-reactions'
+import type { BitsMatchFeed } from '@/lib/types'
 
 export type MatchLike = {
   bitsMatchId: number; date: string
@@ -13,6 +14,16 @@ export type MatchLike = {
   homeResult: number | null; awayResult: number | null
   homeScore: number | null; awayScore: number | null
   division: string | null; hall: string | null; finished: boolean
+}
+
+// One place that turns a feed match row into the card's props — used by the
+// Allt stream and the Matcher tab so both render the identical scorecard.
+export function toMatchLike(m: BitsMatchFeed): MatchLike {
+  return {
+    bitsMatchId: m.bits_match_id, date: m.match_date, homeTeam: m.home_team_name, awayTeam: m.away_team_name,
+    homeResult: m.home_result, awayResult: m.away_result, homeScore: m.home_score, awayScore: m.away_score,
+    division: m.division_name, hall: m.hall_name, finished: m.is_finished,
+  }
 }
 
 function fmtDate(iso: string) {
