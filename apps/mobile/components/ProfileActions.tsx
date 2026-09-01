@@ -7,8 +7,8 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 export type ProfileAction = { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void };
 
-const SIZE = 76;
-const RING = 3;
+const SIZE = 54;
+const RING = 2;
 const SHEEN = ['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0)'] as const;
 
 // Action row under the hero deck, in the home-feed circle language (StoryRail):
@@ -23,7 +23,7 @@ export function ProfileActions({ actions }: { actions: ProfileAction[] }) {
         <PressableScale key={a.label} style={styles.item} onPress={a.onPress} accessibilityLabel={a.label}>
           <View style={styles.ring}>
             <LinearGradient colors={SHEEN} locations={[0, 0.4, 0.62]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={styles.sheen} pointerEvents="none" />
-            <View style={styles.disc}><Ionicons name={a.icon} size={30} color={COLOR.ink2} /></View>
+            <View style={styles.disc}><Ionicons name={a.icon} size={22} color={COLOR.ink2} /></View>
           </View>
           <Text style={styles.label} numberOfLines={1}>{a.label}</Text>
         </PressableScale>
