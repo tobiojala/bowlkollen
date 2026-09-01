@@ -9,6 +9,7 @@ import PlayerProfileView from './PlayerProfileView'
 import { buildProfileFromBitsRows } from '@/lib/profile-adapter'
 import { calcRating, bkTopPercent } from '@/lib/player-stats'
 import { usePlayerIdentity, usePlayerBitsResults, usePlayerPercentile, useSession } from '@/lib/queries'
+import { useFollowerCount } from '@/lib/use-follow-count'
 import { useTrackAnonView } from '@/lib/use-track-anon-view'
 import type { ProfileIdentity } from '@/lib/profile'
 import type { Achievement } from '@/app/mockup/_components/IdentitySection'
@@ -23,6 +24,7 @@ export default function PlayerProfileClient({ id }: { id: string }) {
   const { data: identityRaw, isLoading: identityLoading } = usePlayerIdentity(id)
   const { data: rowsRaw = [] }                             = usePlayerBitsResults(id)
   const { data: realPct }                                  = usePlayerPercentile(id)
+  const { data: followerCount = 0 }                        = useFollowerCount('player', id)
   const { data: session }                                  = useSession()
 
   const player = identityRaw
@@ -87,7 +89,9 @@ export default function PlayerProfileClient({ id }: { id: string }) {
 
   const identity: ProfileIdentity = {
     name: player.name, initials, teamLabel,
-    followers: 0, following: 0,   // TODO: wire real follower counts
+    // Real follower count (get_follow_count). "Following" stays private under the
+    // follows RLS, so it isn't shown for other players — hidden when 0.
+    followers: followerCount, following: 0,
     isJunior: player.isJunior, isClaimed: player.isClaimed,
   }
 

@@ -139,8 +139,12 @@ export default function IdentitySection({
       </div>
       <div style={{ fontSize: 13, color: INK3, padding: '8px 0 0 62px' }}>
         <span style={{ color: INK2, fontWeight: 600 }}>{(identity.followers + (following ? 1 : 0)).toLocaleString('sv-SE')}</span> följare
-        <span style={{ padding: '0 6px', color: INK4 }}>·</span>
-        <span style={{ color: INK2, fontWeight: 600 }}>{identity.following}</span> följer
+        {identity.following > 0 && (
+          <>
+            <span style={{ padding: '0 6px', color: INK4 }}>·</span>
+            <span style={{ color: INK2, fontWeight: 600 }}>{identity.following}</span> följer
+          </>
+        )}
       </div>
 
       {/* Level + achievement chips — quiet, tonal; gold only when nearly earned */}
