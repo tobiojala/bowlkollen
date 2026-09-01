@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { CreditCard, Swords, Trophy, Share2, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-react'
+import { Trophy, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-react'
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
-import { ActionRow, ActionButton } from '@/components/ui/primitives'
+import { ProfileActions } from './ProfileActions'
 import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import { COLORS } from '../data'
@@ -51,6 +51,7 @@ interface IdentitySectionProps {
   /** Optional real-action handlers wired by the live route (no-op in the mockup). */
   onOpenCard?: () => void
   onOpenH2H?: () => void
+  onOpenSeason?: () => void
   onShare?: () => void
   /** public_id of the profile's player — resolves their approved photo. */
   avatarPublicId?: string
@@ -59,7 +60,7 @@ interface IdentitySectionProps {
 export default function IdentitySection({
   data, identity, bkTopPct, licenceAverage, bkRating, level, achievements = [],
   bkProgress, rankingPts, isOwner = false, showFollow = true,
-  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onShare, avatarPublicId,
+  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onOpenSeason, onShare, avatarPublicId,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
@@ -229,13 +230,14 @@ export default function IdentitySection({
           ))}
       </div>
 
-      {/* Action row */}
-      <ActionRow className="mt-6 -mx-1">
-        <ActionButton icon={CreditCard} label="Spelarkort" onClick={onOpenCard} />
-        <ActionButton icon={Swords}     label="H2H"        onClick={onOpenH2H} />
-        <ActionButton icon={Trophy}     label="Utmaningar" onClick={onOpenChallenges} />
-        <ActionButton icon={Share2}     label="Dela"       onClick={onShare} />
-      </ActionRow>
+      {/* Action row — home-feed circle language */}
+      <ProfileActions
+        onOpenCard={() => onOpenCard?.()}
+        onOpenH2H={() => onOpenH2H?.()}
+        onOpenSeason={() => onOpenSeason?.()}
+        onOpenChallenges={onOpenChallenges}
+        onShare={() => onShare?.()}
+      />
     </div>
   )
 }

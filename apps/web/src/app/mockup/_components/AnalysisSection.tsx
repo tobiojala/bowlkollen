@@ -1,7 +1,7 @@
 'use client'
 
 import { Surface, SectionHeader, Hairline } from '@/components/ui/primitives'
-import { characterSentence, rhythmLabel, narrativeParagraph } from '../helpers'
+import { characterSentence, rhythmLabel } from '../helpers'
 import { COLORS } from '../data'
 import type { ProfileData } from '@/lib/profile'
 
@@ -13,12 +13,10 @@ const INK4 = 'rgba(244,245,247,0.24)'
 
 interface AnalysisSectionProps {
   data: ProfileData
-  /** First name for the season narrative copy. */
-  firstName: string
   onOpenCurve: () => void
 }
 
-export default function AnalysisSection({ data, firstName, onOpenCurve }: AnalysisSectionProps) {
+export default function AnalysisSection({ data, onOpenCurve }: AnalysisSectionProps) {
   const { seasonAvg, formDiff } = data
   const allGames    = data.matches.flatMap(m => m.games.filter(g => g > 0))
   const n           = allGames.length
@@ -33,12 +31,6 @@ export default function AnalysisSection({ data, firstName, onOpenCurve }: Analys
   const bestMatch   = data.matches[bestIdx]
   const gameAvgs    = data.gameAvgs
   const rhythm      = rhythmLabel(gameAvgs)
-  const lastSeasonAvg = data.lastSeasonAvg
-  const narrative   = narrativeParagraph({
-    firstName, seasonAvg, lastSeasonAvg, formDiff, hitRate,
-    streakAboveAvg: sAvg.current, consistency, rhythmLabel: rhythm.label,
-    bestSeries, games200Plus: over200, totalGames: n,
-  })
 
   const bkts = [
     { c: 'rgba(244,245,247,0.18)', v: allGames.filter(g => g < 180).length,             l: 'u.180' },
@@ -165,20 +157,6 @@ export default function AnalysisSection({ data, firstName, onOpenCurve }: Analys
         </Surface>
       </div>
 
-      {/* Season narrative */}
-      <div style={{ padding: '28px 20px 0' }}>
-        <SectionHeader label="Säsongen i korthet" />
-        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {narrative.map((sentence, i) => (
-            <p key={i} style={{ margin: 0, lineHeight: 1.6,
-              fontSize: i === 0 ? 15 : 14,
-              fontWeight: i === 0 ? 500 : 400,
-              color: i === 0 ? 'rgba(244,245,247,0.88)' : i < 3 ? 'rgba(244,245,247,0.6)' : 'rgba(244,245,247,0.45)' }}>
-              {sentence}
-            </p>
-          ))}
-        </div>
-      </div>
     </>
   )
 }

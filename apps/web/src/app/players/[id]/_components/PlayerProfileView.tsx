@@ -22,11 +22,12 @@ import WhatIfSheet   from '@/app/mockup/_components/sheets/WhatIfSheet'
 import DuellSheet    from '@/app/mockup/_components/sheets/DuellSheet'
 import MatchSheet    from '@/app/mockup/_components/sheets/MatchSheet'
 import BkRatingSheet from '@/app/mockup/_components/sheets/BkRatingSheet'
+import SeasonSheet   from '@/app/mockup/_components/sheets/SeasonSheet'
 
 const BG  = '#0b0d10'
 const INK = '#f4f5f7'
 
-type SheetType = 'curve' | 'whatif' | 'duell' | 'match' | 'bkrating' | null
+type SheetType = 'curve' | 'whatif' | 'duell' | 'match' | 'bkrating' | 'season' | null
 
 const JUNIOR_NOTICE = 'Minderårig — följning öppnas när profilen är verifierad av vårdnadshavare eller lagledare.'
 
@@ -184,6 +185,7 @@ export default function PlayerProfileView({
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => {}}
             onOpenBkRating={() => setExpanded('bkrating')}
+            onOpenSeason={() => setExpanded('season')}
             onOpenCard={onOpenCard}
             onOpenH2H={onOpenH2H}
             onShare={onShare}
@@ -209,7 +211,6 @@ export default function PlayerProfileView({
           <Reveal direction="up" distance={16}>
             <AnalysisSection
               data={data}
-              firstName={firstName}
               onOpenCurve={() => { setCurveMetric('snitt'); setExpanded('curve') }}
             />
           </Reveal>
@@ -270,6 +271,7 @@ export default function PlayerProfileView({
       {expanded === 'bkrating' && (
         <BkRatingSheet bkTopPct={bkTopPct} onClose={close} />
       )}
+      {expanded === 'season' && <SeasonSheet data={data} firstName={firstName} onClose={close} />}
 
       {expanded === 'duell' && (
         <DuellSheet

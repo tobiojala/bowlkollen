@@ -22,8 +22,9 @@ import DuellSheet      from './_components/sheets/DuellSheet'
 import MatchSheet      from './_components/sheets/MatchSheet'
 import DnaInfoSheet    from './_components/sheets/DnaInfoSheet'
 import BkRatingSheet   from './_components/sheets/BkRatingSheet'
+import SeasonSheet     from './_components/sheets/SeasonSheet'
 
-type CardType = 'curve' | 'whatif' | 'challenges' | 'duell' | 'match' | 'bkrating'
+type CardType = 'curve' | 'whatif' | 'challenges' | 'duell' | 'match' | 'bkrating' | 'season'
 
 export default function MockupPage() {
   const [expanded, setExpanded]         = useState<CardType | null>(null)
@@ -133,6 +134,7 @@ export default function MockupPage() {
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => setExpanded('challenges')}
             onOpenBkRating={() => setExpanded('bkrating')}
+            onOpenSeason={() => setExpanded('season')}
           />
 
           {/* The identity artifact */}
@@ -149,7 +151,6 @@ export default function MockupPage() {
           <Reveal direction="up" distance={16}>
             <AnalysisSection
               data={pdata}
-              firstName={identity.name.split(' ')[0]}
               onOpenCurve={() => { setCurveMetric('snitt'); setExpanded('curve') }}
             />
           </Reveal>
@@ -215,6 +216,9 @@ export default function MockupPage() {
 
       {expanded === 'bkrating' && (
         <BkRatingSheet bkTopPct={bkTopPct} onClose={close} />
+      )}
+      {expanded === 'season' && (
+        <SeasonSheet data={pdata} firstName={identity.name.split(' ')[0]} onClose={close} />
       )}
 
       {expanded === 'duell' && (
