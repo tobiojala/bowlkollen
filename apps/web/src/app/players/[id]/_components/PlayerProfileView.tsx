@@ -141,7 +141,7 @@ export default function PlayerProfileView({
         @media (min-width: 1024px) {
           .pp-canvas { max-width: 1160px; padding-left: 32px; padding-right: 32px; }
           .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 40px; align-items: start; }
-          .pp-side { position: sticky; top: 24px; align-self: start; }
+          .pp-side { align-self: start; }  /* not sticky: tall side would strand its bottom under the OS dock */
         }
       `}</style>
       <PublicHeader />
