@@ -117,30 +117,32 @@ export default function IdentitySection({
 
   const visibleAchievements = achievements.filter(a => a.earned || a.near)
 
+  const followControl = followSlot ?? ((!isOwner && showFollow) ? (
+    <button onClick={() => setFollowing(f => !f)}
+      style={{ minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
+        background: following ? '#1c2127' : INK,
+        color: following ? INK2 : '#0b0d10', fontSize: 13, fontWeight: 700,
+        transition: 'background 0.15s, color 0.15s' }}>
+      {following ? 'Följer' : 'Följ'}
+    </button>
+  ) : null)
+
   return (
-    <div style={{ padding: '12px 20px 0' }}>
+    <div style={{ padding: '12px 20px 0', position: 'relative' }}>
+
+      {/* Follow / edit control floats top-right so it never squeezes the name */}
+      {followControl && <div style={{ position: 'absolute', top: 12, right: 20, zIndex: 1 }}>{followControl}</div>}
 
       {/* Identity header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <PlayerAvatar publicId={avatarPublicId} name={identity.name} size={56} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, paddingRight: followControl ? 80 : 0 }}>
             <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{identity.name}</span>
             {identity.isClaimed && <BadgeCheck size={19} color={GOLD} fill={GOLD} fillOpacity={0.18} style={{ flexShrink: 0 }} aria-label="Verifierad spelare" />}
           </div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>
-        {followSlot ? (
-          <div style={{ flexShrink: 0 }}>{followSlot}</div>
-        ) : (!isOwner && showFollow && (
-          <button onClick={() => setFollowing(f => !f)}
-            style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
-              background: following ? '#1c2127' : INK,
-              color: following ? INK2 : '#0b0d10', fontSize: 13, fontWeight: 700,
-              transition: 'background 0.15s, color 0.15s' }}>
-            {following ? 'Följer' : 'Följ'}
-          </button>
-        ))}
       </div>
       <div style={{ fontSize: 13, color: INK3, padding: '8px 0 0 62px' }}>
         <span style={{ color: INK2, fontWeight: 600 }}>{(identity.followers + (following ? 1 : 0)).toLocaleString('sv-SE')}</span> följare
@@ -178,13 +180,13 @@ export default function IdentitySection({
       {/* Hero deck: a pill toggle over one card at a time — tap, don't swipe, so
           each card's graph keeps its horizontal drag-scrub (parity with native
           HeroDeck). */}
-      <div className="hero-in" style={{ marginTop: 24 }}>
+      <div className="hero-in" style={{ marginTop: 16 }}>
         {heroCards.length > 1 && (
-          <div style={{ display: 'flex', gap: 4, width: 'fit-content', margin: '0 auto 16px',
-            background: '#14171c', borderRadius: 999, padding: 4 }}>
+          <div style={{ display: 'flex', gap: 3, width: 'fit-content', margin: '0 auto 10px',
+            background: '#14171c', borderRadius: 999, padding: 3 }}>
             {heroCards.map((c, i) => (
               <button key={c.key} onClick={() => setActiveHero(i)} aria-label={c.label}
-                style={{ border: 'none', cursor: 'pointer', minHeight: 40, padding: '0 16px', borderRadius: 999,
+                style={{ border: 'none', cursor: 'pointer', minHeight: 34, padding: '0 13px', borderRadius: 999,
                   background: i === activeHero ? '#1c2127' : 'transparent',
                   color: i === activeHero ? INK : INK3, fontSize: 13, fontWeight: 600,
                   transition: 'background 0.15s, color 0.15s' }}>
@@ -232,6 +234,7 @@ export default function IdentitySection({
                     lineWidth={5}
                     tailLength={9}
                     yPad={0.05}
+                    height={210}
                   />
                 </div>
               )}
