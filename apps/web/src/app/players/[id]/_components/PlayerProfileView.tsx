@@ -154,23 +154,7 @@ export default function PlayerProfileView({
       }}>
         <div className="pp-canvas">
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, padding: '12px 20px 0' }}>
-            {isOwner && onEdit && (
-              <button onClick={onEdit}
-                style={{ minHeight: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
-                  border: '1px solid rgba(244,245,247,0.14)', background: 'transparent',
-                  color: 'rgba(244,245,247,0.64)', fontSize: 12, fontWeight: 700 }}>
-                Redigera profil
-              </button>
-            )}
-            {!isOwner && (
-              identity.isJunior && !identity.isClaimed
-                ? <JuniorFollowNotice size="sm" />
-                : <FollowButton entityType="player" entityId={playerId} size="sm" />
-            )}
-          </div>
-
-          <div className="pp-grid">
+          <div className="pp-grid" style={{ paddingTop: 12 }}>
           <div className="pp-side">
           <IdentitySection
             data={data}
@@ -181,7 +165,21 @@ export default function PlayerProfileView({
             bkRating={null}                /* launch state: "kommer snart" */
             achievements={achievements}
             isOwner={isOwner}
-            showFollow={false}             /* the route renders the real FollowButton above */
+            showFollow={false}
+            followSlot={
+              isOwner
+                ? (onEdit && (
+                    <button onClick={onEdit}
+                      style={{ minHeight: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
+                        border: '1px solid rgba(244,245,247,0.14)', background: 'transparent',
+                        color: 'rgba(244,245,247,0.64)', fontSize: 12, fontWeight: 700 }}>
+                      Redigera
+                    </button>
+                  ))
+                : (identity.isJunior && !identity.isClaimed
+                    ? <JuniorFollowNotice size="sm" />
+                    : <FollowButton entityType="player" entityId={playerId} size="sm" />)
+            }
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => {}}
             onOpenBkRating={() => setExpanded('bkrating')}
@@ -194,7 +192,7 @@ export default function PlayerProfileView({
 
           <div className="pp-main">
           {pulsPoints.length > 1 && (
-            <section style={{ padding: '28px 20px 0' }}>
+            <section style={{ padding: '16px 20px 0' }}>
               <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>PROFIL-PULS</div>
               <ProfileTrend
                 points={pulsPoints}

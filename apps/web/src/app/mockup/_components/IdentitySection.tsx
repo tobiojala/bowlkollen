@@ -5,7 +5,6 @@ import { Trophy, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-reac
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { ProfileActions } from './ProfileActions'
-import { useMediaQuery } from '@/lib/use-media-query'
 import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import { COLORS } from '../data'
@@ -56,18 +55,18 @@ interface IdentitySectionProps {
   onShare?: () => void
   /** public_id of the profile's player — resolves their approved photo. */
   avatarPublicId?: string
+  /** Real follow/edit control from the live route, rendered inline in the header
+   *  (so it needs no separate top band). Falls back to the mock follow button. */
+  followSlot?: React.ReactNode
 }
 
 export default function IdentitySection({
   data, identity, bkTopPct, licenceAverage, bkRating, level, achievements = [],
   bkProgress, rankingPts, isOwner = false, showFollow = true,
-  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onOpenSeason, onShare, avatarPublicId,
+  onOpenCurve, onOpenChallenges, onOpenBkRating, onOpenCard, onOpenH2H, onOpenSeason, onShare, avatarPublicId, followSlot,
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
-  // On desktop the left column must fit above the fold, so the hero graph is
-  // shorter and the vertical rhythm tighter. Mobile keeps the roomier sizes.
-  const wide = useMediaQuery('(min-width: 1024px)')
 
   const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
 
@@ -119,7 +118,7 @@ export default function IdentitySection({
   const visibleAchievements = achievements.filter(a => a.earned || a.near)
 
   return (
-    <div style={{ padding: '20px 20px 0' }}>
+    <div style={{ padding: '12px 20px 0' }}>
 
       {/* Identity header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -131,7 +130,9 @@ export default function IdentitySection({
           </div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>
-        {!isOwner && showFollow && (
+        {followSlot ? (
+          <div style={{ flexShrink: 0 }}>{followSlot}</div>
+        ) : (!isOwner && showFollow && (
           <button onClick={() => setFollowing(f => !f)}
             style={{ flexShrink: 0, minHeight: 40, padding: '0 18px', borderRadius: 999, cursor: 'pointer', border: 'none',
               background: following ? '#1c2127' : INK,
@@ -139,7 +140,7 @@ export default function IdentitySection({
               transition: 'background 0.15s, color 0.15s' }}>
             {following ? 'Följer' : 'Följ'}
           </button>
-        )}
+        ))}
       </div>
       <div style={{ fontSize: 13, color: INK3, padding: '8px 0 0 62px' }}>
         <span style={{ color: INK2, fontWeight: 600 }}>{(identity.followers + (following ? 1 : 0)).toLocaleString('sv-SE')}</span> följare
@@ -177,7 +178,7 @@ export default function IdentitySection({
       {/* Hero deck: a pill toggle over one card at a time — tap, don't swipe, so
           each card's graph keeps its horizontal drag-scrub (parity with native
           HeroDeck). */}
-      <div className="hero-in" style={{ marginTop: wide ? 14 : 24 }}>
+      <div className="hero-in" style={{ marginTop: 24 }}>
         {heroCards.length > 1 && (
           <div style={{ display: 'flex', gap: 4, width: 'fit-content', margin: '0 auto 16px',
             background: '#14171c', borderRadius: 999, padding: 4 }}>
@@ -231,7 +232,6 @@ export default function IdentitySection({
                     lineWidth={5}
                     tailLength={9}
                     yPad={0.05}
-                    height={wide ? 150 : undefined}
                   />
                 </div>
               )}
