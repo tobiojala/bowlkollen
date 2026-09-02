@@ -5,6 +5,7 @@ import { Trophy, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-reac
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { ProfileActions } from './ProfileActions'
+import { useMediaQuery } from '@/lib/use-media-query'
 import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import { COLORS } from '../data'
@@ -64,6 +65,9 @@ export default function IdentitySection({
 }: IdentitySectionProps) {
   const [following, setFollowing] = useState(false)
   const [activeHero, setActiveHero] = useState(0)
+  // On desktop the left column must fit above the fold, so the hero graph is
+  // shorter and the vertical rhythm tighter. Mobile keeps the roomier sizes.
+  const wide = useMediaQuery('(min-width: 1024px)')
 
   const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
 
@@ -173,7 +177,7 @@ export default function IdentitySection({
       {/* Hero deck: a pill toggle over one card at a time — tap, don't swipe, so
           each card's graph keeps its horizontal drag-scrub (parity with native
           HeroDeck). */}
-      <div className="hero-in" style={{ marginTop: 24 }}>
+      <div className="hero-in" style={{ marginTop: wide ? 14 : 24 }}>
         {heroCards.length > 1 && (
           <div style={{ display: 'flex', gap: 4, width: 'fit-content', margin: '0 auto 16px',
             background: '#14171c', borderRadius: 999, padding: 4 }}>
@@ -227,6 +231,7 @@ export default function IdentitySection({
                     lineWidth={5}
                     tailLength={9}
                     yPad={0.05}
+                    height={wide ? 150 : undefined}
                   />
                 </div>
               )}

@@ -8,7 +8,7 @@ export type TrendPoint = { avg: number; date: string; label: string }
 // Web mirror of the native ProfileTrend graph: solid ink line, gridlines + value
 // labels, dashed "snitt" baseline, dashed prognos, and a colour-only dot + light-
 // tail that follows the cursor on HOVER (drag → hover is the only platform change).
-const H = 190
+const DEFAULT_H = 190
 const PAD_L = 40
 const PAD_R = 40
 const PAD_T = 26
@@ -20,9 +20,11 @@ const ink = (o: number) => `rgba(244,245,247,${o})`
 export default function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight,
   accent, baseline, baselineLabel = 'snitt', projValue, lineWidth = 2.6, tailLength = 5, yPad = 0.18,
-  onSelect,
+  onSelect, height,
 }: {
   points: TrendPoint[]
+  /** Graph height in px (viewBox height). Shorter on desktop so the profile's left column fits above the fold. */
+  height?: number
   /** When set, the scrubbed point becomes clickable — fires with its index. */
   onSelect?: (index: number) => void
   label?: string
@@ -40,6 +42,7 @@ export default function ProfileTrend({
   tailLength?: number
   yPad?: number
 }) {
+  const H = height ?? DEFAULT_H
   const gid = useId()
   const svgRef = useRef<SVGSVGElement>(null)
   const prev = useRef(points.length - 1)
