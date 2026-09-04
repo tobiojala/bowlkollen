@@ -9,6 +9,7 @@ import { BallShelf } from '@/components/BallShelf';
 import { CaptainQuickActions } from '@/components/CaptainQuickActions';
 import { ClaimedBadge } from '@/components/ClaimedBadge';
 import { IdentityAvatar } from '@/components/IdentityAvatar';
+import { DiarySection } from '@/components/DiarySection';
 import { NextMatchCard } from '@/components/NextMatchCard';
 import { SelectedCard } from '@/components/SelectedCard';
 import { PressableScale } from '@/components/PressableScale';
@@ -132,6 +133,9 @@ export default function Profile() {
 
         {/* Next match → prep sheet (bowling diary) */}
         <NextMatchCard />
+
+        {/* Dagbok — private diary incl. training & external competitions (Remember pillar) */}
+        {verified && <DiarySection />}
 
         {/* Captain/member shortcuts — one tap to lineup & availability */}
         <CaptainQuickActions />

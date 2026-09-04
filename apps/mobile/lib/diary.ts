@@ -3,6 +3,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { mapNote, NOTE_COLS, type Note } from './diary-entries';
+
+// The diary data model + standalone-entry hooks live in diary-entries.ts; re-export
+// so existing '@/lib/diary' consumers are unaffected.
+export { useDiaryEntries, useSaveDiaryEntry, noteDate, noteType } from './diary-entries';
+export type { Note, DiaryType } from './diary-entries';
 
 // player_notes isn't in the generated types yet (run supabase/migrations/player_notes.sql).
 const db = supabase as unknown as SupabaseClient;
@@ -119,22 +125,6 @@ export function usePrepMatch(matchId: number) {
   });
 }
 
-export type Note = {
-  id: string;
-  matchId: number | null;
-  hall: string | null;
-  body: string;
-  createdAt: string;
-};
-
-const mapNote = (r: Record<string, unknown>): Note => ({
-  id: r.id as string,
-  matchId: (r.bits_match_id as number | null) ?? null,
-  hall: (r.hall_name as string | null) ?? null,
-  body: r.body as string,
-  createdAt: r.created_at as string,
-});
-
 // Every note I've written at a given center, newest first — this is the "recall"
 // that surfaces when I'm booked to play here again.
 export function useHallNotes(hall: string | null | undefined) {
@@ -146,7 +136,7 @@ export function useHallNotes(hall: string | null | undefined) {
     queryFn: async (): Promise<Note[]> => {
       const { data } = await db
         .from('player_notes')
-        .select('id, bits_match_id, hall_name, body, created_at')
+        .select(NOTE_COLS)
         .eq('user_id', uid!)
         .eq('hall_name', hall!)
         .order('created_at', { ascending: false });
@@ -165,7 +155,7 @@ export function useMatchNotes(matchId: number | null | undefined) {
     queryFn: async (): Promise<Note[]> => {
       const { data } = await db
         .from('player_notes')
-        .select('id, bits_match_id, hall_name, body, created_at')
+        .select(NOTE_COLS)
         .eq('user_id', uid!)
         .eq('bits_match_id', matchId!)
         .order('created_at', { ascending: false });
@@ -191,6 +181,7 @@ export function useSaveNote() {
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ['match-notes', uid, v.matchId] });
       qc.invalidateQueries({ queryKey: ['hall-notes', uid, v.hall] });
+      qc.invalidateQueries({ queryKey: ['diary-entries', uid] });
     },
   });
 }
@@ -399,7 +390,7 @@ export function usePatternHistory(pattern: string | null | undefined, excludeMat
         db.from('match_balls').select(BALL_JOIN).eq('user_id', uid!).in('bits_match_id', ids),
         db
           .from('player_notes')
-          .select('id, bits_match_id, hall_name, body, created_at')
+          .select(NOTE_COLS)
           .eq('user_id', uid!)
           .in('bits_match_id', ids)
           .order('created_at', { ascending: false })
@@ -427,6 +418,7 @@ export function useDeleteNote() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['match-notes', uid] });
       qc.invalidateQueries({ queryKey: ['hall-notes', uid] });
+      qc.invalidateQueries({ queryKey: ['diary-entries', uid] });
     },
   });
 }
