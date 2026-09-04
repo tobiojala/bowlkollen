@@ -114,11 +114,52 @@ export function usePrepMatch(matchId: number) {
   })
 }
 
-export type Note = { id: string; matchId: number | null; hall: string | null; body: string; createdAt: string }
+export type DiaryType = 'traning' | 'tavling' | 'match' | 'ovrigt'
+export type Note = {
+  id: string; matchId: number | null; hall: string | null; body: string; createdAt: string
+  entryType: DiaryType | null; entryDate: string | null
+}
 const mapNote = (r: Record<string, unknown>): Note => ({
   id: r.id as string, matchId: (r.bits_match_id as number | null) ?? null,
   hall: (r.hall_name as string | null) ?? null, body: r.body as string, createdAt: r.created_at as string,
+  entryType: (r.entry_type as DiaryType | null) ?? null, entryDate: (r.entry_date as string | null) ?? null,
 })
+export const noteDate = (n: Note): string => n.entryDate ?? n.createdAt.slice(0, 10)   // event date, else written
+export const noteType = (n: Note): DiaryType => n.entryType ?? (n.matchId != null ? 'match' : 'ovrigt')
+
+const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date'
+
+/** The whole diary — every entry newest-first: match-prep notes + standalone training/competition entries. */
+export function useDiaryEntries() {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  return useQuery({
+    queryKey: ['diary-entries', uid],
+    enabled: !!uid,
+    staleTime: STALE.DEFAULT,
+    queryFn: async (): Promise<Note[]> => {
+      const { data } = await untyped().from('player_notes').select(NOTE_COLS).eq('user_id', uid!)
+      return ((data ?? []) as Record<string, unknown>[]).map(mapNote).sort((a, b) => noteDate(b).localeCompare(noteDate(a)))
+    },
+  })
+}
+
+/** Add a standalone diary entry (training / competition outside league play) — bits_match_id stays null. */
+export function useSaveDiaryEntry() {
+  const { data: session } = useSession()
+  const uid = session?.user?.id
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string }) => {
+      const { error } = await untyped().from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date })
+      if (error) throw error
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['diary-entries', uid] })
+      qc.invalidateQueries({ queryKey: ['hall-notes', uid, v.hall] })
+    },
+  })
+}
 
 /** Every note at a given center, newest first — the "recall" when booked there again. */
 export function useHallNotes(hall: string | null | undefined) {
@@ -129,7 +170,7 @@ export function useHallNotes(hall: string | null | undefined) {
     enabled: !!uid && !!hall,
     queryFn: async (): Promise<Note[]> => {
       const { data } = await untyped()
-        .from('player_notes').select('id, bits_match_id, hall_name, body, created_at')
+        .from('player_notes').select(NOTE_COLS)
         .eq('user_id', uid!).eq('hall_name', hall!).order('created_at', { ascending: false })
       return ((data ?? []) as Record<string, unknown>[]).map(mapNote)
     },
@@ -144,7 +185,7 @@ export function useMatchNotes(matchId: number | null | undefined) {
     enabled: !!uid && matchId != null,
     queryFn: async (): Promise<Note[]> => {
       const { data } = await untyped()
-        .from('player_notes').select('id, bits_match_id, hall_name, body, created_at')
+        .from('player_notes').select(NOTE_COLS)
         .eq('user_id', uid!).eq('bits_match_id', matchId!).order('created_at', { ascending: false })
       return ((data ?? []) as Record<string, unknown>[]).map(mapNote)
     },
@@ -165,6 +206,7 @@ export function useSaveNote() {
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ['match-notes', uid, v.matchId] })
       qc.invalidateQueries({ queryKey: ['hall-notes', uid, v.hall] })
+      qc.invalidateQueries({ queryKey: ['diary-entries', uid] })
     },
   })
 }
@@ -179,6 +221,7 @@ export function useDeleteNote() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['match-notes'] })
       qc.invalidateQueries({ queryKey: ['hall-notes'] })
+      qc.invalidateQueries({ queryKey: ['diary-entries'] })
     },
   })
 }
@@ -248,7 +291,7 @@ export function usePatternHistory(pattern: string | null | undefined, excludeMat
       const ids = ((preps ?? []) as Record<string, unknown>[]).map((p) => p.bits_match_id as number)
       if (ids.length === 0) return []
       const { data } = await untyped()
-        .from('player_notes').select('id, bits_match_id, hall_name, body, created_at')
+        .from('player_notes').select(NOTE_COLS)
         .eq('user_id', uid!).in('bits_match_id', ids).order('created_at', { ascending: false }).limit(5)
       return ((data ?? []) as Record<string, unknown>[]).map(mapNote)
     },

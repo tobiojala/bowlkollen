@@ -15,6 +15,7 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import CaptainSection from './_components/CaptainSection'
 import SelectedCard from './_components/SelectedCard'
 import NextMatchCard from './_components/NextMatchCard'
+import DiarySection from './_components/DiarySection'
 import BallShelf from './_components/BallShelf'
 
 // Dark, native-matching palette (mirrors PlayerProfileView so /profile and the
@@ -219,6 +220,9 @@ export default function ProfilePage() {
 
         {/* Next fixture → prep sheet (Prepare pillar) */}
         <NextMatchCard />
+
+        {/* Dagbok — private diary incl. training & external competitions (Remember pillar) */}
+        {verified && <DiarySection />}
 
         {/* Captain/board shortcut → team admin (lineup, availability, notis) */}
         <CaptainSection />
