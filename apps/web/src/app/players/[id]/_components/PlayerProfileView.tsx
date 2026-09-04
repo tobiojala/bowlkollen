@@ -98,6 +98,14 @@ export default function PlayerProfileView({
   }, [])
   const isSheetOpen = expanded !== null
 
+  // Follow / edit control — lives top-right over SPELARPULS (right column), not in
+  // the left hero column.
+  const followControl = isOwner
+    ? (onEdit && (
+        <button onClick={onEdit} style={{ minHeight: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer', border: '1px solid rgba(244,245,247,0.14)', background: 'transparent', color: 'rgba(244,245,247,0.64)', fontSize: 12, fontWeight: 700 }}>Redigera</button>
+      ))
+    : (identity.isJunior && !identity.isClaimed ? <JuniorFollowNotice size="sm" /> : <FollowButton entityType="player" entityId={playerId} size="sm" />)
+
   // No matches yet — show a quiet identity header + empty state.
   if (!data.hasData) {
     return (
@@ -138,10 +146,15 @@ export default function PlayerProfileView({
 
         /* Public player page — single column on mobile, wide magazine on desktop */
         .pp-canvas { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
+        /* Follow control: inline with the identity on mobile, top-right over
+           SPELARPULS on desktop. Rendered in both, shown by breakpoint. */
+        .pp-follow-desktop { display: none; }
         @media (min-width: 1024px) {
           .pp-canvas { max-width: 1160px; padding-left: 32px; padding-right: 32px; }
           .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start; }
           .pp-side { align-self: start; }  /* not sticky: tall side would strand its bottom under the OS dock */
+          .pp-follow-desktop { display: block; }
+          .pp-follow-mobile { display: none; }
         }
       `}</style>
       <PublicHeader />
@@ -166,20 +179,7 @@ export default function PlayerProfileView({
             achievements={achievements}
             isOwner={isOwner}
             showFollow={false}
-            followSlot={
-              isOwner
-                ? (onEdit && (
-                    <button onClick={onEdit}
-                      style={{ minHeight: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
-                        border: '1px solid rgba(244,245,247,0.14)', background: 'transparent',
-                        color: 'rgba(244,245,247,0.64)', fontSize: 12, fontWeight: 700 }}>
-                      Redigera
-                    </button>
-                  ))
-                : (identity.isJunior && !identity.isClaimed
-                    ? <JuniorFollowNotice size="sm" />
-                    : <FollowButton entityType="player" entityId={playerId} size="sm" />)
-            }
+            followSlot={followControl && <span className="pp-follow-mobile" style={{ display: 'inline-flex' }}>{followControl}</span>}
             onOpenCurve={(m) => { setCurveMetric(m ?? 'snitt'); setExpanded('curve') }}
             onOpenChallenges={() => {}}
             onOpenBkRating={() => setExpanded('bkrating')}
@@ -190,7 +190,8 @@ export default function PlayerProfileView({
           />
           </div>
 
-          <div className="pp-main">
+          <div className="pp-main" style={{ position: 'relative' }}>
+          {followControl && <div className="pp-follow-desktop" style={{ position: 'absolute', top: 16, right: 20, zIndex: 2 }}>{followControl}</div>}
           {pulsPoints.length > 1 && (
             <section style={{ padding: '16px 20px 0' }}>
               <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>SPELARPULS</div>
