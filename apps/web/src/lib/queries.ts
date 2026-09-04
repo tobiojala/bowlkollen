@@ -1033,8 +1033,29 @@ export function useToggleFollow(entityType: FollowEntityType, entityId: string) 
         return true   // now following
       }
     },
-    onSuccess: () => {
+    // Optimistic: flip the button and the follower count instantly, then reconcile.
+    onMutate: async () => {
+      const countKey = ['follow-count', entityType, entityId]
+      await qc.cancelQueries({ queryKey: keys.follows })
+      await qc.cancelQueries({ queryKey: countKey })
+      const prevFollows = qc.getQueryData<Follow[]>(keys.follows)
+      const prevCount = qc.getQueryData<number>(countKey)
+      const isNow = (prevFollows ?? []).some(f => f.entity_type === entityType && f.entity_id === entityId)
+      qc.setQueryData<Follow[]>(keys.follows, (old = []) =>
+        isNow
+          ? old.filter(f => !(f.entity_type === entityType && f.entity_id === entityId))
+          : [...old, { id: `optimistic-${entityId}`, user_id: '', entity_type: entityType, entity_id: entityId, created_at: new Date().toISOString() }])
+      qc.setQueryData<number>(countKey, c => Math.max(0, (c ?? 0) + (isNow ? -1 : 1)))
+      return { prevFollows, prevCount, countKey }
+    },
+    onError: (_e, _v, ctx) => {
+      if (!ctx) return
+      qc.setQueryData(keys.follows, ctx.prevFollows)
+      qc.setQueryData(ctx.countKey, ctx.prevCount)
+    },
+    onSettled: (_d, _e, _v, ctx) => {
       qc.invalidateQueries({ queryKey: keys.follows })
+      if (ctx) qc.invalidateQueries({ queryKey: ctx.countKey })
     },
   })
 }
