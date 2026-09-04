@@ -128,18 +128,17 @@ export default function IdentitySection({
   ) : null)
 
   return (
-    <div style={{ padding: '12px 20px 0', position: 'relative' }}>
+    <div style={{ padding: '12px 20px 0' }}>
 
-      {/* Follow / edit control floats top-right so it never squeezes the name */}
-      {followControl && <div style={{ position: 'absolute', top: 12, right: 20, zIndex: 1 }}>{followControl}</div>}
-
-      {/* Identity header */}
+      {/* Identity header — follow/edit sits inline after the name (left column), so
+          it neither squeezes the name onto two lines nor floats out toward the gap. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <PlayerAvatar publicId={avatarPublicId} name={identity.name} size={56} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, paddingRight: followControl ? 80 : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1.15, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{identity.name}</span>
             {identity.isClaimed && <BadgeCheck size={19} color={GOLD} fill={GOLD} fillOpacity={0.18} style={{ flexShrink: 0 }} aria-label="Verifierad spelare" />}
+            {followControl && <div style={{ flexShrink: 0, marginLeft: 4 }}>{followControl}</div>}
           </div>
           <div style={{ fontSize: 13, color: INK2, marginTop: 3 }}>{identity.teamLabel}</div>
         </div>

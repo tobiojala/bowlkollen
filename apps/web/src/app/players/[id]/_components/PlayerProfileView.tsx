@@ -140,7 +140,7 @@ export default function PlayerProfileView({
         .pp-canvas { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
         @media (min-width: 1024px) {
           .pp-canvas { max-width: 1160px; padding-left: 32px; padding-right: 32px; }
-          .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 40px; align-items: start; }
+          .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start; }
           .pp-side { align-self: start; }  /* not sticky: tall side would strand its bottom under the OS dock */
         }
       `}</style>
@@ -193,7 +193,7 @@ export default function PlayerProfileView({
           <div className="pp-main">
           {pulsPoints.length > 1 && (
             <section style={{ padding: '16px 20px 0' }}>
-              <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>PROFIL-PULS</div>
+              <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>SPELARPULS</div>
               <ProfileTrend
                 points={pulsPoints}
                 caption="Snitt match för match"

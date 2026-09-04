@@ -16,7 +16,7 @@ export function ProfilePulse({ history, seasonAvg, onInfo }: { history: PlayerMa
     <View style={styles.section}>
       <ProfileTrend
         points={points}
-        label="PROFIL-PULS"
+        label="SPELARPULS"
         caption="Snitt match för match"
         baseline={seasonAvg}
         baselineLabel="matchsnitt"
