@@ -13,7 +13,7 @@ export function greetingFor(hour: number, firstName: string | null): string {
 
 const TIPS = [
   'Glöm inte kolla väskan innan matchen',
-  'Kolla oljemönstret innan du väljer klot',
+  'Kolla oljeprofilen innan du väljer klot',
   'Rent klot ger bättre grepp — torka av innan spel',
   'Ny PB? Logga matchen i din dagbok',
   'Kolla dina bord mot nästa motståndare',
