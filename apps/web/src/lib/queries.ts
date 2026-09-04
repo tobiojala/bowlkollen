@@ -999,66 +999,8 @@ export function usePersonalizedFeed(playerIds: string[], teamIds: string[]) {
   })
 }
 
-/** Toggle follow/unfollow. Returns the new following state. */
-export function useToggleFollow(entityType: FollowEntityType, entityId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async () => {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('not_authenticated')
-      const uid = session.user.id
-
-      // Check current state
-      const { data: existing } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('user_id', uid)
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .maybeSingle()
-
-      if (existing) {
-        await supabase.from('follows').delete().eq('id', existing.id)
-        return false  // now unfollowed
-      } else {
-        const { error } = await supabase.from('follows').insert({ user_id: uid, entity_type: entityType, entity_id: entityId })
-        if (error) {
-          // Server-enforced junior guardrail (see enforce_junior_follow_guard
-          // trigger) — surface a recognizable error so the UI can show a
-          // friendly message instead of failing silently.
-          if (error.message.includes('junior_unclaimed')) throw new Error('JUNIOR_UNCLAIMED')
-          throw error
-        }
-        return true   // now following
-      }
-    },
-    // Optimistic: flip the button and the follower count instantly, then reconcile.
-    onMutate: async () => {
-      const countKey = ['follow-count', entityType, entityId]
-      await qc.cancelQueries({ queryKey: keys.follows })
-      await qc.cancelQueries({ queryKey: countKey })
-      const prevFollows = qc.getQueryData<Follow[]>(keys.follows)
-      const prevCount = qc.getQueryData<number>(countKey)
-      const isNow = (prevFollows ?? []).some(f => f.entity_type === entityType && f.entity_id === entityId)
-      qc.setQueryData<Follow[]>(keys.follows, (old = []) =>
-        isNow
-          ? old.filter(f => !(f.entity_type === entityType && f.entity_id === entityId))
-          : [...old, { id: `optimistic-${entityId}`, user_id: '', entity_type: entityType, entity_id: entityId, created_at: new Date().toISOString() }])
-      qc.setQueryData<number>(countKey, c => Math.max(0, (c ?? 0) + (isNow ? -1 : 1)))
-      return { prevFollows, prevCount, countKey }
-    },
-    onError: (_e, _v, ctx) => {
-      if (!ctx) return
-      qc.setQueryData(keys.follows, ctx.prevFollows)
-      qc.setQueryData(ctx.countKey, ctx.prevCount)
-    },
-    onSettled: (_d, _e, _v, ctx) => {
-      qc.invalidateQueries({ queryKey: keys.follows })
-      if (ctx) qc.invalidateQueries({ queryKey: ctx.countKey })
-    },
-  })
-}
+// Follow/unfollow (optimistic) lives in its own file to keep queries.ts small.
+export { useToggleFollow } from './use-follow-toggle'
 
 export function useAnonViewSuggestions(anonId: string | null) {
   return useQuery<AnonViewSuggestion[]>({
