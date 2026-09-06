@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import { useSession } from '@/lib/queries'
 import { STALE } from '@/lib/constants'
+import type { Game } from '@bowlkollen/core'
 
 // player_notes / bits_matches user-scoped reads. player_notes isn't in the
 // generated types (run supabase/migrations/player_notes.sql) — reach it untyped.
@@ -117,17 +118,16 @@ export function usePrepMatch(matchId: number) {
 export type DiaryType = 'traning' | 'tavling' | 'match' | 'ovrigt'
 export type Note = {
   id: string; matchId: number | null; hall: string | null; body: string; createdAt: string
-  entryType: DiaryType | null; entryDate: string | null
+  entryType: DiaryType | null; entryDate: string | null; games: Game[] | null
 }
 const mapNote = (r: Record<string, unknown>): Note => ({
   id: r.id as string, matchId: (r.bits_match_id as number | null) ?? null,
   hall: (r.hall_name as string | null) ?? null, body: r.body as string, createdAt: r.created_at as string,
-  entryType: (r.entry_type as DiaryType | null) ?? null, entryDate: (r.entry_date as string | null) ?? null,
+  entryType: (r.entry_type as DiaryType | null) ?? null, entryDate: (r.entry_date as string | null) ?? null, games: (r.games as Game[] | null) ?? null,
 })
 export const noteDate = (n: Note): string => n.entryDate ?? n.createdAt.slice(0, 10)   // event date, else written
-export const noteType = (n: Note): DiaryType => n.entryType ?? (n.matchId != null ? 'match' : 'ovrigt')
 
-const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date'
+const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date, games'
 
 /** The whole diary — every entry newest-first: match-prep notes + standalone training/competition entries. */
 export function useDiaryEntries() {
@@ -150,8 +150,8 @@ export function useSaveDiaryEntry() {
   const uid = session?.user?.id
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string }) => {
-      const { error } = await untyped().from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date })
+    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string; games?: Game[] }) => {
+      const { error } = await untyped().from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date, games: input.games?.length ? input.games : null })
       if (error) throw error
     },
     onSuccess: (_d, v) => {

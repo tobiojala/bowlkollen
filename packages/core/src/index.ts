@@ -12,3 +12,4 @@ export * from './delmatch';
 export * from './home-tip';
 export * from './feed-rank';
 export * from './serie-bars';
+export * from './bowling-score';

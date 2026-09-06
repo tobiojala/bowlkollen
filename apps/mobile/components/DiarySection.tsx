@@ -31,7 +31,7 @@ export function DiarySection() {
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
-        <Text style={styles.label}>DAGBOK</Text>
+        <Text style={styles.label}>LOGGBOK</Text>
         {entries.length > 0 && (
           <PressableScale onPress={() => setAdding(true)}><Text style={styles.add}>Ny anteckning</Text></PressableScale>
         )}
@@ -41,7 +41,7 @@ export function DiarySection() {
         <PressableScale style={styles.empty} onPress={() => setAdding(true)}>
           <Ionicons name="add-circle" size={24} color={COLOR.gold} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.emptyTitle}>Börja föra dagbok</Text>
+            <Text style={styles.emptyTitle}>Börja föra loggbok</Text>
             <Text style={styles.emptySub}>Logga träning, tävling och matcher — privat, bara för dig.</Text>
           </View>
         </PressableScale>
