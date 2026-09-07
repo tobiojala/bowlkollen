@@ -3,6 +3,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import type { Game } from '@bowlkollen/core';
+export type { Game };
 
 // The diary data model — split out of diary.ts to keep that file within budget.
 // player_notes isn't in the generated types (run supabase/migrations/player_notes.sql).
@@ -11,7 +13,7 @@ const db = supabase as unknown as SupabaseClient;
 export type DiaryType = 'traning' | 'tavling' | 'match' | 'ovrigt';
 export type Note = {
   id: string; matchId: number | null; hall: string | null; body: string; createdAt: string;
-  entryType: DiaryType | null; entryDate: string | null;
+  entryType: DiaryType | null; entryDate: string | null; games: Game[] | null;
 };
 
 export const mapNote = (r: Record<string, unknown>): Note => ({
@@ -22,11 +24,15 @@ export const mapNote = (r: Record<string, unknown>): Note => ({
   createdAt: r.created_at as string,
   entryType: (r.entry_type as DiaryType | null) ?? null,
   entryDate: (r.entry_date as string | null) ?? null,
+  games: (r.games as Game[] | null) ?? null,
 });
 export const noteDate = (n: Note): string => n.entryDate ?? n.createdAt.slice(0, 10);
 export const noteType = (n: Note): DiaryType => n.entryType ?? (n.matchId != null ? 'match' : 'ovrigt');
+export const entrySeries = (n: Note): number[] => (n.games ?? []).map((g) => g.total);
+export const entryTotal = (n: Note): number => entrySeries(n).reduce((a, b) => a + b, 0);
+export const entryAvg = (n: Note): number | null => { const s = entrySeries(n); return s.length ? Math.round(entryTotal(n) / s.length) : null; };
 
-export const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date';
+export const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date, games';
 
 // The whole diary — every entry newest-first: match-prep notes + standalone entries.
 export function useDiaryEntries() {
@@ -48,8 +54,8 @@ export function useSaveDiaryEntry() {
   const uid = session?.user?.id;
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string }) => {
-      const { error } = await db.from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date });
+    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string; games?: Game[] }) => {
+      const { error } = await db.from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date, games: input.games?.length ? input.games : null });
       if (error) throw error;
     },
     onSuccess: (_d, v) => {

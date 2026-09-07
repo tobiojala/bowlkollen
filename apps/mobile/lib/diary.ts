@@ -7,8 +7,8 @@ import { mapNote, NOTE_COLS, type Note } from './diary-entries';
 
 // The diary data model + standalone-entry hooks live in diary-entries.ts; re-export
 // so existing '@/lib/diary' consumers are unaffected.
-export { useDiaryEntries, useSaveDiaryEntry, noteDate, noteType } from './diary-entries';
-export type { Note, DiaryType } from './diary-entries';
+export { useDiaryEntries, useSaveDiaryEntry, noteDate, noteType, entrySeries, entryTotal, entryAvg } from './diary-entries';
+export type { Note, DiaryType, Game } from './diary-entries';
 
 // player_notes isn't in the generated types yet (run supabase/migrations/player_notes.sql).
 const db = supabase as unknown as SupabaseClient;

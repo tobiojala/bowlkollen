@@ -4,9 +4,11 @@ import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { GlassSheet } from '@/components/GlassSheet';
 import { PressableScale } from '@/components/PressableScale';
+import { Scoreboard } from '@/components/Scoreboard';
 import { Segmented } from '@/components/Segmented';
 import {
-  useDiaryEntries, useSaveDiaryEntry, useDeleteNote, noteDate, noteType, type DiaryType, type Note,
+  useDiaryEntries, useSaveDiaryEntry, useDeleteNote, noteDate, noteType, entrySeries, entryAvg, entryTotal,
+  type DiaryType, type Note, type Game,
 } from '@/lib/diary';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
@@ -70,7 +72,13 @@ function EntryRow({ note }: { note: Note }) {
         <View style={{ flex: 1 }} />
         <PressableScale onPress={remove} accessibilityLabel="Ta bort"><Ionicons name="trash-outline" size={16} color={COLOR.ink4} /></PressableScale>
       </View>
-      <Text style={styles.body}>{note.body}</Text>
+      {note.games && note.games.length > 0 && (
+        <View style={styles.gamesRow}>
+          <Text style={styles.gamesSeries}>{entrySeries(note).join('  ')}</Text>
+          <Text style={styles.gamesMeta}>· ⌀ {entryAvg(note)} · {entryTotal(note)} tot</Text>
+        </View>
+      )}
+      {!!note.body && <Text style={styles.body}>{note.body}</Text>}
     </View>
   );
 }
@@ -80,13 +88,19 @@ function AddSheet({ visible, onClose }: { visible: boolean; onClose: () => void 
   const [type, setType] = useState<DiaryType>('traning');
   const [hall, setHall] = useState('');
   const [body, setBody] = useState('');
+  const [games, setGames] = useState<Game[]>([]);
+  const [board, setBoard] = useState(false);
 
+  const canSave = body.trim().length > 0 || games.length > 0;
+  const reset = () => { setBody(''); setHall(''); setType('traning'); setGames([]); };
   const submit = () => {
-    if (!body.trim()) return;
-    save.mutate({ body, hall: hall.trim() || null, type, date: todayISO() }, {
-      onSuccess: () => { setBody(''); setHall(''); setType('traning'); onClose(); },
+    if (!canSave) return;
+    save.mutate({ body, hall: hall.trim() || null, type, date: todayISO(), games }, {
+      onSuccess: () => { reset(); onClose(); },
     });
   };
+  const gTotal = games.reduce((a, g) => a + g.total, 0);
+  const gAvg = games.length ? Math.round(gTotal / games.length) : 0;
 
   return (
     <GlassSheet visible={visible} onClose={onClose} title="Ny anteckning">
@@ -95,10 +109,16 @@ function AddSheet({ visible, onClose }: { visible: boolean; onClose: () => void 
         <TextInput value={hall} onChangeText={setHall} placeholder="Hall (valfritt)" placeholderTextColor={COLOR.ink4} style={styles.input} />
         <TextInput value={body} onChangeText={setBody} placeholder="Hur gick det? Vad testade du?" placeholderTextColor={COLOR.ink4}
           multiline style={[styles.input, styles.textarea]} />
-        <PressableScale style={[styles.save, !body.trim() && styles.saveOff]} onPress={submit} disabled={!body.trim() || save.isPending}>
-          <Text style={[styles.saveText, !body.trim() && styles.saveTextOff]}>Spara</Text>
+        <PressableScale style={styles.scoreBtn} onPress={() => setBoard(true)}>
+          <Ionicons name="list" size={20} color={games.length ? COLOR.gold : COLOR.ink3} />
+          <Text style={styles.scoreBtnText}>{games.length ? `${games.length} spel · ⌀ ${gAvg} · ${gTotal} tot` : 'Lägg till spel'}</Text>
+          <Text style={styles.scoreBtnHint}>{games.length ? 'Ändra' : 'Poängräkning'}</Text>
+        </PressableScale>
+        <PressableScale style={[styles.save, !canSave && styles.saveOff]} onPress={submit} disabled={!canSave || save.isPending}>
+          <Text style={[styles.saveText, !canSave && styles.saveTextOff]}>Spara</Text>
         </PressableScale>
       </View>
+      <Scoreboard visible={board} initial={games} onClose={() => setBoard(false)} onSave={(g) => { setGames(g); setBoard(false); }} />
     </GlassSheet>
   );
 }
@@ -120,6 +140,12 @@ const styles = StyleSheet.create({
   badgeText: { color: COLOR.ink2, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.4 },
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1 },
   body: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.regular, lineHeight: 22, marginTop: 6 },
+  gamesRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: SPACE[2], marginTop: 6 },
+  gamesSeries: { color: COLOR.ink, fontFamily: FONT.score, fontSize: TYPE.body, fontVariant: ['tabular-nums'] },
+  gamesMeta: { color: COLOR.ink3, fontSize: TYPE.caption },
+  scoreBtn: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[3] },
+  scoreBtnText: { flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  scoreBtnHint: { color: COLOR.ink3, fontSize: TYPE.caption },
 
   input: { backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[3],
     color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.regular },
