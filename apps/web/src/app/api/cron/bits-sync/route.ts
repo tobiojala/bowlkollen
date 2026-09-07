@@ -16,6 +16,16 @@ import { syncBitsCompetitions, syncPendingCompetitionResults } from '@/lib/bits-
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // seconds — bump on Vercel Pro if the daily player sync needs longer
 
+// Per-run caps for the pending-backfill batches. These MUST keep the whole run
+// under maxDuration even when a pool is huge (e.g. after a history backfill dumps
+// ~141k matches into the exact/delmatch pools) — otherwise the function is killed
+// before it writes its sync_runs row and the sync looks dead. Steady state only
+// needs a handful/day; a large historical backlog is drained deliberately via the
+// dedicated /api/cron/backfill-{exact,delmatch} routes, not this 3-hourly run.
+const BATCH_SCORES = 100
+const BATCH_EXACT = 60
+const BATCH_DELMATCH = 60
+
 // Runs the BITS sync. Triggered by pg_cron (POST, supabase/migrations/bits_sync_cron.sql)
 // OR Vercel Cron (GET, vercel.json) — both authenticate with $CRON_SECRET.
 function authed(req: Request): boolean {
@@ -42,9 +52,9 @@ async function runSync() {
 
   const tasks: Promise<unknown>[] = [
     syncBitsMatchesForSeason(season),
-    syncPendingMatchScores(200),
-    syncPendingExactResults(150),
-    syncPendingDelmatches(150),
+    syncPendingMatchScores(BATCH_SCORES),
+    syncPendingExactResults(BATCH_EXACT),
+    syncPendingDelmatches(BATCH_DELMATCH),
   ]
   if (daily) {
     tasks.push(syncBitsPlayers())

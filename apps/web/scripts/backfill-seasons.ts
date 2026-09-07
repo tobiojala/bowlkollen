@@ -9,15 +9,24 @@
  * MODULE_NOT_FOUND. This duplicates the minimal session/fetch/upsert logic
  * instead (same convention as the other one-off scripts in this folder).
  *
- * Safe to re-run — everything upserts.
- * Run: npx tsx scripts/backfill-seasons.ts
+ * Safe to re-run — everything upserts. BITS serves full league history back to
+ * ~2008 (a partial 2005; nothing at 2000). 2021–2026 are already synced by the
+ * nightly cron, so the default range is the historical tail 2008–2020.
+ *
+ * Run (default 2008–2020):  npx tsx scripts/backfill-seasons.ts
+ * Run (explicit range):     npx tsx scripts/backfill-seasons.ts 2008 2020
+ * Run (single season):      npx tsx scripts/backfill-seasons.ts 2010
  */
 import dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 
 import { createClient } from '@supabase/supabase-js'
 
-const SEASONS = [2021, 2022, 2023, 2024, 2025]
+// Range from argv, else the historical tail. Empty seasons (pre-2008) are cheap
+// no-ops — one Division call that upserts nothing — so an over-wide range is safe.
+const args = process.argv.slice(2).map(Number).filter(n => Number.isFinite(n))
+const [from, to] = args.length === 0 ? [2008, 2020] : args.length === 1 ? [args[0], args[0]] : [args[0], args[1]]
+const SEASONS = Array.from({ length: to - from + 1 }, (_, i) => from + i)
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

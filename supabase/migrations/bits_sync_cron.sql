@@ -11,6 +11,10 @@
 -- Store the endpoint + secret in Supabase Vault ONCE (never commit the values):
 --   select vault.create_secret('https://bowlkollen.se/api/cron/bits-sync', 'bits_sync_url');
 --   select vault.create_secret('<CRON_SECRET>',                            'bits_sync_secret');
+-- IMPORTANT: use the production CUSTOM DOMAIN (bowlkollen.se), NOT the
+-- bowlkollen-brain.vercel.app alias — that alias 308-redirects to the custom
+-- domain and pg_net does NOT follow redirects, which silently stalled the sync
+-- from 2026-08-16. See bits_sync_cron_revive.sql for the incident.
 -- CRON_SECRET must equal the web app's CRON_SECRET env var. To rotate the URL/
 -- secret later, use vault.update_secret(); no need to touch this job.
 
