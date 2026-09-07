@@ -7,7 +7,7 @@ import { useDiaryEntries } from '@/lib/diary'
 import { LogEntryRow } from '@/components/logbook/LogEntryRow'
 import { LogEntrySheet } from '@/components/logbook/LogEntrySheet'
 
-const INK = '#f4f5f7', INK2 = 'rgba(244,245,247,0.72)', INK3 = 'rgba(244,245,247,0.56)', GOLD = '#f5c200', SURFACE = '#14171c'
+const INK = '#f4f5f7', INK2 = 'rgba(244,245,247,0.72)', INK3 = 'rgba(244,245,247,0.56)', GOLD = '#f5c200'
 
 // Compact Loggbok preview on the profile — the last few entries + a doorway to the
 // full /loggbok page (timeline, league matches, filters).
@@ -18,10 +18,11 @@ export default function DiarySection() {
   return (
     <div style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 12px' }}>
-        <Link href="/loggbok" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', textDecoration: 'none' }}>
-          LOGGBOK <ChevronRight size={14} />
-        </Link>
-        <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: INK2 }}>Ny anteckning</button>
+        <span style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em' }}>LOGGBOK</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: INK2 }}>Ny anteckning</button>
+          <Link href="/loggbok" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 14, fontWeight: 600, color: INK2, textDecoration: 'none' }}>Visa alla <ChevronRight size={15} /></Link>
+        </div>
       </div>
 
       {entries.length === 0 ? (
@@ -37,12 +38,6 @@ export default function DiarySection() {
       ) : (
         <div>{entries.slice(0, 3).map((n) => <LogEntryRow key={n.id} note={n} />)}</div>
       )}
-
-      {/* Always-visible doorway to the full page */}
-      <Link href="/loggbok" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10,
-        padding: '13px', borderRadius: 12, background: SURFACE, fontSize: 14, fontWeight: 700, color: INK, textDecoration: 'none' }}>
-        Öppna hela loggboken <ChevronRight size={16} />
-      </Link>
 
       {adding && <LogEntrySheet onClose={() => setAdding(false)} />}
     </div>
