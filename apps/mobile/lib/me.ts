@@ -54,7 +54,7 @@ export function useMyStats(publicId: string | undefined): PlayerStats | null {
   return computePlayerStats(history);
 }
 
-export type MyTeam = { teamId: number; name: string; role: string };
+export type MyTeam = { teamId: number; name: string; clubName: string | null; role: string };
 
 // Teams the user is a verified member/captain of.
 export function useMyTeams() {
@@ -71,13 +71,17 @@ export function useMyTeams() {
         .eq('status', 'verified');
       const ids = (claims ?? []).map((c) => c.bits_team_id);
       if (ids.length === 0) return [];
-      const { data: teams } = await supabase.from('bits_teams').select('bits_team_id, name').in('bits_team_id', ids);
-      const nameById = new Map((teams ?? []).map((t) => [t.bits_team_id, t.name]));
-      return (claims ?? []).map((c) => ({
-        teamId: c.bits_team_id,
-        name: nameById.get(c.bits_team_id) ?? 'Lag',
-        role: c.role ?? 'player',
-      }));
+      const { data: teams } = await supabase.from('bits_teams').select('bits_team_id, name, club_name').in('bits_team_id', ids);
+      const metaById = new Map((teams ?? []).map((t) => [t.bits_team_id, t]));
+      return (claims ?? []).map((c) => {
+        const meta = metaById.get(c.bits_team_id);
+        return {
+          teamId: c.bits_team_id,
+          name: meta?.name ?? 'Lag',
+          clubName: (meta?.club_name as string | null) ?? null,
+          role: c.role ?? 'player',
+        };
+      });
     },
   });
 }

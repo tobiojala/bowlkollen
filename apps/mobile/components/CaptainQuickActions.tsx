@@ -17,11 +17,19 @@ export function CaptainQuickActions() {
   const teams = useTeamShortcuts();
   if (teams.length === 0) return null;
 
+  // Group by club — a player can have several teams, two of which can be one club's
+  // herr/dam sides, so "MINA LAG" grouped by club reads clear (web parity).
+  const groups = new Map<string, typeof teams>();
+  for (const t of teams) { const c = t.clubName ?? t.name; groups.set(c, [...(groups.get(c) ?? []), t]); }
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionLabel}>DINA LAG — SNABBVAL</Text>
-      {teams.map((t) => (
-        <TeamCard key={t.teamId} t={t} />
+      <Text style={styles.sectionLabel}>MINA LAG</Text>
+      {[...groups.entries()].map(([club, gteams]) => (
+        <View key={club} style={styles.clubGroup}>
+          <Text style={styles.clubName}>{club}</Text>
+          {gteams.map((t) => <TeamCard key={t.teamId} t={t} />)}
+        </View>
       ))}
     </View>
   );
@@ -108,6 +116,8 @@ function Action({
 const styles = StyleSheet.create({
   section: { marginTop: SPACE[8] },
   sectionLabel: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.5, marginBottom: SPACE[3] },
+  clubGroup: { marginBottom: SPACE[2] },
+  clubName: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.bold, marginBottom: SPACE[2] },
   card: { backgroundColor: COLOR.surface, borderRadius: RADIUS.lg, padding: SPACE[4], marginBottom: SPACE[3] },
   head: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3] },
   headText: { flex: 1, minWidth: 0 },

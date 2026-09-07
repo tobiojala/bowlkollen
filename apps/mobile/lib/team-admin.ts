@@ -306,7 +306,7 @@ export function useMySelections() {
 // a captain reaches the lineup/availability tool in one tap instead of four.
 export type TeamShortcut = {
   teamId: number;
-  name: string;
+  name: string; clubName: string | null;
   role: TeamRole;
   next: { matchId: number; date: string; opponent: string; isHome: boolean } | null;
 };
@@ -347,7 +347,7 @@ export function useTeamShortcuts() {
   });
   return teams.map<TeamShortcut>((t) => ({
     teamId: t.teamId,
-    name: t.name,
+    name: t.name, clubName: t.clubName,
     role: (t.role as TeamRole) ?? 'player',
     next: nextByTeam?.get(t.teamId) ?? null,
   }));
