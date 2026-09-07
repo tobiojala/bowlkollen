@@ -14,17 +14,20 @@ import {
 import { syncBitsCompetitions, syncPendingCompetitionResults } from '@/lib/bits-competitions-sync'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60 // seconds — bump on Vercel Pro if the daily player sync needs longer
+// Vercel Pro. syncBitsMatchesForSeason re-syncs all ~88 current divisions every
+// run and takes ~50s alone, so the old 60s ceiling was always marginal and any
+// pending work tipped it into FUNCTION_INVOCATION_TIMEOUT (killed before the
+// sync_runs row is written → sync looks dead). pg_cron's net.http_post waits up
+// to 280s, so keep this comfortably under that.
+export const maxDuration = 240
 
-// Per-run caps for the pending-backfill batches. These MUST keep the whole run
-// under maxDuration even when a pool is huge (e.g. after a history backfill dumps
-// ~141k matches into the exact/delmatch pools) — otherwise the function is killed
-// before it writes its sync_runs row and the sync looks dead. Steady state only
-// needs a handful/day; a large historical backlog is drained deliberately via the
-// dedicated /api/cron/backfill-{exact,delmatch} routes, not this 3-hourly run.
-const BATCH_SCORES = 100
-const BATCH_EXACT = 60
-const BATCH_DELMATCH = 60
+// Per-run caps for the pending-backfill batches. Steady state only needs a
+// handful/day; a large historical backlog (e.g. the ~141k matches the 2008–2020
+// history backfill added to each pool) is drained deliberately via the dedicated
+// /api/cron/backfill-{exact,delmatch} routes, not this 3-hourly run.
+const BATCH_SCORES = 200
+const BATCH_EXACT = 150
+const BATCH_DELMATCH = 150
 
 // Runs the BITS sync. Triggered by pg_cron (POST, supabase/migrations/bits_sync_cron.sql)
 // OR Vercel Cron (GET, vercel.json) — both authenticate with $CRON_SECRET.

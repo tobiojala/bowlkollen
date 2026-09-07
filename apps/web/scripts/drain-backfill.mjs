@@ -19,7 +19,7 @@ const S = env.CRON_SECRET
 const url = `https://bowlkollen.se/api/cron/backfill-${kind}?limit=${limit}`
 
 const started = Date.now()
-let totalSynced = 0, iterations = 0, consecErrors = 0
+let totalSynced = 0, iterations = 0, noProgress = 0, lastRemaining = Infinity
 console.log(`[${kind}] draining via ${url}`)
 
 while (true) {
@@ -30,12 +30,16 @@ while (true) {
     const j = await r.json()
     totalSynced += j.synced ?? 0
     const mins = ((Date.now() - started) / 60000).toFixed(1)
-    if (j.errors?.length) { consecErrors++; console.log(`[${kind}] iter ${iterations}: err ${j.errors[0]?.slice(0, 80)} | remaining=${j.remaining}`) }
-    else consecErrors = 0
-    if (iterations % 10 === 0 || j.remaining === 0) console.log(`[${kind}] iter ${iterations} | +${j.synced} (tot ${totalSynced}) | remaining=${j.remaining} | ${mins}min`)
+    // Old matches often throw a transient BITS 500 on a single match while the
+    // rest of the batch still commits — so abort on lack of PROGRESS, never on
+    // errors alone. `remaining` dropping = real progress.
+    if (typeof j.remaining === 'number' && j.remaining < lastRemaining) { noProgress = 0; lastRemaining = j.remaining }
+    else noProgress++
+    if (iterations % 10 === 0 || j.remaining === 0 || j.errors?.length) {
+      console.log(`[${kind}] iter ${iterations} | +${j.synced} (tot ${totalSynced}) | remaining=${j.remaining} | ${mins}min${j.errors?.length ? ` | e.g. ${j.errors[0]?.slice(0, 60)}` : ''}`)
+    }
     if (j.remaining === 0) { console.log(`[${kind}] DONE — remaining 0 after ${iterations} iters, ${mins}min`); break }
-    // A run that makes no progress AND has no errors would loop forever — guard it.
-    if (consecErrors > 20) { console.log(`[${kind}] ABORT — ${consecErrors} consecutive errored iters`); process.exit(1) }
+    if (noProgress > 15) { console.log(`[${kind}] ABORT — ${noProgress} iters with no drop in remaining (stuck at ${lastRemaining})`); process.exit(1) }
   } catch (e) {
     console.log(`[${kind}] fetch error: ${String(e).slice(0, 100)} — retrying in 5s`); await sleep(5000)
   }
