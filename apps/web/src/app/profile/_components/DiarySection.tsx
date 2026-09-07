@@ -17,11 +17,11 @@ export default function DiarySection() {
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '4px 2px 12px' }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em' }}>LOGGBOK</span>
-        {entries.length > 0 && (
-          <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: INK2 }}>Ny anteckning</button>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 12px' }}>
+        <Link href="/loggbok" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', textDecoration: 'none' }}>
+          LOGGBOK <ChevronRight size={14} />
+        </Link>
+        <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: INK2 }}>Ny anteckning</button>
       </div>
 
       {entries.length === 0 ? (
