@@ -7,7 +7,7 @@ import { useDiaryEntries } from '@/lib/diary'
 import { LogEntryRow } from '@/components/logbook/LogEntryRow'
 import { LogEntrySheet } from '@/components/logbook/LogEntrySheet'
 
-const INK = '#f4f5f7', INK2 = 'rgba(244,245,247,0.72)', INK3 = 'rgba(244,245,247,0.56)', GOLD = '#f5c200'
+const INK = '#f4f5f7', INK2 = 'rgba(244,245,247,0.72)', INK3 = 'rgba(244,245,247,0.56)', GOLD = '#f5c200', SURFACE = '#14171c'
 
 // Compact Loggbok preview on the profile — the last few entries + a doorway to the
 // full /loggbok page (timeline, league matches, filters).
@@ -35,13 +35,14 @@ export default function DiarySection() {
           </span>
         </button>
       ) : (
-        <div>
-          {entries.slice(0, 3).map((n) => <LogEntryRow key={n.id} note={n} />)}
-          <Link href="/loggbok" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '12px', marginTop: 4, fontSize: 14, fontWeight: 700, color: INK2, textDecoration: 'none' }}>
-            Öppna loggboken <ChevronRight size={16} />
-          </Link>
-        </div>
+        <div>{entries.slice(0, 3).map((n) => <LogEntryRow key={n.id} note={n} />)}</div>
       )}
+
+      {/* Always-visible doorway to the full page */}
+      <Link href="/loggbok" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10,
+        padding: '13px', borderRadius: 12, background: SURFACE, fontSize: 14, fontWeight: 700, color: INK, textDecoration: 'none' }}>
+        Öppna hela loggboken <ChevronRight size={16} />
+      </Link>
 
       {adding && <LogEntrySheet onClose={() => setAdding(false)} />}
     </div>
