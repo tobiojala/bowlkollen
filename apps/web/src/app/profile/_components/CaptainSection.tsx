@@ -18,7 +18,7 @@ const SEASON_ID = 2026
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
 type NextMatch = { matchId: number; opp: string; date: string }
-type MyTeam = { bitsTeamId: number; name: string; role: string; status: string; next: NextMatch | null }
+type MyTeam = { bitsTeamId: number; name: string; clubName: string | null; role: string; status: string; next: NextMatch | null }
 
 function roleLabel(role: string) {
   return role === 'captain' ? 'Kapten' : role === 'board' || role === 'styrelse' ? 'Styrelse' : role === 'lagledare' ? 'Lagledare' : role === 'admin' ? 'Admin' : 'Spelare'
@@ -45,14 +45,14 @@ export default function CaptainSection() {
 
       const ids = rows.map((r) => r.bits_team_id)
       const [{ data: bt }, { data: matches }] = await Promise.all([
-        supabase.from('bits_teams').select('bits_team_id, name').in('bits_team_id', ids),
+        supabase.from('bits_teams').select('bits_team_id, name, club_name').in('bits_team_id', ids),
         supabase.from('bits_matches')
           .select('bits_match_id, match_date, home_team_name, away_team_name, home_bits_team_id, away_bits_team_id')
           .or(`home_bits_team_id.in.(${ids.join(',')}),away_bits_team_id.in.(${ids.join(',')})`)
           .eq('season_id', SEASON_ID).eq('is_finished', false).gte('match_date', todayISO())
           .order('match_date', { ascending: true }),
       ])
-      const nameById = new Map(((bt ?? []) as { bits_team_id: number; name: string }[]).map((t) => [t.bits_team_id, t.name]))
+      const metaById = new Map(((bt ?? []) as { bits_team_id: number; name: string; club_name: string | null }[]).map((t) => [t.bits_team_id, t]))
       const nextFor = (teamId: number): NextMatch | null => {
         const m = ((matches ?? []) as Record<string, unknown>[]).find(
           (x) => x.home_bits_team_id === teamId || x.away_bits_team_id === teamId)
@@ -60,60 +60,72 @@ export default function CaptainSection() {
         const isHome = m.home_bits_team_id === teamId
         return { matchId: m.bits_match_id as number, date: m.match_date as string, opp: (isHome ? m.away_team_name : m.home_team_name) as string }
       }
-      setTeams(rows.map((r) => ({
-        bitsTeamId: r.bits_team_id, name: nameById.get(r.bits_team_id) ?? 'Lag',
-        role: r.role ?? 'player', status: r.status, next: nextFor(r.bits_team_id),
-      })))
+      setTeams(rows.map((r) => {
+        const meta = metaById.get(r.bits_team_id)
+        return {
+          bitsTeamId: r.bits_team_id, name: meta?.name ?? 'Lag', clubName: meta?.club_name ?? null,
+          role: r.role ?? 'player', status: r.status, next: nextFor(r.bits_team_id),
+        }
+      }))
     })()
   }, [])
 
   if (!teams || teams.length === 0) return null
 
+  // Group teams under their club — a player can have several teams, and two of them
+  // can belong to the same club (herr + dam), so "MINA LAG" grouped by club reads clear.
+  const groups = new Map<string, MyTeam[]>()
+  for (const t of teams) { const c = t.clubName ?? t.name; groups.set(c, [...(groups.get(c) ?? []), t]) }
+
   return (
     <>
-      <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '36px 2px 4px' }}>MITT LAG</div>
-      {teams.map((t) => {
-        if (t.status !== 'verified') {
-          return (
-            <div key={t.bitsTeamId} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: SURFACE, borderRadius: 16, opacity: 0.7 }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Shield size={22} color={GOLD} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: INK }}>{t.name}</div>
-                <div style={{ fontSize: 14, color: INK3, marginTop: 2 }}>Väntar på granskning</div>
-              </div>
-              <Clock size={18} color={INK4} />
-            </div>
-          )
-        }
-        const isCaptain = t.role === 'captain'
-        return (
-          <div key={t.bitsTeamId} style={{ background: SURFACE, borderRadius: 16, overflow: 'hidden' }}>
-            <Link href={`/lag/${t.bitsTeamId}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, textDecoration: 'none' }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Shield size={22} color={GOLD} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
-                <div style={{ fontSize: 14, color: INK3, marginTop: 2 }}>{roleLabel(t.role)}</div>
-              </div>
-              <ChevronRight size={20} color={INK4} />
-            </Link>
-
-            <ActionRow icon={<Megaphone size={20} color={INK2} />} label="Anslagstavla" href={`/lag/${t.bitsTeamId}/nyheter`} />
-            {t.next && (isCaptain ? (
-              <>
-                <ActionRow icon={<ListChecks size={20} color={INK2} />} label="Laguttagning" sub={`mot ${t.next.opp} · ${shortDate(t.next.date)}`} href={`/lag/${t.bitsTeamId}/laguttagning/${t.next.matchId}`} />
-                <ActionRow icon={<CalendarCheck size={20} color={INK2} />} label="Tillgänglighet" sub={`mot ${t.next.opp}`} href={`/lag/${t.bitsTeamId}/tillganglighet/${t.next.matchId}`} />
-              </>
-            ) : (
-              <ActionRow icon={<CalendarCheck size={20} color={INK2} />} label={`Kan du spela mot ${t.next.opp}?`} sub={shortDate(t.next.date)} href={`/lag/${t.bitsTeamId}/tillganglighet/${t.next.matchId}`} />
-            ))}
+      <div style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em', padding: '36px 2px 4px' }}>MINA LAG</div>
+      {[...groups.entries()].map(([club, gteams]) => (
+        <div key={club} style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: INK2, padding: '2px 2px 8px' }}>{club}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {gteams.map((t) => <TeamCard key={t.bitsTeamId} t={t} />)}
           </div>
-        )
-      })}
+        </div>
+      ))}
     </>
+  )
+}
+
+function TeamCard({ t }: { t: MyTeam }) {
+  if (t.status !== 'verified') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: SURFACE, borderRadius: 16, opacity: 0.7 }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={22} color={GOLD} /></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: INK }}>{t.name}</div>
+          <div style={{ fontSize: 14, color: INK3, marginTop: 2 }}>Väntar på granskning</div>
+        </div>
+        <Clock size={18} color={INK4} />
+      </div>
+    )
+  }
+  const isCaptain = t.role === 'captain'
+  return (
+    <div style={{ background: SURFACE, borderRadius: 16, overflow: 'hidden' }}>
+      <Link href={`/lag/${t.bitsTeamId}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, textDecoration: 'none' }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,194,0,0.12)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={22} color={GOLD} /></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+          <div style={{ fontSize: 14, color: INK3, marginTop: 2 }}>{roleLabel(t.role)}</div>
+        </div>
+        <ChevronRight size={20} color={INK4} />
+      </Link>
+      <ActionRow icon={<Megaphone size={20} color={INK2} />} label="Anslagstavla" href={`/lag/${t.bitsTeamId}/nyheter`} />
+      {t.next && (isCaptain ? (
+        <>
+          <ActionRow icon={<ListChecks size={20} color={INK2} />} label="Laguttagning" sub={`mot ${t.next.opp} · ${shortDate(t.next.date)}`} href={`/lag/${t.bitsTeamId}/laguttagning/${t.next.matchId}`} />
+          <ActionRow icon={<CalendarCheck size={20} color={INK2} />} label="Tillgänglighet" sub={`mot ${t.next.opp}`} href={`/lag/${t.bitsTeamId}/tillganglighet/${t.next.matchId}`} />
+        </>
+      ) : (
+        <ActionRow icon={<CalendarCheck size={20} color={INK2} />} label={`Kan du spela mot ${t.next.opp}?`} sub={shortDate(t.next.date)} href={`/lag/${t.bitsTeamId}/tillganglighet/${t.next.matchId}`} />
+      ))}
+    </div>
   )
 }
 
