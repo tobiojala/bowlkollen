@@ -20,16 +20,18 @@ export default async function DivisionPage(
   const currentYear = Number(SEASON.CURRENT.slice(0, 4))
 
   // Division IDs are stable across seasons (bits_matches.season_id distinguishes
-  // them) — so name is resolved season-agnostic, and the seasons list drives the
-  // picker. The selected season comes from ?season= (default: current, else newest).
-  const [{ data: division }, { data: seasonRows }] = await Promise.all([
-    supabase.from('bits_divisions').select('name')
-      .eq('bits_division_id', divisionId).order('season_id', { ascending: false }).limit(1).maybeSingle(),
-    supabase.from('bits_matches').select('season_id').eq('bits_division_id', divisionId),
-  ])
+  // them) — so BOTH the name and the seasons picker come from bits_divisions, which
+  // holds exactly one row per (division, season). Deriving seasons from bits_matches
+  // instead hits PostgREST's 1000-row cap once a division has ~19 seasons of games
+  // (post-2008 backfill), silently dropping the NEWEST seasons. The selected season
+  // comes from ?season= (default: current, else newest).
+  const { data: divRows } = await supabase
+    .from('bits_divisions').select('name, season_id')
+    .eq('bits_division_id', divisionId).order('season_id', { ascending: false })
+  const division = divRows?.[0] ?? null
   if (!division) notFound()
 
-  const seasons = [...new Set(((seasonRows ?? []) as { season_id: number }[]).map(r => r.season_id))].sort((a, b) => b - a)
+  const seasons = (divRows ?? []).map(r => r.season_id)
   const wanted = sp?.season ? Number(sp.season) : null
   const seasonYear = wanted && seasons.includes(wanted) ? wanted
     : seasons.includes(currentYear) ? currentYear
