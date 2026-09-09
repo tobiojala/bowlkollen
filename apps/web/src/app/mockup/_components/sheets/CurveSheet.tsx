@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { SERIE_GOLD_MIN } from '@bowlkollen/core'
 import { Sheet } from '@/components/mockup/Sheet'
 import { FullCurve, MCFG, type Metric } from '@/components/mockup/Curves'
+import SeasonCurve from '@/components/SeasonCurve'
 import { COLORS } from '../../data'
 import type { ProfileMatch, ProfileUpcoming } from '@/lib/profile'
 
@@ -31,8 +33,16 @@ export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, fo
   const scoreColor  = (g: number) => g >= 250 ? GOLD : g >= 200 ? INK : INK3
   const scoreWeight = (g: number) => g >= 250 ? 900 : g >= 200 ? 700 : 400
 
+  // Real dates + milestone flags for the honest season curve. A match earns a
+  // gold dot when it held a milestone series (≥ SERIE_GOLD_MIN) — gold stays rare.
+  const dates      = matches.map(m => m.date)
+  const highlights = matches.map(m => {
+    const gs = m.games.filter(g => g > 0)
+    return gs.length > 0 && Math.max(...gs) >= SERIE_GOLD_MIN
+  })
+
   return (
-    <Sheet title="Säsongskurva" subtitle={`${matches.length} matcher denna säsong`} onClose={onClose}>
+    <Sheet title="Säsongskurva" subtitle={`${matches.length} matcher`} onClose={onClose}>
 
       {/* Hero — same pattern as the page */}
       <div className="flex items-baseline gap-3 mb-1">
@@ -64,9 +74,14 @@ export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, fo
         })}
       </div>
 
-      <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric={curveMetric}
-        tapped={curveTapped} onTap={setCurveTapped}
-        upcoming={upcoming} recentAvg={recentAvg} />
+      {curveMetric === 'snitt' ? (
+        <SeasonCurve matchAvgs={matchAvgs} dates={dates} highlights={highlights}
+          seasonAvg={seasonAvg} recentAvg={recentAvg} tapped={curveTapped} onTap={setCurveTapped} />
+      ) : (
+        <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric={curveMetric}
+          tapped={curveTapped} onTap={setCurveTapped}
+          upcoming={upcoming} recentAvg={recentAvg} />
+      )}
 
       {/* Ghost fan legend */}
       {curveMetric === 'snitt' && (
