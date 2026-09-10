@@ -8,7 +8,6 @@ import PublicHeader from '@/components/PublicHeader'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import ProfileTrend from '@/components/ProfileTrend'
 import { matchTrendPoints } from '@/lib/profile'
-import { usePlayerRankPoints } from './use-player-competitions'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
@@ -72,7 +71,6 @@ export default function PlayerProfileView({
   const [matchTapped, setMatchTapped] = useState<number | null>(null)
 
   const { matchAvgs, seasonAvg, recentAvg, formDiff, lastSeasonAvg } = data
-  const rankPoints = usePlayerRankPoints(playerId)
   const allGames = data.matches.flatMap(m => m.games.filter(g => g > 0)), totalGames = allGames.length
   const totalSum   = allGames.reduce((a, b) => a + b, 0)
   const projAvg    = totalGames ? Math.round((totalSum + 210 * 4) / (totalGames + 4)) : seasonAvg
@@ -254,7 +252,6 @@ export default function PlayerProfileView({
           formDiff={formDiff}
           recentAvg={recentAvg}
           initialMetric={curveMetric}
-          rankPoints={rankPoints}
           onClose={close}
         />
       )}

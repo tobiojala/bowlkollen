@@ -31,18 +31,3 @@ export function usePlayerCompetitions(playerId: string) {
     },
   })
 }
-
-function fmtShort(iso: string): string {
-  const d = new Date(iso)
-  return isNaN(d.getTime()) ? iso : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
-}
-
-// Chronological BITS rankingpoäng points (value + short date) for the curve's
-// Rank. tab — only competitions where the player actually scored ranking points.
-export function usePlayerRankPoints(playerId: string): { value: number; date: string }[] {
-  const { data = [] } = usePlayerCompetitions(playerId)
-  return data
-    .filter(c => c.rank_points != null && c.rank_points > 0 && c.start_date)
-    .sort((a, b) => (a.start_date! < b.start_date! ? -1 : 1))
-    .map(c => ({ value: c.rank_points as number, date: fmtShort(c.start_date as string) }))
-}

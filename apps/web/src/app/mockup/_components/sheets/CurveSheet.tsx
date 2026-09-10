@@ -3,13 +3,10 @@
 import { useState } from 'react'
 import { SERIE_GOLD_MIN } from '@bowlkollen/core'
 import { Sheet } from '@/components/mockup/Sheet'
-import { FullCurve, MCFG, type Metric } from '@/components/mockup/Curves'
+import { MCFG, type Metric } from '@/components/mockup/Curves'
 import SeasonCurve from '@/components/SeasonCurve'
-import { RankCurve, ComboCurve } from '@/components/RankCurves'
 import { COLORS } from '../../data'
 import type { ProfileMatch, ProfileUpcoming } from '@/lib/profile'
-
-export type RankPoint = { value: number; date: string }
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -25,12 +22,10 @@ interface CurveSheetProps {
   formDiff: number
   recentAvg: number
   initialMetric?: Metric
-  /** Real BITS rankingpoäng per competition (chronological). Undefined = mockup. */
-  rankPoints?: RankPoint[]
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, formDiff, recentAvg, initialMetric, rankPoints, onClose }: CurveSheetProps) {
+export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, onClose }: CurveSheetProps) {
   const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
@@ -49,18 +44,8 @@ export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, fo
   return (
     <Sheet title="Säsongskurva" subtitle={`${matches.length} matcher`} onClose={onClose}>
 
-      {/* Hero — metric-aware */}
-      {curveMetric === 'bk' ? null : curveMetric === 'ranking' && rankPoints ? (
-        <>
-          <div className="flex items-baseline gap-3 mb-1">
-            <span className="num" style={{ fontSize: 40, color: INK }}>{rankPoints.length ? rankPoints[rankPoints.length - 1].value : '–'}</span>
-            <span className="text-[13px]" style={{ color: INK3 }}>rankingpoäng</span>
-          </div>
-          <p className="text-[13px] mb-5" style={{ color: INK3 }}>
-            senaste tävlingen{rankPoints.length ? ` · ${rankPoints.length} tävlingar med poäng` : ''}
-          </p>
-        </>
-      ) : (
+      {/* Hero — snitt only; other metrics are "kommer snart" */}
+      {curveMetric === 'snitt' && (
         <>
           <div className="flex items-baseline gap-3 mb-1">
             <span className="num" style={{ fontSize: 40, color: INK }}>{seasonAvg}</span>
@@ -96,16 +81,12 @@ export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, fo
       {curveMetric === 'snitt' ? (
         <SeasonCurve matchAvgs={matchAvgs} dates={dates} highlights={highlights}
           seasonAvg={seasonAvg} recentAvg={recentAvg} tapped={curveTapped} onTap={setCurveTapped} />
-      ) : curveMetric === 'bk' ? (
-        <ComingSoon />
       ) : curveMetric === 'ranking' ? (
-        rankPoints === undefined
-          ? <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric="ranking" tapped={curveTapped} onTap={setCurveTapped} upcoming={upcoming} recentAvg={recentAvg} />
-          : rankPoints.length >= 2 ? <RankCurve points={rankPoints} /> : <NoData label="Ingen rankingpoäng registrerad än" />
+        <ComingSoon text="Rankingpoäng hämtas från BITS – på väg." />
+      ) : curveMetric === 'bk' ? (
+        <ComingSoon text="BK-rating är under utveckling – vi visar den så fort den är redo." />
       ) : (
-        rankPoints === undefined
-          ? <FullCurve matchAvgs={matchAvgs} seasonAvg={seasonAvg} metric="alla" tapped={curveTapped} onTap={setCurveTapped} upcoming={upcoming} recentAvg={recentAvg} />
-          : <ComboCurve snitt={matchAvgs} ranking={rankPoints.map(r => r.value)} />
+        <ComingSoon text="Kommer när ranking är på plats – då jämförs snitt och ranking här." />
       )}
 
       {/* Ghost fan legend */}
@@ -170,22 +151,12 @@ export default function CurveSheet({ matchAvgs, matches, upcoming, seasonAvg, fo
   )
 }
 
-// BK-rating is still under development — an honest placeholder, never a fake curve.
-function ComingSoon() {
+// Honest placeholder for metrics that aren't wired to real data yet — never a fake curve.
+function ComingSoon({ text }: { text: string }) {
   return (
     <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: 152, gap: 8 }}>
       <div className="text-[15px] font-bold" style={{ color: INK }}>Kommer snart</div>
-      <p className="text-[13px]" style={{ color: INK3, maxWidth: '32ch' }}>
-        BK-rating är under utveckling — vi visar den så fort den är redo, inte innan.
-      </p>
-    </div>
-  )
-}
-
-function NoData({ label }: { label: string }) {
-  return (
-    <div className="flex items-center justify-center text-center" style={{ minHeight: 152 }}>
-      <p className="text-[13px]" style={{ color: INK3 }}>{label}</p>
+      <p className="text-[13px]" style={{ color: INK3, maxWidth: '34ch' }}>{text}</p>
     </div>
   )
 }

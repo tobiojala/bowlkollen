@@ -85,9 +85,30 @@ data in the schema yet).
   → *Do not hard-code a handicap formula* (the old BACKLOG `(200−avg)×0.8` is a
   guess, not official). If we add handicap, model it as organizer-configurable.
 
+## Ranking (rankingpoäng) — Kap K § 10
+- **Awarded at EVERY sanctioned match — league AND competition**, not just comps.
+  - **Seriespel:** rankingpoäng for each won banpoäng, **plus** an amount based on
+    how the player's result compares to the other players in that match.
+    Distribution per series level = **tables inside BITS** (not in the rulebook).
+    (§ K 10 p1)
+  - **Tävlingar:** rankingpoäng by tävlingskategori; how many players score and the
+    per-category distribution = **tables inside BITS**. (§ K 10 p2)
+  - Also awarded to Swedish-licensed players at Euro/World-tour events.
+- **Authoritative list is BITS's own** (`bits.swebowl.se`, legacy `query.aspx`).
+  The point tables are internal to BITS → **we cannot faithfully recompute ranking**;
+  the correct move is to INGEST BITS's ranking value, not derive it.
+- **Our data gap (2026-09-10):** we store competition `rank_points`
+  (`bits_competition_results`) but **zero league rankingpoäng** —
+  `bits_match_player_results` has no ranking column. So any ranking we show from our
+  own data is competition-only and will not match a league player's BITS ranking.
+- Distinct from **snitt** (§ K 9): snitt/hcp = the player's **25 best results over a
+  rolling helår** (365 days), updated daily, nothing older than 5 years; ingångsvärde
+  250 until 4 real results. Snitt "reads" results + rankingpoäng; ranking is its own list.
+
 ---
 
 ### Still not ingested
 - Exact promotion/relegation counts per tier/season (Kap D § 105–106, revised
   yearly) — keep these data-driven, not constants.
-- Ranking-point formula (Kap K § 10) and BK Rating inputs beyond snitt.
+- BITS's internal rankingpoäng distribution tables (§ K 10) — needed only if we ever
+  recompute rather than ingest ranking; ingesting the finished list avoids them.
