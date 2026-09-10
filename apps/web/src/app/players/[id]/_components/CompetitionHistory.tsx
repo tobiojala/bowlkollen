@@ -2,20 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase'
 import { COLOR, FONT, SPACE, TYPE } from '@/lib/brand'
-import { STALE } from '@/lib/constants'
-
-type CompHistoryRow = {
-  bits_competition_id: number
-  competition_name: string
-  start_date: string | null
-  place: number | null
-  total_pins: number
-  total_games: number
-  rank_points: number | null
-}
+import { usePlayerCompetitions } from './use-player-competitions'
 
 const INITIAL = 6
 
@@ -24,17 +12,7 @@ const INITIAL = 6
 // isn't there yet), so it's safe to ship ahead of the migration + backfill.
 export function CompetitionHistory({ playerId }: { playerId: string }) {
   const [expanded, setExpanded] = useState(false)
-  const { data = [] } = useQuery<CompHistoryRow[]>({
-    queryKey: ['player-competitions', playerId],
-    staleTime: STALE.MEDIUM,
-    retry: false,
-    queryFn: async () => {
-      const db = createClient()
-      const { data, error } = await db.rpc('get_player_competition_results', { p_public_id: playerId })
-      if (error) return []
-      return (data ?? []) as CompHistoryRow[]
-    },
-  })
+  const { data = [] } = usePlayerCompetitions(playerId)
 
   if (!data.length) return null
   const shown = expanded ? data : data.slice(0, INITIAL)
