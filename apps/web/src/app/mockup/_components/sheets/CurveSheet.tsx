@@ -7,6 +7,7 @@ import { MCFG, type Metric } from '@/components/mockup/Curves'
 import SeasonCurve from '@/components/SeasonCurve'
 import { COLORS } from '../../data'
 import type { ProfileMatch, ProfileUpcoming } from '@/lib/profile'
+import type { PlayerRanking } from '@/app/players/[id]/_components/use-player-ranking'
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -22,10 +23,12 @@ interface CurveSheetProps {
   formDiff: number
   recentAvg: number
   initialMetric?: Metric
+  /** Real BITS national ranking for this player (null = unranked/mockup). */
+  ranking?: PlayerRanking | null
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, onClose }: CurveSheetProps) {
+export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, ranking, onClose }: CurveSheetProps) {
   const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
@@ -82,7 +85,7 @@ export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, re
         <SeasonCurve matchAvgs={matchAvgs} dates={dates} highlights={highlights}
           seasonAvg={seasonAvg} recentAvg={recentAvg} tapped={curveTapped} onTap={setCurveTapped} />
       ) : curveMetric === 'ranking' ? (
-        <ComingSoon text="Rankingpoäng hämtas från BITS – på väg." />
+        ranking ? <RankingCard r={ranking} /> : <ComingSoon text="Ingen rankingpoäng registrerad än." />
       ) : curveMetric === 'bk' ? (
         <ComingSoon text="BK-rating är under utveckling – vi visar den så fort den är redo." />
       ) : (
@@ -148,6 +151,40 @@ export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, re
         </div>
       )}
     </Sheet>
+  )
+}
+
+// Current BITS national ranking — a snapshot (rankingpoäng + place), not a curve.
+function RankingCard({ r }: { r: PlayerRanking }) {
+  const place = r.place_male ?? r.place_female
+  const genderLabel = r.gender === 'F' ? 'damer' : 'herrar'
+  const points = r.rank_points != null ? r.rank_points.toFixed(2).replace('.', ',') : '–'
+  return (
+    <div style={{ minHeight: 152 }}>
+      <div className="flex items-baseline gap-3 mb-1">
+        <span className="num" style={{ fontSize: 40, color: INK }}>{points}</span>
+        <span className="text-[13px]" style={{ color: INK3 }}>rankingpoäng</span>
+      </div>
+      {place ? (
+        <p className="text-[14px] mb-5" style={{ color: INK2 }}>
+          Placering <b style={{ color: INK }}>#{place}</b> i Sverige ({genderLabel})
+        </p>
+      ) : <div className="mb-5" />}
+      <div className="grid grid-cols-3 gap-3 pt-4" style={{ borderTop: '1px solid rgba(244,245,247,0.07)' }}>
+        <RankStat label="Snitt" value={r.average != null ? Math.round(r.average) : '–'} />
+        <RankStat label="Serier" value={r.total_rounds ?? '–'} />
+        <RankStat label="Spelstyrka" value={r.skill_level != null ? Math.round(r.skill_level) : '–'} />
+      </div>
+      <p className="text-[12px] mt-4" style={{ color: INK3 }}>Officiell ranking från BITS, uppdateras dagligen.</p>
+    </div>
+  )
+}
+function RankStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: INK3 }}>{label}</p>
+      <p className="num text-2xl" style={{ color: INK }}>{value}</p>
+    </div>
   )
 }
 
