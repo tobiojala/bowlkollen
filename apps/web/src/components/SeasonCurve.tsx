@@ -1,13 +1,14 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { COLOR, FONT } from '@/lib/brand'
 
 // The honest season/career curve for the profile's Säsongskurva sheet: every
 // match is a faint ink dot (the real spread, good games and bad), a smoothed
 // ink FORM line is the signal you read, and GOLD is spent only where it's
 // earned — matches with a milestone series (≥ SERIE_GOLD_MIN) and the current
-// "nu" point. Replaces the old all-points-in-gold render. Same visual language
-// as ProfileTrend so the profile reads as one design.
+// "nu" point. Tracks its render width so 1 unit = 1px (crisp axis text at every
+// screen size), the same convention as ProfileTrend, so the profile reads as one.
 interface SeasonCurveProps {
   matchAvgs:  number[]   // per-match average, chronological (oldest → newest)
   dates:      string[]   // display date per match, parallel to matchAvgs
@@ -18,11 +19,9 @@ interface SeasonCurveProps {
   onTap:      (i: number | null) => void
 }
 
-const W = 340, H = 152
-const PAD = { l: 30, r: 46, t: 16, b: 22 }
-const iH = H - PAD.t - PAD.b
+const PAD = { l: 34, r: 50, t: 16, b: 24 }
+const AXIS = 12  // real px (1 unit = 1px), matches ProfileTrend's crisp labels
 
-// Centered rolling mean — the smoothed form line. Window scales with sample size.
 function rollingMean(a: number[], w: number): number[] {
   const h = Math.floor((w - 1) / 2)
   return a.map((_, i) => {
@@ -32,7 +31,6 @@ function rollingMean(a: number[], w: number): number[] {
   })
 }
 
-// Catmull-Rom → cubic bézier, for a soft line through the form points.
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length < 3) return pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
   let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
@@ -46,9 +44,22 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 }
 
 export default function SeasonCurve({ matchAvgs, dates, highlights, seasonAvg, recentAvg, tapped, onTap }: SeasonCurveProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [renderW, setRenderW] = useState(0)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([e]) => setRenderW(e.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const N = matchAvgs.length
   if (N < 2) return null
 
+  const W = renderW > 0 ? renderW : 360
+  const H = Math.max(150, Math.min(300, Math.round(W * 0.42)))
+  const iH = H - PAD.t - PAD.b
   // Reserve the right ~18% for the "where you're heading" projection tail.
   const splitX = PAD.l + (W - PAD.l - PAD.r) * 0.82
   const win  = Math.max(5, Math.min(15, Math.round(N / 12)))
@@ -62,8 +73,11 @@ export default function SeasonCurve({ matchAvgs, dates, highlights, seasonAvg, r
   const cx = (i: number) => PAD.l + (i / (N - 1)) * (splitX - PAD.l)
   const cy = (v: number) => PAD.t + iH - ((v - mn) / (mx - mn)) * iH
 
+  // Nice-step gridlines — 3–5 round values, never a wall of numbers.
+  const range = Math.max(1, mx - mn)
+  const step = [5, 10, 20, 25, 50, 100].find(s => s >= range / 4) ?? 100
   const grid: number[] = []
-  for (let v = Math.ceil(mn / 20) * 20; v < mx; v += 20) grid.push(v)
+  for (let v = Math.ceil(mn / step) * step; v < mx && grid.length < 6; v += step) grid.push(v)
 
   const mpts = matchAvgs.map((v, i) => ({ x: cx(i), y: cy(v) }))
   const fpts = form.map((v, i) => ({ x: cx(i), y: cy(v) }))
@@ -72,51 +86,50 @@ export default function SeasonCurve({ matchAvgs, dates, highlights, seasonAvg, r
   const yForm = cy(recentAvg), yAvg = cy(seasonAvg)
 
   const t = (x: number, y: number, s: string | number, fill: string, anchor: 'start' | 'middle' | 'end', weight = 500) => (
-    <text x={x} y={y} fill={fill} fontSize={10.5} textAnchor={anchor} fontWeight={weight}
+    <text x={x} y={y} fill={fill} fontSize={AXIS} textAnchor={anchor} fontWeight={weight}
       fontFamily={FONT.body} style={{ fontVariantNumeric: 'tabular-nums' }}>{s}</text>
   )
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
-      {/* gridlines */}
+    <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
       {grid.map(v => (
         <g key={v}>
           <line x1={PAD.l} y1={cy(v)} x2={W - PAD.r} y2={cy(v)} stroke={COLOR.hairline} strokeWidth={1} />
-          {t(PAD.l - 6, cy(v) + 3.5, v, COLOR.ink3, 'end', 600)}
+          {t(PAD.l - 8, cy(v) + 4, v, COLOR.ink3, 'end', 500)}
         </g>
       ))}
 
       {/* season-average baseline */}
       <line x1={PAD.l} y1={yAvg} x2={W - PAD.r} y2={yAvg} stroke="rgba(244,245,247,0.22)" strokeWidth={1} strokeDasharray="4,3" />
-      {t(W - PAD.r + 4, yAvg + 3.5, `snitt ${seasonAvg}`, COLOR.ink3, 'start', 700)}
+      {t(W - PAD.r + 5, yAvg + 4, `snitt ${seasonAvg}`, COLOR.ink3, 'start', 600)}
 
       {/* projection tail — form vs season average holding */}
-      <line x1={last.x} y1={last.y} x2={projX} y2={yForm} stroke="rgba(245,194,0,0.5)" strokeWidth={1.4} strokeDasharray="4,3" strokeLinecap="round" />
-      <line x1={last.x} y1={last.y} x2={projX} y2={yAvg} stroke="rgba(244,245,247,0.22)" strokeWidth={1.4} strokeDasharray="4,3" strokeLinecap="round" />
+      <line x1={last.x} y1={last.y} x2={projX} y2={yForm} stroke="rgba(245,194,0,0.5)" strokeWidth={1.6} strokeDasharray="4,3" strokeLinecap="round" />
+      <line x1={last.x} y1={last.y} x2={projX} y2={yAvg} stroke="rgba(244,245,247,0.22)" strokeWidth={1.6} strokeDasharray="4,3" strokeLinecap="round" />
 
       {/* every match as a faint ink dot; milestones in gold */}
       {mpts.map((p, i) => (
         <g key={i} onClick={() => onTap(tapped === i ? null : i)} style={{ cursor: 'pointer' }}>
-          <circle cx={p.x} cy={p.y} r={9} fill="transparent" />
+          <circle cx={p.x} cy={p.y} r={11} fill="transparent" />
           {tapped === i
-            ? <circle cx={p.x} cy={p.y} r={4} fill="#fff" stroke={COLOR.gold} strokeWidth={2} />
+            ? <circle cx={p.x} cy={p.y} r={5} fill="#fff" stroke={COLOR.gold} strokeWidth={2.5} />
             : highlights[i]
-              ? <circle cx={p.x} cy={p.y} r={2.8} fill={COLOR.gold} />
-              : <circle cx={p.x} cy={p.y} r={1.7} fill="rgba(244,245,247,0.30)" />}
+              ? <circle cx={p.x} cy={p.y} r={3.6} fill={COLOR.gold} />
+              : <circle cx={p.x} cy={p.y} r={2.4} fill="rgba(244,245,247,0.32)" />}
         </g>
       ))}
 
       {/* the form line — the signal */}
-      <path d={smoothPath(fpts)} fill="none" stroke={COLOR.ink2} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={smoothPath(fpts)} fill="none" stroke={COLOR.ink2} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
 
       {/* "nu" — current form level */}
-      <circle cx={last.x} cy={last.y} r={8} fill="rgba(245,194,0,0.16)" />
-      <circle cx={last.x} cy={last.y} r={4} fill={COLOR.gold} />
-      {t(last.x, last.y - 12, 'nu', COLOR.gold, 'middle', 700)}
+      <circle cx={last.x} cy={last.y} r={10} fill="rgba(245,194,0,0.16)" />
+      <circle cx={last.x} cy={last.y} r={5} fill={COLOR.gold} />
+      {t(last.x, last.y - 14, 'nu', COLOR.gold, 'middle', 700)}
 
       {/* real first/last match dates */}
-      {t(PAD.l, H - 5, dates[0] ?? '', COLOR.ink3, 'start')}
-      {t(splitX, H - 5, dates[N - 1] ?? '', COLOR.ink3, 'end')}
+      {t(PAD.l, H - 6, dates[0] ?? '', COLOR.ink3, 'start')}
+      {t(splitX, H - 6, dates[N - 1] ?? '', COLOR.ink3, 'end')}
     </svg>
   )
 }

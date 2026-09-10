@@ -1,16 +1,17 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { COLOR, FONT } from '@/lib/brand'
 
 // Multi-line chart for the profile's ranking history (BITS Spelarprofil style):
 // one or more metrics on a shared absolute value axis over the 12 months. Used
 // for the Rank. tab (ranking alone, axis fitted) and Alla (spelstyrka + ranking +
-// snitt on one 0-based axis, so the flat metrics sit low and ranking rides high).
+// snitt on one 0-based axis). Tracks render width so 1 unit = 1px — crisp axis
+// text at every size, matching SeasonCurve / ProfileTrend.
 export type Line = { label: string; color: string; values: number[] }
 
-const W = 340, H = 150
-const PAD = { l: 34, r: 12, t: 14, b: 22 }
-const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
+const PAD = { l: 38, r: 14, t: 16, b: 24 }
+const AXIS = 12
 
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length < 3) return pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
@@ -25,8 +26,23 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 }
 
 export function RankingChart({ xLabels, lines, zeroBased = false }: { xLabels: string[]; lines: Line[]; zeroBased?: boolean }) {
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [renderW, setRenderW] = useState(0)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([e]) => setRenderW(e.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const n = xLabels.length
   if (n < 2 || lines.length === 0) return null
+
+  const W = renderW > 0 ? renderW : 360
+  const H = Math.max(150, Math.min(300, Math.round(W * 0.42)))
+  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b
+
   const all = lines.flatMap(l => l.values)
   const hi = Math.max(...all)
   const lo = zeroBased ? 0 : Math.min(...all)
@@ -39,17 +55,17 @@ export function RankingChart({ xLabels, lines, zeroBased = false }: { xLabels: s
   const grid = Array.from({ length: gridN + 1 }, (_, k) => Math.round(mn + ((mx - mn) * k) / gridN))
 
   const t = (x: number, y: number, s: string | number, fill: string, anchor: 'start' | 'middle' | 'end', weight = 500) => (
-    <text x={x} y={y} fill={fill} fontSize={10.5} textAnchor={anchor} fontWeight={weight}
+    <text x={x} y={y} fill={fill} fontSize={AXIS} textAnchor={anchor} fontWeight={weight}
       fontFamily={FONT.body} style={{ fontVariantNumeric: 'tabular-nums' }}>{s}</text>
   )
 
   return (
     <div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
+      <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
         {grid.map((v, k) => (
           <g key={k}>
             <line x1={PAD.l} y1={cy(v)} x2={W - PAD.r} y2={cy(v)} stroke={COLOR.hairline} strokeWidth={1} />
-            {t(PAD.l - 6, cy(v) + 3.5, v, COLOR.ink3, 'end', 600)}
+            {t(PAD.l - 8, cy(v) + 4, v, COLOR.ink3, 'end', 500)}
           </g>
         ))}
         {lines.map(l => {
@@ -57,13 +73,13 @@ export function RankingChart({ xLabels, lines, zeroBased = false }: { xLabels: s
           const last = pts[pts.length - 1]
           return (
             <g key={l.label}>
-              <path d={smoothPath(pts)} fill="none" stroke={l.color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx={last.x} cy={last.y} r={3.5} fill={l.color} />
+              <path d={smoothPath(pts)} fill="none" stroke={l.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx={last.x} cy={last.y} r={4.5} fill={l.color} />
             </g>
           )
         })}
-        {t(PAD.l, H - 5, xLabels[0], COLOR.ink3, 'start')}
-        {t(W - PAD.r, H - 5, xLabels[n - 1], COLOR.ink3, 'end')}
+        {t(PAD.l, H - 6, xLabels[0], COLOR.ink3, 'start')}
+        {t(W - PAD.r, H - 6, xLabels[n - 1], COLOR.ink3, 'end')}
       </svg>
       {lines.length > 1 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 8 }}>
