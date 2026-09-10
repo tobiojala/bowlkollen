@@ -87,16 +87,18 @@ export default function IdentitySection({
 
   const heroCards: HeroCard[] = [
     {
-      // The curve is OUR running league-series average, so the card headline is
-      // our seriesnitt (matches the curve tail). BITS' official snitt is a broader,
-      // scalar figure — surfaced in the caption, never conflated with this curve.
-      key: 'snitt', label: 'Seriesnitt', value: seasonAvg, delta: recentAvg - seasonAvg, deltaSuffix: 'form',
+      // Headline = the OFFICIAL BITS snitt (licence_average) so there's one snitt
+      // number, matching BITS (falls back to our computed avg only if BITS is
+      // missing). The curve stays our running league-series average — a dynamic
+      // "development" line, NOT the flat/boring official snitt line — labelled as
+      // your form so it never claims to be the scalar above it.
+      key: 'snitt', label: 'Snitt', value: licenceAverage ?? seasonAvg, delta: recentAvg - seasonAvg, deltaSuffix: 'form',
       caption: [
-        licenceAverage != null ? `BITS-snitt ${licenceAverage}` : null,
+        licenceAverage != null ? 'Officiell BITS-snitt' : null,
         `Topp ${bkTopPct}% i ligan`,
       ].filter(Boolean).join(' · '),
       color: '#f5c200', points: snittPoints, baseline: seasonAvg, proj: projSeasonAvg,
-      footerLeft: `${matches.length} matcher`,
+      footerLeft: `din utveckling · ${matches.length} matcher`,
       footerRight: lastSeasonAvg ? `Förra säsongen ${lastSeasonAvg}` : undefined,
     },
     {
