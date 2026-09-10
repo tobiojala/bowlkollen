@@ -1,72 +1,65 @@
 import { NextResponse } from 'next/server'
-import { BITS_API, BITS_KEY, BASE_HEADERS, getSession } from '@/lib/bits-client'
+import { BASE_HEADERS, getSession } from '@/lib/bits-client'
 
-// TEMPORARY discovery probe (2026-09-10): the BITS ranking API isn't documented,
-// and it can't be probed from the dev machine (home IP is firewalled by BITS).
-// This runs on Vercel (allowed IP), tries a fixed list of candidate ranking
-// endpoints with the real BITS session, and reports which one answers — so we can
-// build the real ranking sync. Host is hard-coded to api.swebowl.se; no arbitrary
-// URL is accepted. DELETE once the endpoint is known.
+// TEMPORARY discovery probe (2026-09-10): the BITS ranking API endpoint isn't
+// documented and 9 guessed paths all 404'd. This fetches the BITS 2.0 ranking
+// SPA + its JS bundles (from Vercel's allowed IP) and greps them for the real API
+// URLs / endpoint names. Hosts are hard-coded to *.swebowl.se. DELETE once known.
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-type Candidate = { path: string; method: 'GET' | 'POST'; params: Record<string, string | number> }
+const SITE = 'https://bits.swebowl.se'
 
-// Filters seen on bits.swebowl.se/ranking: Period, Nivå (level), Förening (club),
-// Distrikt (district), Kön (gender). Try plausible names/param sets.
-const CANDIDATES: Candidate[] = [
-  { path: 'Ranking',                 method: 'GET',  params: { seasonId: 2026 } },
-  { path: 'Ranking',                 method: 'GET',  params: {} },
-  { path: 'ranking/GetRanking',      method: 'GET',  params: { seasonId: 2026 } },
-  { path: 'ranking/GetRanking',      method: 'POST', params: { seasonId: 2026 } },
-  { path: 'ranking/GetRankingList',  method: 'POST', params: { seasonId: 2026, take: 25, skip: 0, page: 1, pageSize: 25 } },
-  { path: 'RankingList',             method: 'GET',  params: { seasonId: 2026 } },
-  { path: 'Ranking/GetRanking',      method: 'GET',  params: { seasonId: 2026 } },
-  { path: 'player/GetRanking',       method: 'GET',  params: { seasonId: 2026 } },
-  { path: 'ranking/GetPlayerRanking', method: 'POST', params: { seasonId: 2026 } },
-]
-
-async function tryOne(c: Candidate, cookie: string) {
-  try {
-    const qs = new URLSearchParams(
-      Object.entries(c.method === 'GET' ? c.params : {}).map(([k, v]) => [k, String(v)]).concat([['apiKey', BITS_KEY]]),
-    )
-    const url = `${BITS_API}/${c.path}?${qs}`
-    const res = await fetch(url, {
-      method: c.method,
-      headers: { ...BASE_HEADERS, Cookie: cookie, ...(c.method === 'POST' ? { 'Content-Type': 'application/json' } : {}) },
-      body: c.method === 'POST' ? JSON.stringify(c.params) : undefined,
-      cache: 'no-store',
-    })
-    const text = await res.text()
-    let shape = 'text'
-    try {
-      const j = JSON.parse(text)
-      shape = Array.isArray(j) ? `array(${j.length})` : Array.isArray(j?.data) ? `{data:array(${j.data.length})}` : 'object'
-    } catch { /* not json */ }
-    return { ...c, status: res.status, shape, sample: text.slice(0, 400) }
-  } catch (e) {
-    return { ...c, status: 0, shape: 'error', sample: String(e).slice(0, 200) }
-  }
+// Pull unique regex matches out of a blob, capped.
+function grab(text: string, re: RegExp, cap = 40): string[] {
+  const out = new Set<string>()
+  for (const m of text.matchAll(re)) { out.add(m[0]); if (out.size >= cap) break }
+  return [...out]
 }
 
 async function run() {
   const cookie = await getSession()
-  const results = []
-  for (const c of CANDIDATES) results.push(await tryOne(c, cookie))
-  return results
+  const H = { ...BASE_HEADERS, Cookie: cookie, Accept: 'text/html,*/*' }
+
+  const pageRes = await fetch(`${SITE}/ranking`, { headers: H, cache: 'no-store' })
+  const html = await pageRes.text()
+
+  // script src="..." (relative or absolute)
+  const srcs = grab(html, /src="([^"]+\.js[^"]*)"/g).map(s => s.replace(/^src="|"$/g, ''))
+  const absSrcs = srcs.map(s => (s.startsWith('http') ? s : `${SITE}${s.startsWith('/') ? '' : '/'}${s}`))
+
+  const report: Record<string, unknown> = {
+    pageStatus: pageRes.status,
+    htmlBytes: html.length,
+    scriptSrcs: absSrcs,
+    inlineApiHits: grab(html, /https?:\/\/[a-z0-9.-]*swebowl\.se[^\s"'<>]*/gi),
+  }
+
+  // Fetch each bundle and grep for API hosts + ranking-ish endpoint paths.
+  const bundleFindings: Record<string, { hosts: string[]; ranking: string[]; apiPaths: string[] }> = {}
+  for (const url of absSrcs.slice(0, 6)) {
+    try {
+      const js = await (await fetch(url, { headers: { ...BASE_HEADERS, Cookie: cookie }, cache: 'no-store' })).text()
+      bundleFindings[url] = {
+        hosts:    grab(js, /https?:\/\/[a-z0-9.-]*swebowl\.se[^\s"'`]*/gi, 20),
+        ranking:  grab(js, /["'`][^"'`]*[Rr]ank[A-Za-z]*[^"'`]*["'`]/g, 30),
+        apiPaths: grab(js, /["'`]\/?api\/[A-Za-z0-9/_.-]+["'`]/g, 30),
+      }
+    } catch (e) { bundleFindings[url] = { hosts: [String(e).slice(0, 80)], ranking: [], apiPaths: [] } }
+  }
+  report.bundles = bundleFindings
+  return report
 }
 
 function authed(req: Request) {
   const s = process.env.CRON_SECRET
   return !!s && (req.headers.get('authorization') ?? '') === `Bearer ${s}`
 }
-
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   return NextResponse.json(await run())
 }
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   return NextResponse.json(await run())
 }
