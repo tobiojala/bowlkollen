@@ -134,9 +134,11 @@ body {
 
 /* ── Design system utilities ────────────────────────────────────────────── */
 
-/* Display numbers — scores, stats, big figures */
+/* Display numbers — scores, stats, big figures. Uses the score face (Sora),
+   matching how stat numbers render elsewhere (e.g. ProfileTrend's FONT.score).
+   Graph axis labels stay DM Sans by setting their font inline, not via .num. */
 .num {
-  font-family: var(--font-sans);
+  font-family: var(--font-score, 'Sora'), system-ui, sans-serif;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
