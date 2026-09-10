@@ -5,9 +5,11 @@ import { SERIE_GOLD_MIN } from '@bowlkollen/core'
 import { Sheet } from '@/components/mockup/Sheet'
 import { MCFG, type Metric } from '@/components/mockup/Curves'
 import SeasonCurve from '@/components/SeasonCurve'
+import { RankingChart } from '@/components/RankingChart'
 import { COLORS } from '../../data'
 import type { ProfileMatch, ProfileUpcoming } from '@/lib/profile'
 import type { PlayerRanking } from '@/app/players/[id]/_components/use-player-ranking'
+import type { RankingGraphPoint } from '@/app/players/[id]/_components/use-player-ranking-history'
 
 const { GOLD, GREEN, RED } = COLORS
 const INK  = '#f4f5f7'
@@ -25,10 +27,12 @@ interface CurveSheetProps {
   initialMetric?: Metric
   /** Real BITS national ranking for this player (null = unranked/mockup). */
   ranking?: PlayerRanking | null
+  /** 12-month spelstyrka/ranking/snitt history for the ranking + Alla curves. */
+  rankingHistory?: RankingGraphPoint[]
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, ranking, onClose }: CurveSheetProps) {
+export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, ranking, rankingHistory, onClose }: CurveSheetProps) {
   const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
@@ -85,11 +89,15 @@ export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, re
         <SeasonCurve matchAvgs={matchAvgs} dates={dates} highlights={highlights}
           seasonAvg={seasonAvg} recentAvg={recentAvg} tapped={curveTapped} onTap={setCurveTapped} />
       ) : curveMetric === 'ranking' ? (
-        ranking ? <RankingCard r={ranking} /> : <ComingSoon text="Ingen rankingpoäng registrerad än." />
+        ranking || (rankingHistory && rankingHistory.length >= 2)
+          ? <RankingCard r={ranking ?? null} history={rankingHistory} />
+          : <ComingSoon text="Ingen rankingpoäng registrerad än." />
       ) : curveMetric === 'bk' ? (
         <ComingSoon text="BK-rating är under utveckling – vi visar den så fort den är redo." />
       ) : (
-        <ComingSoon text="Kommer när ranking är på plats – då jämförs snitt och ranking här." />
+        rankingHistory && rankingHistory.length >= 2
+          ? <ComboLines history={rankingHistory} />
+          : <ComingSoon text="Kommer när ranking är på plats – då jämförs snitt, ranking och spelstyrka här." />
       )}
 
       {/* Ghost fan legend */}
@@ -154,28 +162,52 @@ export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, re
   )
 }
 
-// Current BITS national ranking — a snapshot (rankingpoäng + place), not a curve.
-function RankingCard({ r }: { r: PlayerRanking }) {
-  const place = r.place_male ?? r.place_female
-  const genderLabel = r.gender === 'F' ? 'damer' : 'herrar'
-  const points = r.rank_points != null ? r.rank_points.toFixed(2).replace('.', ',') : '–'
+// BITS national ranking: current figure + place as the header, with the 12-month
+// rankingpoäng line below when history is available.
+function RankingCard({ r, history }: { r: PlayerRanking | null; history?: RankingGraphPoint[] }) {
+  const place = r ? (r.place_male ?? r.place_female) : null
+  const genderLabel = r?.gender === 'F' ? 'damer' : 'herrar'
+  const points = r?.rank_points != null ? r.rank_points.toFixed(2).replace('.', ',') : '–'
+  const hasChart = !!history && history.length >= 2
+  return (
+    <div>
+      {r && (
+        <>
+          <div className="flex items-baseline gap-3 mb-1">
+            <span className="num" style={{ fontSize: 40, color: INK }}>{points}</span>
+            <span className="text-[13px]" style={{ color: INK3 }}>rankingpoäng</span>
+          </div>
+          {place
+            ? <p className="text-[14px] mb-4" style={{ color: INK2 }}>Placering <b style={{ color: INK }}>#{place}</b> i Sverige ({genderLabel})</p>
+            : <div className="mb-4" />}
+        </>
+      )}
+      {hasChart && (
+        <RankingChart xLabels={history!.map(h => h.xLabel)}
+          lines={[{ label: 'Rankingpoäng', color: GOLD, values: history!.map(h => h.ranking) }]} />
+      )}
+      {r && (
+        <div className="grid grid-cols-3 gap-3 pt-4 mt-4" style={{ borderTop: '1px solid rgba(244,245,247,0.07)' }}>
+          <RankStat label="Snitt" value={r.average != null ? Math.round(r.average) : '–'} />
+          <RankStat label="Serier" value={r.total_rounds ?? '–'} />
+          <RankStat label="Spelstyrka" value={r.skill_level != null ? Math.round(r.skill_level) : '–'} />
+        </div>
+      )}
+      <p className="text-[12px] mt-4" style={{ color: INK3 }}>Officiell ranking från BITS, uppdateras dagligen.</p>
+    </div>
+  )
+}
+
+// Alla — spelstyrka + ranking + snitt on one axis (BITS Spelarprofil style).
+function ComboLines({ history }: { history: RankingGraphPoint[] }) {
   return (
     <div style={{ minHeight: 152 }}>
-      <div className="flex items-baseline gap-3 mb-1">
-        <span className="num" style={{ fontSize: 40, color: INK }}>{points}</span>
-        <span className="text-[13px]" style={{ color: INK3 }}>rankingpoäng</span>
-      </div>
-      {place ? (
-        <p className="text-[14px] mb-5" style={{ color: INK2 }}>
-          Placering <b style={{ color: INK }}>#{place}</b> i Sverige ({genderLabel})
-        </p>
-      ) : <div className="mb-5" />}
-      <div className="grid grid-cols-3 gap-3 pt-4" style={{ borderTop: '1px solid rgba(244,245,247,0.07)' }}>
-        <RankStat label="Snitt" value={r.average != null ? Math.round(r.average) : '–'} />
-        <RankStat label="Serier" value={r.total_rounds ?? '–'} />
-        <RankStat label="Spelstyrka" value={r.skill_level != null ? Math.round(r.skill_level) : '–'} />
-      </div>
-      <p className="text-[12px] mt-4" style={{ color: INK3 }}>Officiell ranking från BITS, uppdateras dagligen.</p>
+      <RankingChart xLabels={history.map(h => h.xLabel)} zeroBased lines={[
+        { label: 'Spelstyrka', color: GREEN, values: history.map(h => h.spelstyrka) },
+        { label: 'Rankingpoäng', color: GOLD, values: history.map(h => h.ranking) },
+        { label: 'Snitt', color: INK2, values: history.map(h => h.snitt) },
+      ]} />
+      <p className="text-[12px] mt-3" style={{ color: INK3 }}>Officiell ranking från BITS, uppdateras dagligen.</p>
     </div>
   )
 }

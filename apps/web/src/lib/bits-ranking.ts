@@ -50,3 +50,21 @@ export async function getPlayerRanking(
   const j = await res.json() as { data?: BitsRankingRow[]; total?: number }
   return { rows: j.data ?? [], total: j.total ?? 0 }
 }
+
+// One point of the Spelarprofil monthly chart. The chart's three lines are
+// strength (Spelstyrka), yearRankPoints (Rankingpoäng — rolling year) and average
+// (Snitt); xAxisText is the month label.
+export type RankingGraphPoint = { xLabel: string; spelstyrka: number; ranking: number; snitt: number }
+
+// A player's 12-month spelstyrka/ranking/snitt history — powers the profile's
+// ranking curve. GET /MiscFrontApiConnector/PlayerDetailGraphData, type 2 = Month.
+export async function getPlayerRankingGraph(licNbr: string): Promise<RankingGraphPoint[]> {
+  const cookie = await getSession()
+  const res = await fetch(
+    `${SITE}/MiscFrontApiConnector/PlayerDetailGraphData?licenseNumber=${encodeURIComponent(licNbr)}&type=2`,
+    { headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*' }, cache: 'no-store' },
+  )
+  if (!res.ok) throw new Error(`BITS PlayerDetailGraphData → HTTP ${res.status}`)
+  const rows = await res.json() as Array<{ strength: number; average: number; yearRankPoints: number; xAxisText: string }>
+  return rows.map(r => ({ xLabel: r.xAxisText, spelstyrka: r.strength, ranking: r.yearRankPoints, snitt: r.average }))
+}

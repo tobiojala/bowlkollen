@@ -9,6 +9,7 @@ import { PlayerAvatar } from '@/components/PlayerAvatar'
 import ProfileTrend from '@/components/ProfileTrend'
 import { matchTrendPoints } from '@/lib/profile'
 import { usePlayerRanking } from './use-player-ranking'
+import { usePlayerRankingHistory } from './use-player-ranking-history'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
 import type { Metric } from '@/components/mockup/Curves'
 
@@ -72,11 +73,9 @@ export default function PlayerProfileView({
   const [matchTapped, setMatchTapped] = useState<number | null>(null)
 
   const { matchAvgs, seasonAvg, recentAvg, formDiff, lastSeasonAvg } = data
-  const ranking = usePlayerRanking(playerId).data ?? null
-  const allGames = data.matches.flatMap(m => m.games.filter(g => g > 0)), totalGames = allGames.length
-  const totalSum   = allGames.reduce((a, b) => a + b, 0)
-  const projAvg    = totalGames ? Math.round((totalSum + 210 * 4) / (totalGames + 4)) : seasonAvg
-  const projDiff   = projAvg - seasonAvg
+  const ranking = usePlayerRanking(playerId).data ?? null, rankingHistory = usePlayerRankingHistory(playerId).data
+  const allGames = data.matches.flatMap(m => m.games.filter(g => g > 0)), totalGames = allGames.length, totalSum = allGames.reduce((a, b) => a + b, 0)
+  const projAvg = totalGames ? Math.round((totalSum + 210 * 4) / (totalGames + 4)) : seasonAvg, projDiff = projAvg - seasonAvg
   const firstDate  = data.matches[0]?.date ?? '', lastDate = data.matches[data.matches.length - 1]?.date ?? ''
 
   const close    = () => { setExpanded(null); setMatchTapped(null) }
@@ -255,6 +254,7 @@ export default function PlayerProfileView({
           recentAvg={recentAvg}
           initialMetric={curveMetric}
           ranking={ranking}
+          rankingHistory={rankingHistory}
           onClose={close}
         />
       )}
