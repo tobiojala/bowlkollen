@@ -253,8 +253,7 @@ export default function PlayerProfileView({
           formDiff={formDiff}
           recentAvg={recentAvg}
           initialMetric={curveMetric}
-          ranking={ranking}
-          rankingHistory={rankingHistory}
+          ranking={ranking} rankingHistory={rankingHistory} licenceAverage={licenceAverage}
           onClose={close}
         />
       )}

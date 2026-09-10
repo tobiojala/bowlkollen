@@ -29,10 +29,12 @@ interface CurveSheetProps {
   ranking?: PlayerRanking | null
   /** 12-month spelstyrka/ranking/snitt history for the ranking + Alla curves. */
   rankingHistory?: RankingGraphPoint[]
+  /** Official BITS snitt (licence_average) — the headline number for the Snitt tab. */
+  licenceAverage?: number | null
   onClose: () => void
 }
 
-export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, ranking, rankingHistory, onClose }: CurveSheetProps) {
+export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, recentAvg, initialMetric, ranking, rankingHistory, licenceAverage, onClose }: CurveSheetProps) {
   const [curveMetric, setCurveMetric] = useState<Metric>(initialMetric ?? 'snitt')
   const [curveTapped, setCurveTapped] = useState<number | null>(null)
 
@@ -51,17 +53,23 @@ export default function CurveSheet({ matchAvgs, matches, seasonAvg, formDiff, re
   return (
     <Sheet title="Säsongskurva" subtitle={`${matches.length} matcher`} onClose={onClose}>
 
-      {/* Hero — snitt only; other metrics are "kommer snart" */}
+      {/* Hero — Snitt tab: the OFFICIAL BITS snitt on top, the dotted per-match
+          curve below is our graphical detail of the form behind it. */}
       {curveMetric === 'snitt' && (
         <>
           <div className="flex items-baseline gap-3 mb-1">
-            <span className="num" style={{ fontSize: 40, color: INK }}>{seasonAvg}</span>
-            <span className="text-caption font-bold rounded-full px-2.5 py-1 tabular-nums"
-              style={{ color: formDiff > 0 ? GREEN : RED, background: formDiff > 0 ? 'rgba(93,202,165,0.10)' : 'rgba(224,85,85,0.10)' }}>
-              {formDiff > 0 ? '+' : ''}{formDiff} form
-            </span>
+            <span className="num" style={{ fontSize: 40, color: INK }}>{licenceAverage ?? seasonAvg}</span>
+            <span className="text-[13px]" style={{ color: INK3 }}>{licenceAverage != null ? 'BITS-snitt' : 'snitt'}</span>
+            {formDiff !== 0 && (
+              <span className="text-caption font-bold rounded-full px-2.5 py-1 tabular-nums"
+                style={{ color: formDiff > 0 ? GREEN : RED, background: formDiff > 0 ? 'rgba(93,202,165,0.10)' : 'rgba(224,85,85,0.10)' }}>
+                {formDiff > 0 ? '+' : ''}{formDiff} form
+              </span>
+            )}
           </div>
-          <p className="text-[13px] mb-5" style={{ color: INK3 }}>senaste 4 matcher mot säsongssnittet</p>
+          <p className="text-[13px] mb-5" style={{ color: INK3 }}>
+            {licenceAverage != null ? 'Officiell snitt från BITS · din form match för match nedan' : 'senaste 4 matcher mot säsongssnittet'}
+          </p>
         </>
       )}
 
