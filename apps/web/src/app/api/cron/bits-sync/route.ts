@@ -12,6 +12,7 @@ import {
   syncPendingMatchScores,
 } from '@/lib/bits-sync'
 import { syncBitsCompetitions, syncPendingCompetitionResults } from '@/lib/bits-competitions-sync'
+import { syncBitsPlayerRanking } from '@/lib/bits-ranking-sync'
 
 export const dynamic = 'force-dynamic'
 // Vercel Pro. syncBitsMatchesForSeason re-syncs all ~88 current divisions every
@@ -67,10 +68,13 @@ async function runSync() {
     // batch of not-yet-fetched competitions' per-player results.
     tasks.push(syncBitsCompetitions(season))
     tasks.push(syncPendingCompetitionResults(20))
+    // National ranking (rankingpoäng) — the authoritative BITS figure, ingested
+    // not recomputed (§K 10 tables are internal to BITS). ~15k players, paged.
+    tasks.push(syncBitsPlayerRanking())
   }
 
   const settled = await Promise.allSettled(tasks)
-  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult, compResult, compResultsResult] = settled
+  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult, compResult, compResultsResult, rankingResult] = settled
   const val = (r?: PromiseSettledResult<unknown>) =>
     r?.status === 'fulfilled' ? r.value : { ok: false, error: String(r?.reason) }
 
@@ -98,6 +102,7 @@ async function runSync() {
     ...(daily ? {
       players: val(playersResult), clubs: val(clubsResult), teams: val(teamsResult),
       competitions: val(compResult), competitionResults: val(compResultsResult),
+      ranking: val(rankingResult),
       discover,
     } : {}),
   }
