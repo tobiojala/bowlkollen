@@ -1,48 +1,36 @@
 import { NextResponse } from 'next/server'
 import { BASE_HEADERS, getSession } from '@/lib/bits-client'
 
-// TEMPORARY discovery probe v2 (2026-09-10): the BITS Spelarprofil page has a
-// MONTHLY chart of spelstyrka/rankingpoäng/snitt per player — a different endpoint
-// than GetPlayerRanking (current list). Find the profile URL + its chart data
-// source. Uses Noel's licence (M091007NOE01). Host hard-coded. DELETE after.
+// TEMPORARY probe v3 (2026-09-10): find the Spelarprofil URL from the ranking
+// grid's playerName column link (candidate server paths all 404'd). Return the
+// playerName template + every href/route pattern. Host hard-coded. DELETE after.
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const SITE = 'https://bits.swebowl.se'
-const LIC = 'M091007NOE01'
-
-const CANDIDATES = [
-  `/player/${LIC}`, `/players/${LIC}`, `/spelarprofil/${LIC}`,
-  `/licenser/spelarprofil/${LIC}`, `/license/${LIC}`, `/playerlicense/${LIC}`,
-  `/licenser/${LIC}`, `/spelare/${LIC}`, `/playerprofile/${LIC}`,
-]
 
 async function run() {
   const cookie = await getSession()
-  const H = { ...BASE_HEADERS, Cookie: cookie, Accept: 'text/html,*/*' }
-  const results: Record<string, unknown> = {}
+  const html = await (await fetch(`${SITE}/ranking`, {
+    headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'text/html,*/*' }, cache: 'no-store',
+  })).text()
 
-  for (const path of CANDIDATES) {
-    try {
-      const res = await fetch(`${SITE}${path}`, { headers: H, cache: 'no-store', redirect: 'manual' })
-      const loc = res.headers.get('location')
-      let hasChart = false, scripts: string[] = [], connectors: string[] = []
-      if (res.status === 200) {
-        const html = await res.text()
-        hasChart = /ankingpo|kendo-chart|MiscFrontApiConnector|spelstyrk/i.test(html)
-        if (hasChart) {
-          for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
-            if (/\bsrc=/i.test(m[1] || '')) continue
-            const b = m[2] || ''
-            if (/MiscFrontApiConnector|dataSource|chart|ankingpo|spelstyrk/i.test(b)) scripts.push(b.trim().slice(0, 3500))
-          }
-          connectors = [...new Set([...html.matchAll(/\/MiscFrontApiConnector\/[A-Za-z]+/g)].map(m => m[0]))]
-        }
-      }
-      results[path] = { status: res.status, location: loc, hasChart, connectors, scripts: scripts.slice(0, 4) }
-    } catch (e) { results[path] = { error: String(e).slice(0, 120) } }
+  // Context around playerName (its column template holds the profile link).
+  const playerNameCtx: string[] = []
+  for (const m of html.matchAll(/playerName/g)) {
+    const i = m.index ?? 0
+    playerNameCtx.push(html.slice(Math.max(0, i - 80), i + 320).replace(/\s+/g, ' '))
+    if (playerNameCtx.length >= 8) break
   }
-  return results
+
+  // Any href / route / :href / to= patterns anywhere in the page.
+  const grab = (re: RegExp, cap = 40) => { const s = new Set<string>(); for (const m of html.matchAll(re)) { s.add(m[0]); if (s.size >= cap) break } return [...s] }
+  return {
+    playerNameContexts: playerNameCtx,
+    hrefs:     grab(/href\s*[:=]\s*["'`][^"'`]{0,80}["'`]/g),
+    routes:    grab(/["'`]\/[a-z][a-z0-9/_-]{2,60}["'`]/gi, 60),
+    licInUrls: grab(/[A-Za-z0-9/_.?=-]*[Ll]ic[A-Za-z0-9/_.?=-]*/g, 40),
+  }
 }
 
 function authed(req: Request) {
