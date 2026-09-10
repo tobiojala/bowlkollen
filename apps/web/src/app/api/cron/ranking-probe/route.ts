@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { BASE_HEADERS, getSession } from '@/lib/bits-client'
 
-// TEMPORARY probe v4 (2026-09-10): profile is /player-detail?licenseNumber=<lic>.
-// Fetch it and extract the monthly chart (spelstyrka/rankingpoäng/snitt) data
-// source + connectors. Host hard-coded. DELETE once the endpoint is known.
+// TEMPORARY probe v5 (2026-09-10): confirm the monthly chart endpoint
+// GET /MiscFrontApiConnector/PlayerDetailGraphData?licenseNumber=&type=2 (Month).
+// Host hard-coded. DELETE once the ingestion is built.
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
@@ -12,19 +12,14 @@ const LIC = 'M091007NOE01'
 
 async function run() {
   const cookie = await getSession()
-  const res = await fetch(`${SITE}/player-detail?licenseNumber=${LIC}`, {
-    headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'text/html,*/*' }, cache: 'no-store',
+  const res = await fetch(`${SITE}/MiscFrontApiConnector/PlayerDetailGraphData?licenseNumber=${LIC}&type=2`, {
+    headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*' }, cache: 'no-store',
   })
-  const html = await res.text()
-
-  const connectors = [...new Set([...html.matchAll(/\/MiscFrontApiConnector\/[A-Za-z]+/g)].map(m => m[0]))]
-  const scripts: string[] = []
-  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
-    if (/\bsrc=/i.test(m[1] || '')) continue
-    const b = m[2] || ''
-    if (/MiscFrontApiConnector|dataSource|categoryAxis|series\b|rankingpo|spelstyrk|chart/i.test(b)) scripts.push(b.trim().slice(0, 4500))
-  }
-  return { status: res.status, htmlBytes: html.length, connectors, scriptHits: scripts.slice(0, 6) }
+  const text = await res.text()
+  let j: unknown = null
+  try { j = JSON.parse(text) } catch { /* keep text */ }
+  const arr = Array.isArray(j) ? j : []
+  return { status: res.status, count: arr.length, keys: arr[0] ? Object.keys(arr[0] as object) : [], rows: arr, rawHead: j ? undefined : text.slice(0, 400) }
 }
 
 function authed(req: Request) {
