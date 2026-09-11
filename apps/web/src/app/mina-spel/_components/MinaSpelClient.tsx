@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { COLOR, FONT } from '@/lib/brand'
 import { LogGame } from './LogGame'
+import { SparAnalys } from './SparAnalys'
 
 // Mina spel hub: two views over the same loop — Logga spel (score a game via the
 // pin deck, capturing leaves) and Spärranalys (built from what you log). The
@@ -25,11 +26,7 @@ export function MinaSpelClient() {
           <button style={on('analys')} onClick={() => setTab('analys')}>Spärranalys</button>
         </div>
 
-        {tab === 'log'
-          ? <LogGame onSaved={() => setTab('analys')} />
-          : <div style={{ padding: '40px 4px', color: COLOR.ink3, fontSize: 15, maxWidth: '46ch' }}>
-              Logga ett spel så byggs din spärranalys upp här — läge för läge, med din konvertering och dina hål.
-            </div>}
+        {tab === 'log' ? <LogGame onSaved={() => setTab('analys')} /> : <SparAnalys />}
       </div>
     </main>
   )
