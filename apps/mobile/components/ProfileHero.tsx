@@ -28,8 +28,10 @@ export function ProfileHero({
   onOpenSpar?: () => void;
 }) {
   const spare = usePlayerSpares();
-  const spareSummary = isOwn && spare.total > 0
-    ? { pct: spare.stats.overall.pct, nemesis: spare.stats.nemesis ? { name: spare.stats.nemesis.name, pct: spare.stats.nemesis.pct } : null }
+  // Doorway into Mina spel — shows on your own profile whether or not you've
+  // logged spares yet (an empty CTA until the pin-deck log captures leaves).
+  const spareSummary = isOwn
+    ? { has: spare.total > 0, pct: spare.stats.overall.pct, nemesis: spare.stats.nemesis ? { name: spare.stats.nemesis.name, pct: spare.stats.nemesis.pct } : null }
     : null;
   const snittTrend = cumulativeAvgPoints(history);
   // The curve is OUR running league-series average — never BITS' official snitt
@@ -78,7 +80,7 @@ export function ProfileHero({
     cards.push({
       key: 'spar',
       label: 'Spärr',
-      element: <SparHeroCard pct={spareSummary.pct} nemesis={spareSummary.nemesis} onOpen={() => onOpenSpar?.()} />,
+      element: <SparHeroCard has={spareSummary.has} pct={spareSummary.pct} nemesis={spareSummary.nemesis} onOpen={() => onOpenSpar?.()} />,
     });
   }
 

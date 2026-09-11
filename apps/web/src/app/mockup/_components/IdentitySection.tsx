@@ -77,8 +77,11 @@ export default function IdentitySection({
   // Mina spel. Absent on other players' profiles (spare data is your own).
   const router = useRouter()
   const spare = usePlayerSpares()
-  const spareSummary = isOwner && spare.total > 0
-    ? { pct: spare.stats.overall.pct, nemesis: spare.stats.nemesis ? { name: spare.stats.nemesis.name, pct: spare.stats.nemesis.pct } : null }
+  // The card is the owner's doorway INTO Mina spel, so it shows on your own
+  // profile whether or not you've logged spares yet — an empty CTA until the
+  // pin-deck log has captured leaves (the plain scoreboard logs no pin data).
+  const spareSummary = isOwner
+    ? { has: spare.total > 0, pct: spare.stats.overall.pct, nemesis: spare.stats.nemesis ? { name: spare.stats.nemesis.name, pct: spare.stats.nemesis.pct } : null }
     : null
 
   // Trend lines mirror native ProfileTrend: snitt = our running league-series
@@ -217,11 +220,15 @@ export default function IdentitySection({
                 <div onClick={() => router.push('/mina-spel')} style={{ cursor: 'pointer' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Spärr</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                    <span style={{ fontSize: 52, fontWeight: 900, color: INK, letterSpacing: '-0.02em', lineHeight: 1 }}>{spareSummary!.pct}<span style={{ fontSize: 24, color: INK4 }}>%</span></span>
+                    <span style={{ fontSize: 52, fontWeight: 900, color: spareSummary!.has ? INK : INK4, letterSpacing: '-0.02em', lineHeight: 1 }}>{spareSummary!.has ? spareSummary!.pct : '–'}<span style={{ fontSize: 24, color: INK4 }}>%</span></span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: INK2 }}>Mina spel →</span>
                   </div>
-                  {spareSummary!.nemesis && <div style={{ fontSize: 13, color: INK2, marginTop: 14 }}>Nemesis: <b style={{ color: INK }}>{spareSummary!.nemesis.name}</b> · {spareSummary!.nemesis.pct}%</div>}
-                  <div style={{ fontSize: 13, color: INK3, marginTop: spareSummary!.nemesis ? 8 : 14, lineHeight: 1.5 }}>Läge-för-läge från dina loggade spel. Tryck för att logga & se hela analysen →</div>
+                  {spareSummary!.has && spareSummary!.nemesis && <div style={{ fontSize: 13, color: INK2, marginTop: 14 }}>Nemesis: <b style={{ color: INK }}>{spareSummary!.nemesis.name}</b> · {spareSummary!.nemesis.pct}%</div>}
+                  <div style={{ fontSize: 13, color: INK3, marginTop: spareSummary!.has && spareSummary!.nemesis ? 8 : 14, lineHeight: 1.5 }}>
+                    {spareSummary!.has
+                      ? 'Läge-för-läge från dina loggade spel. Tryck för att logga & se hela analysen →'
+                      : 'Logga ett spel i Mina spel och pricka käglorna som stod — din spärranalys byggs upp här. Tryck för att börja →'}
+                  </div>
                 </div>
               ) : c.ready === false ? (
                 /* "Kommer snart" launch state — no live number until the engine has data */

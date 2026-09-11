@@ -6,10 +6,12 @@ import { COLOR, FONT, RADIUS, SPACE } from '@/theme';
 // Owner-only Spärr entry in the profile hero deck. A summary of your spare
 // conversion that opens Mina spel (log + full Spärranalys). Parity with web.
 export function SparHeroCard({
+  has,
   pct,
   nemesis,
   onOpen,
 }: {
+  has: boolean;
   pct: number;
   nemesis: { name: string; pct: number } | null;
   onOpen: () => void;
@@ -18,13 +20,17 @@ export function SparHeroCard({
     <PressableScale style={s.card} onPress={onOpen} accessibilityLabel="Öppna Mina spel">
       <Text style={s.eyebrow}>SPÄRR</Text>
       <View style={s.row}>
-        <Text style={s.big}>{pct}<Text style={s.unit}>%</Text></Text>
+        <Text style={[s.big, !has && { color: COLOR.ink4 }]}>{has ? pct : '–'}<Text style={s.unit}>%</Text></Text>
         <Text style={s.cta}>Mina spel →</Text>
       </View>
-      {nemesis ? (
+      {has && nemesis ? (
         <Text style={s.nem}>Nemesis: <Text style={s.b}>{nemesis.name}</Text> · {nemesis.pct}%</Text>
       ) : null}
-      <Text style={s.hint}>Läge-för-läge från dina loggade spel. Tryck för att logga & se hela analysen →</Text>
+      <Text style={s.hint}>
+        {has
+          ? 'Läge-för-läge från dina loggade spel. Tryck för att logga & se hela analysen →'
+          : 'Logga ett spel i Mina spel och pricka käglorna som stod — din spärranalys byggs upp här. Tryck för att börja →'}
+      </Text>
     </PressableScale>
   );
 }
