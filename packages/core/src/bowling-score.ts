@@ -2,8 +2,14 @@
 // logbook) can never disagree on a total. A game is a flat list of rolls (pins
 // per ball); everything else derives from it.
 
-/** A scored game as stored on a logbook entry: the rolls plus the computed total. */
-export type Game = { rolls: number[]; total: number }
+/** A leave captured while logging a game: which pins stood after the first ball
+ *  of a frame, and whether the frame was cleared (spare) on the second ball.
+ *  Optional — a game scored without pin detail simply omits it. Feeds Spärranalys. */
+export type FrameLeave = { frame: number; pins: number[]; converted: boolean }
+
+/** A scored game as stored on a logbook entry: the rolls, the computed total,
+ *  and (when logged via the pin deck) the per-frame leaves for spare analysis. */
+export type Game = { rolls: number[]; total: number; leaves?: FrameLeave[] }
 
 /** Split a flat roll list into frames (1–9: strike = 1 roll else 2; 10th = up to 3). */
 export function framesOf(rolls: number[]): number[][] {
