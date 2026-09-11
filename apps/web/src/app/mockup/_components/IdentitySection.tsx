@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Trophy, Star, Zap, Flame, Target, Crown, BadgeCheck } from 'lucide-react'
 import ProfileTrend from '@/components/ProfileTrend'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { ProfileActions } from './ProfileActions'
 import { cumulativeAvgPoints, rollingRatingPoints, type TrendPoint } from '@/lib/profile'
 import type { ProfileData, ProfileIdentity } from '@/lib/profile'
+import { usePlayerSpares } from '@/app/mina-spel/_components/use-player-spares'
 import { COLORS } from '../data'
 
 const { GOLD } = COLORS
@@ -15,7 +17,8 @@ const INK2 = 'rgba(244,245,247,0.64)'
 const INK3 = 'rgba(244,245,247,0.40)'
 const INK4 = 'rgba(244,245,247,0.24)'
 
-type HeroMetric = 'snitt' | 'bk' | 'ranking'
+type HeroMetric = 'snitt' | 'bk' | 'ranking'   // the curve-backed metrics (onOpenCurve)
+type CardKey = HeroMetric | 'spar'             // hero-deck cards, incl. the Spärr entry
 
 export type Achievement = {
   icon: string; title: string; earned: boolean; near: boolean; color: string
@@ -70,6 +73,14 @@ export default function IdentitySection({
 
   const { seasonAvg, recentAvg, lastSeasonAvg, projSeasonAvg, matches } = data
 
+  // Owner-only "Spärr" hero card, fed by the viewer's own logged games → opens
+  // Mina spel. Absent on other players' profiles (spare data is your own).
+  const router = useRouter()
+  const spare = usePlayerSpares()
+  const spareSummary = isOwner && spare.total > 0
+    ? { pct: spare.stats.overall.pct, nemesis: spare.stats.nemesis ? { name: spare.stats.nemesis.name, pct: spare.stats.nemesis.pct } : null }
+    : null
+
   // Trend lines mirror native ProfileTrend: snitt = our running league-series
   // average, BK = rolling rating recomputed each match, ranking = raw per-match points.
   const snittPoints = cumulativeAvgPoints(matches)
@@ -79,7 +90,7 @@ export default function IdentitySection({
   }))
 
   type HeroCard = {
-    key: HeroMetric; label: string; value: number; delta: number; deltaSuffix: string
+    key: CardKey; label: string; value: number; delta: number; deltaSuffix: string
     caption: string; color: string; points: TrendPoint[]
     baseline?: number; proj?: number
     footerLeft: string; footerRight?: string; ready?: boolean
@@ -114,6 +125,10 @@ export default function IdentitySection({
       caption: 'Poäng till seriens individuella ranking',
       color: '#9ca5b3', points: rankingPoints,
       footerLeft: 'Max 8 poäng per match',
+    }] : []),
+    ...(spareSummary ? [{
+      key: 'spar' as const, label: 'Spärr', value: spareSummary.pct, delta: 0, deltaSuffix: '',
+      caption: '', color: GOLD, points: [] as TrendPoint[], footerLeft: '',
     }] : []),
   ]
 
@@ -198,7 +213,17 @@ export default function IdentitySection({
         )}
         {[heroCards[activeHero]].map(c => (
             <div key={c.key}>
-              {c.ready === false ? (
+              {c.key === 'spar' ? (
+                <div onClick={() => router.push('/mina-spel')} style={{ cursor: 'pointer' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Spärr</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                    <span style={{ fontSize: 52, fontWeight: 900, color: INK, letterSpacing: '-0.02em', lineHeight: 1 }}>{spareSummary!.pct}<span style={{ fontSize: 24, color: INK4 }}>%</span></span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: INK2 }}>Mina spel →</span>
+                  </div>
+                  {spareSummary!.nemesis && <div style={{ fontSize: 13, color: INK2, marginTop: 14 }}>Nemesis: <b style={{ color: INK }}>{spareSummary!.nemesis.name}</b> · {spareSummary!.nemesis.pct}%</div>}
+                  <div style={{ fontSize: 13, color: INK3, marginTop: spareSummary!.nemesis ? 8 : 14, lineHeight: 1.5 }}>Läge-för-läge från dina loggade spel. Tryck för att logga & se hela analysen →</div>
+                </div>
+              ) : c.ready === false ? (
                 /* "Kommer snart" launch state — no live number until the engine has data */
                 <div onClick={onOpenBkRating} style={{ cursor: 'pointer' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: INK3, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{c.label}</div>
@@ -218,7 +243,7 @@ export default function IdentitySection({
                   </div>
                 </div>
               ) : (
-                <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key)}
+                <div onClick={() => c.key === 'bk' ? onOpenBkRating() : onOpenCurve(c.key as HeroMetric)}
                   style={{ cursor: 'pointer' }}>
                   <ProfileTrend
                     points={c.points}
