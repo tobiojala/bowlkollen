@@ -136,7 +136,9 @@ export default function PlayerPage() {
             history={activeRows}
             licenceAverage={player.licence_average ?? null}
             topPct={topPct}
+            isOwn={isOwn}
             onInfoRating={() => setSheet('rating')}
+            onOpenSpar={() => router.push('/mina-spel' as never)}
           />
 
           <ProfileActions
