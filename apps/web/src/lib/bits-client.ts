@@ -244,9 +244,8 @@ export async function getMatchesByDivision(divisionId: number, seasonId = 2025):
   return bitsGet<BitsMatch[]>('Match', { divisionId, seasonId })
 }
 
-export async function getMatchScores(matchId: number): Promise<BitsMatchScores> {
-  return bitsGet<BitsMatchScores>('matchResult/GetMatchScores', { matchId })
-}
+// getMatchScores lives in bits-match-scores.ts (site-host connector) — the legacy
+// api.swebowl.se/api/v1 tier now 403s us wholesale.
 
 export async function getMatchResults(matchId: number, matchSchemeId: string): Promise<BitsMatchResults> {
   return bitsGet<BitsMatchResults>('matchResult/GetMatchResults', { matchId, matchSchemeId })
