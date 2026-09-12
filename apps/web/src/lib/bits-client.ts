@@ -229,10 +229,6 @@ async function bitsGet<T>(
 
 // ─── public API ───────────────────────────────────────────────────────────────
 
-export async function getDivisions(seasonId = 2025): Promise<BitsDivision[]> {
-  return bitsGet<BitsDivision[]>('Division', { seasonId })
-}
-
 export async function getClubs(seasonId = 2025): Promise<BitsClub[]> {
   return bitsGet<BitsClub[]>('Club', { seasonId })
 }
@@ -241,12 +237,10 @@ export async function getTeamsByClub(clubId: number, seasonId = 2025): Promise<B
   return bitsGet<BitsTeam[]>('Team', { clubId, seasonId })
 }
 
-export async function getMatchesByDivision(divisionId: number, seasonId = 2025): Promise<BitsMatch[]> {
-  return bitsGet<BitsMatch[]>('Match', { divisionId, seasonId })
-}
-
-// getMatchScores lives in bits-match-scores.ts (site-host connector) — the legacy
-// api.swebowl.se/api/v1 tier now 403s us wholesale.
+// getDivisions + getMatchesByDivision live in bits-series.ts, getMatchScores in
+// bits-match-scores.ts — all on the site host, since the legacy
+// api.swebowl.se/api/v1 tier now 403s us wholesale (getClubs/getTeamsByClub/
+// getMatchResults/players below still call it and await the same migration).
 
 export async function getMatchResults(matchId: number, matchSchemeId: string): Promise<BitsMatchResults> {
   return bitsGet<BitsMatchResults>('matchResult/GetMatchResults', { matchId, matchSchemeId })
