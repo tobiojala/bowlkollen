@@ -1,5 +1,6 @@
 import 'server-only'
 import { BASE_HEADERS, getSession } from './bits-client'
+import { bitsFetch } from './bits-core'
 
 // Client for the BITS national ranking. Unlike the match/competition endpoints
 // (api.swebowl.se/api/v1), ranking is a SITE-side connector on bits.swebowl.se
@@ -39,7 +40,7 @@ export async function getPlayerRanking(
     skip, take, page: Math.floor(skip / take) + 1, pageSize: take,
     sort: [{ field: 'rankPoints', dir: 'desc' }],
   }
-  const res = await fetch(`${SITE}/MiscFrontApiConnector/GetPlayerRanking`, {
+  const res = await bitsFetch(`${SITE}/MiscFrontApiConnector/GetPlayerRanking`, {
     method: 'POST',
     headers: { ...BASE_HEADERS, Cookie: cookie, 'Content-Type': 'application/json', Accept: 'application/json, */*' },
     body: JSON.stringify(body),
@@ -60,7 +61,7 @@ export type RankingGraphPoint = { xLabel: string; spelstyrka: number; ranking: n
 // ranking curve. GET /MiscFrontApiConnector/PlayerDetailGraphData, type 2 = Month.
 export async function getPlayerRankingGraph(licNbr: string): Promise<RankingGraphPoint[]> {
   const cookie = await getSession()
-  const res = await fetch(
+  const res = await bitsFetch(
     `${SITE}/MiscFrontApiConnector/PlayerDetailGraphData?licenseNumber=${encodeURIComponent(licNbr)}&type=2`,
     { headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*' }, cache: 'no-store' },
   )

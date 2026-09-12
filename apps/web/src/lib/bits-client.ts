@@ -1,4 +1,5 @@
 import 'server-only'
+import { bitsFetch } from './bits-core'
 
 const BITS_SITE = 'https://bits.swebowl.se'
 export const BITS_API  = 'https://api.swebowl.se/api/v1'
@@ -181,14 +182,14 @@ export async function getSession(): Promise<string> {
 
   const jar: Record<string, string> = {}
 
-  const r1 = await fetch(`${BITS_SITE}/`, {
+  const r1 = await bitsFetch(`${BITS_SITE}/`, {
     headers: { 'User-Agent': UA, Accept: 'text/html,*/*;q=0.9', 'Accept-Language': 'sv-SE,sv;q=0.9' },
     redirect: 'follow',
   })
   Object.assign(jar, extractSetCookies(r1))
 
   // Visiting /seriespel initialises the Kendo Grid session that unlocks the API tier
-  const r2 = await fetch(`${BITS_SITE}/seriespel`, {
+  const r2 = await bitsFetch(`${BITS_SITE}/seriespel`, {
     headers: { 'User-Agent': UA, Accept: 'text/html,*/*;q=0.9', Cookie: jarToString(jar), Referer: `${BITS_SITE}/` },
     redirect: 'follow',
   })
@@ -211,7 +212,7 @@ async function bitsGet<T>(
   const qs = new URLSearchParams([...entries, ['apiKey', BITS_KEY]])
   const url = `${BITS_API}/${path}?${qs}`
 
-  const res = await fetch(url, {
+  const res = await bitsFetch(url, {
     headers: { ...BASE_HEADERS, Cookie: cookie },
     // Tell Next.js not to cache these dynamic data calls
     cache: 'no-store',
