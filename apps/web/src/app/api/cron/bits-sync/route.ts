@@ -26,9 +26,14 @@ export const maxDuration = 240
 // handful/day; a large historical backlog (e.g. the ~141k matches the 2008–2020
 // history backfill added to each pool) is drained deliberately via the dedicated
 // /api/cron/backfill-{exact,delmatch} routes, not this 3-hourly run.
-const BATCH_SCORES = 200
-const BATCH_EXACT = 150
-const BATCH_DELMATCH = 150
+// Small per-run batches: every run also re-syncs ~103 divisions + fixtures, and
+// all BITS calls are serialized through the hardened client, so a run of
+// matches + 3×40 pending fetches fits comfortably under maxDuration. The
+// current-season backlog (rounds already played) drains over successive 3h runs;
+// history is the backfill-* routes' job.
+const BATCH_SCORES = 40
+const BATCH_EXACT = 40
+const BATCH_DELMATCH = 40
 
 // Runs the BITS sync. Triggered by pg_cron (POST, supabase/migrations/bits_sync_cron.sql)
 // OR Vercel Cron (GET, vercel.json) — both authenticate with $CRON_SECRET.
