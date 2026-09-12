@@ -52,7 +52,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   const id = Number(matchId)
   if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'invalid match id' }, { status: 400 })
   const sp = new URL(req.url).searchParams
-  if (sp.get('probe') === PROBE_TOKEN) return NextResponse.json({ id, connectors: await probeConnectors(id) }, { status: 200 })
+  if (sp.get('probe') === PROBE_TOKEN) {
+    if (sp.get('dump') === '1') {
+      const cookie = await getSession()
+      const r = await fetch(`${SITE}/MiscFrontApiConnector/GetMatchScores?id=${id}`, {
+        headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*', 'X-Requested-With': 'XMLHttpRequest', Referer: `${SITE}/match-detail?matchid=${id}` }, cache: 'no-store',
+      })
+      return new NextResponse(await r.text(), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+    return NextResponse.json({ id, connectors: await probeConnectors(id) }, { status: 200 })
+  }
   const debug = sp.get('debug') === '1'
 
   const hit = cache.get(id)
