@@ -1,24 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { GlassSheet } from '@/components/GlassSheet';
 import { PressableScale } from '@/components/PressableScale';
-import { Scoreboard } from '@/components/Scoreboard';
-import { Segmented } from '@/components/Segmented';
+import { SessionLogger } from '@/components/SessionLogger';
+import { useMyBalls } from '@/lib/balls';
 import {
-  useDiaryEntries, useSaveDiaryEntry, useDeleteNote, noteDate, noteType, entrySeries, entryAvg, entryTotal,
-  type DiaryType, type Note, type Game,
+  useDiaryEntries, useDeleteNote, noteDate, noteType, entrySeries, entryAvg, entryTotal,
+  type DiaryType, type Note,
 } from '@/lib/diary';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
-const TYPE_OPTS: { key: DiaryType; label: string }[] = [
-  { key: 'traning', label: 'Träning' }, { key: 'tavling', label: 'Tävling' },
-  { key: 'match', label: 'Match' }, { key: 'ovrigt', label: 'Övrigt' },
-];
 const LABEL: Record<DiaryType, string> = { traning: 'Träning', tavling: 'Tävling', match: 'Match', ovrigt: 'Övrigt' };
-const todayISO = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (d: string) => {
   const dt = new Date(d + 'T12:00:00');
   if (isNaN(dt.getTime())) return d;
@@ -65,7 +60,9 @@ export function DiarySection() {
 
 function EntryRow({ note }: { note: Note }) {
   const del = useDeleteNote();
+  const { data: balls = [] } = useMyBalls();
   const t = noteType(note);
+  const ballNames = note.ballIds.map((id) => balls.find((b) => b.id === id)?.name).filter(Boolean) as string[];
   const remove = () => Alert.alert('Ta bort', 'Ta bort anteckningen?', [
     { text: 'Avbryt', style: 'cancel' },
     { text: 'Ta bort', style: 'destructive', onPress: () => del.mutate(note.id) },
@@ -85,47 +82,20 @@ function EntryRow({ note }: { note: Note }) {
           <Text style={styles.gamesMeta}>· ⌀ {entryAvg(note)} · {entryTotal(note)} tot</Text>
         </View>
       )}
+      {(!!note.oilPattern || ballNames.length > 0) && (
+        <Text style={styles.context} numberOfLines={2}>
+          {[note.oilPattern, ballNames.join(', ')].filter(Boolean).join('  ·  ')}
+        </Text>
+      )}
       {!!note.body && <Text style={styles.body}>{note.body}</Text>}
     </View>
   );
 }
 
 function AddSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const save = useSaveDiaryEntry();
-  const [type, setType] = useState<DiaryType>('traning');
-  const [hall, setHall] = useState('');
-  const [body, setBody] = useState('');
-  const [games, setGames] = useState<Game[]>([]);
-  const [board, setBoard] = useState(false);
-
-  const canSave = body.trim().length > 0 || games.length > 0;
-  const reset = () => { setBody(''); setHall(''); setType('traning'); setGames([]); };
-  const submit = () => {
-    if (!canSave) return;
-    save.mutate({ body, hall: hall.trim() || null, type, date: todayISO(), games }, {
-      onSuccess: () => { reset(); onClose(); },
-    });
-  };
-  const gTotal = games.reduce((a, g) => a + g.total, 0);
-  const gAvg = games.length ? Math.round(gTotal / games.length) : 0;
-
   return (
-    <GlassSheet visible={visible} onClose={onClose} title="Ny anteckning">
-      <View style={{ gap: SPACE[3] }}>
-        <Segmented options={TYPE_OPTS} value={type} onChange={setType} />
-        <TextInput value={hall} onChangeText={setHall} placeholder="Hall (valfritt)" placeholderTextColor={COLOR.ink4} style={styles.input} />
-        <TextInput value={body} onChangeText={setBody} placeholder="Hur gick det? Vad testade du?" placeholderTextColor={COLOR.ink4}
-          multiline style={[styles.input, styles.textarea]} />
-        <PressableScale style={styles.scoreBtn} onPress={() => setBoard(true)}>
-          <Ionicons name="list" size={20} color={games.length ? COLOR.gold : COLOR.ink3} />
-          <Text style={styles.scoreBtnText}>{games.length ? `${games.length} spel · ⌀ ${gAvg} · ${gTotal} tot` : 'Lägg till spel'}</Text>
-          <Text style={styles.scoreBtnHint}>{games.length ? 'Ändra' : 'Poängräkning'}</Text>
-        </PressableScale>
-        <PressableScale style={[styles.save, !canSave && styles.saveOff]} onPress={submit} disabled={!canSave || save.isPending}>
-          <Text style={[styles.saveText, !canSave && styles.saveTextOff]}>Spara</Text>
-        </PressableScale>
-      </View>
-      <Scoreboard visible={board} initial={games} onClose={() => setBoard(false)} onSave={(g) => { setGames(g); setBoard(false); }} />
+    <GlassSheet visible={visible} onClose={onClose} title="Logga spel">
+      <SessionLogger onSaved={onClose} />
     </GlassSheet>
   );
 }
@@ -149,6 +119,7 @@ const styles = StyleSheet.create({
   badgeText: { color: COLOR.ink2, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 0.4 },
   meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, flexShrink: 1 },
   body: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.regular, lineHeight: 22, marginTop: 6 },
+  context: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.regular, marginTop: 6 },
   gamesRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: SPACE[2], marginTop: 6 },
   gamesSeries: { color: COLOR.ink, fontFamily: FONT.score, fontSize: TYPE.body, fontVariant: ['tabular-nums'] },
   gamesMeta: { color: COLOR.ink3, fontSize: TYPE.caption },

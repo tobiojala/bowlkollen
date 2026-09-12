@@ -66,15 +66,15 @@ export default function LoggbokPage() {
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', marginTop: 2 }}>Loggbok</h1>
             <div style={{ fontSize: 14, color: INK3, marginTop: 4 }}>Din privata logg — träning, tävling, matcher.</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, marginTop: 6 }}>
-            <Link href="/mina-spel"
-              style={{ background: GOLD, color: '#0b0d10', borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 800, textAlign: 'center', textDecoration: 'none' }}>
-              Logga spel
-            </Link>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, marginTop: 6, alignItems: 'stretch' }}>
             <button onClick={() => setAdding(true)}
-              style={{ background: 'transparent', color: INK2, border: `1px solid ${INK4}`, borderRadius: 999, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-              + Snabbnotis
+              style={{ background: GOLD, color: '#0b0d10', border: 'none', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              Logga spel
             </button>
+            <Link href="/mina-spel"
+              style={{ color: INK2, border: `1px solid ${INK4}`, borderRadius: 999, padding: '9px 16px', fontSize: 14, fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>
+              Spärranalys →
+            </Link>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function LoggbokPage() {
 
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', color: INK4, fontSize: 14, padding: '48px 20px' }}>
-            {filter === 'alla' ? 'Inget loggat än — tryck Logga spel för att räkna en serie, eller + Snabbnotis.' : 'Inget här än.'}
+            {filter === 'alla' ? 'Inget loggat än — tryck Logga spel för att räkna dina serier.' : 'Inget här än.'}
           </div>
         ) : (
           <div>

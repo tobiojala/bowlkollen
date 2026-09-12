@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/PressableScale';
-import { LogGame } from '@/components/LogGame';
+import { SessionLogger } from '@/components/SessionLogger';
 import { SparAnalys } from '@/components/SparAnalys';
 import { COLOR, FONT, SPACE } from '@/theme';
 
@@ -27,7 +27,7 @@ export default function MinaSpel() {
           <PressableScale style={[s.tab, tab === 'log' && s.tabOn]} onPress={() => setTab('log')}><Text style={[s.tabT, tab === 'log' && s.tabTOn]}>Logga spel</Text></PressableScale>
           <PressableScale style={[s.tab, tab === 'analys' && s.tabOn]} onPress={() => setTab('analys')}><Text style={[s.tabT, tab === 'analys' && s.tabTOn]}>Spärranalys</Text></PressableScale>
         </View>
-        {tab === 'log' ? <LogGame onSaved={() => setTab('analys')} /> : <SparAnalys />}
+        {tab === 'log' ? <SessionLogger onSaved={() => setTab('analys')} /> : <SparAnalys />}
       </ScrollView>
     </SafeAreaView>
   );

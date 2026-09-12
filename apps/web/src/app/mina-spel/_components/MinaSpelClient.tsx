@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { COLOR, FONT } from '@/lib/brand'
-import { LogGame } from './LogGame'
+import { SessionLogger } from './SessionLogger'
 import { SparAnalys } from './SparAnalys'
 
 // Mina spel hub: two views over the same loop — Logga spel (score a game via the
@@ -26,7 +26,7 @@ export function MinaSpelClient() {
           <button style={on('analys')} onClick={() => setTab('analys')}>Spärranalys</button>
         </div>
 
-        {tab === 'log' ? <LogGame onSaved={() => setTab('analys')} /> : <SparAnalys />}
+        {tab === 'log' ? <SessionLogger onSaved={() => setTab('analys')} /> : <SparAnalys />}
       </div>
     </main>
   )

@@ -31,7 +31,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Ball arsenal | ✅ `/arsenal/add` | ✅ `/arsenal/add` (`balls.ts`) | Both. |
 | Oil profiles | ✅ `/oljeprofiler` | 🟡 (in diary) | Web has a dedicated page; native folds oil into diary. Gap: native dedicated oil surface. |
 | Scouting | ✅ (profile) | ✅ `scouting.ts` | Both. |
-| Mina spel (pin-deck log + Spärranalys) | ✅ `/mina-spel` | ✅ `/mina-spel` | **Parity (2026-09-11)** — shared `@bowlkollen/core` spare-leaves + bowling-score engine; both apps: PinDeck log → leaves captured to diary → Spärranalys (white bars, tip-only colour). Owner-only "Spärr" hero card on the profile opens it. |
+| Mina spel (pin-deck log + Spärranalys) | ✅ `/mina-spel` | ✅ `/mina-spel` | **Parity (2026-09-12)** — shared `@bowlkollen/core` spare-leaves + bowling-score engine; both apps: SessionLogger (multi-serie pin-deck → leaves) + EntryMeta context (center/oil/käglor-from-arsenal/note) → one loggbok entry → Spärranalys (white bars, tip-only colour). Same SessionLogger powers the loggbok quick entry. Owner-only "Spärr" hero card opens it. Needs `player_notes_context.sql` (oil_pattern, ball_ids). |
 | Compare (players) | ✅ `/compare/[a]/[b]` | ✅ `/compare/[a]/[b]` | Both. |
 | Team stats (deep) | ✅ `/lag/[id]/statistik` (+ inline summary + OG share card) | ✅ `/lag/[id]/statistik` (+ inline summary) | **Parity (2026-08-19)** — shared `computeTeamStats` engine (pinfall-first, 9 tests); both apps: summary on team page + deep page (ProfileTrend). Web also has a sponsor OG share card + Dela. |
 | Compare (teams) | ✅ `/compare/teams/[id1]/[id2]` (BITS) | ✅ `/compare/teams/[a]/[b]` | **Parity (2026-08-19)** — both on `computeTeamStats` + opponent picker; leading side green. |

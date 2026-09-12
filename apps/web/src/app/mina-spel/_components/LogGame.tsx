@@ -1,32 +1,26 @@
 'use client'
 
-import { useState } from 'react'
 import { COLOR, FONT } from '@/lib/brand'
-import { leaveName, isSplit } from '@bowlkollen/core'
-import { useSaveDiaryEntry } from '@/lib/diary'
+import { leaveName, isSplit, type Game } from '@bowlkollen/core'
 import { PinDeck } from '@/components/PinDeck'
 import { useLogGame } from './use-log-game'
 
 const box = (m: string[], tenth: boolean): string[] =>
   tenth ? [m[0] ?? '', m[1] ?? '', m[2] ?? ''] : (m.length === 1 && m[0] === 'X' ? ['', 'X'] : [m[0] ?? '', m[1] ?? ''])
 
-// Log a full game via the pin deck: each ball, tap the käglor that stood. Scores
-// itself (via core) and captures open-frame leaves for Spärranalys — one flow.
-export function LogGame({ onSaved }: { onSaved?: () => void }) {
+// Score one serie via the pin deck: each ball, tap the käglor that stood. Scores
+// itself (via core) and captures open-frame leaves for Spärranalys. When the serie
+// is done it's handed up via onComplete — the parent (SessionLogger) collects
+// series and owns the save.
+export function LogGame({ onComplete }: { onComplete: (game: Game) => void }) {
   const g = useLogGame()
-  const save = useSaveDiaryEntry()
-  const [hall, setHall] = useState('')
 
   const stand = [...g.standing].sort((a, b) => a - b)
   const hal = isSplit(stand)
   const readout = stand.length === 0 ? (g.ball === 1 ? 'Strike' : 'Spärr') : leaveName(stand) + (hal ? '  ·  hål' : '')
   const readColor = stand.length === 0 && g.ball === 1 ? COLOR.gold : hal ? COLOR.red : COLOR.ink
 
-  const commit = () => {
-    if (!g.game) return
-    save.mutate({ body: '', hall: hall.trim() || null, type: 'match', date: new Date().toISOString().slice(0, 10), games: [g.game] },
-      { onSuccess: () => { g.reset(); setHall(''); onSaved?.() } })
-  }
+  const add = () => { if (g.game) { onComplete(g.game); g.reset() } }
 
   return (
     <div>
@@ -70,11 +64,10 @@ export function LogGame({ onSaved }: { onSaved?: () => void }) {
       ) : (
         <div style={{ marginTop: 20, padding: 18, borderRadius: 14, background: COLOR.surface }}>
           <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 20 }}>{g.total === 300 ? 'PERFEKT · 300!' : `Serie klar · ${g.total}`}</div>
-          <input value={hall} onChange={e => setHall(e.target.value)} placeholder="Hall (valfritt)"
-            style={{ width: '100%', marginTop: 12, background: COLOR.surface2, border: 'none', borderRadius: 10, padding: '11px 14px', color: COLOR.ink, fontSize: 15, fontFamily: FONT.body }} />
+          <p style={{ fontSize: 13, color: COLOR.ink3, marginTop: 6 }}>Lägg serien i loggen och räkna nästa, eller spara nedan.</p>
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button onClick={commit} disabled={save.isPending} style={{ border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 22px', background: COLOR.gold, color: COLOR.bg }}>Spara serie</button>
-            <button onClick={g.reset} style={{ border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 20px', background: 'transparent', color: COLOR.ink3, boxShadow: `inset 0 0 0 1px ${COLOR.hairline}` }}>Ny serie</button>
+            <button onClick={add} style={{ border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 22px', background: COLOR.gold, color: COLOR.bg }}>Lägg till serie</button>
+            <button onClick={g.reset} style={{ border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 20px', background: 'transparent', color: COLOR.ink3, boxShadow: `inset 0 0 0 1px ${COLOR.hairline}` }}>Gör om</button>
           </div>
         </div>
       )}

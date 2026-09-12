@@ -1,33 +1,26 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/PressableScale';
 import { PinDeck } from '@/components/PinDeck';
-import { leaveName, isSplit } from '@bowlkollen/core';
-import { useSaveDiaryEntry } from '@/lib/diary';
+import { leaveName, isSplit, type Game } from '@bowlkollen/core';
 import { useLogGame } from '@/lib/use-log-game';
 import { COLOR, FONT, SPACE } from '@/theme';
 
 const box = (m: string[], tenth: boolean): string[] =>
   tenth ? [m[0] ?? '', m[1] ?? '', m[2] ?? ''] : (m.length === 1 && m[0] === 'X' ? ['', 'X'] : [m[0] ?? '', m[1] ?? '']);
 
-// Log a full game via the pin deck (parity with web): each ball, tap the käglor
-// that stood. Scores itself (core) and captures open-frame leaves for Spärranalys.
-export function LogGame({ onSaved }: { onSaved?: () => void }) {
+// Score one serie via the pin deck (parity with web): each ball, tap the käglor
+// that stood. Scores itself (core) and captures open-frame leaves. When done, the
+// serie is handed up via onComplete — SessionLogger collects series and saves.
+export function LogGame({ onComplete }: { onComplete: (game: Game) => void }) {
   const g = useLogGame();
-  const save = useSaveDiaryEntry();
-  const [hall, setHall] = useState('');
 
   const stand = [...g.standing].sort((a, b) => a - b);
   const hal = isSplit(stand);
   const readout = stand.length === 0 ? (g.ball === 1 ? 'Strike' : 'Spärr') : leaveName(stand) + (hal ? '  ·  hål' : '');
   const readColor = stand.length === 0 && g.ball === 1 ? COLOR.gold : hal ? COLOR.red : COLOR.ink;
 
-  const commit = () => {
-    if (!g.game) return;
-    save.mutate({ body: '', hall: hall.trim() || null, type: 'match', date: new Date().toISOString().slice(0, 10), games: [g.game] },
-      { onSuccess: () => { g.reset(); setHall(''); onSaved?.(); } });
-  };
+  const add = () => { if (g.game) { onComplete(g.game); g.reset(); } };
   const shownLeaves = g.leaves.filter((l) => l.converted || l.residual.length);
 
   return (
@@ -74,10 +67,10 @@ export function LogGame({ onSaved }: { onSaved?: () => void }) {
       ) : (
         <View style={s.done}>
           <Text style={s.doneQ}>{g.total === 300 ? 'PERFEKT · 300!' : `Serie klar · ${g.total}`}</Text>
-          <TextInput value={hall} onChangeText={setHall} placeholder="Hall (valfritt)" placeholderTextColor={COLOR.ink4} style={s.input} />
+          <Text style={s.doneSub}>Lägg serien i loggen och räkna nästa, eller spara nedan.</Text>
           <View style={s.brow}>
-            <PressableScale style={[s.btnP, { backgroundColor: COLOR.gold }]} onPress={commit} disabled={save.isPending}><Text style={s.btnPT}>Spara serie</Text></PressableScale>
-            <PressableScale style={s.btnG} onPress={g.reset}><Text style={s.btnGT}>Ny serie</Text></PressableScale>
+            <PressableScale style={[s.btnP, { backgroundColor: COLOR.gold }]} onPress={add}><Text style={s.btnPT}>Lägg till serie</Text></PressableScale>
+            <PressableScale style={s.btnG} onPress={g.reset}><Text style={s.btnGT}>Gör om</Text></PressableScale>
           </View>
         </View>
       )}
@@ -127,7 +120,7 @@ const s = StyleSheet.create({
   btnGT: { color: COLOR.ink2, fontFamily: FONT.bold, fontSize: 15 },
   done: { marginTop: SPACE[4], padding: SPACE[4], borderRadius: 14, backgroundColor: COLOR.surface },
   doneQ: { fontFamily: FONT.display, fontSize: 20, color: COLOR.ink },
-  input: { marginTop: SPACE[3], backgroundColor: COLOR.surface2, borderRadius: 10, paddingHorizontal: SPACE[4], paddingVertical: SPACE[3], color: COLOR.ink, fontSize: 15, fontFamily: FONT.regular },
+  doneSub: { fontSize: 13, color: COLOR.ink3, marginTop: 6, fontFamily: FONT.regular },
   slog: { marginTop: SPACE[6], borderTopWidth: 1, borderTopColor: COLOR.hairline, paddingTop: SPACE[4] },
   slogH: { fontSize: 13, fontFamily: FONT.bold, letterSpacing: 0.4, color: COLOR.ink3, marginBottom: SPACE[2] },
   lrow: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], paddingVertical: SPACE[2] },

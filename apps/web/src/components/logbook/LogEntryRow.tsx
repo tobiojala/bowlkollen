@@ -1,7 +1,8 @@
 'use client'
 
-import { Trash2, MapPin } from 'lucide-react'
+import { Trash2, MapPin, Droplet, Circle } from 'lucide-react'
 import { useDeleteNote, noteDate, type DiaryType, type Note } from '@/lib/diary'
+import { useMyBalls } from '@/lib/balls'
 import { noteType, entrySeries, entryAvg, entryTotal } from '@/lib/logbook'
 
 const INK = '#f4f5f7', INK3 = 'rgba(244,245,247,0.56)', INK4 = 'rgba(244,245,247,0.34)', GOLD = '#f5c200', SURFACE2 = '#1c2127', HAIR = 'rgba(244,245,247,0.08)'
@@ -17,7 +18,9 @@ export function fmtDate(d: string): string {
 // One logbook entry — type badge, date, hall, scored games (series + snitt), note.
 export function LogEntryRow({ note }: { note: Note }) {
   const del = useDeleteNote()
+  const { data: balls = [] } = useMyBalls()
   const t = noteType(note)
+  const ballNames = note.ballIds.map((id) => balls.find((b) => b.id === id)?.name).filter(Boolean) as string[]
   return (
     <div style={{ borderBottom: `1px solid ${HAIR}`, padding: '12px 2px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -34,6 +37,12 @@ export function LogEntryRow({ note }: { note: Note }) {
             {entrySeries(note).map((s, i) => <span key={i} style={{ color: s >= 250 ? GOLD : INK }}>{s}</span>)}
           </span>
           <span style={{ fontSize: 13, color: INK3 }}>· ⌀ {entryAvg(note)} · {entryTotal(note)} tot</span>
+        </div>
+      )}
+      {(note.oilPattern || ballNames.length > 0) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 8, fontSize: 13, color: INK3 }}>
+          {note.oilPattern && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Droplet size={12} />{note.oilPattern}</span>}
+          {ballNames.length > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Circle size={12} />{ballNames.join(', ')}</span>}
         </div>
       )}
       {note.body && <div style={{ fontSize: 15, color: INK, lineHeight: 1.5, marginTop: 6, whiteSpace: 'pre-wrap' }}>{note.body}</div>}

@@ -14,6 +14,7 @@ export type DiaryType = 'traning' | 'tavling' | 'match' | 'ovrigt';
 export type Note = {
   id: string; matchId: number | null; hall: string | null; body: string; createdAt: string;
   entryType: DiaryType | null; entryDate: string | null; games: Game[] | null;
+  oilPattern: string | null; ballIds: string[];
 };
 
 export const mapNote = (r: Record<string, unknown>): Note => ({
@@ -25,6 +26,8 @@ export const mapNote = (r: Record<string, unknown>): Note => ({
   entryType: (r.entry_type as DiaryType | null) ?? null,
   entryDate: (r.entry_date as string | null) ?? null,
   games: (r.games as Game[] | null) ?? null,
+  oilPattern: (r.oil_pattern as string | null) ?? null,
+  ballIds: (r.ball_ids as string[] | null) ?? [],
 });
 export const noteDate = (n: Note): string => n.entryDate ?? n.createdAt.slice(0, 10);
 export const noteType = (n: Note): DiaryType => n.entryType ?? (n.matchId != null ? 'match' : 'ovrigt');
@@ -32,7 +35,7 @@ export const entrySeries = (n: Note): number[] => (n.games ?? []).map((g) => g.t
 export const entryTotal = (n: Note): number => entrySeries(n).reduce((a, b) => a + b, 0);
 export const entryAvg = (n: Note): number | null => { const s = entrySeries(n); return s.length ? Math.round(entryTotal(n) / s.length) : null; };
 
-export const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date, games';
+export const NOTE_COLS = 'id, bits_match_id, hall_name, body, created_at, entry_type, entry_date, games, oil_pattern, ball_ids';
 
 // The whole diary — every entry newest-first: match-prep notes + standalone entries.
 export function useDiaryEntries() {
@@ -54,8 +57,8 @@ export function useSaveDiaryEntry() {
   const uid = session?.user?.id;
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string; games?: Game[] }) => {
-      const { error } = await db.from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date, games: input.games?.length ? input.games : null });
+    mutationFn: async (input: { body: string; hall: string | null; type: DiaryType; date: string; games?: Game[]; oilPattern?: string | null; ballIds?: string[] }) => {
+      const { error } = await db.from('player_notes').insert({ user_id: uid, bits_match_id: null, hall_name: input.hall, body: input.body.trim(), entry_type: input.type, entry_date: input.date, games: input.games?.length ? input.games : null, oil_pattern: input.oilPattern?.trim() || null, ball_ids: input.ballIds?.length ? input.ballIds : null });
       if (error) throw error;
     },
     onSuccess: (_d, v) => {
