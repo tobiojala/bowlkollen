@@ -42,7 +42,9 @@ function authed(req: Request): boolean {
   return !!secret && (req.headers.get('authorization') ?? '') === `Bearer ${secret}`
 }
 
-async function runSync() {
+type SyncLike = { ok: boolean; synced: number; skipped: number; errors: string[] }
+
+async function runSync(light = false) {
   // Bowling season runs Jul→Jun; season_id is the starting calendar year. Using
   // getFullYear() directly would target the wrong (future, empty) season Jan–Jun and
   // silently stop updating the live season — so pin to the July boundary.
@@ -59,8 +61,16 @@ async function runSync() {
   // silently sync nothing. One cheap API call + upsert guarantees they exist.
   const divisionsResult = await syncBitsDivisions(season)
 
+  // Matches first, timed separately, so we can see the base cost apart from the
+  // pending processing. `light` returns right after (diagnostic + a cheap path
+  // that only refreshes fixtures).
+  const tMatches = Date.now()
+  const matchesResult = await syncBitsMatchesForSeason(season)
+    .catch((e): SyncLike => ({ ok: false, synced: 0, skipped: 0, errors: [String(e)] }))
+  const matchesMs = Date.now() - tMatches
+  if (light) return { ts: now.toISOString(), season, light: true, matchesMs, divisions: divisionsResult, matches: matchesResult }
+
   const tasks: Promise<unknown>[] = [
-    syncBitsMatchesForSeason(season),
     // Scope the pending-work queries to the current season — the historical
     // backlog is drained by the dedicated /api/cron/backfill-* routes, and an
     // unscoped scan over ~196k matches hits the Postgres statement timeout.
@@ -82,7 +92,7 @@ async function runSync() {
   }
 
   const settled = await Promise.allSettled(tasks)
-  const [matchesResult, scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult, compResult, compResultsResult, rankingResult] = settled
+  const [scoresResult, exactResult, delmatchResult, playersResult, clubsResult, teamsResult, compResult, compResultsResult, rankingResult] = settled
   const val = (r?: PromiseSettledResult<unknown>) =>
     r?.status === 'fulfilled' ? r.value : { ok: false, error: String(r?.reason) }
 
@@ -102,8 +112,9 @@ async function runSync() {
   const summary = {
     ts: now.toISOString(),
     season,
+    matchesMs,
     divisions: divisionsResult,
-    matches: val(matchesResult),
+    matches: matchesResult,
     scores: val(scoresResult),
     exact: val(exactResult),
     delmatch: val(delmatchResult),
@@ -114,7 +125,7 @@ async function runSync() {
       discover,
     } : {}),
   }
-  const ok = divisionsResult.ok && settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
+  const ok = divisionsResult.ok && matchesResult.ok && settled.every((r) => r.status === 'fulfilled' && (r.value as { ok?: boolean })?.ok !== false)
 
   // Record the run so /api/health/sync can tell whether the sync is alive (best-effort).
   try {
@@ -128,10 +139,10 @@ async function runSync() {
 
 export async function POST(req: Request) {
   if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return NextResponse.json(await runSync())
+  return NextResponse.json(await runSync(new URL(req.url).searchParams.get('light') === '1'))
 }
 
 export async function GET(req: Request) {
   if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return NextResponse.json(await runSync())
+  return NextResponse.json(await runSync(new URL(req.url).searchParams.get('light') === '1'))
 }
