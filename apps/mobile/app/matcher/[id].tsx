@@ -27,6 +27,8 @@ import { usePro } from '@/lib/pro';
 import { Segmented } from '@/components/Segmented';
 import { TeamResults } from '@/components/TeamResults';
 import { UpcomingPanel } from '@/components/UpcomingPanel';
+import { LiveScoreboard } from '@/components/LiveScoreboard';
+import { isMatchLive } from '@/lib/live-match';
 import { useMatch, useMatchResults, useMatchDelmatcher } from '@/lib/match-data';
 import { useMatchRivalry } from '@/lib/match-rivalry';
 import type { Moment } from '@/lib/share';
@@ -128,7 +130,7 @@ export default function MatchPage() {
           )}
 
           {finished && <SeasonContext divisionId={match.bits_division_id} seasonId={match.season_id} homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} homeName={match.home_team_name} awayName={match.away_team_name} tier={divisionTier(match.division_name ?? '')} />}
-          {!finished && <UpcomingPanel homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} matchDatetime={match.match_datetime} matchDate={match.match_date} hallName={match.hall_name} hallCity={match.hall_city} oilPattern={match.oil_pattern} homeName={match.home_team_name} awayName={match.away_team_name} />}
+          {!finished && (isMatchLive(match) ? <LiveScoreboard matchId={matchId} homeName={match.home_team_name} awayName={match.away_team_name} /> : <UpcomingPanel homeTeamId={match.home_bits_team_id} awayTeamId={match.away_bits_team_id} matchDatetime={match.match_datetime} matchDate={match.match_date} hallName={match.hall_name} hallCity={match.hall_city} oilPattern={match.oil_pattern} homeName={match.home_team_name} awayName={match.away_team_name} />)}
 
           {topPlayer && topTotal > 0 && (
             <PressableScale
