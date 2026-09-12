@@ -4,7 +4,7 @@ import { HeroDeck } from '@/components/HeroDeck';
 import { ProfileTrend } from '@/components/ProfileTrend';
 import { SparHeroCard } from '@/components/SparHeroCard';
 import { usePlayerSpares } from '@/lib/use-player-spares';
-import { cumulativeAvgPoints, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
+import { cumulativeAvgPoints, SEASON, type PlayerMatch, type PlayerStats } from '@/lib/player-stats';
 import { COLOR } from '@/theme';
 
 // The profile's hero deck: Säsongssnitt + BK-rating, each a big number with the
@@ -63,6 +63,7 @@ export function ProfileHero({
               lineWidth={5}
               tailLength={9}
               yPad={0.05}
+              markerDate={SEASON.CURRENT}
               footerLeft={`${stats.matchesPlayed} matcher`}
               footerRight={stats.projectedAvg != null ? `Prognos ${stats.projectedAvg}` : undefined}
             />

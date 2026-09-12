@@ -88,13 +88,11 @@ export default function PlayerProfileView({
     }
   }
 
-  const pulsPoints = matchTrendPoints(data.matches)
-  // matchTrendPoints drops matches with no played games, so point index ≠ match
-  // index — keep a parallel map so a tapped point opens the right match sheet.
-  const pulsIdx = data.matches.reduce<number[]>((acc, m, i) => {
-    if (m.games.some((g) => g > 0)) acc.push(i)
-    return acc
-  }, [])
+  // Puls line spans last + this season (continuous); stats stay current-season.
+  // pulsIdx maps current-season points → data.matches; last-season points (before
+  // curveMarkerIndex) open no sheet (they aren't in data.matches).
+  const pulsPoints = matchTrendPoints(data.curveMatches ?? data.matches)
+  const pulsIdx = data.matches.reduce<number[]>((acc, m, i) => { if (m.games.some((g) => g > 0)) acc.push(i); return acc }, [])
   const isSheetOpen = expanded !== null
 
   // Follow / edit control — top-right over SPELARPULS on desktop, inline on mobile.
@@ -197,12 +195,13 @@ export default function PlayerProfileView({
               <div style={{ color: 'rgba(244,245,247,0.56)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12 }}>SPELARPULS</div>
               <ProfileTrend
                 points={pulsPoints}
+                markerIndex={data.curveMarkerIndex}
                 caption="Snitt match för match"
                 baseline={seasonAvg}
                 baselineLabel="matchsnitt"
                 footerLeft={`Lägst ${Math.min(...pulsPoints.map((p) => p.avg))}`}
                 footerRight={`Högst ${Math.max(...pulsPoints.map((p) => p.avg))}`}
-                onSelect={(i) => openMatch(pulsIdx[i])}
+                onSelect={(i) => { const j = i - (data.curveMarkerIndex ?? 0); if (j >= 0 && j < pulsIdx.length) openMatch(pulsIdx[j]) }}
               />
             </section>
           )}

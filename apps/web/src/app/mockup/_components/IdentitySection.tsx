@@ -86,7 +86,7 @@ export default function IdentitySection({
 
   // Trend lines mirror native ProfileTrend: snitt = our running league-series
   // average, BK = rolling rating recomputed each match, ranking = raw per-match points.
-  const snittPoints = cumulativeAvgPoints(matches)
+  const snittPoints = cumulativeAvgPoints(data.curveMatches ?? matches)
   const bkPoints    = rollingRatingPoints(matches)
   const rankingPoints: TrendPoint[] = (rankingPts ?? []).map((v, i) => ({
     avg: v, date: matches[i]?.date ?? '', label: matches[i]?.opp ?? '',
@@ -255,6 +255,7 @@ export default function IdentitySection({
                   <ProfileTrend
                     points={c.points}
                     label={c.label}
+                    markerIndex={c.key === 'snitt' ? data.curveMarkerIndex : undefined}
                     restValue={c.value}
                     delta={c.delta}
                     deltaSuffix={c.deltaSuffix}

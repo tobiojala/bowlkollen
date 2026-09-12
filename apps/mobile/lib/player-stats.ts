@@ -63,23 +63,23 @@ const avgOf = (games: number[]): number | null => (games.length ? Math.round(gam
 export type SeasonSplit = {
   activeRows: PlayerMatch[];   // current season, or all history in the offseason
   prevRows: PlayerMatch[];
+  curveRows: PlayerMatch[];    // last season + this season, chronological — for the curves
   hasCurrent: boolean;         // does the current season actually have matches? (false in preseason)
   lastSeasonAvg: number | null;
   prevMatchAvgs: number[];     // previous-season per-match averages (for the duel overlay)
 };
 
-// Split history into current / previous season. Before the new season has any
-// matches (preseason), activeRows falls back to all history so the profile isn't empty.
+// Split history into current / previous season. activeRows falls back to all history
+// preseason so the profile isn't empty; curveRows spans last+this season so the
+// graphs build forward from last season instead of resetting to a near-empty line.
 export function splitSeason(history: PlayerMatch[]): SeasonSplit {
   const curr = history.filter((h) => h.match_date >= SEASON.CURRENT);
   const prev = history.filter((h) => h.match_date >= SEASON.PREV && h.match_date < SEASON.CURRENT);
   const activeRows = curr.length ? curr : history;
+  const combined = [...prev, ...curr].sort((a, b) => a.match_date.localeCompare(b.match_date));
   const prevGames = prev.flatMap((h) => (h.series ?? []).filter((g) => g > 0));
-  const prevMatchAvgs = [...prev]
-    .sort((a, b) => a.match_date.localeCompare(b.match_date))
-    .map((h) => avgOf((h.series ?? []).filter((g) => g > 0)))
-    .filter((v): v is number => v !== null);
-  return { activeRows, prevRows: prev, hasCurrent: curr.length > 0, lastSeasonAvg: avgOf(prevGames), prevMatchAvgs };
+  const prevMatchAvgs = [...prev].sort((a, b) => a.match_date.localeCompare(b.match_date)).map((h) => avgOf((h.series ?? []).filter((g) => g > 0))).filter((v): v is number => v !== null);
+  return { activeRows, prevRows: prev, curveRows: combined.length ? combined : activeRows, hasCurrent: curr.length > 0, lastSeasonAvg: avgOf(prevGames), prevMatchAvgs };
 }
 
 export type TierInfo = { label: string; accent: string };

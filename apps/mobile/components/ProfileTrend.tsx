@@ -42,11 +42,12 @@ type Props = {
   tailLength?: number;  // matches the drag light-tail spans behind the finger
   yPad?: number;        // vertical headroom fraction — smaller = more zoomed in
   onInfo?: () => void;  // adds a tappable "what is this?" affordance on the label
+  markerDate?: string;  // draws a faint season-break line at the first point on/after this date
 };
 
 export function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight, accent, baseline, projValue,
-  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18, baselineLabel = 'snitt', onInfo,
+  lineWidth = 2.6, tailLength = TAIL, yPad = 0.18, baselineLabel = 'snitt', onInfo, markerDate,
 }: Props) {
   const { width } = useWindowDimensions();
   const W = width - SIDE * 2 - INSET * 2;
@@ -72,6 +73,7 @@ export function ProfileTrend({
   const cy = (v: number) => PAD_T + (GH - PAD_T - PAD_B) * (1 - (v - lo) / span);
   const xs = points.map((_, i) => PAD_L + (n <= 1 ? dataW / 2 : (i / (n - 1)) * dataW));
   const ys = points.map((p) => cy(p.avg));
+  const markerIdx = markerDate ? points.findIndex((p) => p.date >= markerDate) : -1;
   const linePath = xs.map((x, i) => `${i ? 'L' : 'M'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ');
   const areaBottom = GH - PAD_B;
 
@@ -167,6 +169,14 @@ export function ProfileTrend({
               {gridVals.map((v) => (
                 <SvgText key={`t${v}`} x={PAD_L - 6} y={cy(v) + 4} fill={COLOR.ink2} fontSize={AXIS} fontFamily={FONT.semibold} textAnchor="end">{v}</SvgText>
               ))}
+
+              {/* season break — faint divider where the new season starts */}
+              {markerIdx > 0 && markerIdx < n && (
+                <>
+                  <Line x1={xs[markerIdx]} y1={PAD_T} x2={xs[markerIdx]} y2={GH - PAD_B} stroke={COLOR.ink4} strokeWidth={1} strokeDasharray="2,3" />
+                  <SvgText x={xs[markerIdx] + 3} y={PAD_T + 2} fill={COLOR.ink4} fontSize={AXIS} fontFamily={FONT.medium}>ny säsong</SvgText>
+                </>
+              )}
 
               {/* season-average reference */}
               {baseline != null && (

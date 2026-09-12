@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ProfileTrend } from '@/components/ProfileTrend';
-import { matchTrendPoints, type PlayerMatch } from '@/lib/player-stats';
+import { matchTrendPoints, SEASON, type PlayerMatch } from '@/lib/player-stats';
 import { SPACE } from '@/theme';
 
 // PROFIL-PULS — snitt match för match. The raw per-match average (jagged like an
@@ -21,6 +21,7 @@ export function ProfilePulse({ history, seasonAvg, onInfo }: { history: PlayerMa
         baseline={seasonAvg}
         baselineLabel="matchsnitt"
         onInfo={onInfo}
+        markerDate={SEASON.CURRENT}
         footerLeft={`Lägst ${Math.min(...avgs)}`}
         footerRight={`Högst ${Math.max(...avgs)}`}
       />

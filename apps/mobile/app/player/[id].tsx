@@ -66,7 +66,7 @@ export default function PlayerPage() {
   const setHeader = useSetMyPlayerHeader(id);
   const [headerOpen, setHeaderOpen] = useState(false);
 
-  const { activeRows, hasCurrent, lastSeasonAvg, prevMatchAvgs } = splitSeason(history as PlayerMatch[]);
+  const { activeRows, curveRows, hasCurrent, lastSeasonAvg, prevMatchAvgs } = splitSeason(history as PlayerMatch[]);
   const stats = computePlayerStats(activeRows);
   const { recentAvg, formDiff, historyDesc } = stats;
   // The RPC already returns the "top X%" (smaller = better); don't invert it.
@@ -133,7 +133,7 @@ export default function PlayerPage() {
 
           <ProfileHero
             stats={stats}
-            history={activeRows}
+            history={curveRows}
             licenceAverage={player.licence_average ?? null}
             topPct={topPct}
             isOwn={isOwn}
@@ -161,7 +161,7 @@ export default function PlayerPage() {
             ]}
           />
 
-          <ProfilePulse history={activeRows} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
+          <ProfilePulse history={curveRows} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
 
           <PlayerAnalysis firstName={player.name.split(' ')[0]} history={activeRows} stats={stats} lastSeasonAvg={lastSeasonAvg} />
 

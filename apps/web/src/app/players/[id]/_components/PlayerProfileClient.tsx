@@ -66,12 +66,16 @@ export default function PlayerProfileClient({ id }: { id: string }) {
   const currRows = rowsRaw.filter(r => r.matchDate >= SEASON.CURRENT)
   const prevRows = rowsRaw.filter(r => r.matchDate >= SEASON.PREV && r.matchDate < SEASON.CURRENT)
   const activeRows = currRows.length > 0 ? currRows : rowsRaw
+  // Graphs span last + this season so they build forward from last season; stats
+  // stay on activeRows (current). Fall back to activeRows when there's no two-season span.
+  const combinedRows = [...prevRows, ...currRows].sort((a, b) => a.matchDate.localeCompare(b.matchDate))
+  const curveRows = combinedRows.length > 0 ? combinedRows : activeRows
 
   const activeAvg     = mean(activeRows.flatMap(r => r.series.filter(g => g > 0)))
   const prevGames     = prevRows.flatMap(r => r.series.filter(g => g > 0))
   const lastSeasonAvg = prevGames.length > 0 ? mean(prevGames) : Math.max(0, activeAvg - 5)
 
-  const data          = buildProfileFromBitsRows(activeRows, { lastSeasonAvg })
+  const data          = buildProfileFromBitsRows(activeRows, { lastSeasonAvg, curveRows })
   const prevMatchAvgs = prevRows
     .map(r => { const g = r.series.filter(s => s > 0); return g.length ? mean(g) : null })
     .filter((v): v is number => v !== null)

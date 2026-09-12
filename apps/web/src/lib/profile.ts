@@ -42,7 +42,9 @@ export type ProfileChallenge = {
 export type ProfileReactions = Record<number, { flame: number; heart: number }>
 
 export type ProfileData = {
-  matches: ProfileMatch[]          // chronological, oldest first
+  matches: ProfileMatch[]          // chronological, oldest first (current season — drives stats)
+  curveMatches?: ProfileMatch[]    // last + this season, for continuous graphs
+  curveMarkerIndex?: number        // index in curveMatches where the new season starts
   matchAvgs: number[]
   seasonAvg: number
   recentAvg: number

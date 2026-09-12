@@ -8,6 +8,9 @@
 
 import type { MatchResult, BitsPlayerMatchRow } from '@/lib/types'
 import { buildProfileData, type ProfileData, type ProfileMatch } from '@/lib/profile'
+import { SEASON } from '@/lib/constants'
+
+const SEASON_CURRENT = SEASON.CURRENT
 
 /** Swedish short display date, e.g. "14 sep". */
 function displayDate(iso: string | undefined): string {
@@ -90,10 +93,16 @@ export function bitsRowsToProfileMatches(rows: BitsPlayerMatchRow[]): ProfileMat
     .map(x => x.pm)
 }
 
-/** Build canonical ProfileData straight from real BITS match-history rows. */
+/** Build canonical ProfileData straight from real BITS match-history rows.
+ * `curveRows` (last + this season) gives the graphs a continuous line that builds
+ * forward from last season, while stats stay on the current-season `rows`. */
 export function buildProfileFromBitsRows(
   rows: BitsPlayerMatchRow[],
-  opts: { lastSeasonAvg?: number } = {},
+  opts: { lastSeasonAvg?: number; curveRows?: BitsPlayerMatchRow[] } = {},
 ): ProfileData {
-  return buildProfileData(bitsRowsToProfileMatches(rows), opts)
+  const data = buildProfileData(bitsRowsToProfileMatches(rows), opts)
+  if (!opts.curveRows) return data
+  const curveMatches = bitsRowsToProfileMatches(opts.curveRows)
+  const curveMarkerIndex = opts.curveRows.filter((r) => r.matchDate < SEASON_CURRENT && r.series.some((g) => g > 0)).length
+  return { ...data, curveMatches, curveMarkerIndex }
 }

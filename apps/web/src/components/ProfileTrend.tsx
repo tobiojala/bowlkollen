@@ -20,9 +20,11 @@ const ink = (o: number) => `rgba(244,245,247,${o})`
 export default function ProfileTrend({
   points, label, restValue, delta, deltaSuffix, caption, footerLeft, footerRight,
   accent, baseline, baselineLabel = 'snitt', projValue, lineWidth = 2.6, tailLength = 5, yPad = 0.18,
-  onSelect, height,
+  onSelect, height, markerIndex,
 }: {
   points: TrendPoint[]
+  /** Faint divider at this point index — marks where the new season starts. */
+  markerIndex?: number
   /** Graph height in px (viewBox height). Shorter on desktop so the profile's left column fits above the fold. */
   height?: number
   /** When set, the scrubbed point becomes clickable — fires with its index. */
@@ -147,6 +149,12 @@ export default function ProfileTrend({
 
             {gridVals.map((v) => <line key={`g${v}`} x1={PAD_L} y1={cy(v)} x2={W - PAD_R} y2={cy(v)} stroke={ink(0.05)} strokeWidth={1} />)}
             {gridVals.map((v) => <text key={`t${v}`} {...t(PAD_L - 6, cy(v) + 4, COLOR.ink2, 'end', 600)}>{v}</text>)}
+            {markerIndex != null && markerIndex > 0 && markerIndex < n && (
+              <>
+                <line x1={xs[markerIndex]} y1={PAD_T} x2={xs[markerIndex]} y2={H - PAD_B} stroke={ink(0.20)} strokeWidth={1} strokeDasharray="2,3" />
+                <text {...t(xs[markerIndex] + 3, PAD_T + 10, COLOR.ink3, 'start', 500)}>ny säsong</text>
+              </>
+            )}
 
             {baseline != null && (
               <>
