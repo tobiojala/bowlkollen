@@ -151,7 +151,8 @@ export default function PlayerProfileView({
         @media (min-width: 1024px) {
           .pp-canvas { max-width: 1160px; padding-left: 32px; padding-right: 32px; }
           .pp-grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start; }
-          .pp-side { align-self: start; }  /* not sticky: tall side would strand its bottom under the OS dock */
+          /* Identity column stays put while the main column scrolls; capped to the viewport w/ internal scroll so a tall side never strands under the OS dock. */
+          .pp-side { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 96px); overflow-y: auto; scrollbar-width: none; }
           .pp-follow-desktop { display: block; }
           .pp-follow-mobile { display: none; }
         }
