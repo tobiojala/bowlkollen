@@ -56,9 +56,12 @@ async function runSync() {
 
   const tasks: Promise<unknown>[] = [
     syncBitsMatchesForSeason(season),
-    syncPendingMatchScores(BATCH_SCORES),
-    syncPendingExactResults(BATCH_EXACT),
-    syncPendingDelmatches(BATCH_DELMATCH),
+    // Scope the pending-work queries to the current season — the historical
+    // backlog is drained by the dedicated /api/cron/backfill-* routes, and an
+    // unscoped scan over ~196k matches hits the Postgres statement timeout.
+    syncPendingMatchScores(BATCH_SCORES, season),
+    syncPendingExactResults(BATCH_EXACT, season),
+    syncPendingDelmatches(BATCH_DELMATCH, season),
   ]
   if (daily) {
     tasks.push(syncBitsPlayers())
