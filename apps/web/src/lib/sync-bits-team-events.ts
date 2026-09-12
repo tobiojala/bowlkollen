@@ -56,6 +56,23 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     nameToLic.set(r.player_name, r.lic_nbr)
   }
 
+  // Career-high game per player BEFORE this season — so personal_best fires only on
+  // a genuine all-time best, not the season's running high (which makes every early
+  // game a false "record"). Best-effort: if it fails, we fall back to season scope.
+  const careerBest = new Map<string, number>() // lic_nbr → highest game before seasonFloor
+  const careerLics = [...new Set(nameToLic.values())]
+  if (careerLics.length) {
+    const { data: hist } = await pub
+      .from('bits_match_player_results')
+      .select('lic_nbr, series, bits_matches!inner(match_date)')
+      .in('lic_nbr', careerLics)
+      .lt('bits_matches.match_date', seasonFloor)
+    for (const r of (hist ?? []) as { lic_nbr: string; series: number[] | null }[]) {
+      const hi = Math.max(...(r.series ?? []).filter((g) => g > 0), 0)
+      if (hi > (careerBest.get(r.lic_nbr) ?? 0)) careerBest.set(r.lic_nbr, hi)
+    }
+  }
+
   const inserts: Record<string, unknown>[] = []
   const MAX = TEAM_EVENT.MAX_INSERT_PER_SYNC
 
@@ -127,9 +144,12 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     return { match: m, byPlayer }
   })
 
-  // ── personal_best (a new season-high game) ───────────────────────────────
+  // ── personal_best (a genuine all-time best game) ─────────────────────────
   if (inserts.length < MAX) {
+    // Seed with each player's career-high (before this season) so we only celebrate
+    // a real personal best, not the season's first-few-games running high.
     const best = new Map<string, number>()
+    for (const [name, lic] of nameToLic) best.set(name, careerBest.get(lic) ?? 0)
     for (const { match, byPlayer } of perMatch) {
       const date = match.match_date.slice(0, 10)
       for (const [name, games] of byPlayer) {
