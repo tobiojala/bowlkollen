@@ -18,19 +18,30 @@ const MAX_RETRIES = 2           // for 5xx only
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 const backoff = (attempt: number) => 400 * 2 ** attempt + Math.floor(Math.random() * 250)
 
+// Breaker is PER-HOST: the dead api.swebowl.se must never trip the breaker for the
+// working bits.swebowl.se (scores/ranking) or vice-versa.
 type Breaker = { openUntil: number; consecutiveBlocks: number; lastError: string | null; lastOkAt: number | null; totalBlocks: number }
-const breaker: Breaker = { openUntil: 0, consecutiveBlocks: 0, lastError: null, lastOkAt: null, totalBlocks: 0 }
+const breakers = new Map<string, Breaker>()
+const forHost = (host: string): Breaker => {
+  let b = breakers.get(host)
+  if (!b) { b = { openUntil: 0, consecutiveBlocks: 0, lastError: null, lastOkAt: null, totalBlocks: 0 }; breakers.set(host, b) }
+  return b
+}
 
 export function bitsBreakerState() {
   const now = Date.now()
-  return {
-    open: now < breaker.openUntil,
-    cooldownSecondsLeft: Math.max(0, Math.ceil((breaker.openUntil - now) / 1000)),
-    consecutiveBlocks: breaker.consecutiveBlocks,
-    totalBlocks: breaker.totalBlocks,
-    lastError: breaker.lastError,
-    lastOkAt: breaker.lastOkAt ? new Date(breaker.lastOkAt).toISOString() : null,
+  const hosts: Record<string, unknown> = {}
+  let anyOpen = false
+  for (const [host, b] of breakers) {
+    const open = now < b.openUntil
+    anyOpen = anyOpen || open
+    hosts[host] = {
+      open, cooldownSecondsLeft: Math.max(0, Math.ceil((b.openUntil - now) / 1000)),
+      consecutiveBlocks: b.consecutiveBlocks, totalBlocks: b.totalBlocks,
+      lastError: b.lastError, lastOkAt: b.lastOkAt ? new Date(b.lastOkAt).toISOString() : null,
+    }
   }
+  return { open: anyOpen, hosts }
 }
 
 // Serialize everything through one promise chain + a min-gap clock.
@@ -50,21 +61,23 @@ function gate<T>(fn: () => Promise<T>): Promise<T> {
 export class BitsCircuitOpenError extends Error {}
 
 export async function bitsFetch(url: string, init: RequestInit): Promise<Response> {
-  if (Date.now() < breaker.openUntil) {
-    throw new BitsCircuitOpenError(`BITS circuit open (${bitsBreakerState().cooldownSecondsLeft}s left) — last: ${breaker.lastError}`)
+  const host = new URL(url).hostname
+  const b = forHost(host)
+  if (Date.now() < b.openUntil) {
+    throw new BitsCircuitOpenError(`BITS circuit open for ${host} (${Math.ceil((b.openUntil - Date.now()) / 1000)}s left) — last: ${b.lastError}`)
   }
   return gate(async () => {
     for (let attempt = 0; ; attempt++) {
       const res = await fetch(url, init)
       if (res.status === 403 || res.status === 429) {
-        breaker.consecutiveBlocks++
-        breaker.totalBlocks++
-        breaker.lastError = `HTTP ${res.status} ${new URL(url).pathname}`
-        if (breaker.consecutiveBlocks >= BLOCK_TRIP) breaker.openUntil = Date.now() + COOLDOWN_MS
+        b.consecutiveBlocks++
+        b.totalBlocks++
+        b.lastError = `HTTP ${res.status} ${new URL(url).pathname}`
+        if (b.consecutiveBlocks >= BLOCK_TRIP) b.openUntil = Date.now() + COOLDOWN_MS
         return res // caller sees the status; the breaker now guards the next call
       }
       if (res.status >= 500 && attempt < MAX_RETRIES) { await sleep(backoff(attempt)); continue }
-      if (res.status !== 401) { breaker.consecutiveBlocks = 0; breaker.lastOkAt = Date.now() } // 401 = session, not a block
+      if (res.status !== 401) { b.consecutiveBlocks = 0; b.lastOkAt = Date.now() } // 401 = session, not a block
       return res
     }
   })
