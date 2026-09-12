@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getMatchScores, parseTeamSeries, parsePlayerTotals } from '@/lib/bits-client'
+import { getMatchScores, getDivisions, parseTeamSeries, parsePlayerTotals } from '@/lib/bits-client'
 
 // Live match scores, pulled straight from BITS server-side (the same
 // GetMatchScores endpoint the nightly sync uses). Server-side keeps us off the
@@ -32,7 +32,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   try {
     scores = await getMatchScores(id)
   } catch (e) {
-    if (debug) return NextResponse.json({ ok: false, stage: 'fetch', error: String(e) }, { status: 200 })
+    if (debug) {
+      // Probe a second api.swebowl.se endpoint to tell "this endpoint is
+      // blocked/moved" apart from "the whole API auth is broken from here".
+      let divisions = 'unknown'
+      try { const d = await getDivisions(2025); divisions = `ok ${Array.isArray(d) ? d.length : '?'}` } catch (de) { divisions = String(de) }
+      return NextResponse.json({ ok: false, stage: 'fetch', error: String(e), divisionsProbe: divisions }, { status: 200 })
+    }
     return NextResponse.json(EMPTY('fetch-failed'), { headers: { 'Cache-Control': 'no-store' } })
   }
 
