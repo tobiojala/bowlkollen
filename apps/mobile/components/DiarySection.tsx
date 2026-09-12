@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -27,6 +28,7 @@ const fmtDate = (d: string) => {
 // DAGBOK — the player's private diary (Remember pillar). Match-prep notes plus
 // standalone entries for training and competitions outside league play.
 export function DiarySection() {
+  const router = useRouter();
   const { data: entries = [] } = useDiaryEntries();
   const [adding, setAdding] = useState(false);
 
@@ -34,9 +36,14 @@ export function DiarySection() {
     <View style={styles.wrap}>
       <View style={styles.head}>
         <Text style={styles.label}>LOGGBOK</Text>
-        {entries.length > 0 && (
-          <PressableScale onPress={() => setAdding(true)}><Text style={styles.add}>Ny anteckning</Text></PressableScale>
-        )}
+        <View style={styles.headActions}>
+          <PressableScale onPress={() => router.push('/mina-spel' as never)}>
+            <Text style={styles.addGold}>Logga spel</Text>
+          </PressableScale>
+          {entries.length > 0 && (
+            <PressableScale onPress={() => setAdding(true)}><Text style={styles.add}>Snabbnotis</Text></PressableScale>
+          )}
+        </View>
       </View>
 
       {entries.length === 0 ? (
@@ -127,7 +134,9 @@ const styles = StyleSheet.create({
   wrap: { marginTop: SPACE[4] },
   head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: SPACE[1], marginBottom: SPACE[3] },
   label: { color: COLOR.ink3, fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1.4 },
+  headActions: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[4] },
   add: { color: COLOR.ink2, fontSize: TYPE.body, fontFamily: FONT.semibold },
+  addGold: { color: COLOR.gold, fontSize: TYPE.body, fontFamily: FONT.bold },
 
   empty: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], padding: SPACE[4], borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(245,194,0,0.08)', borderWidth: 1, borderColor: 'rgba(245,194,0,0.24)' },

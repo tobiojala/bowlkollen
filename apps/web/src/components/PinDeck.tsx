@@ -10,7 +10,8 @@ const POS: Record<number, [number, number]> = {
   7: [0, 0], 8: [1, 0], 9: [2, 0], 10: [3, 0],
   4: [0.5, 1], 5: [1.5, 1], 6: [2.5, 1], 2: [1, 2], 3: [2, 2], 1: [1.5, 3],
 }
-const OX = 16, OY = 14, SX = 44, SY = 50, R = 16, W = 176, H = 196
+// OX/OY leave a full radius (+stroke) of headroom so no circle clips the edge.
+const OX = 20, OY = 20, SX = 44, SY = 50, R = 16, W = 184, H = 210
 
 export function PinDeck({ available, standing, onToggle }: {
   available: Set<number>

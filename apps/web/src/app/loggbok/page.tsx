@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useDiaryEntries, noteDate, type DiaryType } from '@/lib/diary'
 import { noteType } from '@/lib/logbook'
@@ -65,10 +66,16 @@ export default function LoggbokPage() {
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', marginTop: 2 }}>Loggbok</h1>
             <div style={{ fontSize: 14, color: INK3, marginTop: 4 }}>Din privata logg — träning, tävling, matcher.</div>
           </div>
-          <button onClick={() => setAdding(true)}
-            style={{ flexShrink: 0, marginTop: 6, background: GOLD, color: '#0b0d10', border: 'none', borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-            + Ny
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, marginTop: 6 }}>
+            <Link href="/mina-spel"
+              style={{ background: GOLD, color: '#0b0d10', borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 800, textAlign: 'center', textDecoration: 'none' }}>
+              Logga spel
+            </Link>
+            <button onClick={() => setAdding(true)}
+              style={{ background: 'transparent', color: INK2, border: `1px solid ${INK4}`, borderRadius: 999, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              + Snabbnotis
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 7, margin: '18px 0 6px', flexWrap: 'wrap' }}>
@@ -83,7 +90,7 @@ export default function LoggbokPage() {
 
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', color: INK4, fontSize: 14, padding: '48px 20px' }}>
-            {filter === 'alla' ? 'Inget loggat än — tryck + Ny för att börja.' : 'Inget här än.'}
+            {filter === 'alla' ? 'Inget loggat än — tryck Logga spel för att räkna en serie, eller + Snabbnotis.' : 'Inget här än.'}
           </div>
         ) : (
           <div>
