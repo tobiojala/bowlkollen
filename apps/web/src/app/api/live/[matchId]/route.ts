@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { parseTeamSeries, parsePlayerTotals, parseMatchDelmatchSlots } from '@/lib/bits-client'
-import { getMatchScores } from '@/lib/bits-match-scores'
+import { getMatchScores, getMatchStatus, MATCH_STATUS_FINISHED } from '@/lib/bits-match-scores'
+import { finalizeMatch } from '@/lib/bits-finalize'
 import { computeDelmatcher } from '@bowlkollen/core'
 
 // Running banpoäng (Elitserien: 4 bordpoäng + 1 serie-pinfall bonus = 5/serie,
@@ -56,7 +57,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   }
 
   try {
-    const data = { series: parseTeamSeries(scores), players: parsePlayerTotals(scores), banp: runningBanp(scores), updatedAt: new Date().toISOString() }
+    const finished = (await getMatchStatus(id)) === MATCH_STATUS_FINISHED
+    const data = { series: parseTeamSeries(scores), players: parsePlayerTotals(scores), banp: runningBanp(scores), finished, updatedAt: new Date().toISOString() }
     if (debug) {
       const hasSeries = Array.isArray((scores as { series?: unknown }).series)
       return NextResponse.json({ ok: true, hasSeries, teamA: data.series.teamA, teamB: data.series.teamB, players: data.players.length }, { status: 200 })
@@ -66,5 +68,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   } catch (e) {
     if (debug) return NextResponse.json({ ok: false, stage: 'parse', error: String(e) }, { status: 200 })
     return NextResponse.json(EMPTY('parse-failed'), { headers: { 'Cache-Control': 'no-store' } })
+  }
+}
+
+// Finalize a single match on demand: the live view POSTs here when BITS reports the
+// match finished, so is_finished + results land in our DB immediately (rather than
+// waiting for the 3h cron) and the page can render the real finished view.
+// Self-guards on BITS' matchStatus, so it's a safe no-op if the match isn't over.
+export async function POST(_req: Request, { params }: { params: Promise<{ matchId: string }> }) {
+  const { matchId } = await params
+  const id = Number(matchId)
+  if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'invalid match id' }, { status: 400 })
+  try {
+    return NextResponse.json(await finalizeMatch(id), { headers: { 'Cache-Control': 'no-store' } })
+  } catch (e) {
+    return NextResponse.json({ finished: false, error: String(e) }, { status: 200 })
   }
 }

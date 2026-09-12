@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { TeamResults, type ResultRow } from '@/components/TeamResults';
 import { useLiveMatch, type LiveScores } from '@/lib/use-live-match';
@@ -18,7 +19,9 @@ const hhmmss = (iso: string) => {
 // pulsing LIVE badge.
 export function LiveScoreboard({ matchId, homeName, awayName }: { matchId: number; homeName: string; awayName: string }) {
   const { data, isLoading, isError } = useLiveMatch(matchId, true);
+  const qc = useQueryClient();
   const pulse = useRef(new Animated.Value(1)).current;
+  const finalizing = useRef(false);
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
       Animated.timing(pulse, { toValue: 0.25, duration: 750, useNativeDriver: true }),
@@ -27,6 +30,23 @@ export function LiveScoreboard({ matchId, homeName, awayName }: { matchId: numbe
     loop.start();
     return () => loop.stop();
   }, [pulse]);
+
+  // When BITS reports finished, finalize on demand then refetch the match so the
+  // real finished screen renders (parity with web).
+  useEffect(() => {
+    if (!data?.finished || finalizing.current) return;
+    finalizing.current = true;
+    fetch(`https://bowlkollen.se/api/live/${matchId}`, { method: 'POST' })
+      .then((r) => r.json())
+      .then((res: { finished?: boolean }) => {
+        if (res?.finished) {
+          qc.invalidateQueries({ queryKey: ['match', matchId] });
+          qc.invalidateQueries({ queryKey: ['match-results', matchId] });
+          qc.invalidateQueries({ queryKey: ['match-delmatch', matchId] });
+        }
+      })
+      .catch(() => { finalizing.current = false; });
+  }, [data?.finished, matchId, qc]);
 
   const home = data?.series.teamA ?? [];
   const away = data?.series.teamB ?? [];

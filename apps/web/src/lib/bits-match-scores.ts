@@ -21,3 +21,17 @@ export async function getMatchScores(matchId: number, retry = false): Promise<Bi
   if (!res.ok) throw new Error(`BITS GetMatchScores → HTTP ${res.status}`)
   return res.json() as Promise<BitsMatchScores>
 }
+
+// GetMatchHeadInfo carries matchStatus — the authoritative "is this match over?"
+// signal (3 = finished/results confirmed). Used to switch a live view to the real
+// finished page the moment BITS closes the match, without waiting for the cron.
+export const MATCH_STATUS_FINISHED = 3
+export async function getMatchStatus(matchId: number): Promise<number | null> {
+  const cookie = await getSession()
+  const res = await bitsFetch(`${SITE}/MiscFrontApiConnector/GetMatchHeadInfo?id=${matchId}`, {
+    headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*' }, cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const j = await res.json() as { matchStatus?: number }
+  return typeof j.matchStatus === 'number' ? j.matchStatus : null
+}

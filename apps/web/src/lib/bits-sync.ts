@@ -298,14 +298,16 @@ export async function syncBitsMatchScores(bitsMatchId: number): Promise<SyncResu
 
 // ─── sync finished matches that are missing scores ────────────────────────────
 
-export async function syncPendingMatchScores(limit = 50, seasonId?: number): Promise<SyncResult> {
+export async function syncPendingMatchScores(limit = 50, seasonId?: number, bitsMatchId?: number): Promise<SyncResult> {
   const result: SyncResult = { ok: true, synced: 0, skipped: 0, errors: [] }
   const db = createServiceSupabase()
 
   // The 3-hourly cron scopes to the current season (fast); the historical backlog
   // (~140k skeletons) is drained by /api/cron/backfill-* with no season → full scan.
+  // bitsMatchId scopes to a single match (on-demand finalize).
   let q = db.from('bits_matches').select('bits_match_id').eq('is_finished', true).eq('scores_synced', false)
   if (seasonId != null) q = q.eq('season_id', seasonId)
+  if (bitsMatchId != null) q = q.eq('bits_match_id', bitsMatchId)
   const { data: pending, error: fetchErr } = await q
     .order('match_date', { ascending: false })
     .limit(limit)
@@ -384,12 +386,13 @@ export async function syncBitsMatchResultsExact(bitsMatchId: number): Promise<Sy
   return result
 }
 
-export async function syncPendingExactResults(limit = 200, seasonId?: number): Promise<SyncResult> {
+export async function syncPendingExactResults(limit = 200, seasonId?: number, bitsMatchId?: number): Promise<SyncResult> {
   const result: SyncResult = { ok: true, synced: 0, skipped: 0, errors: [] }
   const db = createServiceSupabase()
 
   let q = db.from('bits_matches').select('bits_match_id,match_scheme_id').eq('is_finished', true).eq('exact_results_synced', false)
   if (seasonId != null) q = q.eq('season_id', seasonId)
+  if (bitsMatchId != null) q = q.eq('bits_match_id', bitsMatchId)
   const { data: pending, error: fetchErr } = await q
     .order('match_date', { ascending: false })
     .limit(limit)
@@ -540,12 +543,13 @@ export async function syncBitsMatchDelmatches(bitsMatchId: number): Promise<Sync
   return result
 }
 
-export async function syncPendingDelmatches(limit = 200, seasonId?: number): Promise<SyncResult> {
+export async function syncPendingDelmatches(limit = 200, seasonId?: number, bitsMatchId?: number): Promise<SyncResult> {
   const result: SyncResult = { ok: true, synced: 0, skipped: 0, errors: [] }
   const db = createServiceSupabase() as unknown as SupabaseClient   // delmatch_synced not in generated types yet
 
   let q = db.from('bits_matches').select('bits_match_id').eq('is_finished', true).eq('delmatch_synced', false)
   if (seasonId != null) q = q.eq('season_id', seasonId)
+  if (bitsMatchId != null) q = q.eq('bits_match_id', bitsMatchId)
   const { data: pending, error: fetchErr } = await q
     .order('match_date', { ascending: false })
     .limit(limit)

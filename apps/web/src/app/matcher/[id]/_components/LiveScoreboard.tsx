@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { COLOR, FONT } from '@/lib/brand'
 import { MatchResults } from './MatchResults'
 import { useLiveMatch, type LiveScores } from './use-live-match'
@@ -14,6 +16,20 @@ const hhmmss = (iso: string) => { try { return new Date(iso).toLocaleTimeString(
 // reads exactly like the finished scorecard, just live.
 export function LiveScoreboard({ matchId, homeTeamName, awayTeamName }: { matchId: number; homeTeamName: string; awayTeamName: string }) {
   const { data, isLoading, isError } = useLiveMatch(matchId, true)
+  const router = useRouter()
+  const finalizing = useRef(false)
+
+  // The moment BITS reports the match finished, finalize it into our DB (results +
+  // is_finished) on demand, then refresh so the real finished match page renders —
+  // instead of sitting on the live board until the 3h cron catches up.
+  useEffect(() => {
+    if (!data?.finished || finalizing.current) return
+    finalizing.current = true
+    fetch(`/api/live/${matchId}`, { method: 'POST' })
+      .then((r) => r.json())
+      .then((res) => { if (res?.finished) router.refresh() })
+      .catch(() => { finalizing.current = false })
+  }, [data?.finished, matchId, router])
 
   const homeSeries = data?.series.teamA ?? []
   const awaySeries = data?.series.teamB ?? []
