@@ -16,6 +16,8 @@ import { Hojdpunkter } from './Hojdpunkter'
 import { SeasonContext } from './SeasonContext'
 import { useCenterId } from './use-match-context'
 import { UpcomingPanel } from './UpcomingPanel'
+import { LiveScoreboard } from './LiveScoreboard'
+import { isMatchLive } from '@/lib/live-match'
 import { ProGate } from '@/components/ProGate'
 import { useMatchDelmatch, useMatchRivalry, serieScoresByPlayer } from './use-match-bord'
 import { usePro } from '@/lib/pro'
@@ -255,7 +257,9 @@ export default function MatcherClient({ match, results }: Props) {
           <div style={{ padding: `${SPACE[8]}px 0`, textAlign: 'center', color: COLOR.ink3, fontSize: TYPE.caption }}>Spelarresultat synkas inom kort</div>
         )}
         {!match.is_finished && (
-          <div style={{ maxWidth: 900 }}><UpcomingPanel match={match} /></div>
+          isMatchLive(match)
+            ? <LiveScoreboard matchId={match.bits_match_id} homeTeamName={match.home_team_name} awayTeamName={match.away_team_name} />
+            : <div style={{ maxWidth: 900 }}><UpcomingPanel match={match} /></div>
         )}
 
         {match.bits_division_id && (
