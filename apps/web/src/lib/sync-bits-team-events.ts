@@ -60,6 +60,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
   // a genuine all-time best, not the season's running high (which makes every early
   // game a false "record"). Best-effort: if it fails, we fall back to season scope.
   const careerBest = new Map<string, number>() // lic_nbr → highest game before seasonFloor
+  const priorAvg = new Map<string, number>()   // lic_nbr → established game snitt before this season
   const careerLics = [...new Set(nameToLic.values())]
   if (careerLics.length) {
     const { data: hist } = await pub
@@ -67,10 +68,17 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
       .select('lic_nbr, series, bits_matches!inner(match_date)')
       .in('lic_nbr', careerLics)
       .lt('bits_matches.match_date', seasonFloor)
+    const sum = new Map<string, number>(); const cnt = new Map<string, number>()
     for (const r of (hist ?? []) as { lic_nbr: string; series: number[] | null }[]) {
-      const hi = Math.max(...(r.series ?? []).filter((g) => g > 0), 0)
+      const games = (r.series ?? []).filter((g) => g > 0)
+      const hi = Math.max(...games, 0)
       if (hi > (careerBest.get(r.lic_nbr) ?? 0)) careerBest.set(r.lic_nbr, hi)
+      if (games.length) {
+        sum.set(r.lic_nbr, (sum.get(r.lic_nbr) ?? 0) + games.reduce((a, b) => a + b, 0))
+        cnt.set(r.lic_nbr, (cnt.get(r.lic_nbr) ?? 0) + games.length)
+      }
     }
+    for (const lic of careerLics) { const c = cnt.get(lic) ?? 0; if (c >= 8) priorAvg.set(lic, Math.round((sum.get(lic) ?? 0) / c)) }
   }
 
   const inserts: Record<string, unknown>[] = []
@@ -202,7 +210,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     }
   }
 
-  // ── form_rising (recent 3-match avg vs season avg) ───────────────────────
+  // ── form_rising (recent form vs the player's established snitt) ──────────
   if (inserts.length < MAX) {
     const avgsByPlayer = new Map<string, number[]>()
     for (const { byPlayer } of perMatch) {
@@ -214,18 +222,23 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     }
     const lastDate = matches[matches.length - 1].match_date.slice(0, 10)
     for (const [name, avgs] of avgsByPlayer) {
-      if (avgs.length < 4) continue
-      const seasonAvg = Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length)
+      if (avgs.length < 3) continue
+      const lic = nameToLic.get(name)
+      // Baseline = the player's established snitt from before this season; only when
+      // there's no prior history fall back to a full current-season sample (≥4).
+      const prior = lic ? priorAvg.get(lic) : undefined
+      const baseline = prior ?? (avgs.length >= 4 ? Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length) : null)
+      if (baseline == null) continue
       const recent = avgs.slice(-3)
       const recentAvg = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length)
-      const delta = recentAvg - seasonAvg
+      const delta = recentAvg - baseline
       if (delta >= TEAM_EVENT.FORM_RISING_DELTA && !existingSet.has(eventKey('form_rising', null, lastDate, name))) {
-        const payload: FormRisingPayload = { player_id: '', player_name: name, delta, recent_avg: recentAvg, season_avg: seasonAvg, match_avgs: avgs.slice(-8) }
+        const payload: FormRisingPayload = { player_id: '', player_name: name, delta, recent_avg: recentAvg, season_avg: baseline, match_avgs: avgs.slice(-8) }
         inserts.push({
           team_id: null, bits_team_id: bitsTeamId, event_type: 'form_rising', event_date: lastDate,
           match_id: null, featured_player_id: null,
           title: formRisingTitle(name, delta, recentAvg),
-          body: `Snittade ${recentAvg} de senaste tre matcherna — ${delta} pins över sitt säsongssnitt på ${seasonAvg}.`,
+          body: `Snittade ${recentAvg} de senaste tre matcherna — ${delta} pins över sitt snitt på ${baseline}.`,
           payload, captain_note: null, is_pinned: false, is_hidden: false,
         })
         existingSet.add(eventKey('form_rising', null, lastDate, name))
