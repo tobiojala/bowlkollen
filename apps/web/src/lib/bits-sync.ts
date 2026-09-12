@@ -2,11 +2,10 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { getMatchScores } from '@/lib/bits-match-scores'
-import { getDivisions, getMatchesByDivision } from '@/lib/bits-series'
+import { getDivisions, getMatchesByDivision, getMatchResults } from '@/lib/bits-series'
 import {
   getClubs,
   getTeamsByClub,
-  getMatchResults,
   getPlayersPage,
   getPlayerProfileDetail,
   parsePlayerTotals,

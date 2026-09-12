@@ -240,11 +240,8 @@ export async function getTeamsByClub(clubId: number, seasonId = 2025): Promise<B
 // getDivisions + getMatchesByDivision live in bits-series.ts, getMatchScores in
 // bits-match-scores.ts — all on the site host, since the legacy
 // api.swebowl.se/api/v1 tier now 403s us wholesale (getClubs/getTeamsByClub/
-// getMatchResults/players below still call it and await the same migration).
-
-export async function getMatchResults(matchId: number, matchSchemeId: string): Promise<BitsMatchResults> {
-  return bitsGet<BitsMatchResults>('matchResult/GetMatchResults', { matchId, matchSchemeId })
-}
+// getMatchResults now lives in bits-series.ts (site host). getClubs/getTeamsByClub/
+// players below still call the dead api tier and await the same migration.
 
 export async function getPlayersPage(skip: number, take = 200): Promise<BitsPlayerPage> {
   return bitsGet<BitsPlayerPage>('Player', { skip, take })

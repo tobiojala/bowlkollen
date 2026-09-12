@@ -1,5 +1,5 @@
 import 'server-only'
-import { BASE_HEADERS, getSession, type BitsDivision, type BitsMatch } from './bits-client'
+import { BASE_HEADERS, getSession, type BitsDivision, type BitsMatch, type BitsMatchResults } from './bits-client'
 import { bitsFetch } from './bits-core'
 
 // League structure (divisions) + fixtures (matches), moved off the dead
@@ -26,4 +26,11 @@ export async function getDivisions(seasonId = 2026): Promise<BitsDivision[]> {
 
 export async function getMatchesByDivision(divisionId: number, seasonId = 2026): Promise<BitsMatch[]> {
   return siteGet<BitsMatch[]>('ListMatches', `divisionId=${divisionId}&seasonId=${seasonId}`)
+}
+
+// Per-player exact results (full name + license + per-serie line, split home/away).
+// Same shape as the old api tier; matchSchemeId comes off the match row (trailing
+// pad trimmed).
+export async function getMatchResults(matchId: number, matchSchemeId: string): Promise<BitsMatchResults> {
+  return siteGet<BitsMatchResults>('GetMatchResults', `matchId=${matchId}&matchSchemeId=${encodeURIComponent(matchSchemeId.trim())}`)
 }
