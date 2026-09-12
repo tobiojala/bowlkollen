@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 export type LiveScores = {
   series: { teamA: number[]; teamB: number[] }
   players: { name: string; games: number[]; total: number; isHomeTeam: boolean }[]
+  banp: { home: number; away: number; completedSeries: number }
   updatedAt: string
 }
 

@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server'
-import { parseTeamSeries, parsePlayerTotals } from '@/lib/bits-client'
+import { parseTeamSeries, parsePlayerTotals, parseMatchDelmatchSlots } from '@/lib/bits-client'
 import { getMatchScores } from '@/lib/bits-match-scores'
+import { computeDelmatcher } from '@bowlkollen/core'
+
+// Running banpoäng (Elitserien: 4 bordpoäng + 1 serie-pinfall bonus = 5/serie,
+// max 20). Only fully-bowled series count — a serie counts when every table has
+// balanced, complete pairs and the serie shows the match's full table set, so the
+// in-progress serie is naturally excluded. computeDelmatcher applies Blåboken §1.3.
+function runningBanp(scores: Awaited<ReturnType<typeof getMatchScores>>) {
+  const slots = parseMatchDelmatchSlots(scores)
+  const bySerie = new Map<number, typeof slots>()
+  for (const s of slots) { const a = bySerie.get(s.serie); if (a) a.push(s); else bySerie.set(s.serie, [s]) }
+  const maxTables = Math.max(0, ...[...bySerie.values()].map((ss) => new Set(ss.map((s) => s.tableNo)).size))
+  const complete = []
+  for (const ss of bySerie.values()) {
+    const tbl = new Map<number, { h: number; a: number }>()
+    for (const s of ss) { const t = tbl.get(s.tableNo) ?? { h: 0, a: 0 }; if (s.isHomeTeam) t.h++; else t.a++; tbl.set(s.tableNo, t) }
+    const balanced = [...tbl.values()].every((t) => t.h === t.a && t.h >= 1)
+    if (maxTables > 0 && tbl.size === maxTables && balanced) for (const s of ss) complete.push({ ...s, publicId: null })
+  }
+  const d = computeDelmatcher(complete)
+  return { home: d.homeBanp, away: d.awayBanp, completedSeries: d.series.length }
+}
 
 // Live match scores, pulled server-side from BITS' site-host GetMatchScores
 // (bits.swebowl.se/MiscFrontApiConnector — the same call the live match-detail
@@ -13,7 +34,7 @@ export const dynamic = 'force-dynamic'
 const TTL_MS = 25_000
 type Cached = { at: number; data: unknown }
 const cache = new Map<number, Cached>()
-const EMPTY = (note?: string) => ({ series: { teamA: [], teamB: [] }, players: [], updatedAt: new Date().toISOString(), note })
+const EMPTY = (note?: string) => ({ series: { teamA: [], teamB: [] }, players: [], banp: { home: 0, away: 0, completedSeries: 0 }, updatedAt: new Date().toISOString(), note })
 
 export async function GET(req: Request, { params }: { params: Promise<{ matchId: string }> }) {
   const { matchId } = await params
@@ -35,7 +56,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   }
 
   try {
-    const data = { series: parseTeamSeries(scores), players: parsePlayerTotals(scores), updatedAt: new Date().toISOString() }
+    const data = { series: parseTeamSeries(scores), players: parsePlayerTotals(scores), banp: runningBanp(scores), updatedAt: new Date().toISOString() }
     if (debug) {
       const hasSeries = Array.isArray((scores as { series?: unknown }).series)
       return NextResponse.json({ ok: true, hasSeries, teamA: data.series.teamA, teamB: data.series.teamB, players: data.players.length }, { status: 200 })

@@ -33,6 +33,7 @@ export function LiveScoreboard({ matchId, homeName, awayName }: { matchId: numbe
   const hasData = Math.max(home.length, away.length) > 0;
   const players = data?.players ?? [];
   const topTotal = players.reduce((m, p) => Math.max(m, p.total), 0);
+  const banp = data?.banp ?? { home: 0, away: 0, completedSeries: 0 };
 
   return (
     <View>
@@ -41,9 +42,17 @@ export function LiveScoreboard({ matchId, homeName, awayName }: { matchId: numbe
           <Animated.View style={[s.dot, { opacity: pulse }]} />
           <Text style={s.badgeT}>LIVE</Text>
         </View>
-        {hasData && <Text style={s.score}>{sum(home)} <Text style={s.dash}>–</Text> {sum(away)}</Text>}
+        {banp.completedSeries > 0 && (
+          <Text style={s.score}>{banp.home} <Text style={s.dash}>–</Text> {banp.away}<Text style={s.poang}> poäng</Text></Text>
+        )}
         {data ? <Text style={s.upd}>Uppdaterad {hhmmss(data.updatedAt)}</Text> : null}
       </View>
+      {hasData ? (
+        <Text style={s.pinline}>
+          Pinnfall {sum(home)} – {sum(away)}
+          {banp.completedSeries > 0 ? ` · efter ${banp.completedSeries} ${banp.completedSeries === 1 ? 'serie' : 'serier'}` : ' · serie 1 pågår'}
+        </Text>
+      ) : null}
 
       {!hasData ? (
         <Text style={s.empty}>
@@ -66,7 +75,9 @@ const s = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: COLOR.red, borderRadius: RADIUS.pill, paddingVertical: 4, paddingHorizontal: 11 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLOR.red },
   badgeT: { fontSize: 11, fontFamily: FONT.bold, letterSpacing: 0.8, color: COLOR.red },
-  score: { fontFamily: FONT.scoreHeavy, fontSize: 20, color: COLOR.ink },
+  score: { fontFamily: FONT.scoreHeavy, fontSize: 24, color: COLOR.ink, letterSpacing: -0.5 },
+  poang: { fontFamily: FONT.bold, fontSize: 12, color: COLOR.ink3 },
+  pinline: { fontSize: 12, color: COLOR.ink3, fontFamily: FONT.regular, marginBottom: SPACE[2] },
   dash: { color: COLOR.ink4, fontFamily: FONT.regular },
   upd: { fontSize: 11, color: COLOR.ink4, fontFamily: FONT.regular, marginLeft: 'auto' },
   empty: { paddingVertical: SPACE[8], textAlign: 'center', color: COLOR.ink3, fontSize: 14, fontFamily: FONT.regular, lineHeight: 20 },

@@ -21,6 +21,7 @@ export function LiveScoreboard({ matchId, homeTeamName, awayTeamName }: { matchI
   const homeTotal = sum(homeSeries)
   const awayTotal = sum(awaySeries)
   const hasData = serieCount > 0
+  const banp = data?.banp ?? { home: 0, away: 0, completedSeries: 0 }
 
   return (
     <div style={{ maxWidth: 900 }}>
@@ -29,13 +30,22 @@ export function LiveScoreboard({ matchId, homeTeamName, awayTeamName }: { matchI
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: COLOR.red, animation: 'bk-live-pulse 1.5s infinite' }} />
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.red }}>LIVE</span>
         </span>
-        {hasData && (
-          <span style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 20, color: COLOR.ink }}>
-            {homeTotal} <span style={{ color: COLOR.ink4, fontWeight: 600 }}>–</span> {awayTotal}
+        {banp.completedSeries > 0 && (
+          <span style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 26, color: COLOR.ink, letterSpacing: '-.02em' }}>
+            {banp.home} <span style={{ color: COLOR.ink4, fontWeight: 600 }}>–</span> {banp.away}
+            <span style={{ fontSize: 12, fontWeight: 700, color: COLOR.ink3, marginLeft: 6 }}>poäng</span>
           </span>
         )}
         {data && <span style={{ fontSize: 11, color: COLOR.ink4, marginLeft: 'auto' }}>Uppdaterad {hhmmss(data.updatedAt)}</span>}
       </div>
+      {hasData && (
+        <div style={{ fontSize: 12, color: COLOR.ink3, marginBottom: 8 }}>
+          Pinnfall {homeTotal} – {awayTotal}
+          {banp.completedSeries > 0
+            ? ` · efter ${banp.completedSeries} ${banp.completedSeries === 1 ? 'serie' : 'serier'}`
+            : ' · serie 1 pågår'}
+        </div>
+      )}
 
       {!hasData ? (
         <div style={{ padding: '28px 0', textAlign: 'center', color: COLOR.ink3, fontSize: 14 }}>
