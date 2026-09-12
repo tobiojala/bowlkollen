@@ -55,7 +55,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   if (sp.get('probe') === PROBE_TOKEN) {
     if (sp.get('dump') === '1') {
       const cookie = await getSession()
-      const r = await fetch(`${SITE}/MiscFrontApiConnector/GetMatchScores?id=${id}`, {
+      const conn = sp.get('c') || 'GetMatchScores'
+      const qp = sp.get('p') || `id=${id}`
+      const r = await fetch(`${SITE}/MiscFrontApiConnector/${conn}?${qp}`, {
         headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*', 'X-Requested-With': 'XMLHttpRequest', Referer: `${SITE}/match-detail?matchid=${id}` }, cache: 'no-store',
       })
       return new NextResponse(await r.text(), { status: 200, headers: { 'Content-Type': 'application/json' } })
