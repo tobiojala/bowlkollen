@@ -63,20 +63,27 @@ export default function PlayerProfileClient({ id }: { id: string }) {
   )
 
   // ── Build canonical ProfileData from real BITS results ─────────────────────
+  // The profile is a rolling last+this-season view: the stat cards AND the graphs
+  // both build forward from last season, so nothing goes thin/dark at season start
+  // (a player with a single current-season game used to show empty PRESTANDA cards).
+  // The official BITS snitt headline stays separate (licenceAverage), and the
+  // "this vs last season" Duell keeps the pure current-season split below.
   const currRows = rowsRaw.filter(r => r.matchDate >= SEASON.CURRENT)
   const prevRows = rowsRaw.filter(r => r.matchDate >= SEASON.PREV && r.matchDate < SEASON.CURRENT)
-  const activeRows = currRows.length > 0 ? currRows : rowsRaw
-  // Graphs span last + this season so they build forward from last season; stats
-  // stay on activeRows (current). Fall back to activeRows when there's no two-season span.
   const combinedRows = [...prevRows, ...currRows].sort((a, b) => a.matchDate.localeCompare(b.matchDate))
-  const curveRows = combinedRows.length > 0 ? combinedRows : activeRows
+  const statsRows = combinedRows.length > 0 ? combinedRows : rowsRaw
 
-  const activeAvg     = mean(activeRows.flatMap(r => r.series.filter(g => g > 0)))
   const prevGames     = prevRows.flatMap(r => r.series.filter(g => g > 0))
-  const lastSeasonAvg = prevGames.length > 0 ? mean(prevGames) : Math.max(0, activeAvg - 5)
+  const statsAvg      = mean(statsRows.flatMap(r => r.series.filter(g => g > 0)))
+  const lastSeasonAvg = prevGames.length > 0 ? mean(prevGames) : Math.max(0, statsAvg - 5)
 
-  const data          = buildProfileFromBitsRows(activeRows, { lastSeasonAvg, curveRows })
+  const data          = buildProfileFromBitsRows(statsRows, { lastSeasonAvg, curveRows: statsRows })
   const prevMatchAvgs = prevRows
+    .map(r => { const g = r.series.filter(s => s > 0); return g.length ? mean(g) : null })
+    .filter((v): v is number => v !== null)
+  // The one place we need the pure current season: the Duell's "this season" line.
+  const currMatchAvgs = currRows
+    .slice().sort((a, b) => a.matchDate.localeCompare(b.matchDate))
     .map(r => { const g = r.series.filter(s => s > 0); return g.length ? mean(g) : null })
     .filter((v): v is number => v !== null)
 
@@ -114,6 +121,7 @@ export default function PlayerProfileClient({ id }: { id: string }) {
         licenceAverage={player.licenceAverage ?? undefined}
         firstName={firstName}
         prevMatchAvgs={prevMatchAvgs.length > 1 ? prevMatchAvgs : undefined}
+        currMatchAvgs={currMatchAvgs.length > 1 ? currMatchAvgs : undefined}
         achievements={achievements}
         isOwner={isOwner}
         onOpenCard={() => setCardOpen(true)}

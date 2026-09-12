@@ -67,7 +67,12 @@ export default function PlayerPage() {
   const [headerOpen, setHeaderOpen] = useState(false);
 
   const { activeRows, curveRows, hasCurrent, lastSeasonAvg, prevMatchAvgs } = splitSeason(history as PlayerMatch[]);
-  const stats = computePlayerStats(activeRows);
+  // Profile = rolling last+this-season view so the cards never go thin/dark at
+  // season start (a single current-season game used to collapse every card).
+  // currStats stays pure current-season for the two season-specific features below
+  // (the Duell "this vs last" and the season Challenges).
+  const stats = computePlayerStats(curveRows);
+  const currStats = computePlayerStats(activeRows);
   const { recentAvg, formDiff, historyDesc } = stats;
   // The RPC already returns the "top X%" (smaller = better); don't invert it.
   const pct = percentile == null ? null : Number(percentile);
@@ -163,20 +168,20 @@ export default function PlayerPage() {
 
           <ProfilePulse history={curveRows} seasonAvg={stats.seasonAvg} onInfo={() => setSheet('puls')} />
 
-          <PlayerAnalysis firstName={player.name.split(' ')[0]} history={activeRows} stats={stats} lastSeasonAvg={lastSeasonAvg} />
+          <PlayerAnalysis firstName={player.name.split(' ')[0]} history={curveRows} stats={stats} lastSeasonAvg={lastSeasonAvg} />
 
-          <WhatIf history={activeRows} seasonAvg={stats.seasonAvg} />
+          <WhatIf history={curveRows} seasonAvg={stats.seasonAvg} />
 
-          {hasCurrent && prevMatchAvgs.length > 1 && stats.matchAvgs.length > 1 && (
+          {hasCurrent && prevMatchAvgs.length > 1 && currStats.matchAvgs.length > 1 && (
             <Duell
-              thisAvgs={stats.matchAvgs.map((a) => Math.round(a))}
+              thisAvgs={currStats.matchAvgs.map((a) => Math.round(a))}
               lastAvgs={prevMatchAvgs}
-              firstDate={historyDesc.length ? formatMatchDate(historyDesc[historyDesc.length - 1].match_date) : undefined}
-              lastDate={historyDesc.length ? formatMatchDate(historyDesc[0].match_date) : undefined}
+              firstDate={currStats.historyDesc.length ? formatMatchDate(currStats.historyDesc[currStats.historyDesc.length - 1].match_date) : undefined}
+              lastDate={currStats.historyDesc.length ? formatMatchDate(currStats.historyDesc[0].match_date) : undefined}
             />
           )}
 
-          <ProfileChallenges history={activeRows} stats={stats} prevAvg={lastSeasonAvg} />
+          <ProfileChallenges history={activeRows} stats={currStats} prevAvg={lastSeasonAvg} />
 
           {delmatchRecord && (
             <PlayerDelmatchCard

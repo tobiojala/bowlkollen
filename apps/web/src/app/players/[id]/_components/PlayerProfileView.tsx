@@ -56,6 +56,8 @@ export interface PlayerProfileViewProps {
   firstName: string
   /** Previous-season per-match averages — DNA overlay + duel ghost line. */
   prevMatchAvgs?: number[]
+  /** Current-season per-match averages — the Duell's "this season" line (cards use the rolling window). */
+  currMatchAvgs?: number[]
   achievements?: Achievement[]
   isOwner?: boolean
   onEdit?: () => void
@@ -65,7 +67,7 @@ export interface PlayerProfileViewProps {
 
 export default function PlayerProfileView({
   playerId, data, identity, bkTopPct, licenceAverage, firstName,
-  prevMatchAvgs, achievements = [], isOwner = false,
+  prevMatchAvgs, currMatchAvgs, achievements = [], isOwner = false,
   onEdit, onOpenCard, onOpenH2H,
 }: PlayerProfileViewProps) {
   const [expanded, setExpanded]     = useState<SheetType>(null)
@@ -88,9 +90,8 @@ export default function PlayerProfileView({
     }
   }
 
-  // Puls line spans last + this season (continuous); stats stay current-season.
-  // pulsIdx maps current-season points → data.matches; last-season points (before
-  // curveMarkerIndex) open no sheet (they aren't in data.matches).
+  // Puls spans last+this season; cards use the same window, so curveMatches ===
+  // matches and each puls point maps 1:1 to a match (marker = season break).
   const pulsPoints = matchTrendPoints(data.curveMatches ?? data.matches)
   const pulsIdx = data.matches.reduce<number[]>((acc, m, i) => { if (m.games.some((g) => g > 0)) acc.push(i); return acc }, [])
   const isSheetOpen = expanded !== null
@@ -127,7 +128,7 @@ export default function PlayerProfileView({
             )}
           </div>
           <div style={{ marginTop: 40, textAlign: 'center', color: 'rgba(244,245,247,0.40)', fontSize: 14 }}>
-            Ingen matchdata än den här säsongen.
+            Ingen matchdata än.
           </div>
         </div>
       </main>
@@ -201,7 +202,7 @@ export default function PlayerProfileView({
                 baselineLabel="matchsnitt"
                 footerLeft={`Lägst ${Math.min(...pulsPoints.map((p) => p.avg))}`}
                 footerRight={`Högst ${Math.max(...pulsPoints.map((p) => p.avg))}`}
-                onSelect={(i) => { const j = i - (data.curveMarkerIndex ?? 0); if (j >= 0 && j < pulsIdx.length) openMatch(pulsIdx[j]) }}
+                onSelect={(i) => { if (i >= 0 && i < pulsIdx.length) openMatch(pulsIdx[i]) }}
               />
             </section>
           )}
@@ -274,7 +275,7 @@ export default function PlayerProfileView({
 
       {expanded === 'duell' && (
         <DuellSheet
-          matchAvgs={matchAvgs}
+          matchAvgs={currMatchAvgs && currMatchAvgs.length > 1 ? currMatchAvgs : matchAvgs}
           lastSeasonAvgs={prevMatchAvgs && prevMatchAvgs.length > 1 ? prevMatchAvgs : matchAvgs.map(() => lastSeasonAvg)}
           firstDate={firstDate}
           lastDate={lastDate}
