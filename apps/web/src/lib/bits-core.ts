@@ -10,7 +10,8 @@ import 'server-only'
 // 5xx get a couple of jittered retries; 401 is left to the caller (session
 // refresh). State is readable via bitsBreakerState() for /api/health/bits.
 
-const MIN_GAP_MS = 700          // ≈1.4 req/s — gentle, browser-like
+const MIN_GAP_MS = 250          // 4 req/s — gentle (a page load fires more), but the
+                               // sync makes ~110 calls/run and must fit maxDuration
 const BLOCK_TRIP = 3            // consecutive 403/429 before the breaker opens
 const COOLDOWN_MS = 15 * 60_000 // how long the breaker stays open
 const MAX_RETRIES = 2           // for 5xx only
