@@ -17,11 +17,10 @@ export function MinaSpelClient() {
   })
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink }}>
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 20px 120px' }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', fontSize: 12, color: COLOR.gold }}>Bowlkollen</div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.03em', margin: '6px 0 16px' }}>Mina spel</h1>
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '14px 20px 120px' }}>
+        <h1 style={{ fontSize: 'clamp(22px, 6.5vw, 30px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 12px' }}>Mina spel</h1>
 
-        <div style={{ display: 'flex', gap: 4, background: COLOR.surface, borderRadius: 999, padding: 4, width: 'fit-content', marginBottom: 26 }}>
+        <div style={{ display: 'flex', gap: 4, background: COLOR.surface, borderRadius: 999, padding: 4, width: 'fit-content', marginBottom: 16 }}>
           <button style={on('log')} onClick={() => setTab('log')}>Logga spel</button>
           <button style={on('analys')} onClick={() => setTab('analys')}>Spärranalys</button>
         </div>

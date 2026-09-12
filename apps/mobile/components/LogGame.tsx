@@ -46,31 +46,32 @@ export function LogGame({ onComplete }: { onComplete: (game: Game) => void }) {
         </View>
       </ScrollView>
 
-      <View style={s.totalRow}>
-        <Text style={s.total}>{g.total}</Text>
-        <Text style={s.totalK}>{g.done ? 'slutresultat' : 'löpande summa'}</Text>
-      </View>
-
       {!g.done ? (
-        <View style={s.ball}>
-          <PinDeck available={g.available} standing={g.standing} onToggle={g.toggle} />
-          <View style={{ flex: 1, minWidth: 180 }}>
-            <Text style={s.step}>Ruta {g.frame + 1} · Kast {g.ball}</Text>
-            <Text style={[s.rd, { color: readColor }]}>{readout}</Text>
-            <Text style={s.hint}>Tryck på käglorna som stod kvar. Inga kvar = strike / spärr.</Text>
-            <View style={s.brow}>
-              <PressableScale style={s.btnP} onPress={g.confirm}><Text style={s.btnPT}>Klar</Text></PressableScale>
-              <PressableScale style={[s.btnG, !g.canUndo && { opacity: 0.5 }]} onPress={g.undo} disabled={!g.canUndo}><Text style={s.btnGT}>Ångra</Text></PressableScale>
+        // Thumb-first: readout + total, then the deck, then Klar right under it.
+        <View style={{ marginTop: SPACE[4] }}>
+          <View style={s.readRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.step}>Ruta {g.frame + 1} · Kast {g.ball}</Text>
+              <Text style={[s.rd, { color: readColor }]}>{readout}</Text>
             </View>
+            <Text style={s.totalInline}>{g.total}</Text>
           </View>
+          <View style={s.deckWrap}>
+            <PinDeck available={g.available} standing={g.standing} onToggle={g.toggle} />
+          </View>
+          <View style={s.brow}>
+            <PressableScale style={[s.btnP, { flex: 2 }]} onPress={g.confirm}><Text style={s.btnPT}>Klar</Text></PressableScale>
+            <PressableScale style={[s.btnG, { flex: 1 }, !g.canUndo && { opacity: 0.5 }]} onPress={g.undo} disabled={!g.canUndo}><Text style={s.btnGT}>Ångra</Text></PressableScale>
+          </View>
+          <Text style={s.hint}>Tryck på käglorna som stod kvar. Inga kvar = strike / spärr.</Text>
         </View>
       ) : (
         <View style={s.done}>
           <Text style={s.doneQ}>{g.total === 300 ? 'PERFEKT · 300!' : `Serie klar · ${g.total}`}</Text>
           <Text style={s.doneSub}>Lägg serien i loggen och räkna nästa, eller spara nedan.</Text>
           <View style={s.brow}>
-            <PressableScale style={[s.btnP, { backgroundColor: COLOR.gold }]} onPress={add}><Text style={s.btnPT}>Lägg till serie</Text></PressableScale>
-            <PressableScale style={s.btnG} onPress={g.reset}><Text style={s.btnGT}>Gör om</Text></PressableScale>
+            <PressableScale style={[s.btnP, { backgroundColor: COLOR.gold, flex: 2 }]} onPress={add}><Text style={s.btnPT}>Lägg till serie</Text></PressableScale>
+            <PressableScale style={[s.btnG, { flex: 1 }]} onPress={g.reset}><Text style={s.btnGT}>Gör om</Text></PressableScale>
           </View>
         </View>
       )}
@@ -106,17 +107,16 @@ const s = StyleSheet.create({
   bxBorder: { borderLeftWidth: 1, borderLeftColor: COLOR.hairline },
   bxT: { fontFamily: FONT.score, fontSize: 15 },
   cum: { height: 30, textAlign: 'center', textAlignVertical: 'center', fontFamily: FONT.scoreHeavy, fontSize: 16, color: COLOR.ink },
-  totalRow: { flexDirection: 'row', alignItems: 'baseline', gap: SPACE[3], marginTop: SPACE[4] },
-  total: { fontFamily: FONT.scoreHeavy, fontSize: 38, color: COLOR.ink, letterSpacing: -1 },
-  totalK: { fontSize: 13, color: COLOR.ink3, fontFamily: FONT.regular },
-  ball: { flexDirection: 'row', gap: SPACE[6], alignItems: 'center', marginTop: SPACE[4], flexWrap: 'wrap' },
+  readRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: SPACE[3] },
+  totalInline: { fontFamily: FONT.scoreHeavy, fontSize: 30, color: COLOR.ink, letterSpacing: -1 },
+  deckWrap: { alignItems: 'center', marginTop: SPACE[3] },
   step: { fontSize: 12, color: COLOR.ink4, textTransform: 'uppercase', letterSpacing: 1, fontFamily: FONT.bold },
   rd: { fontFamily: FONT.scoreHeavy, fontSize: 24, marginTop: 4, letterSpacing: -0.5 },
-  hint: { fontSize: 13, color: COLOR.ink3, marginTop: SPACE[2], fontFamily: FONT.regular },
+  hint: { fontSize: 13, color: COLOR.ink3, marginTop: SPACE[3], fontFamily: FONT.regular, textAlign: 'center' },
   brow: { flexDirection: 'row', gap: SPACE[2], marginTop: SPACE[4] },
-  btnP: { backgroundColor: COLOR.ink, borderRadius: 11, paddingVertical: 12, paddingHorizontal: 22 },
-  btnPT: { color: COLOR.bg, fontFamily: FONT.bold, fontSize: 15 },
-  btnG: { borderRadius: 11, paddingVertical: 12, paddingHorizontal: 20, borderWidth: 1, borderColor: COLOR.hairline },
+  btnP: { backgroundColor: COLOR.ink, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  btnPT: { color: COLOR.bg, fontFamily: FONT.bold, fontSize: 16 },
+  btnG: { borderRadius: 12, paddingVertical: 15, borderWidth: 1, borderColor: COLOR.hairline, alignItems: 'center' },
   btnGT: { color: COLOR.ink2, fontFamily: FONT.bold, fontSize: 15 },
   done: { marginTop: SPACE[4], padding: SPACE[4], borderRadius: 14, backgroundColor: COLOR.surface },
   doneQ: { fontFamily: FONT.display, fontSize: 20, color: COLOR.ink },

@@ -24,44 +24,50 @@ export function LogGame({ onComplete }: { onComplete: (game: Game) => void }) {
 
   return (
     <div>
-      {/* scoreboard */}
+      {/* scoreboard — compact, the current frame stays in view while you bowl */}
       <div style={{ overflowX: 'auto', margin: '0 -18px', padding: '0 18px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9,1fr) 1.5fr', minWidth: 540, border: `1px solid ${COLOR.hairline}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9,1fr) 1.5fr', minWidth: 500, border: `1px solid ${COLOR.hairline}`, borderRadius: 12, overflow: 'hidden' }}>
           {Array.from({ length: 10 }).map((_, f) => {
             const bx = box(g.marks[f] ?? [], f === 9), cur = f === g.frame && !g.done
             return (
               <div key={f} style={{ borderRight: f < 9 ? `1px solid ${COLOR.hairline}` : 'none', background: cur ? 'rgba(245,194,0,0.06)' : 'transparent' }}>
-                <div style={{ fontSize: 10, color: COLOR.ink4, textAlign: 'center', padding: '4px 0', fontWeight: 700 }}>{f + 1}</div>
-                <div style={{ display: 'flex', height: 30, borderTop: `1px solid ${COLOR.hairline}`, borderBottom: `1px solid ${COLOR.hairline}` }}>
+                <div style={{ fontSize: 10, color: COLOR.ink4, textAlign: 'center', padding: '3px 0', fontWeight: 700 }}>{f + 1}</div>
+                <div style={{ display: 'flex', height: 26, borderTop: `1px solid ${COLOR.hairline}`, borderBottom: `1px solid ${COLOR.hairline}` }}>
                   {bx.map((m, k) => (
-                    <div key={k} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.score, fontWeight: 700, fontSize: 15, borderLeft: k ? `1px solid ${COLOR.hairline}` : 'none', color: m === 'X' ? COLOR.gold : m === '–' ? COLOR.ink4 : COLOR.ink }}>{m}</div>
+                    <div key={k} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.score, fontWeight: 700, fontSize: 14, borderLeft: k ? `1px solid ${COLOR.hairline}` : 'none', color: m === 'X' ? COLOR.gold : m === '–' ? COLOR.ink4 : COLOR.ink }}>{m}</div>
                   ))}
                 </div>
-                <div style={{ height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.score, fontWeight: 800, fontSize: 16, color: g.cum[f] == null ? COLOR.ink4 : COLOR.ink }}>{g.cum[f] ?? '·'}</div>
+                <div style={{ height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.score, fontWeight: 800, fontSize: 15, color: g.cum[f] == null ? COLOR.ink4 : COLOR.ink }}>{g.cum[f] ?? '·'}</div>
               </div>
             )
           })}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '18px 0 4px' }}>
-        <span style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 38, letterSpacing: '-.03em' }}>{g.total}</span>
-        <span style={{ fontSize: 13, color: COLOR.ink3 }}>{g.done ? 'slutresultat' : 'löpande summa'}</span>
-      </div>
 
-      {!g.done ? (
-        <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-          <PinDeck available={g.available} standing={g.standing} onToggle={g.toggle} />
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 12, color: COLOR.ink4, textTransform: 'uppercase', letterSpacing: '.09em', fontWeight: 700 }}>Ruta {g.frame + 1} · Kast {g.ball}</div>
-            <div style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 25, marginTop: 4, color: readColor }}>{readout}</div>
-            <p style={{ fontSize: 13, color: COLOR.ink3, marginTop: 8, maxWidth: '32ch' }}>Tryck på käglorna som stod kvar. Inga kvar = strike / spärr.</p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={g.confirm} style={{ border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 22px', background: COLOR.ink, color: COLOR.bg }}>Klar</button>
-              <button onClick={g.undo} disabled={!g.canUndo} style={{ border: 'none', cursor: g.canUndo ? 'pointer' : 'default', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 11, padding: '12px 20px', background: 'transparent', color: COLOR.ink4, boxShadow: `inset 0 0 0 1px ${COLOR.hairline}`, opacity: g.canUndo ? 1 : .5 }}>Ångra</button>
+      {!g.done && (
+        // Thumb-first: readout, then the deck, then Klar right under it — the whole
+        // tap→confirm loop lives together, no scroll to score a ball.
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+            <div>
+              <span style={{ fontSize: 12, color: COLOR.ink4, textTransform: 'uppercase', letterSpacing: '.09em', fontWeight: 700 }}>Ruta {g.frame + 1} · Kast {g.ball}</span>
+              <div style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 24, marginTop: 2, color: readColor }}>{readout}</div>
             </div>
+            <span style={{ fontFamily: FONT.score, fontWeight: 800, fontSize: 28, letterSpacing: '-.03em', color: COLOR.ink }}>{g.total}</span>
           </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+            <PinDeck available={g.available} standing={g.standing} onToggle={g.toggle} />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, maxWidth: 360, marginInline: 'auto' }}>
+            <button onClick={g.confirm} style={{ flex: 2, border: 'none', cursor: 'pointer', fontFamily: FONT.body, fontWeight: 800, fontSize: 16, borderRadius: 12, padding: '15px 0', background: COLOR.ink, color: COLOR.bg }}>Klar</button>
+            <button onClick={g.undo} disabled={!g.canUndo} style={{ flex: 1, border: 'none', cursor: g.canUndo ? 'pointer' : 'default', fontFamily: FONT.body, fontWeight: 700, fontSize: 15, borderRadius: 12, padding: '15px 0', background: 'transparent', color: COLOR.ink4, boxShadow: `inset 0 0 0 1px ${COLOR.hairline}`, opacity: g.canUndo ? 1 : .5 }}>Ångra</button>
+          </div>
+          <p style={{ fontSize: 12, color: COLOR.ink4, marginTop: 10, textAlign: 'center' }}>Tryck på käglorna som stod kvar. Inga kvar = strike / spärr.</p>
         </div>
-      ) : (
+      )}
+      {g.done && (
         <div style={{ marginTop: 20, padding: 18, borderRadius: 14, background: COLOR.surface }}>
           <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 20 }}>{g.total === 300 ? 'PERFEKT · 300!' : `Serie klar · ${g.total}`}</div>
           <p style={{ fontSize: 13, color: COLOR.ink3, marginTop: 6 }}>Lägg serien i loggen och räkna nästa, eller spara nedan.</p>
