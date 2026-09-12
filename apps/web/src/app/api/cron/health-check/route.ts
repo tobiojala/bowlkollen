@@ -33,6 +33,11 @@ async function notify(text: string) {
 
 export async function GET(req: Request) {
   if (!authed(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // ?test=1 → send a one-off test alert to confirm ALERT_WEBHOOK_URL is wired.
+  if (new URL(req.url).searchParams.get('test') === '1') {
+    const sent = await notify('Bowlkollen health watchdog test — if you can read this, alerts are working.')
+    return NextResponse.json({ test: true, webhookConfigured: !!process.env.ALERT_WEBHOOK_URL, sent })
+  }
   const db = createServiceSupabase() as unknown as SupabaseClient
   const now = new Date()
   const season = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1
