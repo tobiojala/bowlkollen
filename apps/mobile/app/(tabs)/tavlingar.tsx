@@ -1,111 +1,29 @@
-import { TAVLINGAR, type Tavling } from '@bowlkollen/core';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { FlatList, Linking, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { PressableScale } from '@/components/PressableScale';
-import { useNavScroll } from '@/lib/nav-scroll';
 import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/theme';
 
-// Competitions — native parity with web /tavlingar, same curated list from
-// @bowlkollen/core. Pågående first, then kommande, then avslutade.
-const ORDER: Record<Tavling['status'], number> = { pagaende: 0, kommande: 1, avslutad: 2 };
-
-function openHref(href: string) {
-  const url = href.startsWith('http') ? href : `https://bowlkollen.se${href}`;
-  Linking.openURL(url).catch(() => {});
-}
-
+// Tävlingar is being rebuilt (curated list + BITS results + bowlres.se
+// partnership). Until it's ready the tab shows a clean under-construction state
+// (parity with web /tavlingar).
 export default function Tavlingar() {
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { onScroll } = useNavScroll();
-  const list = useMemo(() => [...TAVLINGAR].sort((a, b) => ORDER[a.status] - ORDER[b.status]), []);
-  const live = TAVLINGAR.filter((t) => t.status === 'pagaende').length;
-
   return (
     <View style={styles.safe}>
-      <FlatList
-        data={list}
-        keyExtractor={(t) => t.id}
-        renderItem={({ item }) => <TavCard t={item} />}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        contentContainerStyle={[styles.list, { paddingTop: insets.top + SPACE[4] }]}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.h1}>Tävlingar</Text>
-            <Text style={styles.sub}>{live > 0 ? `${live} pågår just nu` : 'Tävlingar i Sverige'}</Text>
-            <PressableScale style={styles.resultsEntry} onPress={() => router.push('/tavlingar/resultat')}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.resultsTitle}>Tävlingsresultat</Text>
-                <Text style={styles.resultsSub}>Officiella resultat & placeringar från BITS</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={COLOR.ink3} />
-            </PressableScale>
-          </View>
-        }
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
-  );
-}
-
-function TavCard({ t }: { t: Tavling }) {
-  const live = t.status === 'pagaende';
-  const done = t.status === 'avslutad';
-  const statusColor = live ? COLOR.green : done ? COLOR.ink3 : COLOR.gold;
-  const statusText = live ? 'PÅGÅENDE' : done ? 'AVSLUTAD' : 'KOMMANDE';
-
-  return (
-    <View style={[styles.card, live && styles.cardLive, done && styles.cardDone]}>
-      <View style={styles.statusRow}>
-        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-        <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
+      <View style={styles.icon}>
+        <Ionicons name="construct-outline" size={30} color={COLOR.gold} />
       </View>
-      <Text style={styles.name}>{t.name}</Text>
-      <Text style={styles.subtitle}>{t.subtitle}</Text>
-      <Text style={styles.meta} numberOfLines={1}>{[t.date, t.venue].filter(Boolean).join('  ·  ')}</Text>
-
-      <View style={styles.actions}>
-        <PressableScale style={styles.primary} onPress={() => openHref(t.officialHref ?? t.href)}>
-          <Text style={styles.primaryText}>{t.buttonLabel}</Text>
-        </PressableScale>
-        {(t.extraButtons ?? []).map((b) => (
-          <PressableScale key={b.href} style={styles.secondary} onPress={() => openHref(b.href)}>
-            <Text style={styles.secondaryText}>{b.label}</Text>
-          </PressableScale>
-        ))}
-      </View>
+      <Text style={styles.h1}>Tävlingar byggs</Text>
+      <Text style={styles.sub}>
+        Den här delen är under uppbyggnad. Snart kan du följa tävlingar i Sverige och se officiella resultat här.
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLOR.bg },
-  list: { paddingHorizontal: SPACE[4], paddingBottom: 120, gap: SPACE[3] },
-  header: { paddingBottom: SPACE[2] },
-  h1: { color: COLOR.ink, fontSize: TYPE.title + 6, fontFamily: FONT.bold, letterSpacing: -0.5 },
-  sub: { color: COLOR.ink3, fontSize: TYPE.body, fontFamily: FONT.medium, marginTop: 4 },
-  resultsEntry: { flexDirection: 'row', alignItems: 'center', gap: SPACE[3], backgroundColor: COLOR.surface, borderRadius: RADIUS.lg, padding: SPACE[4], marginTop: SPACE[4] },
-  resultsTitle: { color: COLOR.ink, fontSize: TYPE.body, fontFamily: FONT.bold },
-  resultsSub: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: 2 },
-
-  card: { backgroundColor: COLOR.surface, borderRadius: RADIUS.xl, borderWidth: StyleSheet.hairlineWidth, borderColor: COLOR.hairline, padding: SPACE[4] },
-  cardLive: { borderColor: 'rgba(48,212,126,0.35)' },
-  cardDone: { opacity: 0.7 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACE[2] },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: TYPE.label, fontFamily: FONT.bold, letterSpacing: 1 },
-  name: { color: COLOR.ink, fontSize: TYPE.body + 3, fontFamily: FONT.bold, letterSpacing: -0.3 },
-  subtitle: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.regular, marginTop: 4, lineHeight: 19 },
-  meta: { color: COLOR.ink3, fontSize: TYPE.caption, fontFamily: FONT.medium, marginTop: SPACE[2] },
-
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[2], marginTop: SPACE[4] },
-  primary: { backgroundColor: COLOR.gold, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[2] },
-  primaryText: { color: COLOR.bg, fontSize: TYPE.caption, fontFamily: FONT.bold },
-  secondary: { backgroundColor: COLOR.surface2, borderRadius: RADIUS.md, paddingHorizontal: SPACE[4], paddingVertical: SPACE[2] },
-  secondaryText: { color: COLOR.ink2, fontSize: TYPE.caption, fontFamily: FONT.semibold },
+  safe: { flex: 1, backgroundColor: COLOR.bg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACE[8] },
+  icon: { width: 64, height: 64, borderRadius: RADIUS.lg, alignItems: 'center', justifyContent: 'center', marginBottom: SPACE[4],
+    backgroundColor: 'rgba(245,194,0,0.12)', borderWidth: 1, borderColor: 'rgba(245,194,0,0.28)' },
+  h1: { fontSize: 24, fontFamily: FONT.bold, color: COLOR.ink, letterSpacing: -0.5, marginBottom: SPACE[2] },
+  sub: { fontSize: TYPE.body, fontFamily: FONT.regular, color: COLOR.ink3, textAlign: 'center', lineHeight: 22, maxWidth: 320 },
 });
