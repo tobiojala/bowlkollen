@@ -12,6 +12,8 @@ import 'server-only'
 
 const MIN_GAP_MS = 250          // 4 req/s — gentle (a page load fires more), but the
                                // sync makes ~110 calls/run and must fit maxDuration
+const CONCURRENCY = 6           // allow overlap for slow site-host latency; rate is
+                               // still capped by MIN_GAP between starts, not this
 const BLOCK_TRIP = 3            // consecutive 403/429 before the breaker opens
 const COOLDOWN_MS = 15 * 60_000 // how long the breaker stays open
 const MAX_RETRIES = 2           // for 5xx only
@@ -45,18 +47,18 @@ export function bitsBreakerState() {
   return { open: anyOpen, hosts }
 }
 
-// Serialize everything through one promise chain + a min-gap clock.
-let chain: Promise<unknown> = Promise.resolve()
-let lastAt = 0
-function gate<T>(fn: () => Promise<T>): Promise<T> {
-  const run = chain.then(async () => {
-    const wait = MIN_GAP_MS - (Date.now() - lastAt)
-    if (wait > 0) await sleep(wait)
-    lastAt = Date.now()
-    return fn()
-  })
-  chain = run.then(() => undefined, () => undefined) // keep the chain alive past errors
-  return run
+// Rate cap = one request STARTED per MIN_GAP (so a steady ≤4/s, browser-gentle),
+// but allow up to CONCURRENCY in flight so slow site-host latency doesn't serialize
+// end-to-end (the whole-season sync makes ~100 calls and must fit maxDuration).
+// Peak rate is still bounded by the start-spacing, not the concurrency.
+let active = 0
+let lastStart = 0
+async function acquire(): Promise<void> {
+  for (;;) {
+    const gap = MIN_GAP_MS - (Date.now() - lastStart)
+    if (active < CONCURRENCY && gap <= 0) { active++; lastStart = Date.now(); return }
+    await sleep(gap > 0 ? gap : 20)
+  }
 }
 
 export class BitsCircuitOpenError extends Error {}
@@ -67,7 +69,8 @@ export async function bitsFetch(url: string, init: RequestInit): Promise<Respons
   if (Date.now() < b.openUntil) {
     throw new BitsCircuitOpenError(`BITS circuit open for ${host} (${Math.ceil((b.openUntil - Date.now()) / 1000)}s left) — last: ${b.lastError}`)
   }
-  return gate(async () => {
+  await acquire()
+  try {
     for (let attempt = 0; ; attempt++) {
       const res = await fetch(url, init)
       if (res.status === 403 || res.status === 429) {
@@ -81,5 +84,7 @@ export async function bitsFetch(url: string, init: RequestInit): Promise<Respons
       if (res.status !== 401) { b.consecutiveBlocks = 0; b.lastOkAt = Date.now() } // 401 = session, not a block
       return res
     }
-  })
+  } finally {
+    active--
+  }
 }
