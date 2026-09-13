@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import Reveal from '@/components/Reveal'
+import { PlayerRow } from '@/components/PlayerRow'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
 import type { MatchRow, TeamStanding } from '@/lib/division-standings'
 import { DivisionMatches } from '@/app/divisioner/[id]/_components/DivisionMatches'
@@ -106,24 +107,13 @@ export function LagClient({ teamId, teamName, clubId, divisionId, divisionName, 
               <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.08em', color: COLOR.ink2, padding: '0 20px 10px' }}>
                 TRUPP
               </div>
-              {roster.map(p => (
-                <Link key={p.public_id} href={`/players/${p.public_id}`} style={{
-                  display: 'flex', alignItems: 'center', gap: SPACE[3],
-                  padding: '13px 20px', borderTop: `1px solid ${COLOR.hairline}`,
-                  textDecoration: 'none', WebkitTapHighlightColor: 'transparent',
-                }}>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {p.name}
-                  </span>
-                  <span style={{ fontSize: 13, color: COLOR.ink2, whiteSpace: 'nowrap' }}>
-                    {p.licence_average ? `snitt ${p.licence_average} · ` : ''}{p.appearances} {p.appearances === 1 ? 'match' : 'matcher'}
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLOR.ink3}
-                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
-              ))}
+              <div style={{ padding: '0 20px' }}>
+                {roster.map(p => (
+                  <PlayerRow key={p.public_id} name={p.name} href={`/players/${p.public_id}`}
+                    sub={[`${p.appearances} ${p.appearances === 1 ? 'match' : 'matcher'}`]}
+                    stat={{ value: p.licence_average, label: 'snitt' }} />
+                ))}
+              </div>
             </section>
           </aside>
         )}

@@ -59,11 +59,8 @@ export function LagetTab({ teamId, matchId, match, isCaptain }: {
     isFinalRoundsOf(eligibilitySig),
   )
 
-  const onSlotClick = (bord: number, pos: number, isReserve: boolean) => {
-    const existing = slots.find(s => s.bord === bord && s.pos === pos && s.isReserve === isReserve)
-    if (existing) setSlots(prev => prev.filter(s => !(s.bord === bord && s.pos === pos && s.isReserve === isReserve)))
-    else setActiveSlot({ bord, pos, isReserve })
-  }
+  const onSeatEmpty = (target: ActiveSlot) => setActiveSlot(target)
+  const onRemove = (publicId: string) => setSlots(prev => prev.filter(s => s.publicId !== publicId))
   const onPick = (publicId: string, playerName: string) => {
     if (!activeSlot) return
     setSlots(prev => [
@@ -121,7 +118,7 @@ export function LagetTab({ teamId, matchId, match, isCaptain }: {
         />
       )}
 
-      <LineupBoardGrid slots={displaySlots} editable={isCaptain} onSlotClick={onSlotClick} verdictFor={verdictFor} />
+      <LineupBoardGrid slots={displaySlots} editable={isCaptain} onSeatEmpty={onSeatEmpty} onRemove={onRemove} />
       <EligibilityBanner issues={eligibilityIssues} />
 
       {isCaptain && (

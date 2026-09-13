@@ -1,100 +1,84 @@
 'use client'
 
+import { Plus, X } from 'lucide-react'
+import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import type { LineupSlot } from '@/lib/queries'
-import type { EligibilityVerdict } from '@/lib/eligibility'
+
+const BOARDS = [1, 2, 3, 4]
+type Target = { bord: number; pos: number; isReserve: boolean }
 
 type Props = {
   slots:        LineupSlot[]
   editable:     boolean
-  onSlotClick?: (bord: number, pos: number, isReserve: boolean) => void
-  verdictFor?:  (publicId: string) => EligibilityVerdict
+  onSeatEmpty?: (target: Target) => void
+  onRemove?:    (publicId: string) => void
 }
 
-function findSlot(slots: LineupSlot[], bord: number, pos: number, isReserve: boolean): LineupSlot | null {
-  return slots.find(s => s.bord === bord && s.pos === pos && s.isReserve === isReserve) ?? null
-}
+const label: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: COLOR.ink3, letterSpacing: '0.1em', marginBottom: SPACE[2] }
 
-// § D 306 marker — colour AND glyph (never colour alone, senior-legibility rule).
-function EligibilityMark({ verdict }: { verdict: EligibilityVerdict }) {
-  if (verdict.state === 'ok') return null
-  const c = verdict.state === 'blocked' ? COLOR.red : verdict.state === 'restricted' ? COLOR.gold : COLOR.ink3
-  const glyph = verdict.state === 'unknown' ? '?' : '!'
-  return (
-    <span
-      title={verdict.reason}
-      aria-label={verdict.reason}
-      style={{
-        flexShrink: 0, width: 18, height: 18, borderRadius: 9, background: c,
-        color: '#1a1400', fontSize: 12, fontWeight: 900, lineHeight: '18px', textAlign: 'center',
-      }}
-    >
-      {glyph}
-    </span>
-  )
-}
-
-function SlotCell({ label, slot, editable, onClick, verdictFor }: {
-  label: string; slot: LineupSlot | null; editable: boolean; onClick?: () => void
-  verdictFor?: (publicId: string) => EligibilityVerdict
+// One seat — the native LineupSeating look: empty = dashed "+", filled = avatar +
+// name + a remove ✕ (captain only). Compact variant for reserves.
+function Seat({ slot, editable, compact, onAdd, onRemove }: {
+  slot?: LineupSlot | null; editable: boolean; compact?: boolean
+  onAdd?: () => void; onRemove?: (publicId: string) => void
 }) {
-  const verdict = slot && verdictFor ? verdictFor(slot.publicId) : null
+  const box: React.CSSProperties = {
+    flex: compact ? '0 0 auto' : 1, minWidth: compact ? 150 : 0, minHeight: compact ? 52 : 60,
+    borderRadius: RADIUS.md, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    gap: SPACE[2], padding: `0 ${SPACE[3]}px`, boxSizing: 'border-box',
+  }
+  if (!slot) {
+    if (!editable) return <div style={{ ...box, background: COLOR.surface, color: COLOR.ink4 }}>—</div>
+    return (
+      <button onClick={onAdd} style={{ ...box, cursor: 'pointer', background: 'transparent', border: `1px dashed ${COLOR.hairline}` }}>
+        <Plus size={compact ? 20 : 24} color={COLOR.ink3} />
+      </button>
+    )
+  }
   return (
-    <div
-      onClick={editable ? onClick : undefined}
-      style={{
-        flex: 1, padding: SPACE[3], cursor: editable ? 'pointer' : 'default',
-        display: 'flex', flexDirection: 'column', gap: 2, WebkitTapHighlightColor: 'transparent',
-      }}
-    >
-      <span style={{ fontSize: 10, fontWeight: 700, color: COLOR.ink3, letterSpacing: '0.06em' }}>{label}</span>
-      {slot ? (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-          <span style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {slot.playerName}
-          </span>
-          {verdict && <EligibilityMark verdict={verdict} />}
-        </span>
-      ) : (
-        <span style={{ fontSize: TYPE.body, color: editable ? COLOR.gold : COLOR.ink3 }}>
-          {editable ? '+ Välj spelare' : '—'}
-        </span>
+    <div style={{ ...box, background: COLOR.surface, justifyContent: 'flex-start' }}>
+      <IdentityAvatar name={slot.playerName} size={30} />
+      <span style={{ flex: 1, minWidth: 0, fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slot.playerName}</span>
+      {editable && onRemove && (
+        <button onClick={() => onRemove(slot.publicId)} aria-label={`Ta bort ${slot.playerName}`} style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}>
+          <X size={18} color={COLOR.ink4} />
+        </button>
       )}
     </div>
   )
 }
 
-/** The 4-board × 2-position grid + reserves. Captain: tap an empty or filled
- * slot to open the picker / clear it. Everyone else: read-only. */
-export function LineupBoardGrid({ slots, editable, onSlotClick, verdictFor }: Props) {
+/** 4 banpar × 2 seats + a dynamic reserve row. Captain taps an empty seat to open
+ * the picker, ✕ to clear; everyone else sees it read-only. */
+export function LineupBoardGrid({ slots, editable, onSeatEmpty, onRemove }: Props) {
+  const starter = (bord: number, pos: number) => slots.find(s => !s.isReserve && s.bord === bord && s.pos === pos) ?? null
+  const reserves = slots.filter(s => s.isReserve).sort((a, b) => a.pos - b.pos)
+  const nextReservePos = (reserves[reserves.length - 1]?.pos ?? 0) + 1
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[2] }}>
-      {[1, 2, 3, 4].map(bord => (
-        <div key={bord} style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
-          <div style={{
-            padding: `${SPACE[2]}px ${SPACE[3]}px`, background: 'rgba(245,194,0,0.06)',
-            fontSize: 11, fontWeight: 800, color: COLOR.gold, letterSpacing: '0.08em',
-          }}>
-            BORD {bord}
-          </div>
-          <div style={{ display: 'flex' }}>
-            <SlotCell label="POS 1" slot={findSlot(slots, bord, 1, false)} editable={editable} onClick={() => onSlotClick?.(bord, 1, false)} verdictFor={verdictFor} />
-            <div style={{ width: 1, background: COLOR.hairline }} />
-            <SlotCell label="POS 2" slot={findSlot(slots, bord, 2, false)} editable={editable} onClick={() => onSlotClick?.(bord, 2, false)} verdictFor={verdictFor} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3] }}>
+      {BOARDS.map(bord => (
+        <div key={bord}>
+          <div style={label}>BANPAR {bord}</div>
+          <div style={{ display: 'flex', gap: SPACE[3] }}>
+            {[1, 2].map(pos => (
+              <Seat key={pos} slot={starter(bord, pos)} editable={editable}
+                onAdd={() => onSeatEmpty?.({ bord, pos, isReserve: false })} onRemove={onRemove} />
+            ))}
           </div>
         </div>
       ))}
 
-      <div style={{ background: COLOR.surface, borderRadius: RADIUS.lg, overflow: 'hidden' }}>
-        <div style={{ padding: `${SPACE[2]}px ${SPACE[3]}px`, background: COLOR.surface2, fontSize: 11, fontWeight: 800, color: COLOR.ink2, letterSpacing: '0.08em' }}>
-          RESERVER
+      {(editable || reserves.length > 0) && (
+        <div>
+          <div style={label}>RESERVER</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[3] }}>
+            {reserves.map(r => <Seat key={r.publicId} slot={r} editable={editable} compact onRemove={onRemove} />)}
+            {editable && <Seat editable compact onAdd={() => onSeatEmpty?.({ bord: 0, pos: nextReservePos, isReserve: true })} />}
+          </div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <SlotCell label="RESERV 1" slot={findSlot(slots, 0, 1, true)} editable={editable} onClick={() => onSlotClick?.(0, 1, true)} verdictFor={verdictFor} />
-          <div style={{ width: 1, background: COLOR.hairline }} />
-          <SlotCell label="RESERV 2" slot={findSlot(slots, 0, 2, true)} editable={editable} onClick={() => onSlotClick?.(0, 2, true)} verdictFor={verdictFor} />
-        </div>
-      </div>
+      )}
     </div>
   )
 }

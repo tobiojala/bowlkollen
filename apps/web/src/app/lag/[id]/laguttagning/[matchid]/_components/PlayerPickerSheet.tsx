@@ -4,16 +4,12 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus } from 'lucide-react'
 import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { PlayerRow } from '@/components/PlayerRow'
 import type { RosterPlayer } from '@/lib/queries'
 import { candidateFit, playsDown, FIT_LABEL, useRosterSearch, type LineupCandidate } from '@/lib/lineup-aids'
 
 const COL = 'max(0px, calc(50vw - 300px))'
-
-const AV_LABEL: Record<string, { label: string; color: string }> = {
-  yes:   { label: 'Kan spela', color: COLOR.green },
-  maybe: { label: 'Kanske',    color: COLOR.gold  },
-  no:    { label: 'Kan inte',  color: COLOR.red   },
-}
+type Avail = 'yes' | 'maybe' | 'no'
 
 type Props = {
   open:                    boolean
@@ -27,9 +23,9 @@ type Props = {
   matchDivision?:          string | null
 }
 
-/** Bottom sheet roster picker — the roster (available first) with real stats, plus
- * a free search over the whole licence register so a captain can seat a bowler who
- * isn't in the app's roster list (parity with native LineupSeating). */
+/** Bottom sheet roster picker — the roster as PlayerRow cards (available first, real
+ * stats, fit at this venue/division), plus a free search over the whole licence
+ * register so a captain can seat a bowler who isn't in the app's roster list. */
 export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availabilityByPublicId, onPick, candidates, matchDivision }: Props) {
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
@@ -37,13 +33,6 @@ export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availa
   useEffect(() => { if (!open) setQuery('') }, [open])
   const { data: hits = [] } = useRosterSearch(debounced)
   const searching = debounced.trim().length >= 2
-
-  const rowBtn = {
-    display: 'flex', alignItems: 'center', gap: SPACE[3], width: '100%',
-    padding: `${SPACE[3]}px 0`, borderTop: `1px solid ${COLOR.hairline}`,
-    background: 'none', border: 'none', borderTopWidth: 1, textAlign: 'left' as const,
-    WebkitTapHighlightColor: 'transparent',
-  }
 
   return (
     <AnimatePresence>
@@ -79,42 +68,27 @@ export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availa
             <div style={{ overflowY: 'auto', padding: `0 ${SPACE[4]}px ${SPACE[6]}px` }}>
               {searching ? (
                 hits.filter(h => !usedPublicIds.includes(h.publicId)).map(h => (
-                  <button key={h.publicId} onClick={() => onPick(h.publicId, h.name)} style={{ ...rowBtn, cursor: 'pointer' }}>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</span>
-                      {h.club && <span style={{ display: 'block', fontSize: TYPE.caption, color: COLOR.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.club}</span>}
-                    </span>
-                    <Plus size={20} color={COLOR.gold} />
-                  </button>
+                  <PlayerRow key={h.publicId} name={h.name} sub={[h.club]} onClick={() => onPick(h.publicId, h.name)}
+                    trailing={<Plus size={20} color={COLOR.gold} style={{ flexShrink: 0 }} />} />
                 ))
               ) : (
                 <>
                   {roster.map(p => {
-                    const used   = usedPublicIds.includes(p.publicId)
-                    const avInfo = AV_LABEL[availabilityByPublicId[p.publicId] ?? '']
-                    const cand   = candidates?.[p.publicId]
-                    const fit    = cand ? candidateFit(cand) : null
-                    const down   = cand ? playsDown(cand.homeDivision, matchDivision ?? null) : false
+                    const used = usedPublicIds.includes(p.publicId)
+                    const cand = candidates?.[p.publicId]
+                    const fit  = cand ? candidateFit(cand) : null
+                    const down = cand ? playsDown(cand.homeDivision, matchDivision ?? null) : false
                     return (
-                      <button key={p.publicId} onClick={() => !used && onPick(p.publicId, p.name)} disabled={used}
-                        style={{ ...rowBtn, cursor: used ? 'default' : 'pointer', opacity: used ? 0.35 : 1 }}>
-                        <span style={{ flex: 1, fontSize: TYPE.body, fontWeight: 600, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                        {down && (
-                          <span title="Spelar normalt en högre division — kontrollera spärrreglerna"
-                            style={{ fontSize: 11, fontWeight: 800, color: COLOR.gold, background: 'rgba(245,194,0,0.14)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>↑ spelar upp</span>
-                        )}
-                        {avInfo && <span style={{ fontSize: TYPE.caption, fontWeight: 700, color: avInfo.color, flexShrink: 0 }}>{avInfo.label}</span>}
-                        <span style={{ minWidth: 78, textAlign: 'right', flexShrink: 0 }}>
-                          {fit && fit.value != null ? (
-                            <>
-                              <span style={{ fontSize: TYPE.body, fontWeight: 700, color: COLOR.ink, fontVariantNumeric: 'tabular-nums' }}>{fit.value}</span>
-                              <span style={{ display: 'block', fontSize: 11, color: COLOR.ink3 }}>{FIT_LABEL[fit.context]}</span>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: TYPE.caption, color: COLOR.ink3 }}>{p.licenceAverage ? `snitt ${p.licenceAverage}` : '—'}</span>
-                          )}
-                        </span>
-                      </button>
+                      <PlayerRow key={p.publicId} name={p.name} disabled={used}
+                        onClick={() => onPick(p.publicId, p.name)}
+                        availability={(availabilityByPublicId[p.publicId] as Avail | undefined) ?? null}
+                        showAvailability
+                        sub={[
+                          cand?.homeTeam ? `Spelar mest i ${cand.homeTeam}` : null,
+                          down ? 'Spelar normalt en högre division' : null,
+                        ]}
+                        stat={fit && fit.value != null ? { value: fit.value, label: FIT_LABEL[fit.context] } : { value: p.licenceAverage, label: 'snitt' }}
+                      />
                     )
                   })}
                   <p style={{ fontSize: TYPE.caption, color: COLOR.ink3, textAlign: 'center', padding: `${SPACE[6]}px 0 0`, lineHeight: 1.5 }}>
