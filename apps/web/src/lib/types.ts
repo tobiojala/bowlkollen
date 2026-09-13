@@ -322,11 +322,11 @@ export type StreakPayload = {
 }
 
 export type PersonalBestPayload = {
-  player_id: string
-  player_name: string
+  player_id: string; player_name: string
   new_best: number
   previous_best: number
   match_id: string
+  kind?: 'game' | 'serie'   // 'game' = highest single game (personbästa); 'serie' = best match total (bästa serie)
 }
 
 export type PlayerMilestonePayload = {

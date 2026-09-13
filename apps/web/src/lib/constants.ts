@@ -137,11 +137,6 @@ export const TEAM_EVENT = {
   // form_rising fires when recentAvg - seasonAvg exceeds this
   FORM_RISING_DELTA: 8,
 
-  // season_best (a new best game THIS season) fires only when it beats the prior
-  // season best by at least this — so a trivial +1 edge doesn't post, and we never
-  // claim an (unverifiable) career "personbästa", only a season best we can prove.
-  SEASON_BEST_MIN_GAIN: 3,
-
   // giant_killer fires when opponent is this many table positions above the team
   GIANT_KILLER_GAP: 5,
 

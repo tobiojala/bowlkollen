@@ -13,7 +13,7 @@ import { COLOR, FONT, SPACE, TYPE } from '@/theme';
 
 const LABELS: Partial<Record<TeamEventType, string>> = {
   win_streak: 'SEGERSVIT',
-  personal_best: 'SÄSONGSBÄSTA',
+  personal_best: 'PERSONBÄSTA',
   player_milestone: 'MILSTOLPE',
   form_rising: 'I FORM',
   division_climbed: 'KLÄTTRAR',
@@ -31,6 +31,7 @@ function labelFor(e: TeamEvent): string {
     const r = (e.payload as MatchResultPayload).result;
     return r === 'W' ? 'SEGER' : r === 'L' ? 'FÖRLUST' : 'OAVGJORT';
   }
+  if (e.event_type === 'personal_best' && (e.payload as { kind?: string }).kind === 'serie') return 'BÄSTA SERIE';
   return LABELS[e.event_type] ?? e.event_type.replace(/_/g, ' ').toUpperCase();
 }
 

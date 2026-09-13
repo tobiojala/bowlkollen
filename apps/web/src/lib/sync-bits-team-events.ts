@@ -7,11 +7,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { createPublicSupabase } from '@/lib/supabase-public'
 import { SEASON, TEAM_EVENT } from '@/lib/constants'
-import type { MatchResultPayload, StreakPayload, PersonalBestPayload, PlayerMilestonePayload, FormRisingPayload } from '@/lib/types'
+import type { MatchResultPayload, StreakPayload, PlayerMilestonePayload, FormRisingPayload } from '@/lib/types'
 import {
   eventKey, outcomeOf, bestScorer, calcMatchAvg, milestoneOrdinal,
-  winStreakTitle, matchResultTitle, matchResultBody, seasonBestTitle, formRisingTitle,
-  emotionalWinInserts,
+  winStreakTitle, matchResultTitle, matchResultBody, formRisingTitle,
+  emotionalWinInserts, personalRecordInserts, type PlayerRecord,
 } from './sync-bits-team-events.helpers'
 
 type RawBitsMatch = {
@@ -42,7 +42,13 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
   const { data: existing } = await svc
     .from('team_events').select('event_type, match_id, event_date, payload').eq('bits_team_id', bitsTeamId)
   const existingSet = new Set(((existing ?? []) as { event_type: string; match_id: string | null; event_date: string; payload: Record<string, unknown> | null }[])
-    .map((e) => eventKey(e.event_type, e.match_id, e.event_date, (e.payload?.player_name as string | undefined) ?? '')))
+    .map((e) => {
+      const name = (e.payload?.player_name as string | undefined) ?? ''
+      // personal_best is keyed with its kind so a game record and a serie record for the
+      // same player+match dedupe separately (they can both fall the same night).
+      const who = e.event_type === 'personal_best' ? `${name}#${(e.payload?.kind as string | undefined) ?? 'game'}` : name
+      return eventKey(e.event_type, e.match_id, e.event_date, who)
+    }))
 
   // Per-player exact results (has lic_nbr → resolves to public_id, and the games array).
   const { data: resultsRaw } = await pub
@@ -152,38 +158,27 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     return { match: m, byPlayer }
   })
 
-  // ── season_best (a new best game THIS season) ────────────────────────────
-  // NOT a career "personbästa" — we can't verify that (no BITS career-high, and our
-  // per-game history is incomplete: no competitions, older matches lack per-game data).
-  // Baseline is the player's best game earlier THIS season, which we fully hold, so the
-  // claim is always provable. event_type stays 'personal_best' (legacy name); the UI
-  // labels it "SÄSONGSBÄSTA".
-  if (inserts.length < MAX) {
-    const best = new Map<string, number>()   // season-only high so far (no career seed)
-    for (const { match, byPlayer } of perMatch) {
-      const date = match.match_date.slice(0, 10)
-      for (const [name, games] of byPlayer) {
-        const high = Math.max(...games.filter((g) => g > 0), 0)
-        if (!high) continue
-        const prev = best.get(name) ?? 0
-        if (high > prev) {
-          if (prev > 0 && high - prev >= TEAM_EVENT.SEASON_BEST_MIN_GAIN
-              && !existingSet.has(eventKey('personal_best', String(match.bits_match_id), date, name))) {
-            const payload: PersonalBestPayload = { player_id: '', player_name: name, new_best: high, previous_best: prev, match_id: String(match.bits_match_id) }
-            inserts.push({
-              team_id: null, bits_team_id: bitsTeamId, event_type: 'personal_best', event_date: date,
-              match_id: String(match.bits_match_id), featured_player_id: null,
-              title: seasonBestTitle(name, high, high - prev),
-              body: `${high - prev} pins bättre än säsongsbästa på ${prev}. Kvällen tillhörde ${name}.`,
-              payload, captain_note: null, is_pinned: false, is_hidden: false,
-            })
-            existingSet.add(eventKey('personal_best', String(match.bits_match_id), date, name))
-            if (inserts.length >= MAX) break
-          }
-          best.set(name, high)
-        }
-      }
-      if (inserts.length >= MAX) break
+  // ── personbästa + bästa serie (real career records) ──────────────────────
+  // Tracked in player_records (backfilled from all our per-game history, maintained
+  // forward here). Only a beaten STORED record fires a story — so unlike a season high,
+  // this is a provable career record. The baseline already includes everything synced,
+  // so the first run after backfill can't flood; only new peaks going forward fire.
+  if (inserts.length < MAX && careerLics.length) {
+    const upperLics = careerLics.map((l) => l.toUpperCase())
+    const records = new Map<string, PlayerRecord>()
+    const { data: recRows } = await svc.from('player_records').select('lic_nbr, best_game, best_serie').in('lic_nbr', upperLics)
+    for (const r of (recRows ?? []) as { lic_nbr: string; best_game: number | null; best_serie: number | null }[]) {
+      records.set(r.lic_nbr, { bestGame: r.best_game ?? 0, bestSerie: r.best_serie ?? 0 })
+    }
+    const { events, updates } = personalRecordInserts(bitsTeamId, perMatch, nameToLic, records, existingSet, MAX - inserts.length)
+    for (const ev of events) inserts.push(ev)
+    // Persist the new peaks so future runs use them as the baseline (idempotency) and the
+    // profile can read them. lic_nbr is upper-normalised to match the backfill.
+    for (const [lic, u] of updates) {
+      const patch: Record<string, unknown> = { lic_nbr: lic, updated_at: new Date().toISOString() }
+      if (u.game)  { patch.best_game = u.game.value;   patch.best_game_date = u.game.date;   patch.best_game_match_id = u.game.matchId }
+      if (u.serie) { patch.best_serie = u.serie.value; patch.best_serie_date = u.serie.date; patch.best_serie_match_id = u.serie.matchId }
+      await svc.from('player_records').upsert(patch, { onConflict: 'lic_nbr' })
     }
   }
 

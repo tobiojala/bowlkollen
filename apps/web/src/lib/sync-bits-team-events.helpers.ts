@@ -61,13 +61,86 @@ export function matchResultBody(result: 'W' | 'D' | 'L', my: number, opps: numbe
   return hero ? `Oavgjort ${my}–${opps} ${venue}. ${hero}` : `Delade poängen ${my}–${opps} ${venue}.`
 }
 
-// Season best only — we can't verify a true career "personbästa" (no BITS career-high;
-// our per-game history is incomplete: no competitions, older matches lack per-game data),
-// so we never claim one. This celebrates a new best game THIS season, which we can prove.
-export function seasonBestTitle(name: string, newBest: number, delta: number): string {
-  if (delta >= 20) return `${newBest} pins — ${name} höjer säsongsbästa rejält`
-  if (delta >= 10) return `${newBest} pins — nytt säsongsbästa för ${name}`
-  return `${newBest} pins — ${name}s bästa i år`
+// Career personbästa — a new highest single game vs the tracked all-time record in
+// player_records (backfilled from all our per-game history, maintained forward). Only
+// fires when the stored record is actually beaten, so the claim is provable.
+export function personalBestTitle(name: string, newBest: number, delta: number): string {
+  if (delta >= 20) return `${newBest} pins — ${name} krossar sitt personbästa`
+  if (delta >= 10) return `${newBest} pins — nytt personbästa för ${name}`
+  return `${newBest} pins — ${name} kniper nytt personbästa`
+}
+
+// Career best serie (a match total) — the same idea for a whole-match record.
+export function serieBestTitle(name: string, newBest: number, delta: number): string {
+  if (delta >= 40) return `${newBest} — ${name} krossar sin bästa serie`
+  return `${newBest} — ${name}s bästa serie hittills`
+}
+
+// ── Personal records (career best game + best serie) ──────────────────────────
+export type PlayerRecord = { bestGame: number; bestSerie: number }
+export type RecordSlot = { value: number; date: string; matchId: number }
+export type RecordUpdate = { game?: RecordSlot; serie?: RecordSlot }
+export type RecordMatch = { match: { bits_match_id: number; match_date: string }; byPlayer: Map<string, number[]> }
+
+// Pure: over this season's matches (chronological), find each game/serie that BEATS the
+// player's stored career record, emitting a personbästa story and the record bump. The
+// baseline (`records`, from player_records) already includes everything we've synced, so
+// only genuinely new peaks fire — never a first-sync flood. A player with no record yet
+// (bestGame 0) sets their baseline silently. Distinct 'game'/'serie' event keys so both
+// can fire the same night. `updates` carries the new maxes to persist to player_records.
+export function personalRecordInserts(
+  bitsTeamId: number, perMatch: RecordMatch[], nameToLic: Map<string, string>,
+  records: Map<string, PlayerRecord>, seen: Set<string>, remaining: number,
+): { events: Record<string, unknown>[]; updates: Map<string, RecordUpdate> } {
+  const events: Record<string, unknown>[] = []
+  const updates = new Map<string, RecordUpdate>()
+  const work = new Map<string, PlayerRecord>()
+  const row = (date: string, matchId: number, name: string, kind: 'game' | 'serie', nv: number, pv: number) => ({
+    team_id: null, bits_team_id: bitsTeamId, event_type: 'personal_best', event_date: date,
+    match_id: String(matchId), featured_player_id: null,
+    title: kind === 'serie' ? serieBestTitle(name, nv, nv - pv) : personalBestTitle(name, nv, nv - pv),
+    body: kind === 'serie'
+      ? `${nv - pv} pinnfall bättre än förra bästa serien på ${pv}. Nytt rekord för ${name}.`
+      : `${nv - pv} pins bättre än förra personbästat på ${pv}. Nytt rekord för ${name}.`,
+    payload: { player_id: '', player_name: name, new_best: nv, previous_best: pv, match_id: String(matchId), kind },
+    captain_note: null, is_pinned: false, is_hidden: false,
+  })
+  for (const { match, byPlayer } of perMatch) {
+    const date = match.match_date.slice(0, 10)
+    for (const [name, games] of byPlayer) {
+      const raw = nameToLic.get(name)
+      if (!raw) continue
+      const lic = raw.toUpperCase()   // player_records is keyed by upper(lic_nbr)
+      const valid = games.filter((g) => g > 0)
+      if (!valid.length) continue
+      const high = Math.max(...valid)
+      const serie = valid.reduce((a, b) => a + b, 0)
+      const rec = work.get(lic) ?? records.get(lic) ?? { bestGame: 0, bestSerie: 0 }
+      let g = rec.bestGame, s = rec.bestSerie
+      if (high > rec.bestGame) {
+        if (rec.bestGame > 0 && events.length < remaining && !seen.has(eventKey('personal_best', String(match.bits_match_id), date, `${name}#game`))) {
+          events.push(row(date, match.bits_match_id, name, 'game', high, rec.bestGame))
+          seen.add(eventKey('personal_best', String(match.bits_match_id), date, `${name}#game`))
+        }
+        g = high; setUpdate(updates, lic, 'game', { value: high, date, matchId: match.bits_match_id })
+      }
+      if (serie > rec.bestSerie) {
+        if (rec.bestSerie > 0 && events.length < remaining && !seen.has(eventKey('personal_best', String(match.bits_match_id), date, `${name}#serie`))) {
+          events.push(row(date, match.bits_match_id, name, 'serie', serie, rec.bestSerie))
+          seen.add(eventKey('personal_best', String(match.bits_match_id), date, `${name}#serie`))
+        }
+        s = serie; setUpdate(updates, lic, 'serie', { value: serie, date, matchId: match.bits_match_id })
+      }
+      work.set(lic, { bestGame: g, bestSerie: s })
+    }
+  }
+  return { events, updates }
+}
+
+function setUpdate(updates: Map<string, RecordUpdate>, lic: string, kind: 'game' | 'serie', slot: RecordSlot) {
+  const u = updates.get(lic) ?? {}
+  u[kind] = slot
+  updates.set(lic, u)
 }
 
 export function formRisingTitle(name: string, delta: number, _recentAvg: number): string {

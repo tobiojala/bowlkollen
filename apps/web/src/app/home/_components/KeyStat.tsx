@@ -128,7 +128,7 @@ export function KeyStat({ event, accent }: { event: TeamEvent; accent: string })
         <div style={numStyle}>
           <CountUp to={p.new_best} delay={0.1} duration={0.9} />
         </div>
-        <span style={unitStyle}>pins · säsongsbästa</span>
+        <span style={unitStyle}>pins · {p.kind === 'serie' ? 'bästa serie' : 'personbästa'}</span>
 
         <div style={{ marginTop: SPACE[6] }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>

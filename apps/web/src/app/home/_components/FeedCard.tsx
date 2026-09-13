@@ -16,7 +16,7 @@ import type {
 
 const LABELS: Partial<Record<TeamEventType, string>> = {
   win_streak:         'SEGERSVIT',
-  personal_best:      'SÄSONGSBÄSTA',
+  personal_best:      'PERSONBÄSTA',
   player_milestone:   'MILSTOLPE',
   form_rising:        'I FORM',
   division_climbed:   'KLÄTTRAR',
@@ -33,6 +33,7 @@ function labelFor(event: TeamEvent): string {
     const p = event.payload as MatchResultPayload
     return p.result === 'W' ? 'SEGER' : p.result === 'L' ? 'FÖRLUST' : 'OAVGJORT'
   }
+  if (event.event_type === 'personal_best' && (event.payload as PersonalBestPayload).kind === 'serie') return 'BÄSTA SERIE'
   return LABELS[event.event_type] ?? event.event_type.toUpperCase().replace(/_/g, ' ')
 }
 

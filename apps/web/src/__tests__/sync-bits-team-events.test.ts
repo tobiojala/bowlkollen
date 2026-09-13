@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   eventKey, outcomeOf, bestScorer, calcMatchAvg, milestoneOrdinal,
-  winStreakTitle, matchResultTitle, matchResultBody, seasonBestTitle, formRisingTitle,
-  emotionalWinInserts, type EmotionalMatch,
+  winStreakTitle, matchResultTitle, matchResultBody, personalBestTitle, serieBestTitle, formRisingTitle,
+  emotionalWinInserts, personalRecordInserts, type EmotionalMatch, type PlayerRecord,
 } from '@/lib/sync-bits-team-events.helpers'
 
 const ME = 100
@@ -101,13 +101,41 @@ describe('matchResultBody', () => {
   })
 })
 
-describe('seasonBestTitle', () => {
-  it('claims a season best (never a career record) and escalates with the jump', () => {
-    expect(seasonBestTitle('A', 250, 25)).toContain('säsongsbästa')
-    expect(seasonBestTitle('A', 250, 12)).toContain('säsongsbästa')
-    expect(seasonBestTitle('A', 250, 4)).toContain('bästa i år')
-    // never asserts an (unverifiable) career record
-    expect(seasonBestTitle('A', 250, 25)).not.toContain('rekord')
+describe('personalBestTitle / serieBestTitle', () => {
+  it('claims a career personbästa, escalating with the jump', () => {
+    expect(personalBestTitle('A', 279, 25)).toContain('personbästa')
+    expect(personalBestTitle('A', 250, 4)).toContain('personbästa')
+  })
+  it('serie record reads as a bästa serie', () => {
+    expect(serieBestTitle('A', 1420, 50)).toContain('bästa serie')
+    expect(serieBestTitle('A', 1300, 10)).toContain('bästa serie')
+  })
+})
+
+describe('personalRecordInserts', () => {
+  const nameToLic = new Map([['A', 'se001']])
+  const m = (id: number, date: string, games: number[]) => ({ match: { bits_match_id: id, match_date: date }, byPlayer: new Map([['A', games]]) })
+
+  it('fires a personbästa only when the stored career game is beaten', () => {
+    const records = new Map<string, PlayerRecord>([['SE001', { bestGame: 240, bestSerie: 9999 }]])
+    const { events, updates } = personalRecordInserts(1, [m(10, '2026-09-13', [210, 245, 200])], nameToLic, records, new Set(), 10)
+    const games = events.filter(e => (e.payload as { kind?: string }).kind === 'game')
+    expect(games).toHaveLength(1)                                   // 245 > 240
+    expect((games[0].payload as { new_best: number }).new_best).toBe(245)
+    expect(updates.get('SE001')?.game?.value).toBe(245)            // record bumped
+  })
+
+  it('never fires when the game does not beat the record', () => {
+    const records = new Map<string, PlayerRecord>([['SE001', { bestGame: 250, bestSerie: 9999 }]])
+    const { events } = personalRecordInserts(1, [m(10, '2026-09-13', [230, 248])], nameToLic, records, new Set(), 10)
+    expect(events.filter(e => (e.payload as { kind?: string }).kind === 'game')).toHaveLength(0)
+  })
+
+  it('sets a first-ever record silently (no story) when there is no baseline', () => {
+    const records = new Map<string, PlayerRecord>()   // unknown player
+    const { events, updates } = personalRecordInserts(1, [m(10, '2026-09-13', [230, 248])], nameToLic, records, new Set(), 10)
+    expect(events).toHaveLength(0)
+    expect(updates.get('SE001')?.game?.value).toBe(248)
   })
 })
 
