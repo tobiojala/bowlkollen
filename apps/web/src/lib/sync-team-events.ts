@@ -688,7 +688,7 @@ function matchResultBody(
   const venue = isHome ? 'hemma' : 'borta'
   const hero  = topScorer ? `${topScorer.name} toppade med ${topScorer.high} pins.` : null
   if (result === 'W') {
-    const base = `Tre poäng ${venue} med ${myScore}–${oppScore}.`
+    const base = `Två poäng ${venue} med ${myScore}–${oppScore}.`  // Blåboken tabellpoäng: win = 2, not 3
     return hero ? `${base} ${hero}` : base
   }
   if (result === 'L') {

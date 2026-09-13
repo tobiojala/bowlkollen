@@ -56,7 +56,9 @@ export function matchResultTitle(result: 'W' | 'D' | 'L', opp: string, my: numbe
 export function matchResultBody(result: 'W' | 'D' | 'L', my: number, opps: number, home: boolean, top: { name: string; high: number } | null): string {
   const venue = home ? 'hemma' : 'borta'
   const hero = top ? `${top.name} toppade med ${top.high} pins.` : null
-  if (result === 'W') { const base = `Tre poäng ${venue} med ${my}–${opps}.`; return hero ? `${base} ${hero}` : base }
+  // Tabellpoäng per Blåboken — same rule as computeStandings (@bowlkollen/core):
+  // win = 2, draw = 1, loss = 0. (Was wrongly "Tre poäng", diverging from the table.)
+  if (result === 'W') { const base = `Två poäng ${venue} med ${my}–${opps}.`; return hero ? `${base} ${hero}` : base }
   if (result === 'L') return hero ? `${hero} Räckte inte — föll ${my}–${opps} ${venue}.` : `Svårt ${venue}möte — föll ${my}–${opps}.`
   return hero ? `Oavgjort ${my}–${opps} ${venue}. ${hero}` : `Delade poängen ${my}–${opps} ${venue}.`
 }
