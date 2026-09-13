@@ -3,18 +3,18 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { computeDelmatcher } from '@bowlkollen/core'
 import { parseTeamSeries, parseMatchDelmatchSlots } from '@/lib/bits-client'
-import { getMatchScores, getMatchStatus, MATCH_STATUS_FINISHED } from '@/lib/bits-match-scores'
+import { getMatchScores, getMatchHead } from '@/lib/bits-match-scores'
 import { syncPendingMatchScores, syncPendingExactResults, syncPendingDelmatches } from '@/lib/bits-sync'
 
 // On-demand finalize of a single match the moment BITS marks it finished
 // (matchStatus 3) — so a live view flips to the real finished page without waiting
 // for the 3h cron. Sets is_finished + the banpoäng result + pinfall, then runs the
 // per-match pending processors for the full detail (scores, exact results,
-// delmatch). Self-guards on matchStatus, so it's a safe no-op if the match isn't
-// actually over.
+// delmatch). Self-guards on BITS' matchFinished boolean, so it's a safe no-op until
+// the match is actually over (matchStatus===3 was too eager — it fires after serie 1).
 export async function finalizeMatch(bitsMatchId: number): Promise<{ finished: boolean }> {
-  const status = await getMatchStatus(bitsMatchId)
-  if (status !== MATCH_STATUS_FINISHED) return { finished: false }
+  const head = await getMatchHead(bitsMatchId)
+  if (!head?.finished) return { finished: false }   // BITS' matchFinished boolean, not matchStatus
 
   const db = createServiceSupabase() as unknown as SupabaseClient
   const scores = await getMatchScores(bitsMatchId)

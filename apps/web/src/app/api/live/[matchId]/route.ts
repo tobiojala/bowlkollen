@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { parseTeamSeries, parsePlayerTotals, parseMatchDelmatchSlots } from '@/lib/bits-client'
-import { getMatchScores, getMatchStatus, MATCH_STATUS_FINISHED } from '@/lib/bits-match-scores'
+import { getMatchScores, getMatchHead } from '@/lib/bits-match-scores'
 import { finalizeMatch } from '@/lib/bits-finalize'
 import { computeDelmatcher } from '@bowlkollen/core'
 
@@ -57,7 +57,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ matchId:
   }
 
   try {
-    const finished = (await getMatchStatus(id)) === MATCH_STATUS_FINISHED
+    const finished = (await getMatchHead(id))?.finished ?? false   // matchFinished boolean, not matchStatus===3
     const data = { series: parseTeamSeries(scores), players: parsePlayerTotals(scores), banp: runningBanp(scores), finished, updatedAt: new Date().toISOString() }
     if (debug) {
       const hasSeries = Array.isArray((scores as { series?: unknown }).series)

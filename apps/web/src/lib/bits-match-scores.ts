@@ -22,16 +22,22 @@ export async function getMatchScores(matchId: number, retry = false): Promise<Bi
   return res.json() as Promise<BitsMatchScores>
 }
 
-// GetMatchHeadInfo carries matchStatus — the authoritative "is this match over?"
-// signal (3 = finished/results confirmed). Used to switch a live view to the real
-// finished page the moment BITS closes the match, without waiting for the cron.
-export const MATCH_STATUS_FINISHED = 3
-export async function getMatchStatus(matchId: number): Promise<number | null> {
+// GetMatchHeadInfo's authoritative "is this match over?" signal is the dedicated
+// boolean `matchFinished` — NOT `matchStatus`. matchStatus reaches 3 mid-match (once
+// the first serie's results register), and gating finalize on `matchStatus === 3`
+// finalized a live match after ONE serie and froze it (the frozen-after-1-serie bug).
+// matchHasBeenPlayed / matchStatus are returned for context only.
+export type MatchHead = { finished: boolean; hasBeenPlayed: boolean; status: number | null }
+export async function getMatchHead(matchId: number): Promise<MatchHead | null> {
   const cookie = await getSession()
   const res = await bitsFetch(`${SITE}/MiscFrontApiConnector/GetMatchHeadInfo?id=${matchId}`, {
     headers: { ...BASE_HEADERS, Cookie: cookie, Accept: 'application/json, */*' }, cache: 'no-store',
   })
   if (!res.ok) return null
-  const j = await res.json() as { matchStatus?: number }
-  return typeof j.matchStatus === 'number' ? j.matchStatus : null
+  const j = await res.json() as { matchStatus?: number; matchFinished?: boolean; matchHasBeenPlayed?: boolean }
+  return {
+    finished: j.matchFinished === true,
+    hasBeenPlayed: j.matchHasBeenPlayed === true,
+    status: typeof j.matchStatus === 'number' ? j.matchStatus : null,
+  }
 }
