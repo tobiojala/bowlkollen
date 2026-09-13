@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShieldCheck, Clock, Share2, CalendarPlus, UserPlus, Repeat } from 'lucide-react'
+import { ShieldCheck, Clock, Share2, CalendarPlus, UserPlus, Repeat, Megaphone, Users } from 'lucide-react'
 import { useSession, useTeamClaim, useCreateTeamInviteCode } from '@/lib/queries'
+import { useMyUnread } from '@/lib/team-posts'
 import FollowButton from '@/components/FollowButton'
 import { DownloadMenu, type CsvScope } from '@/components/DownloadMenu'
 import { COLOR, SPACE } from '@/lib/brand'
@@ -34,6 +35,9 @@ function fmtDate(iso: string) {
 export function LagActions({ teamId, teamName, clubId, matches }: Props) {
   const { data: session }           = useSession()
   const { data: claim }             = useTeamClaim(teamId)
+  const { data: unreadByTeam = {} } = useMyUnread()
+  const unread = unreadByTeam[teamId] ?? 0
+  const isMember = !!session && claim?.status === 'verified'
   const [claimOpen, setClaimOpen]   = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const { mutate: createInvite, isPending: inviting } = useCreateTeamInviteCode(teamId)
@@ -96,6 +100,22 @@ export function LagActions({ teamId, teamName, clubId, matches }: Props) {
           <button onClick={() => setClaimOpen(true)} style={ghost()}>
             <ShieldCheck size={16} strokeWidth={2} color={COLOR.ink2} /> Spelar du här?
           </button>
+        )}
+
+        {/* Private team community — Anslagstavla (news + polls) and the member/role
+            back office. Members only; the pages themselves re-gate server-side. */}
+        {isMember && (
+          <Link href={`/lag/${teamId}/nyheter`} style={ghost()}>
+            <Megaphone size={16} strokeWidth={2} color={COLOR.ink2} /> Anslagstavla
+            {unread > 0 && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: COLOR.gold, color: '#1a1400', fontSize: 11, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{unread}</span>
+            )}
+          </Link>
+        )}
+        {isMember && (
+          <Link href={`/lag/${teamId}/medlemmar`} style={ghost()}>
+            <Users size={16} strokeWidth={2} color={COLOR.ink2} /> Medlemmar
+          </Link>
         )}
 
         {/* Peer-vouching — sharing this link IS the vouch for whoever uses it. */}

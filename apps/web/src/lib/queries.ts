@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import type { TeamEvent, TeamEventReaction, Follow, FollowEntityType, FeedItem, ReactionType, BitsMatchFeed, BitsMatchDetail, BitsTopScore, BitsPlayerIdentity, BitsPlayerMatchRow, AnonViewSuggestion, OnboardingSuggestions, TeamSuggestion, PlayerSuggestion, SeasonMatch } from '@/lib/types'
 import { QUERY, STALE, SCORE, SEASON, STANDINGS_DIVISIONS } from '@/lib/constants'
@@ -430,6 +431,24 @@ export function useVerifiedTeamMembers(bitsTeamId: number) {
     },
     enabled: !!bitsTeamId,
     staleTime: STALE.SHORT,
+  })
+}
+
+/** Captain-only: set ANOTHER member's role (set_member_role, team_role_admin.sql).
+ * Server-gated — captain check + can't remove the last captain. Distinct from
+ * useSetTeamRole, which sets the caller's OWN role. */
+export function useSetMemberRole(bitsTeamId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: { userId: string; role: TeamRole }) => {
+      // set_member_role isn't in the generated RPC types yet (team_role_admin.sql) — untyped call.
+      const db = createClient() as unknown as SupabaseClient
+      const { error } = await db.rpc('set_member_role', {
+        p_bits_team_id: bitsTeamId, p_target_user_id: v.userId, p_role: v.role,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['team-members', bitsTeamId] }),
   })
 }
 
