@@ -1,8 +1,6 @@
 // Pure helpers for the BITS Auto-Story Engine — no I/O, so they're unit-tested
 // in __tests__/sync-bits-team-events.test.ts. Split out of sync-bits-team-events.ts
 // to keep that file under the 300-line limit (AGENTS.md).
-import { TEAM_EVENT } from '@/lib/constants'
-
 export type SeriesRow = { player_name: string; series: number[] | null }
 
 export function eventKey(type: string, matchId: string | null, date: string, player = '') {
@@ -82,30 +80,21 @@ export type EmotionalMatch = {
   home_team_name: string; away_team_name: string
 }
 
-// revenge_win + giant_killer inserts. Pure: derives rough standings from the
-// team's own completed matches, then finds wins that avenge a prior loss or beat
-// a much higher-ranked side. Returns up to `remaining` rows and records their
-// keys in `seen` (idempotency), exactly as the inline version did.
+// revenge_win inserts. Pure: finds wins that avenge a prior loss to the same
+// opponent. Returns up to `remaining` rows and records their keys in `seen`
+// (idempotency).
+//
+// giant_killer was REMOVED here: it ranked teams from a fake mini-table built out
+// of only THIS team's own matches (not the real division table), so it made false
+// "Slog serieledaren" / "N:an i tabellen" / "N platser högre upp" claims that
+// disagreed with the standings. Re-add it only when ranked against the authoritative
+// computeStandings over the whole division+season (see feed-standings.ts for the
+// correct pattern) — never against a subset.
 export function emotionalWinInserts(
   matches: EmotionalMatch[], bitsTeamId: number, seen: Set<string>, remaining: number,
 ): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = []
   if (remaining <= 0) return out
-
-  const pts: Record<number, number> = {}
-  for (const m of matches) {
-    const h = m.home_bits_team_id, a = m.away_bits_team_id
-    if (h == null || a == null || m.home_result == null || m.away_result == null) continue
-    pts[h] ??= 0; pts[a] ??= 0
-    if (m.home_result > m.away_result) pts[h] += 2
-    else if (m.home_result < m.away_result) pts[a] += 2
-    else { pts[h]++; pts[a]++ }
-  }
-  const rankOf = (tid: number) => {
-    const sorted = Object.entries(pts).sort((x, y) => y[1] - x[1])
-    const idx = sorted.findIndex(([id]) => Number(id) === tid)
-    return idx === -1 ? 99 : idx + 1
-  }
 
   for (let i = 1; i < matches.length && out.length < remaining; i++) {
     const m = matches[i]
@@ -137,22 +126,6 @@ export function emotionalWinInserts(
           })
           seen.add(eventKey('revenge_win', String(m.bits_match_id), date))
         }
-      }
-    }
-
-    // giant_killer — beat a team ≥ GAP positions above us
-    if (out.length < remaining && !seen.has(eventKey('giant_killer', String(m.bits_match_id), date))) {
-      const myRank = rankOf(bitsTeamId), oppRank = rankOf(oppTeamId)
-      if (oppRank !== 99 && myRank - oppRank >= TEAM_EVENT.GIANT_KILLER_GAP) {
-        out.push({
-          team_id: null, bits_team_id: bitsTeamId, event_type: 'giant_killer', event_date: date,
-          match_id: String(m.bits_match_id), featured_player_id: null,
-          title: `Slog ${oppRank === 1 ? 'serieledaren' : `${oppRank}:an i tabellen`}`,
-          body: `${my}–${opp} mot ett lag ${myRank - oppRank} platser högre upp.`,
-          payload: { opponent_id: '', opponent_name: oppName, my_score: my, opp_score: opp, rank_gap: myRank - oppRank },
-          captain_note: null, is_pinned: false, is_hidden: false,
-        })
-        seen.add(eventKey('giant_killer', String(m.bits_match_id), date))
       }
     }
   }

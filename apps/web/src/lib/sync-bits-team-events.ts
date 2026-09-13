@@ -59,8 +59,9 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
   // Career-high game per player BEFORE this season — so personal_best fires only on
   // a genuine all-time best, not the season's running high (which makes every early
   // game a false "record"). Best-effort: if it fails, we fall back to season scope.
-  const careerBest = new Map<string, number>() // lic_nbr → highest game before seasonFloor
-  const priorAvg = new Map<string, number>()   // lic_nbr → established game snitt before this season
+  const careerBest = new Map<string, number>()    // lic_nbr → highest game before seasonFloor
+  const priorAvg = new Map<string, number>()      // lic_nbr → established game snitt before this season
+  const careerMatches = new Map<string, number>() // lic_nbr → matches played before this season (career milestone seed)
   const careerLics = [...new Set(nameToLic.values())]
   if (careerLics.length) {
     const { data: hist } = await pub
@@ -70,6 +71,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
       .lt('bits_matches.match_date', seasonFloor)
     const sum = new Map<string, number>(); const cnt = new Map<string, number>()
     for (const r of (hist ?? []) as { lic_nbr: string; series: number[] | null }[]) {
+      careerMatches.set(r.lic_nbr, (careerMatches.get(r.lic_nbr) ?? 0) + 1) // one row = one match appearance
       const games = (r.series ?? []).filter((g) => g > 0)
       const hi = Math.max(...games, 0)
       if (hi > (careerBest.get(r.lic_nbr) ?? 0)) careerBest.set(r.lic_nbr, hi)
@@ -184,9 +186,13 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     }
   }
 
-  // ── player_milestone (10 / 25 / 50 / 100 matches for the team) ───────────
+  // ── player_milestone (10 / 25 / 50 / 100 career matches) ─────────────────
   if (inserts.length < MAX) {
+    // Seed with each player's career appearances BEFORE this season, so the
+    // milestone counts total matches played — not just this season's (which made
+    // "sin 10:e match" fire on a veteran's 10th game of the current season).
     const count = new Map<string, number>()
+    for (const [name, lic] of nameToLic) count.set(name, careerMatches.get(lic) ?? 0)
     for (const { match, byPlayer } of perMatch) {
       const date = match.match_date.slice(0, 10)
       for (const name of byPlayer.keys()) {
@@ -199,7 +205,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
           inserts.push({
             team_id: null, bits_team_id: bitsTeamId, event_type: 'player_milestone', event_date: date,
             match_id: String(match.bits_match_id), featured_player_id: null,
-            title: `${name}s ${ord} match`, body: `Spelade sin ${ord} tävlingsmatch för laget.`,
+            title: `${name}s ${ord} match`, body: `Spelade sin ${ord} tävlingsmatch.`,
             payload, captain_note: null, is_pinned: false, is_hidden: false,
           })
           existingSet.add(eventKey('player_milestone', String(match.bits_match_id), date, name))
@@ -238,7 +244,7 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
           team_id: null, bits_team_id: bitsTeamId, event_type: 'form_rising', event_date: lastDate,
           match_id: null, featured_player_id: null,
           title: formRisingTitle(name, delta, recentAvg),
-          body: `Snittade ${recentAvg} de senaste tre matcherna — ${delta} pins över sitt snitt på ${baseline}.`,
+          body: `Snittade ${recentAvg} de senaste tre matcherna — ${delta} pins över sitt seriesnitt på ${baseline}.`,
           payload, captain_note: null, is_pinned: false, is_hidden: false,
         })
         existingSet.add(eventKey('form_rising', null, lastDate, name))
