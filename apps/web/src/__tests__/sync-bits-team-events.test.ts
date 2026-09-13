@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   eventKey, outcomeOf, bestScorer, calcMatchAvg, milestoneOrdinal,
-  winStreakTitle, matchResultTitle, matchResultBody, personalBestTitle, formRisingTitle,
+  winStreakTitle, matchResultTitle, matchResultBody, seasonBestTitle, formRisingTitle,
   emotionalWinInserts, type EmotionalMatch,
 } from '@/lib/sync-bits-team-events.helpers'
 
@@ -101,11 +101,13 @@ describe('matchResultBody', () => {
   })
 })
 
-describe('personalBestTitle', () => {
-  it('escalates language with the size of the jump', () => {
-    expect(personalBestTitle('A', 250, 25)).toContain('slår rekord')
-    expect(personalBestTitle('A', 250, 12)).toContain('skriver om rekordboken')
-    expect(personalBestTitle('A', 250, 4)).toContain('eget rekord')
+describe('seasonBestTitle', () => {
+  it('claims a season best (never a career record) and escalates with the jump', () => {
+    expect(seasonBestTitle('A', 250, 25)).toContain('säsongsbästa')
+    expect(seasonBestTitle('A', 250, 12)).toContain('säsongsbästa')
+    expect(seasonBestTitle('A', 250, 4)).toContain('bästa i år')
+    // never asserts an (unverifiable) career record
+    expect(seasonBestTitle('A', 250, 25)).not.toContain('rekord')
   })
 })
 

@@ -61,10 +61,13 @@ export function matchResultBody(result: 'W' | 'D' | 'L', my: number, opps: numbe
   return hero ? `Oavgjort ${my}–${opps} ${venue}. ${hero}` : `Delade poängen ${my}–${opps} ${venue}.`
 }
 
-export function personalBestTitle(name: string, newBest: number, delta: number): string {
-  if (delta >= 20) return `${name} slår rekord med ${delta} pins`
-  if (delta >= 10) return `${newBest} pins — ${name} skriver om rekordboken`
-  return `${newBest} pins — ${name} kniper eget rekord`
+// Season best only — we can't verify a true career "personbästa" (no BITS career-high;
+// our per-game history is incomplete: no competitions, older matches lack per-game data),
+// so we never claim one. This celebrates a new best game THIS season, which we can prove.
+export function seasonBestTitle(name: string, newBest: number, delta: number): string {
+  if (delta >= 20) return `${newBest} pins — ${name} höjer säsongsbästa rejält`
+  if (delta >= 10) return `${newBest} pins — nytt säsongsbästa för ${name}`
+  return `${newBest} pins — ${name}s bästa i år`
 }
 
 export function formRisingTitle(name: string, delta: number, _recentAvg: number): string {

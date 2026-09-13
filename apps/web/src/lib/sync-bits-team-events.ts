@@ -10,7 +10,7 @@ import { SEASON, TEAM_EVENT } from '@/lib/constants'
 import type { MatchResultPayload, StreakPayload, PersonalBestPayload, PlayerMilestonePayload, FormRisingPayload } from '@/lib/types'
 import {
   eventKey, outcomeOf, bestScorer, calcMatchAvg, milestoneOrdinal,
-  winStreakTitle, matchResultTitle, matchResultBody, personalBestTitle, formRisingTitle,
+  winStreakTitle, matchResultTitle, matchResultBody, seasonBestTitle, formRisingTitle,
   emotionalWinInserts,
 } from './sync-bits-team-events.helpers'
 
@@ -56,10 +56,10 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     nameToLic.set(r.player_name, r.lic_nbr)
   }
 
-  // Career-high game per player BEFORE this season — so personal_best fires only on
-  // a genuine all-time best, not the season's running high (which makes every early
-  // game a false "record"). Best-effort: if it fails, we fall back to season scope.
-  const careerBest = new Map<string, number>()    // lic_nbr → highest game before seasonFloor
+  // Per-player pre-season history — the established snitt baseline for form_rising and
+  // the career match count for player_milestone. Best-effort: on failure both fall back
+  // to season scope. (No career-high seed here: season_best is season-only by design —
+  // a true career "personbästa" isn't verifiable from our partial per-game history.)
   const priorAvg = new Map<string, number>()      // lic_nbr → established game snitt before this season
   const careerMatches = new Map<string, number>() // lic_nbr → matches played before this season (career milestone seed)
   const careerLics = [...new Set(nameToLic.values())]
@@ -73,8 +73,6 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     for (const r of (hist ?? []) as { lic_nbr: string; series: number[] | null }[]) {
       careerMatches.set(r.lic_nbr, (careerMatches.get(r.lic_nbr) ?? 0) + 1) // one row = one match appearance
       const games = (r.series ?? []).filter((g) => g > 0)
-      const hi = Math.max(...games, 0)
-      if (hi > (careerBest.get(r.lic_nbr) ?? 0)) careerBest.set(r.lic_nbr, hi)
       if (games.length) {
         sum.set(r.lic_nbr, (sum.get(r.lic_nbr) ?? 0) + games.reduce((a, b) => a + b, 0))
         cnt.set(r.lic_nbr, (cnt.get(r.lic_nbr) ?? 0) + games.length)
@@ -154,12 +152,14 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
     return { match: m, byPlayer }
   })
 
-  // ── personal_best (a genuine all-time best game) ─────────────────────────
+  // ── season_best (a new best game THIS season) ────────────────────────────
+  // NOT a career "personbästa" — we can't verify that (no BITS career-high, and our
+  // per-game history is incomplete: no competitions, older matches lack per-game data).
+  // Baseline is the player's best game earlier THIS season, which we fully hold, so the
+  // claim is always provable. event_type stays 'personal_best' (legacy name); the UI
+  // labels it "SÄSONGSBÄSTA".
   if (inserts.length < MAX) {
-    // Seed with each player's career-high (before this season) so we only celebrate
-    // a real personal best, not the season's first-few-games running high.
-    const best = new Map<string, number>()
-    for (const [name, lic] of nameToLic) best.set(name, careerBest.get(lic) ?? 0)
+    const best = new Map<string, number>()   // season-only high so far (no career seed)
     for (const { match, byPlayer } of perMatch) {
       const date = match.match_date.slice(0, 10)
       for (const [name, games] of byPlayer) {
@@ -167,13 +167,14 @@ export async function syncBitsTeamEvents(bitsTeamId: number, seasonFloor: string
         if (!high) continue
         const prev = best.get(name) ?? 0
         if (high > prev) {
-          if (prev > 0 && !existingSet.has(eventKey('personal_best', String(match.bits_match_id), date, name))) {
+          if (prev > 0 && high - prev >= TEAM_EVENT.SEASON_BEST_MIN_GAIN
+              && !existingSet.has(eventKey('personal_best', String(match.bits_match_id), date, name))) {
             const payload: PersonalBestPayload = { player_id: '', player_name: name, new_best: high, previous_best: prev, match_id: String(match.bits_match_id) }
             inserts.push({
               team_id: null, bits_team_id: bitsTeamId, event_type: 'personal_best', event_date: date,
               match_id: String(match.bits_match_id), featured_player_id: null,
-              title: personalBestTitle(name, high, high - prev),
-              body: `${high - prev} pins bättre än tidigare bästa på ${prev}. Kvällen tillhörde ${name}.`,
+              title: seasonBestTitle(name, high, high - prev),
+              body: `${high - prev} pins bättre än säsongsbästa på ${prev}. Kvällen tillhörde ${name}.`,
               payload, captain_note: null, is_pinned: false, is_hidden: false,
             })
             existingSet.add(eventKey('personal_best', String(match.bits_match_id), date, name))

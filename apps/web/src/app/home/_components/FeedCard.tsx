@@ -16,7 +16,7 @@ import type {
 
 const LABELS: Partial<Record<TeamEventType, string>> = {
   win_streak:         'SEGERSVIT',
-  personal_best:      'PERSONBÄSTA',
+  personal_best:      'SÄSONGSBÄSTA',
   player_milestone:   'MILSTOLPE',
   form_rising:        'I FORM',
   division_climbed:   'KLÄTTRAR',
