@@ -85,7 +85,7 @@ export function PlayerRow({
       </div>
       {stat ? (
         <div style={{ width: 78, flexShrink: 0, textAlign: 'center' }}>
-          <div style={{ fontSize: 30, fontWeight: 800, color: COLOR.ink, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: FONT.body }}>{stat.value ?? '–'}</div>
+          <div style={{ fontSize: 30, fontWeight: 800, color: COLOR.ink, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: FONT.score }}>{stat.value ?? '–'}</div>
           <div style={{ fontSize: TYPE.caption, color: COLOR.ink3, marginTop: 3 }}>{stat.label}</div>
         </div>
       ) : trailing}

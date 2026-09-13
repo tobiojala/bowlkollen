@@ -1,7 +1,7 @@
 'use client'
 
 import { Plus, Check } from 'lucide-react'
-import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { useKonstellationer } from '@/lib/lineup-aids'
 
 const MIN_TOGETHER = 4 // enough shared bords to be a real pairing, not a fluke
@@ -59,8 +59,8 @@ export function KonstellationPanel({
               <NameTag person={b} faint />
             </div>
             <div style={{ textAlign: 'right', minWidth: 74 }}>
-              <div style={{ fontSize: TYPE.body, fontWeight: 800, color: COLOR.ink, fontVariantNumeric: 'tabular-nums' }}>{p.wins}–{p.losses}</div>
-              <div style={{ fontSize: TYPE.caption, color: pct >= 60 ? COLOR.green : COLOR.ink3, fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>{pct}% · {p.together} ihop</div>
+              <div style={{ fontSize: TYPE.body, fontWeight: 800, color: COLOR.ink, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>{p.wins}–{p.losses}</div>
+              <div style={{ fontSize: TYPE.caption, color: pct >= 60 ? COLOR.green : COLOR.ink3, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>{pct}% · {p.together} ihop</div>
             </div>
             {interactive && (
               bothFree ? (

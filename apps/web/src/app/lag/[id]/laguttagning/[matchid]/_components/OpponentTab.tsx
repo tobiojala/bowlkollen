@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { useTeamRoster } from '@/lib/queries'
 import { useHeadToHead } from '@/lib/lineup-aids'
 import { LineupDisplay } from './LineupDisplay'
@@ -44,7 +44,7 @@ export function OpponentTab({ teamId, opponentId, opponentName, matchId }: {
             return (
               <div key={m.matchId} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[3]}px 0`, borderBottom: `1px solid ${COLOR.hairline}` }}>
                 <span style={{ width: 72, color: COLOR.ink3, fontSize: TYPE.caption }}>{fmtDate(m.date)}</span>
-                <span style={{ flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{m.ours ?? '–'}–{m.theirs ?? '–'}</span>
+                <span style={{ flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: 800, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>{m.ours ?? '–'}–{m.theirs ?? '–'}</span>
                 {o && <span style={{ fontSize: TYPE.caption, fontWeight: 800, color: o.fg, background: o.bg, borderRadius: RADIUS.pill, padding: '3px 10px' }}>{o.label}</span>}
               </div>
             )
@@ -58,7 +58,7 @@ export function OpponentTab({ teamId, opponentId, opponentName, matchId }: {
           {watch.map(p => (
             <Link key={p.publicId} href={`/players/${p.publicId}`} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], padding: `${SPACE[3]}px 0`, borderBottom: `1px solid ${COLOR.hairline}`, textDecoration: 'none' }}>
               <span style={{ flex: 1, color: COLOR.ink, fontSize: TYPE.body, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              {p.licenceAverage != null && <span style={{ color: COLOR.ink, fontSize: 20, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{p.licenceAverage}</span>}
+              {p.licenceAverage != null && <span style={{ color: COLOR.ink, fontSize: 20, fontWeight: 800, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums' }}>{p.licenceAverage}</span>}
             </Link>
           ))}
         </section>

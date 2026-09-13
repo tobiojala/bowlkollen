@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { COLOR, RADIUS, SPACE, TYPE } from '@/lib/brand'
+import { COLOR, FONT, RADIUS, SPACE, TYPE } from '@/lib/brand'
 import { useTeamLineup } from '@/lib/queries'
 import { shortName } from '@/lib/utils'
 
@@ -25,7 +25,7 @@ export function LineupDisplay({ teamId, matchId, subtitle }: { teamId: number; m
       </div>
       {BOARDS.map(bord => (
         <div key={bord} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], marginBottom: SPACE[2] }}>
-          <span style={{ width: 20, textAlign: 'center', color: COLOR.ink4, fontWeight: 800, fontSize: 18, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{bord}</span>
+          <span style={{ width: 20, textAlign: 'center', color: COLOR.ink4, fontWeight: 800, fontSize: 18, fontFamily: FONT.score, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{bord}</span>
           <div style={{ flex: 1, display: 'flex', gap: SPACE[3] }}>
             {[1, 2].map(pos => {
               const s = starter(bord, pos)
