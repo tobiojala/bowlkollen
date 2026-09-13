@@ -82,7 +82,7 @@ export function PlayerPickerSheet({ open, onClose, roster, usedPublicIds, availa
                       <PlayerRow key={p.publicId} name={p.name} disabled={used}
                         onClick={() => onPick(p.publicId, p.name)}
                         availability={(availabilityByPublicId[p.publicId] as Avail | undefined) ?? null}
-                        showAvailability
+                        showAvailability agreement={cand?.isAgreement}
                         sub={[
                           cand?.homeTeam ? `Spelar mest i ${cand.homeTeam}` : null,
                           down ? 'Spelar normalt en högre division' : null,

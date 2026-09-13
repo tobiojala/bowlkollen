@@ -54,6 +54,12 @@ export function CandidateRow({
       <View style={styles.mid}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>{c.name}</Text>
+          {c.isAgreement && (
+            <View style={styles.badge}>
+              <Ionicons name="document-text-outline" size={13} color={COLOR.ink2} />
+              <Text style={styles.badgeText}>AVTAL</Text>
+            </View>
+          )}
           {elig && (
             <View style={[styles.badge, elig.solid && styles.badgeSolid]}>
               <Ionicons name={elig.icon} size={13} color={elig.solid ? COLOR.bg : COLOR.ink2} />

@@ -43,7 +43,8 @@ RETURNS TABLE (
   best_squad_games    integer,
   home_team           text,
   home_division       text,
-  availability        text
+  availability        text,
+  is_agreement        boolean
 )
 LANGUAGE sql
 STABLE
@@ -83,8 +84,10 @@ AS $$
       AND NOT (p.elsewhere_now AND NOT p.here_now)
     UNION
     -- 2. Avtal — a spelaravtal (secondary registration) contracted to THIS club.
+    --    Same dormant filter: must have played in the last 2 seasons.
     SELECT upper(bp.lic_nbr)
     FROM bits_players bp
+    JOIN play p ON p.lic = upper(bp.lic_nbr)
     WHERE bp.lic_nbr IS NOT NULL
       AND ( bp.agreement_club_id = (SELECT bits_club_id FROM club)
          OR btrim(lower(bp.agreement_club_name)) = btrim(lower((SELECT club_name FROM club))) )
@@ -175,7 +178,11 @@ AS $$
     bd.division_name, bd.avg::int, bd.games::int,
     bs.squad, bs.avg::int, bs.games::int,
     ht.squad, hd.division_name,
-    av.response AS availability
+    av.response AS availability,
+    -- Here on a spelaravtal (their primary club is elsewhere but they're contracted here).
+    ( bp.club_name IS DISTINCT FROM (SELECT club_name FROM club)
+      AND ( bp.agreement_club_id = (SELECT bits_club_id FROM club)
+         OR btrim(lower(bp.agreement_club_name)) = btrim(lower((SELECT club_name FROM club))) ) ) AS is_agreement
   FROM cand c
   JOIN bits_players bp ON upper(bp.lic_nbr) = c.lic
   LEFT JOIN agg a           ON a.lic  = c.lic

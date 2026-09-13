@@ -14,12 +14,10 @@ const db = supabase as unknown as SupabaseClient;
 export type TeamRole = 'captain' | 'player' | 'lagledare' | 'styrelse' | 'reserv';
 export type AvailabilityResponse = 'yes' | 'maybe' | 'no';
 
-// Join a team (role 'player'). A valid invite code (a vouch from a verified member)
-// → verified instantly; licence alone → pending review (see account_verification_
-// hardening.sql / docs/ACCOUNT_MODEL.md). Juniors always pending.
-// An optional team-scoped invite code is the vouching signal. p_invite_code is always
-// sent (null when absent) so PostgREST resolves to the hardened 3-arg submit_team_claim
-// rather than erroring on the legacy overload.
+// Join a team (role 'player'). Valid invite code (a vouch) → verified instantly;
+// licence alone → pending review (account_verification_hardening.sql / ACCOUNT_MODEL.md);
+// juniors always pending. p_invite_code is always sent (null when absent) so PostgREST
+// resolves to the hardened 3-arg submit_team_claim, not the legacy overload.
 export function useJoinTeam(teamId: number) {
   const { session } = useAuth();
   const uid = session?.user?.id;
@@ -202,6 +200,7 @@ export type LineupCandidate = {
   homeTeam: string | null;      // the club team they play MOST for
   homeDivision: string | null;  // …and that team's division
   availability: AvailabilityResponse | null;
+  isAgreement: boolean;         // here on a spelaravtal (primary club is elsewhere)
 };
 
 // Swedish division tiers, lower = higher level. Used to flag "playing down".
@@ -261,6 +260,7 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         homeTeam: (r.home_team as string | null) ?? null,
         homeDivision: (r.home_division as string | null) ?? null,
         availability: (r.availability as AvailabilityResponse | null) ?? null,
+        isAgreement: (r.is_agreement as boolean | null) ?? false,
       }));
     },
   });

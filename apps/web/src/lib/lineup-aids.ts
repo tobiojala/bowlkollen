@@ -19,6 +19,7 @@ export type LineupCandidate = {
   divisionAvg: number | null; divisionGames: number
   homeTeam: string | null; homeDivision: string | null
   availability: string | null
+  isAgreement: boolean   // here on a spelaravtal (primary club is elsewhere)
 }
 
 // Swedish division tiers, lower = higher level (the hierarchy).
@@ -132,6 +133,7 @@ export function useLineupCandidates(teamId: number, matchId: number) {
         homeTeam: (r.home_team as string | null) ?? null,
         homeDivision: (r.home_division as string | null) ?? null,
         availability: (r.availability as string | null) ?? null,
+        isAgreement: (r.is_agreement as boolean | null) ?? false,
       }))
     },
   })

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Lock, ArrowDownUp, HelpCircle } from 'lucide-react'
+import { Lock, ArrowDownUp, HelpCircle, FileSignature } from 'lucide-react'
 import { IdentityAvatar } from '@/components/IdentityAvatar'
 import { COLOR, FONT, RADIUS, TYPE } from '@/lib/brand'
 import type { EligibilityVerdict } from '@/lib/eligibility'
@@ -39,6 +39,8 @@ export type PlayerRowProps = {
   /** Render the availability pill even when unanswered (shows "Ej svarat"). */
   showAvailability?: boolean
   eligibility?: EligibilityVerdict
+  /** Here on a spelaravtal (contracted, primary club elsewhere) — shows an AVTAL chip. */
+  agreement?: boolean
   disabled?: boolean
   href?: string
   onClick?: () => void
@@ -47,7 +49,7 @@ export type PlayerRowProps = {
 }
 
 export function PlayerRow({
-  name, imageUrl, stat, sub, availability, showAvailability, eligibility, disabled, href, onClick, trailing,
+  name, imageUrl, stat, sub, availability, showAvailability, eligibility, agreement, disabled, href, onClick, trailing,
 }: PlayerRowProps) {
   const elig = eligibility && eligibility.state !== 'ok' ? ELIG[eligibility.state] : null
   const av = availability ? AVAIL[availability] : null
@@ -59,6 +61,12 @@ export function PlayerRow({
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: COLOR.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+          {agreement && (
+            <span title="Spelaravtal — kontrakterad från en annan klubb" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0, padding: '2px 7px', borderRadius: RADIUS.pill, border: `1px solid ${COLOR.ink4}`, background: COLOR.surface2 }}>
+              <FileSignature size={12} color={COLOR.ink2} />
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.03em', color: COLOR.ink2 }}>AVTAL</span>
+            </span>
+          )}
           {elig && (
             <span title={eligibility?.reason} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0, padding: '2px 7px', borderRadius: RADIUS.pill, border: `1px solid ${elig.solid ? COLOR.ink : COLOR.ink4}`, background: elig.solid ? COLOR.ink : COLOR.surface2 }}>
               <elig.Icon size={12} color={elig.solid ? COLOR.bg : COLOR.ink2} />
