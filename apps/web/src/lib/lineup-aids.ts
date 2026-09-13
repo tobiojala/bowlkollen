@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { playerSearchTokens } from '@bowlkollen/core'
 import { createClient } from '@/lib/supabase'
 import { STALE } from '@/lib/constants'
 
@@ -50,6 +51,66 @@ export function candidateFit(c: LineupCandidate): { value: number | null; contex
 
 export const FIT_LABEL: Record<'venue' | 'division' | 'overall', string> = {
   venue: 'hemmabana', division: 'i divisionen', overall: 'totalt',
+}
+
+// Rank candidates for a match's auto-suggest: available first (yes → maybe → no
+// answer → no), then legitimacy (own regulars → same/lower div → plays up), then
+// the context-aware fit at this venue/division. Mirrors native LineupSeating.compare.
+export function rankCandidates(candidates: LineupCandidate[], teamName: string | null, matchDivision: string | null): LineupCandidate[] {
+  const availRank = (c: LineupCandidate) =>
+    c.availability === 'yes' ? 0 : c.availability === 'maybe' ? 1 : c.availability === 'no' ? 3 : 2
+  const legitRank = (c: LineupCandidate) =>
+    c.homeTeam && teamName && c.homeTeam === teamName ? 0 : playsDown(c.homeDivision, matchDivision) ? 2 : 1
+  return [...candidates].sort((a, b) =>
+    availRank(a) - availRank(b) || legitRank(a) - legitRank(b) || (candidateFit(b).value ?? 0) - (candidateFit(a).value ?? 0))
+}
+
+// Free player search over the whole licence register — so a captain can seat ANY
+// bowler (teammates not in the app, or teams with no per-player result data).
+export type PlayerHit = { publicId: string; name: string; club: string | null }
+export function useRosterSearch(query: string) {
+  const q = query.trim()
+  return useQuery({
+    queryKey: ['roster-search', q],
+    enabled: q.length >= 2,
+    queryFn: async (): Promise<PlayerHit[]> => {
+      let pq = createClient().from('bits_players').select('public_id, first_name, sur_name, club_name')
+      for (const w of playerSearchTokens(q)) pq = pq.or(`first_name.ilike.%${w}%,sur_name.ilike.%${w}%`)
+      const { data } = await pq.limit(20)
+      return (data ?? []).map((p) => ({
+        publicId: p.public_id as string,
+        name: `${p.first_name ?? ''} ${p.sur_name ?? ''}`.trim() || 'Spelare',
+        club: (p.club_name as string | null) ?? null,
+      }))
+    },
+  })
+}
+
+// Recent meetings between two teams (opponent scouting). Banpoäng result from our
+// team's perspective. Public data — no team-private access needed.
+export type H2HMatch = { matchId: number; date: string; ours: number | null; theirs: number | null; outcome: 'W' | 'L' | 'D' | null }
+export function useHeadToHead(teamId: number, opponentId: number | null) {
+  return useQuery({
+    queryKey: ['h2h', teamId, opponentId],
+    enabled: teamId > 0 && !!opponentId,
+    staleTime: STALE.LONG,
+    queryFn: async (): Promise<H2HMatch[]> => {
+      const { data } = await untyped()
+        .from('bits_matches')
+        .select('bits_match_id, match_date, home_bits_team_id, away_bits_team_id, home_result, away_result')
+        .eq('is_finished', true)
+        .or(`and(home_bits_team_id.eq.${teamId},away_bits_team_id.eq.${opponentId}),and(home_bits_team_id.eq.${opponentId},away_bits_team_id.eq.${teamId})`)
+        .order('match_date', { ascending: false })
+        .limit(6)
+      return ((data ?? []) as Record<string, unknown>[]).map((m) => {
+        const isHome = m.home_bits_team_id === teamId
+        const ours = (isHome ? m.home_result : m.away_result) as number | null
+        const theirs = (isHome ? m.away_result : m.home_result) as number | null
+        const outcome = ours == null || theirs == null ? null : ours > theirs ? 'W' : ours < theirs ? 'L' : 'D'
+        return { matchId: m.bits_match_id as number, date: m.match_date as string, ours, theirs, outcome }
+      })
+    },
+  })
 }
 
 export function useLineupCandidates(teamId: number, matchId: number) {

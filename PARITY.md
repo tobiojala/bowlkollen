@@ -43,7 +43,7 @@ Last surveyed: 2026-08-18 (route/screen + lib survey; cells marked _?_ need a hu
 | Team profile | ✅ `/lag/[id]` | ✅ `/lag/[id]` | Both (BITS canonical). |
 | Roster / laget | ✅ (in `/lag/[id]`) | ✅ `/lag/[id]/laget` | Both. |
 | Team schedule | ✅ (`/lag/[id]`, `/schema`) | ✅ `/lag/[id]/schema` | Both. |
-| Lineup builder (laguttagning) | ✅ `/lag/[id]/laguttagning/[mid]` | ✅ `/lag/[id]/laguttagning/[mid]` | Both. Suggestion tool + hierarchy + konstellationer now on **both** (native-first `konstellationer.ts`; web caught up this session). |
+| Lineup builder (laguttagning) | ✅ `/lag/[id]/laguttagning/[mid]` | ✅ `/lag/[id]/laguttagning/[mid]` | **Full parity (2026-09-13).** Both now the 3-tab shell (Laget / Motståndare / Bana). Laget: auto-suggest ("Föreslå laget"), seat-a-konstellation, free roster search, share, eligibility, draft/publish. Motståndare: opponent lineup + head-to-head + players-to-watch. Bana: venue + likely oil profiles. Web caught up to the native drawing this session (pure helpers `suggestLineup`/`seatPairIntoBoard` in `lib/lineup.ts` + tests; `rankCandidates`/`useRosterSearch`/`useHeadToHead` in `lib/lineup-aids.ts`). Legacy `/team/[id]/laguttagning` (UUID id-space, intern hub) still on the old single-view build — separate retirement task. |
 | Availability (tillgänglighet) | ✅ `/lag/[id]/tillganglighet/[mid]` | ✅ (`team-admin.ts`) | Both. |
 | Anslagstavla (nyheter) | ✅ `/lag/[id]/nyheter` | ✅ `/lag/[id]/nyheter` (`team-posts.ts`) | Both. |
 | In-team join (kod / licens) | ✅ ClaimTeamSheet | ✅ `/lag/[id]/ga-med` | **Parity (2026-08-19)** — both take an optional invite code (vouch → instant) + licence (→ pending review). Same RPC `submit_team_claim`, same security (`account_verification_hardening.sql`). |
