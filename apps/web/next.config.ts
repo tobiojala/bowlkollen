@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: '*.googleusercontent.com' },
       { protocol: 'https', hostname: 'bits.swebowl.se' },
+      // Ball catalog photos (bowwwl.com API — attribution shown in-app).
+      { protocol: 'https', hostname: 'www.bowwwl.com' },
       // Supabase Storage — player profile photos in the `avatars` bucket.
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],

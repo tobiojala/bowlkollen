@@ -42,11 +42,11 @@ export default function BallShelf() {
     <div style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '4px 2px 12px' }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: INK3, letterSpacing: '0.12em' }}>DIN VÄSKA</span>
-        {balls.length > 0 && <Link href="/arsenal/add" style={{ fontSize: 14, fontWeight: 600, color: INK2, textDecoration: 'none' }}>Lägg till</Link>}
+        {balls.length > 0 && <Link href="/klot" style={{ fontSize: 14, fontWeight: 600, color: INK2, textDecoration: 'none' }}>Lägg till</Link>}
       </div>
 
       {balls.length === 0 ? (
-        <Link href="/arsenal/add"
+        <Link href="/klot"
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, textDecoration: 'none',
             background: 'rgba(245,194,0,0.08)', border: '1px solid rgba(245,194,0,0.24)' }}>
           <Plus size={24} color={GOLD} style={{ flexShrink: 0 }} />
@@ -65,7 +65,7 @@ export default function BallShelf() {
               {b.weight != null && <span style={{ fontSize: 12, color: INK3 }}>{b.weight} lb</span>}
             </button>
           ))}
-          <Link href="/arsenal/add" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: ORB + 12, flexShrink: 0, textDecoration: 'none' }}>
+          <Link href="/klot" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: ORB + 12, flexShrink: 0, textDecoration: 'none' }}>
             <div style={{ width: ORB, height: ORB, borderRadius: '50%', border: `1px dashed ${HAIR}`, background: SURFACE,
               display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={30} color={INK3} />

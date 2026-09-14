@@ -4,14 +4,71 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 import { useSession } from '@/lib/queries'
+import { STALE } from '@/lib/constants'
 
 // bowling_balls / player_balls aren't in the generated types (run
 // supabase/migrations/ball_arsenal.sql) — reach them untyped.
 const untyped = () => createClient() as unknown as SupabaseClient
 
 export type CatalogBall = {
-  id: string; brand: string; name: string; coverstock: string | null; core: string | null
-  rg: number | null; differential: number | null; imageUrl: string | null
+  id: string; bowwwlId: string | null; brand: string; name: string
+  coverstock: string | null; coverstockType: string | null
+  core: string | null; coreType: string | null
+  rg: number | null; differential: number | null; intDiff: number | null
+  factoryFinish: string | null; availability: string | null; releaseDate: string | null
+  imageUrl: string | null; thumbnailUrl: string | null
+}
+
+// One SELECT + one mapper so the picker, the catalog browse and the detail all read
+// balls identically. Extended fields come from the bowwwl feed (bowwwl_balls_catalog.sql).
+const CATALOG_COLS =
+  'id, bowwwl_id, brand, name, coverstock, coverstock_type, core, core_type, rg, differential, int_diff, factory_finish, availability, release_date, image_url, thumbnail_url'
+
+function mapCatalog(r: Record<string, unknown>): CatalogBall {
+  return {
+    id: r.id as string, bowwwlId: (r.bowwwl_id as string | null) ?? null,
+    brand: (r.brand as string | null) ?? '—', name: (r.name as string | null) ?? 'Klot',
+    coverstock: (r.coverstock as string | null) ?? null, coverstockType: (r.coverstock_type as string | null) ?? null,
+    core: (r.core as string | null) ?? null, coreType: (r.core_type as string | null) ?? null,
+    rg: (r.rg as number | null) ?? null, differential: (r.differential as number | null) ?? null,
+    intDiff: (r.int_diff as number | null) ?? null,
+    factoryFinish: (r.factory_finish as string | null) ?? null, availability: (r.availability as string | null) ?? null,
+    releaseDate: (r.release_date as string | null) ?? null,
+    imageUrl: (r.image_url as string | null) ?? null, thumbnailUrl: (r.thumbnail_url as string | null) ?? null,
+  }
+}
+
+export type BrandCount = { brand: string; count: number }
+
+/** Distinct brands (most balls first) for the catalog filter chips. */
+export function useBrands() {
+  return useQuery({
+    queryKey: ['ball-brands'],
+    staleTime: STALE.LONG,
+    queryFn: async (): Promise<BrandCount[]> => {
+      const { data } = await untyped().from('bowling_balls').select('brand').not('brand', 'is', null)
+      const counts = new Map<string, number>()
+      for (const r of (data ?? []) as { brand: string }[]) counts.set(r.brand, (counts.get(r.brand) ?? 0) + 1)
+      return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([brand, count]) => ({ brand, count }))
+    },
+  })
+}
+
+/** Browse the catalog — optional text query + brand filter, newest release first. */
+export function useCatalog(filter: { query?: string; brand?: string | null }) {
+  const q = (filter.query ?? '').trim()
+  const brand = filter.brand ?? null
+  return useQuery({
+    queryKey: ['ball-catalog-list', q, brand],
+    staleTime: STALE.MEDIUM,
+    queryFn: async (): Promise<CatalogBall[]> => {
+      let sel = untyped().from('bowling_balls').select(CATALOG_COLS)
+      if (brand) sel = sel.eq('brand', brand)
+      if (q.length >= 2) sel = sel.or(`name.ilike.%${q}%,brand.ilike.%${q}%,coverstock.ilike.%${q}%`)
+      const { data } = await sel.order('release_date', { ascending: false, nullsFirst: false }).limit(80)
+      return ((data ?? []) as Record<string, unknown>[]).map(mapCatalog)
+    },
+  })
 }
 
 export type BagBall = {
@@ -61,14 +118,9 @@ export function useCatalogSearch(query: string) {
     enabled: q.length >= 2,
     queryFn: async (): Promise<CatalogBall[]> => {
       const { data } = await untyped()
-        .from('bowling_balls').select('id, brand, name, coverstock, core, rg, differential, image_url')
+        .from('bowling_balls').select(CATALOG_COLS)
         .or(`name.ilike.%${q}%,brand.ilike.%${q}%`).limit(25)
-      return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
-        id: r.id as string, brand: r.brand as string, name: r.name as string,
-        coverstock: (r.coverstock as string | null) ?? null, core: (r.core as string | null) ?? null,
-        rg: (r.rg as number | null) ?? null, differential: (r.differential as number | null) ?? null,
-        imageUrl: (r.image_url as string | null) ?? null,
-      }))
+      return ((data ?? []) as Record<string, unknown>[]).map(mapCatalog)
     },
   })
 }
