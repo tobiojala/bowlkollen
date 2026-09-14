@@ -59,24 +59,30 @@ export default function KlotClient() {
   return (
     <main style={{ minHeight: '100vh', background: COLOR.bg, color: COLOR.ink, fontFamily: FONT.body }}>
       <style>{`
+        /* Same web layout as the home feed: 600 mobile → 1160 desktop with a
+           minmax(0,1fr) 320 split + a sticky right rail. */
+        .klot-wrap{ max-width:600px; margin:0 auto; padding:16px 16px 96px }
         .klot-grid{ display:block }
         .arsenal-strip{ display:block }
         .klot-side{ display:none }
+        .deskstat{ display:none }
         .shelf{ display:flex; gap:16px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:none }
         .shelf::-webkit-scrollbar{ display:none }
         .shelf-item{ flex:none; width:96px; text-align:center }
         .shelf-item .shelf-meta > div:first-child{ margin-top:9px }
-        @media(min-width:1000px){
-          .klot-grid{ display:grid; grid-template-columns:1fr 340px; gap:48px; align-items:start }
+        @media(min-width:1024px){
+          .klot-wrap{ max-width:1160px; padding:24px 32px 96px }
+          .klot-grid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:40px; align-items:start }
           .arsenal-strip{ display:none }
-          .klot-side{ display:block; position:sticky; top:20px }
+          .klot-side{ display:flex; flex-direction:column; gap:16px; position:sticky; top:88px }
+          .deskstat{ display:block }
           .shelf{ flex-direction:column; gap:4px; overflow:visible }
           .shelf-item{ width:auto; text-align:left; display:flex; align-items:center; gap:12px; padding:8px 2px; border-top:1px solid ${COLOR.hairline} }
           .shelf-item .shelf-meta{ flex:1; min-width:0 }
           .shelf-item .shelf-meta > div:first-child{ margin-top:0 }
         }
       `}</style>
-      <div style={{ maxWidth: 1240, margin: '0 auto', padding: `${SPACE[4]}px ${SPACE[4]}px 96px` }}>
+      <div className="klot-wrap">
         <Link href="/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 14, color: COLOR.ink2, textDecoration: 'none', marginBottom: SPACE[4] }}>
           <ChevronLeft size={15} /> Mina spel
         </Link>
@@ -84,20 +90,19 @@ export default function KlotClient() {
         <h1 style={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 40, letterSpacing: '-0.01em', margin: '5px 0 6px', lineHeight: 1 }}>Klothyllan</h1>
         <p style={{ color: COLOR.ink2, fontSize: 15, margin: '0 0 20px' }}>Hela sortimentet — sök, filtrera och lägg till klot i din arsenal.</p>
 
-        {/* search + filters span the full width so the page fills the canvas */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: COLOR.surface2, borderRadius: 15, padding: '14px 16px' }}>
-          <Search size={19} color={COLOR.ink3} />
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Sök klot, märke eller cover…"
-            style={{ all: 'unset', flex: 1, color: COLOR.ink, fontSize: 16, fontFamily: FONT.body }} />
-        </div>
-        <div style={{ display: 'flex', gap: 9, overflowX: 'auto', padding: '14px 0 4px', scrollbarWidth: 'none' } as React.CSSProperties}>
-          <Chip on={brand === null} onClick={() => setBrand(null)}>Alla</Chip>
-          {brands.slice(0, TOP_BRANDS).map(b => <Chip key={b.brand} on={brand === b.brand} onClick={() => setBrand(b.brand)}>{b.brand}</Chip>)}
-        </div>
-
         <div className="klot-grid">
           {/* ── Left: catalog ── */}
           <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: COLOR.surface2, borderRadius: 15, padding: '14px 16px' }}>
+              <Search size={19} color={COLOR.ink3} />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Sök klot, märke eller cover…"
+                style={{ all: 'unset', flex: 1, color: COLOR.ink, fontSize: 16, fontFamily: FONT.body }} />
+            </div>
+            <div style={{ display: 'flex', gap: 9, overflowX: 'auto', padding: '14px 0 4px', scrollbarWidth: 'none' } as React.CSSProperties}>
+              <Chip on={brand === null} onClick={() => setBrand(null)}>Alla</Chip>
+              {brands.slice(0, TOP_BRANDS).map(b => <Chip key={b.brand} on={brand === b.brand} onClick={() => setBrand(b.brand)}>{b.brand}</Chip>)}
+            </div>
+
             {/* arsenal reel — mobile only (desktop shows the right shelf) */}
             {bag.length > 0 && <div className="arsenal-strip">{shelf}</div>}
 
@@ -117,6 +122,10 @@ export default function KlotClient() {
                       <span style={{ display: 'block', fontSize: 13, color: COLOR.ink3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{b.brand}{b.coverstockType ? ` · ${b.coverstockType.split(' ')[0]}` : ''}</span>
                     </span>
                   </button>
+                  <span className="deskstat" style={{ textAlign: 'right', marginRight: 18, flex: 'none' }}>
+                    <span style={{ display: 'block', fontFamily: FONT.score, fontWeight: 700, fontSize: 16, color: COLOR.ink, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{b.differential != null ? b.differential.toFixed(3).replace(/^0/, '') : '–'}</span>
+                    <span style={{ display: 'block', fontSize: 11, color: COLOR.ink3, marginTop: 3 }}>Diff</span>
+                  </span>
                   <span style={{ textAlign: 'right', marginRight: 4, flex: 'none' }}>
                     <span style={{ display: 'block', fontFamily: FONT.score, fontWeight: 700, fontSize: 16, color: COLOR.ink, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{b.rg != null ? b.rg.toFixed(2) : '–'}</span>
                     <span style={{ display: 'block', fontSize: 11, color: COLOR.ink3, marginTop: 3 }}>RG</span>
