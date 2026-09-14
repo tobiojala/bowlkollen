@@ -50,7 +50,7 @@ export default function KlotClient() {
         <div className="shelf">
           {bag.map(b => (
             <div key={b.id} className="shelf-item">
-              <BallOrb name={b.name} imageUrl={b.imageUrl} size={56} />
+              <BallOrb name={b.name} imageUrl={b.imageUrl} size={72} />
               <div className="shelf-meta">
                 <div style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</div>
                 <div style={{ fontSize: 13, color: COLOR.ink3 }}>{[b.brand, b.weight != null ? `${b.weight} lb` : null].filter(Boolean).join(' · ')}</div>
@@ -129,7 +129,7 @@ export default function KlotClient() {
               return (
                 <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 2px', borderTop: `1px solid ${COLOR.hairline}` }}>
                   <button onClick={() => setSelected(b)} style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: 0 }}>
-                    <BallOrb name={b.name} imageUrl={b.thumbnailUrl ?? b.imageUrl} size={52} />
+                    <BallOrb name={b.name} imageUrl={b.thumbnailUrl ?? b.imageUrl} size={56} />
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: 17, fontWeight: 700, color: COLOR.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</span>
                       <span style={{ display: 'block', fontSize: 13, color: COLOR.ink3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{b.brand}{b.coverstockType ? ` · ${b.coverstockType.split(' ')[0]}` : ''}</span>
