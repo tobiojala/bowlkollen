@@ -61,25 +61,26 @@ export default function KlotClient() {
       <style>{`
         /* Same web layout as the home feed: 600 mobile → 1160 desktop with a
            minmax(0,1fr) 320 split + a sticky right rail. */
-        .klot-wrap{ max-width:600px; margin:0 auto; padding:16px 16px 96px }
-        .klot-grid{ display:block }
-        .arsenal-strip{ display:block }
-        .klot-side{ display:none }
-        .deskstat{ display:none }
-        .shelf{ display:flex; gap:16px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:none }
-        .shelf::-webkit-scrollbar{ display:none }
-        .shelf-item{ flex:none; width:96px; text-align:center }
-        .shelf-item .shelf-meta > div:first-child{ margin-top:9px }
-        @media(min-width:1024px){
-          .klot-wrap{ max-width:1160px; padding:24px 32px 96px }
-          .klot-grid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:40px; align-items:start }
-          .arsenal-strip{ display:none }
-          .klot-side{ display:flex; flex-direction:column; gap:16px; position:sticky; top:88px }
-          .deskstat{ display:block }
-          .shelf{ flex-direction:column; gap:4px; overflow:visible }
-          .shelf-item{ width:auto; text-align:left; display:flex; align-items:center; gap:12px; padding:8px 2px; border-top:1px solid ${COLOR.hairline} }
-          .shelf-item .shelf-meta{ flex:1; min-width:0 }
-          .shelf-item .shelf-meta > div:first-child{ margin-top:0 }
+        .klot-wrap { max-width: 600px; margin: 0 auto; padding: 16px 16px 96px; }
+        .klot-main { min-width: 0; }
+        .klot-grid { display: block; }
+        .arsenal-strip { display: block; }
+        .klot-side { display: none; }
+        .deskstat { display: none; }
+        .shelf { display: flex; gap: 16px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+        .shelf::-webkit-scrollbar { display: none; }
+        .shelf-item { flex: none; width: 96px; text-align: center; }
+        .shelf-item .shelf-meta > div:first-child { margin-top: 9px; }
+        @media (min-width: 1024px) {
+          .klot-wrap { max-width: 1160px; padding: 24px 32px 96px; }
+          .klot-grid { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 40px; align-items: start; }
+          .arsenal-strip { display: none; }
+          .klot-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 88px; }
+          .deskstat { display: block; }
+          .shelf { flex-direction: column; gap: 4px; overflow: visible; }
+          .shelf-item { width: auto; text-align: left; display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-top: 1px solid ${COLOR.hairline}; }
+          .shelf-item .shelf-meta { flex: 1; min-width: 0; }
+          .shelf-item .shelf-meta > div:first-child { margin-top: 0; }
         }
       `}</style>
       <div className="klot-wrap">
@@ -92,7 +93,7 @@ export default function KlotClient() {
 
         <div className="klot-grid">
           {/* ── Left: catalog ── */}
-          <div>
+          <div className="klot-main">
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: COLOR.surface2, borderRadius: 15, padding: '14px 16px' }}>
               <Search size={19} color={COLOR.ink3} />
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Sök klot, märke eller cover…"
