@@ -67,7 +67,7 @@ export default function KlotClient() {
         .shelf-item{ flex:none; width:96px; text-align:center }
         .shelf-item .shelf-meta > div:first-child{ margin-top:9px }
         @media(min-width:1000px){
-          .klot-grid{ display:grid; grid-template-columns:1fr 300px; gap:40px; align-items:start }
+          .klot-grid{ display:grid; grid-template-columns:1fr 340px; gap:48px; align-items:start }
           .arsenal-strip{ display:none }
           .klot-side{ display:block; position:sticky; top:20px }
           .shelf{ flex-direction:column; gap:4px; overflow:visible }
@@ -76,27 +76,28 @@ export default function KlotClient() {
           .shelf-item .shelf-meta > div:first-child{ margin-top:0 }
         }
       `}</style>
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: `${SPACE[4]}px ${SPACE[4]}px 96px` }}>
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: `${SPACE[4]}px ${SPACE[4]}px 96px` }}>
         <Link href="/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 14, color: COLOR.ink2, textDecoration: 'none', marginBottom: SPACE[4] }}>
           <ChevronLeft size={15} /> Mina spel
         </Link>
         <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', color: COLOR.gold, textTransform: 'uppercase' }}>Arsenal</div>
-        <h1 style={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 40, letterSpacing: '-0.01em', margin: '5px 0 6px', lineHeight: 1 }}>Klotdatabas</h1>
+        <h1 style={{ fontFamily: FONT.display, fontWeight: 800, fontSize: 40, letterSpacing: '-0.01em', margin: '5px 0 6px', lineHeight: 1 }}>Klothyllan</h1>
         <p style={{ color: COLOR.ink2, fontSize: 15, margin: '0 0 20px' }}>Hela sortimentet — sök, filtrera och lägg till klot i din arsenal.</p>
+
+        {/* search + filters span the full width so the page fills the canvas */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: COLOR.surface2, borderRadius: 15, padding: '14px 16px' }}>
+          <Search size={19} color={COLOR.ink3} />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Sök klot, märke eller cover…"
+            style={{ all: 'unset', flex: 1, color: COLOR.ink, fontSize: 16, fontFamily: FONT.body }} />
+        </div>
+        <div style={{ display: 'flex', gap: 9, overflowX: 'auto', padding: '14px 0 4px', scrollbarWidth: 'none' } as React.CSSProperties}>
+          <Chip on={brand === null} onClick={() => setBrand(null)}>Alla</Chip>
+          {brands.slice(0, TOP_BRANDS).map(b => <Chip key={b.brand} on={brand === b.brand} onClick={() => setBrand(b.brand)}>{b.brand}</Chip>)}
+        </div>
 
         <div className="klot-grid">
           {/* ── Left: catalog ── */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11, background: COLOR.surface2, borderRadius: 15, padding: '14px 16px' }}>
-              <Search size={19} color={COLOR.ink3} />
-              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Sök klot, märke eller cover…"
-                style={{ all: 'unset', flex: 1, color: COLOR.ink, fontSize: 16, fontFamily: FONT.body }} />
-            </div>
-            <div style={{ display: 'flex', gap: 9, overflowX: 'auto', padding: '14px 0 4px', scrollbarWidth: 'none' } as React.CSSProperties}>
-              <Chip on={brand === null} onClick={() => setBrand(null)}>Alla</Chip>
-              {brands.slice(0, TOP_BRANDS).map(b => <Chip key={b.brand} on={brand === b.brand} onClick={() => setBrand(b.brand)}>{b.brand}</Chip>)}
-            </div>
-
             {/* arsenal reel — mobile only (desktop shows the right shelf) */}
             {bag.length > 0 && <div className="arsenal-strip">{shelf}</div>}
 
