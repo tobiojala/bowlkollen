@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, Search, Plus, Check } from 'lucide-react'
+import { ChevronLeft, Search, Plus, Check, X } from 'lucide-react'
 import { COLOR, FONT, SPACE } from '@/lib/brand'
 import { useSession } from '@/lib/queries'
 import { BallOrb } from '@/components/BallOrb'
 import { BallSheet } from './BallSheet'
-import { useBrands, useCatalog, useMyBalls, useAddBall, type CatalogBall } from '@/lib/balls'
+import { useBrands, useCatalog, useMyBalls, useAddBall, useDeleteBall, type CatalogBall } from '@/lib/balls'
 
 const TOP_BRANDS = 8
 const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', color: COLOR.ink3, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '22px 2px 12px' }
@@ -23,8 +23,10 @@ export default function KlotClient() {
   const { data: balls = [], isLoading } = useCatalog({ query, brand })
   const { data: myBalls = [] } = useMyBalls()
   const add = useAddBall()
+  const del = useDeleteBall()
 
   const inBag = new Set(myBalls.filter(b => b.inBag && b.ballId).map(b => b.ballId as string))
+  const bagIdByBall = new Map(myBalls.filter(b => b.ballId).map(b => [b.ballId as string, b.id]))
   const bag = myBalls.filter(b => b.inBag)
 
   const onAdd = (b: CatalogBall, weight = 15) => {
@@ -33,6 +35,10 @@ export default function KlotClient() {
       { ballId: b.id, customName: null, brand: b.brand, weight, surface: null, layout: null, notes: null },
       { onSuccess: () => setSelected(null) },
     )
+  }
+  const onRemove = (b: CatalogBall) => {
+    const id = bagIdByBall.get(b.id)
+    if (id) del.mutate(id, { onSuccess: () => setSelected(null) })
   }
 
   const shelf = (
@@ -49,6 +55,10 @@ export default function KlotClient() {
                 <div style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</div>
                 <div style={{ fontSize: 13, color: COLOR.ink3 }}>{[b.brand, b.weight != null ? `${b.weight} lb` : null].filter(Boolean).join(' · ')}</div>
               </div>
+              <button className="shelf-remove" onClick={() => del.mutate(b.id)} aria-label={`Ta bort ${b.name}`}
+                style={{ flex: 'none', width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'transparent', color: COLOR.ink3, cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} />
+              </button>
             </div>
           ))}
         </div>
@@ -67,6 +77,7 @@ export default function KlotClient() {
         .arsenal-strip { display: block; }
         .klot-side { display: none; }
         .deskstat { display: none; }
+        .shelf-remove { display: none; }
         .shelf { display: flex; gap: 16px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
         .shelf::-webkit-scrollbar { display: none; }
         .shelf-item { flex: none; width: 96px; text-align: center; }
@@ -77,6 +88,7 @@ export default function KlotClient() {
           .arsenal-strip { display: none; }
           .klot-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 88px; }
           .deskstat { display: block; }
+          .shelf-remove { display: inline-flex; }
           .shelf { flex-direction: column; gap: 4px; overflow: visible; }
           .shelf-item { width: auto; text-align: left; display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-top: 1px solid ${COLOR.hairline}; }
           .shelf-item .shelf-meta { flex: 1; min-width: 0; }
@@ -153,7 +165,7 @@ export default function KlotClient() {
         </div>
       </div>
 
-      <BallSheet ball={selected} inBag={selected ? inBag.has(selected.id) : false} adding={add.isPending} onClose={() => setSelected(null)} onAdd={onAdd} />
+      <BallSheet ball={selected} inBag={selected ? inBag.has(selected.id) : false} adding={add.isPending} onClose={() => setSelected(null)} onAdd={onAdd} onRemove={onRemove} />
     </main>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Check } from 'lucide-react'
+import { X, Plus, Trash2 } from 'lucide-react'
 import { COLOR, FONT, RADIUS } from '@/lib/brand'
 import { BallOrb } from '@/components/BallOrb'
 import type { CatalogBall } from '@/lib/balls'
@@ -26,8 +26,9 @@ function Cell({ v, k, word }: { v: string; k: string; word?: boolean }) {
 
 // The klot detail — a bottom sheet (native pattern), primary action pinned to the
 // thumb zone. Cardless: hairline-bounded spec grid, no boxes.
-export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
-  ball: CatalogBall | null; inBag: boolean; adding: boolean; onClose: () => void; onAdd: (b: CatalogBall, weight: number) => void
+export function BallSheet({ ball, inBag, adding, onClose, onAdd, onRemove }: {
+  ball: CatalogBall | null; inBag: boolean; adding: boolean; onClose: () => void
+  onAdd: (b: CatalogBall, weight: number) => void; onRemove: (b: CatalogBall) => void
 }) {
   const [weight, setWeight] = useState(15)
   useEffect(() => { setWeight(15) }, [ball?.id])   // reset to default when a new klot opens
@@ -94,12 +95,21 @@ export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
             )}
 
             <div style={{ position: 'sticky', bottom: 0, background: `linear-gradient(180deg, transparent, ${COLOR.surface} 24%)`, padding: '16px 0 22px', marginTop: 6 }}>
-              <button onClick={() => !inBag && !adding && onAdd(ball, weight)} disabled={inBag || adding}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', minHeight: 54,
-                  background: inBag ? COLOR.surface2 : COLOR.gold, color: inBag ? COLOR.ink2 : '#1a1400', border: 'none', borderRadius: 16,
-                  fontFamily: FONT.body, fontSize: 17, fontWeight: 700, cursor: inBag || adding ? 'default' : 'pointer' }}>
-                {inBag ? <><Check size={20} color={COLOR.green} /> I din arsenal</> : <><Plus size={20} color="#1a1400" strokeWidth={2.4} /> {adding ? 'Lägger till…' : 'Lägg till i arsenal'}</>}
-              </button>
+              {inBag ? (
+                <button onClick={() => onRemove(ball)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', minHeight: 54,
+                    background: 'transparent', color: COLOR.red, border: `1px solid ${COLOR.hairline}`, borderRadius: 16,
+                    fontFamily: FONT.body, fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>
+                  <Trash2 size={19} color={COLOR.red} /> Ta bort ur arsenal
+                </button>
+              ) : (
+                <button onClick={() => !adding && onAdd(ball, weight)} disabled={adding}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', minHeight: 54,
+                    background: COLOR.gold, color: '#1a1400', border: 'none', borderRadius: 16,
+                    fontFamily: FONT.body, fontSize: 17, fontWeight: 700, cursor: adding ? 'default' : 'pointer' }}>
+                  <Plus size={20} color="#1a1400" strokeWidth={2.4} /> {adding ? 'Lägger till…' : 'Lägg till i arsenal'}
+                </button>
+              )}
             </div>
           </motion.div>
         </>
