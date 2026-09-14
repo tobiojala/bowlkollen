@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Check } from 'lucide-react'
 import { COLOR, FONT, RADIUS } from '@/lib/brand'
@@ -26,8 +27,10 @@ function Cell({ v, k, word }: { v: string; k: string; word?: boolean }) {
 // The klot detail — a bottom sheet (native pattern), primary action pinned to the
 // thumb zone. Cardless: hairline-bounded spec grid, no boxes.
 export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
-  ball: CatalogBall | null; inBag: boolean; adding: boolean; onClose: () => void; onAdd: (b: CatalogBall) => void
+  ball: CatalogBall | null; inBag: boolean; adding: boolean; onClose: () => void; onAdd: (b: CatalogBall, weight: number) => void
 }) {
+  const [weight, setWeight] = useState(15)
+  useEffect(() => { setWeight(15) }, [ball?.id])   // reset to default when a new klot opens
   const released = ball ? relDate(ball.releaseDate) : null
   const discontinued = ball?.availability === 'Discontinued'
   return (
@@ -71,8 +74,22 @@ export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
             )}
             <div style={{ fontSize: 12, color: COLOR.ink4, margin: '10px 0 0' }}>Data från bowwwl.com</div>
 
+            {!inBag && (
+              <div style={{ margin: '18px 0 2px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', color: COLOR.ink3, textTransform: 'uppercase', marginBottom: 10 }}>Vikt</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[12, 13, 14, 15, 16].map(w => (
+                    <button key={w} onClick={() => setWeight(w)}
+                      style={{ flex: 1, minHeight: 46, borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: FONT.score, fontWeight: 700, fontSize: 16, fontVariantNumeric: 'tabular-nums',
+                        background: w === weight ? COLOR.gold : COLOR.surface2, color: w === weight ? '#1a1400' : COLOR.ink2 }}>{w}</button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: COLOR.ink4, marginTop: 8 }}>Spec anges för 15 lb.</div>
+              </div>
+            )}
+
             <div style={{ position: 'sticky', bottom: 0, background: `linear-gradient(180deg, transparent, ${COLOR.surface} 24%)`, padding: '16px 0 22px', marginTop: 6 }}>
-              <button onClick={() => !inBag && !adding && onAdd(ball)} disabled={inBag || adding}
+              <button onClick={() => !inBag && !adding && onAdd(ball, weight)} disabled={inBag || adding}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, width: '100%', minHeight: 54,
                   background: inBag ? COLOR.surface2 : COLOR.gold, color: inBag ? COLOR.ink2 : '#1a1400', border: 'none', borderRadius: 16,
                   fontFamily: FONT.body, fontSize: 17, fontWeight: 700, cursor: inBag || adding ? 'default' : 'pointer' }}>
