@@ -31,6 +31,11 @@ export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
 }) {
   const [weight, setWeight] = useState(15)
   useEffect(() => { setWeight(15) }, [ball?.id])   // reset to default when a new klot opens
+  // Specs for the selected weight (populated by balls-sync); fall back to the 15 lb base.
+  const sw = ball?.specsByWeight?.[String(weight)] ?? null
+  const aRg = sw?.rg ?? ball?.rg ?? null
+  const aDiff = sw?.diff ?? ball?.differential ?? null
+  const aInt = sw?.int ?? ball?.intDiff ?? null
   const released = ball ? relDate(ball.releaseDate) : null
   const discontinued = ball?.availability === 'Discontinued'
   return (
@@ -58,9 +63,9 @@ export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px 10px', padding: '18px 0', borderTop: `1px solid ${COLOR.hairline}`, borderBottom: `1px solid ${COLOR.hairline}`, textAlign: 'center' }}>
-              <Cell v={ball.rg != null ? ball.rg.toFixed(3) : '–'} k="RG" />
-              <Cell v={fmt3(ball.differential)} k="Diff" />
-              <Cell v={ball.intDiff != null ? fmt3(ball.intDiff) : '–'} k="Int. diff" />
+              <Cell v={aRg != null ? aRg.toFixed(3) : '–'} k="RG" />
+              <Cell v={fmt3(aDiff)} k="Diff" />
+              <Cell v={aInt != null ? fmt3(aInt) : '–'} k="Int. diff" />
               <Cell v={ball.coreType ? (ball.coreType.startsWith('Asym') ? 'Asymm.' : 'Symm.') : '–'} k="Core" word />
               <Cell v={ball.coverstockType?.split(' ')[0] ?? '–'} k="Cover" word />
               <Cell v={ball.factoryFinish ?? '–'} k="Finish" word />
@@ -84,7 +89,7 @@ export function BallSheet({ ball, inBag, adding, onClose, onAdd }: {
                         background: w === weight ? COLOR.gold : COLOR.surface2, color: w === weight ? '#1a1400' : COLOR.ink2 }}>{w}</button>
                   ))}
                 </div>
-                <div style={{ fontSize: 12, color: COLOR.ink4, marginTop: 8 }}>Spec anges för 15 lb.</div>
+                <div style={{ fontSize: 12, color: COLOR.ink4, marginTop: 8 }}>Spec för {weight} lb.</div>
               </div>
             )}
 

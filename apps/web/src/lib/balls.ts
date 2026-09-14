@@ -17,12 +17,13 @@ export type CatalogBall = {
   rg: number | null; differential: number | null; intDiff: number | null
   factoryFinish: string | null; availability: string | null; releaseDate: string | null
   imageUrl: string | null; thumbnailUrl: string | null
+  specsByWeight: Record<string, { rg: number | null; diff: number | null; int: number | null }> | null
 }
 
 // One SELECT + one mapper so the picker, the catalog browse and the detail all read
 // balls identically. Extended fields come from the bowwwl feed (bowwwl_balls_catalog.sql).
 const CATALOG_COLS =
-  'id, bowwwl_id, brand, name, coverstock, coverstock_type, core, core_type, rg, differential, int_diff, factory_finish, availability, release_date, image_url, thumbnail_url'
+  'id, bowwwl_id, brand, name, coverstock, coverstock_type, core, core_type, rg, differential, int_diff, factory_finish, availability, release_date, image_url, thumbnail_url, specs_by_weight'
 
 function mapCatalog(r: Record<string, unknown>): CatalogBall {
   return {
@@ -35,6 +36,7 @@ function mapCatalog(r: Record<string, unknown>): CatalogBall {
     factoryFinish: (r.factory_finish as string | null) ?? null, availability: (r.availability as string | null) ?? null,
     releaseDate: (r.release_date as string | null) ?? null,
     imageUrl: (r.image_url as string | null) ?? null, thumbnailUrl: (r.thumbnail_url as string | null) ?? null,
+    specsByWeight: (r.specs_by_weight as CatalogBall['specsByWeight']) ?? null,
   }
 }
 

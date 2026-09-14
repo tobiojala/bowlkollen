@@ -22,3 +22,15 @@ export async function fetchBowwwlPage(page: number): Promise<Record<string, unkn
   const json = await res.json()
   return Array.isArray(json) ? (json as Record<string, unknown>[]) : []
 }
+
+// The v1 endpoint (whole catalog in one response, not paginated) at a given weight —
+// gives weight-specific core_rg/core_diff/core_int_diff. Used to build per-weight specs.
+export async function fetchBowwwlV1(weight: number): Promise<Record<string, unknown>[]> {
+  const res = await fetch(`${BOWWWL_BASE}/restapi/balls?_format=json&weight=${weight}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  })
+  if (!res.ok) throw new Error(`bowwwl v1 weight ${weight} → HTTP ${res.status}`)
+  const json = await res.json()
+  return Array.isArray(json) ? (json as Record<string, unknown>[]) : []
+}
